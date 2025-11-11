@@ -3,8 +3,8 @@
 #include <cstdint>
 #include "InputSystem.h"
 
-// 移除原来的 IsKeyDown 函数声明
-// 添加输入系统实例声明
+// Remove original IsKeyDown function declaration
+// Add input system instance declaration
 extern InputSystem g_inputSystem;
 
 class GameTimer {
@@ -20,17 +20,17 @@ public:
     float GetDeltaTime() const;
 };
 
-// 游戏初始化
+// Game initialization
 void InitGameWorld();
 
-// 游戏循环
+// Game loop
 void GameLoop();
 
-// 绘制函数
+// Drawing function
 void Draw();
 
-// 输入处理
+// Input handling
 void HandleInput();
 
-// 重置游戏
+// Reset game
 void ResetGame();

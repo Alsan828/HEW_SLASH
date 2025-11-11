@@ -1,10 +1,10 @@
 ﻿#include "InputSystem.h"
 
-// 全局输入系统实例
+// Global input system instance
 InputSystem g_inputSystem;
 
 InputSystem::InputSystem() {
-    // 初始化所有按键状态为false
+    // Initialize all key states to false
     int keys[] = {
         VK_LEFT, 'A', VK_RIGHT, 'D', VK_UP, 'W',
         VK_DOWN, 'S', VK_SPACE, VK_SHIFT, 'R', 'T'
@@ -17,10 +17,10 @@ InputSystem::InputSystem() {
 }
 
 void InputSystem::Update() {
-    // 保存上一帧的状态
+    // Save previous frame's states
     m_previousKeyStates = m_currentKeyStates;
 
-    // 更新当前帧的状态
+    // Update current frame's states
     for (auto& pair : m_currentKeyStates) {
         pair.second = (GetAsyncKeyState(pair.first) & 0x8000) != 0;
     }
@@ -31,7 +31,7 @@ bool InputSystem::IsKeyDown(int key) const {
     if (it != m_currentKeyStates.end()) {
         return it->second;
     }
-    // 如果键不在映射中，直接查询
+    // If key is not in the map, query directly
     return (GetAsyncKeyState(key) & 0x8000) != 0;
 }
 
@@ -74,11 +74,11 @@ void InputSystem::GetMoveDirection(float& dirX, float& dirY) const {
     if (IsMovingLeft()) dirX -= 1.0f;
     if (IsMovingRight()) dirX += 1.0f;
 
-    // 上下移动（如果有需要）
+    // Up/down movement (if needed)
     if (IsKeyDown(VK_UP) || IsKeyDown('W')) dirY += 1.0f;
     if (IsKeyDown(VK_DOWN) || IsKeyDown('S')) dirY -= 1.0f;
 
-    // 标准化方向向量
+    // Normalize direction vector
     float length = sqrt(dirX * dirX + dirY * dirY);
     if (length > 0.0f) {
         dirX /= length;
@@ -87,6 +87,6 @@ void InputSystem::GetMoveDirection(float& dirX, float& dirY) const {
 }
 
 void InputSystem::RebindKey(int action, int newKey) {
-    // 这里可以实现按键重绑定功能
-    // 简化实现，实际可以根据需要扩展
+    // Key rebinding functionality can be implemented here
+    // Simplified implementation, can be expanded as needed
 }

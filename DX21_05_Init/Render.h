@@ -18,17 +18,16 @@
 #include <string.h>
 #include <assert.h>
 #include <DirectXMath.h>
-// 窗口和屏幕设置
+
+// Window and screen settings
 #define CLASS_NAME   "DX21Smpl"
 #define WINDOW_NAME  "SLASH ⬆️⬇️"
 #define SCREEN_WIDTH (1080)
 #define SCREEN_HEIGHT (680)
-//testtest222267
-
 
 struct VertexV {
-    float x, y, z;
-    float u, v;
+	float x, y, z;
+	float u, v;
 };
 
 struct ConstantBuffer {
@@ -36,11 +35,10 @@ struct ConstantBuffer {
 	DirectX::XMMATRIX projection;
 };
 
-
-// 使用extern声明全局变量（不初始化）
-extern ID3D11Device* g_pDevice;            // 设备对象
-extern ID3D11DeviceContext* g_pDeviceContext; // 设备上下文
-extern ID3D11InputLayout* g_pInputLayout;    // 输入布局
+// Use extern to declare global variables (without initialization)
+extern ID3D11Device* g_pDevice;            // Device object
+extern ID3D11DeviceContext* g_pDeviceContext; // Device context
+extern ID3D11InputLayout* g_pInputLayout;    // Input layout
 extern ID3D11ShaderResourceView* pTextureSRV;
 extern ID3D11ShaderResourceView* pTextureSRV2;
 extern ID3D11ShaderResourceView* pTextureSRV3;
@@ -54,13 +52,13 @@ extern ID3D11VertexShader* g_pVertexShader;
 extern ID3D11PixelShader* g_pPixelShader;
 
 extern D3D11_SAMPLER_DESC sampDesc;
-extern ID3D11SamplerState* pSamplerState ;
+extern ID3D11SamplerState* pSamplerState;
 
-// 函数声明
+// Function declarations
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HRESULT RendererInit(HWND hwnd);
-void RendererDrawF();//在渲染前调用
-void RendererDrawB();//在渲染后调用
+void RendererDrawF();// Called before rendering
+void RendererDrawB();// Called after rendering
 void RendererUninit();
 HRESULT CreateVertexShader(ID3D11VertexShader** ppVertexShader, ID3D11InputLayout** ppVertexLayout, D3D11_INPUT_ELEMENT_DESC* pLayout, unsigned int numElements, const char* szFileName);
 HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, void** ppShaderObject, int* pShaderObjectSize);

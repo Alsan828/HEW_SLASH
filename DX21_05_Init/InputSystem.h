@@ -2,14 +2,14 @@
 #include <windows.h>
 #include <map>
 
-// 输入系统类
+// Input system class
 class InputSystem {
 private:
-    // 存储按键状态
+    // Store key states
     std::map<int, bool> m_currentKeyStates;
     std::map<int, bool> m_previousKeyStates;
 
-    // 按键映射
+    // Key mappings
     int m_moveLeftKey = VK_LEFT;
     int m_moveLeftAltKey = 'A';
     int m_moveRightKey = VK_RIGHT;
@@ -24,15 +24,15 @@ private:
 public:
     InputSystem();
 
-    // 更新输入状态（每帧调用）
+    // Update input state (call every frame)
     void Update();
 
-    // 按键状态查询
+    // Key state queries
     bool IsKeyDown(int key) const;
-    bool IsKeyPressed(int key) const;  // 当前帧按下
-    bool IsKeyReleased(int key) const; // 当前帧释放
+    bool IsKeyPressed(int key) const;  // Pressed this frame
+    bool IsKeyReleased(int key) const; // Released this frame
 
-    // 特定动作的查询
+    // Specific action queries
     bool IsMovingLeft() const;
     bool IsMovingRight() const;
     bool IsJumping() const;
@@ -40,9 +40,9 @@ public:
     bool IsResetting() const;
     bool IsToggling() const;
 
-    // 获取移动方向向量
+    // Get movement direction vector
     void GetMoveDirection(float& dirX, float& dirY) const;
 
-    // 修改按键绑定（可选功能）
+    // Modify key bindings (optional functionality)
     void RebindKey(int action, int newKey);
 };

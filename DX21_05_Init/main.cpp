@@ -11,7 +11,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
-    // ウィンドウクラス情報をまとめる
+    // Set up window class information
     WNDCLASSEX wc;
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_CLASSDC;
@@ -29,51 +29,52 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
     RegisterClassEx(&wc);
     srand(time(NULL));
 
-    // 获取屏幕分辨率
+    // Get screen resolution
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-    // 创建无边框窗口覆盖整个屏幕
+    // Create borderless window covering entire screen
     HWND hWnd;
 
     hWnd = CreateWindowEx(0,
         CLASS_NAME,
         WINDOW_NAME,
-        WS_POPUP | WS_VISIBLE,  // 无边框样式并立即可见
-        0, 0,                   // 位置在(0,0)
-        screenWidth,            // 宽度覆盖整个屏幕
-        screenHeight,           // 高度覆盖整个屏幕
+        WS_POPUP | WS_VISIBLE,  // Borderless style and immediately visible
+        0, 0,                   // Position at (0,0)
+        screenWidth,            // Width covers entire screen
+        screenHeight,           // Height covers entire screen
         NULL,
         NULL,
         hInstance,
         NULL);
-    // ゲームループに入る前にDirectXの初期化をする
+
+    // Initialize DirectX before entering game loop
     RendererInit(hWnd);
     InitGameWorld();
 
     MSG msg;
 
-    // ゲームループ
+    // Game loop
     while (1)
     {
-        // 新たにメッセージがあれば
+        // If there are new messages
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
-            // ウィンドウプロシージャにメッセージを送る
+            // Send message to window procedure
             DispatchMessage(&msg);
 
-            // 「WM_QUIT」メッセージを受け取ったらループを抜ける
+            // Break loop if WM_QUIT message is received
             if (msg.message == WM_QUIT) {
                 break;
             }
         }
         else
         {
-            GameLoop();  // 处理键盘输入
+            GameLoop();  // Handle keyboard input and update game
         }
     }
 
-    // DirectXの解放処理
+    // Clean up DirectX resources
     RendererUninit();
 
     UnregisterClass(CLASS_NAME, hInstance);
@@ -85,28 +86,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-    case WM_DESTROY:    // ウィンドウ破棄のメッセージ
-        PostQuitMessage(0); // 「WM_QUIT」メッセージを送る → アプリ終了
+    case WM_DESTROY:    // Window destruction message
+        PostQuitMessage(0); // Send WM_QUIT message → Application termination
         break;
 
-    case WM_CLOSE:      // 「x」ボタンが押されたら
+    case WM_CLOSE:      // When 'x' button is pressed
     {
-        int res = MessageBoxA(NULL, "終了しますか？", "確認", MB_OKCANCEL);
+        int res = MessageBoxA(NULL, "Are you sure you want to exit?", "Confirmation", MB_OKCANCEL);
         if (res == IDOK) {
-            DestroyWindow(hWnd);  // 「WM_DESTROY」メッセージを送る
+            DestroyWindow(hWnd);  // Send WM_DESTROY message
         }
     }
     break;
 
-    case WM_KEYDOWN: // キー入力があったメッセージ
+    case WM_KEYDOWN: // Key input message
         if (LOWORD(wParam) == VK_ESCAPE)
-        { // 入力されたキーがESCAPEなら
-            PostMessage(hWnd, WM_CLOSE, wParam, lParam); // 「WM_CLOSE」を送る
+        { // If ESCAPE key is pressed
+            PostMessage(hWnd, WM_CLOSE, wParam, lParam); // Send WM_CLOSE message
         }
         break;
 
     default:
-        // 受け取ったメッセージに対してデフォルトの処理を実行
+        // Execute default processing for received message
         return DefWindowProc(hWnd, uMsg, wParam, lParam);
         break;
     }
