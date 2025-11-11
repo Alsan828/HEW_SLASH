@@ -8,7 +8,7 @@
 
 #pragma once
 
-// 全局常量定义ttttest
+// 全局常量定义
 const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
