@@ -20,7 +20,7 @@
 #include <DirectXMath.h>
 // 窗口和屏幕设置
 #define CLASS_NAME   "DX21Smpl"
-#define WINDOW_NAME  "ハッピースピン"
+#define WINDOW_NAME  "SLASH ⬆️⬇️"
 #define SCREEN_WIDTH (1080)
 #define SCREEN_HEIGHT (680)
 

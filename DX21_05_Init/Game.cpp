@@ -280,6 +280,7 @@ void UpdatePlayerPhysics(float deltaTime) {
     if (g_player.posY < -2.0f) {
         ResetGame();
     }
+
 }
 // 方式1：按下直接冲刺
 void Dash1() {
