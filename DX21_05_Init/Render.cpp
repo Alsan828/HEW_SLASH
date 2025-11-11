@@ -7,7 +7,8 @@
 
 #define SAFE_RELEASE(p) { if( NULL != p ) { p->Release(); p = NULL; } }
 
-// Global variable definitions (allow initialization)
+
+// Define global variables (initialization allowed)
 ID3D11Device* g_pDevice = nullptr;
 ID3D11DeviceContext* g_pDeviceContext = nullptr;
 ID3D11InputLayout* g_pInputLayout = nullptr;
@@ -15,7 +16,7 @@ ID3D11ShaderResourceView* pTextureSRV = nullptr;
 ID3D11ShaderResourceView* pTextureSRV2 = nullptr;
 ID3D11ShaderResourceView* pTextureSRV3 = nullptr;
 ID3D11ShaderResourceView* pTextureNum = nullptr;
-D3D11_FEATURE_LEVEL m_FeatureLevel = D3D_FEATURE_LEVEL_11_0;
+D3D_FEATURE_LEVEL m_FeatureLevel = D3D_FEATURE_LEVEL_11_0;
 IDXGISwapChain* g_pSwapChain = nullptr;
 ID3D11RenderTargetView* g_pRenderTargetView = nullptr;
 ID3D11DepthStencilView* g_pDepthStencilView = nullptr;
@@ -31,13 +32,14 @@ ID3D11ShaderResourceView* texRun1 = nullptr;
 ID3D11ShaderResourceView* texRun2 = nullptr;
 ID3D11ShaderResourceView* texRun3 = nullptr;
 
+
 D3D11_SAMPLER_DESC sampDesc = {};
 ID3D11SamplerState* pSamplerState = nullptr;
 
 HRESULT RendererInit(HWND hwnd) {
 	HRESULT hr = S_OK;
 
-	// Get actual window client area size
+	// Get actual client area size of window
 	RECT clientRect;
 	GetClientRect(hwnd, &clientRect);
 	UINT windowWidth = clientRect.right - clientRect.left;
@@ -55,7 +57,7 @@ HRESULT RendererInit(HWND hwnd) {
 	swapChainDesc.OutputWindow = hwnd;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.SampleDesc.Quality = 0;
-	swapChainDesc.Windowed = TRUE;  // Maintain windowed mode (borderless fullscreen)
+	swapChainDesc.Windowed = TRUE;  // Keep as windowed mode (borderless fullscreen)
 
 	// Call function to create device and swap chain simultaneously
 	hr = D3D11CreateDeviceAndSwapChain(NULL,
@@ -114,18 +116,17 @@ HRESULT RendererInit(HWND hwnd) {
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	g_pDeviceContext->RSSetViewports(1, &viewport);
-
 	// Create input layout
 	D3D11_INPUT_ELEMENT_DESC layout[]
 	{
-		// Indicate presence of position coordinates
+		// Inform that position coordinates exist
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		// Indicate presence of texture coordinates
+		// Inform that texture coordinates exist
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	unsigned int numElements = ARRAYSIZE(layout);
 
-	// Create vertex shader object and vertex layout simultaneously
+	// Create vertex shader object, simultaneously create vertex layout
 	hr = CreateVertexShader(&g_pVertexShader, &g_pInputLayout, layout, numElements, "VertexShader.hlsl");
 	if (FAILED(hr)) {
 		MessageBoxA(NULL, "CreateVertexShader error", "error", MB_OK);
@@ -141,26 +142,26 @@ HRESULT RendererInit(HWND hwnd) {
 
 	hr = LoadTexture(g_pDevice, "asset/char02.png", &pTextureSRV);
 	if (FAILED(hr)) {
-		// Handle error
+		// Handle error		
 		MessageBoxA(NULL, "OP error", "error", MB_OK);
 		return hr;
 	}
 	hr = LoadTexture(g_pDevice, "asset/back_img_01.png", &pTextureSRV2);
 	if (FAILED(hr)) {
-		// Handle error
+		// Handle error		
 		MessageBoxA(NULL, "OP error", "error", MB_OK);
 		return hr;
 	}
 
 	hr = LoadTexture(g_pDevice, "asset/char01.png", &pTextureSRV3);
 	if (FAILED(hr)) {
-		// Handle error
+		// Handle error		
 		MessageBoxA(NULL, "OP error", "error", MB_OK);
 		return hr;
 	}
 	hr = LoadTexture(g_pDevice, "asset/Number.png", &pTextureNum);
 	if (FAILED(hr)) {
-		// Handle error
+		// Handle error		
 		MessageBoxA(NULL, "OP error", "error", MB_OK);
 		return hr;
 	}
@@ -182,7 +183,7 @@ HRESULT RendererInit(HWND hwnd) {
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE; // Alpha source blend factor
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; // Alpha destination blend factor
 	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; // Alpha blend operation
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // Write to all color channels
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // Write all color channels
 	hr = g_pDevice->CreateBlendState(&blendDesc, &g_pBlendState);
 	if (FAILED(hr)) {
 		MessageBoxA(NULL, "CreateBlendState error", "error", MB_OK);
@@ -205,16 +206,17 @@ HRESULT RendererInit(HWND hwnd) {
 	return S_OK;
 }
 
+
 void RendererDrawF()
 {
 	// Screen fill color
 	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; //red,green,blue,alpha
 
-	// Specify rendering target canvas and depth buffer to use
+	// Specify the drawing target canvas and depth buffer to use
 	g_pDeviceContext->OMSetRenderTargets(1, &g_pRenderTargetView, g_pDepthStencilView);
-	// Fill the rendering target canvas
+	// Fill the drawing target canvas
 	g_pDeviceContext->ClearRenderTargetView(g_pRenderTargetView, clearColor);
-	// Reset depth buffer
+	// Reset the depth buffer
 	g_pDeviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	UINT strides = sizeof(VertexV);
@@ -227,20 +229,22 @@ void RendererDrawF()
 
 	g_pDeviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF); // Set blend state (use default blend state)
 
-	// Background: pTextureSRV2
+	//BackGround: pTextureSRV2
 	RenderImage(-1.f, -1.f, 4.75f, 4.75f, pTextureSRV2, 0, 1, 1);
 	// Set sampler state
+
 }
 
 void RendererDrawB()
 {
 	// Switch double buffer and update screen
 	g_pSwapChain->Present(0, 0);
+
 }
 
 void RendererUninit()
 {
-	// ※All DirectX features must be released when the application terminates after creation
+	// ※DirectX features must be released when the application ends after creation
 	if (g_pDeviceContext) g_pDeviceContext->ClearState();
 	SAFE_RELEASE(g_pPixelShader);
 	SAFE_RELEASE(g_pVertexShader);
@@ -263,14 +267,14 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 	if (dot) {
 		int basenameLen = dot - szFileName;
 		strncpy(csoFileName, szFileName, basenameLen); // Copy filename without extension if extension exists
-		csoFileName[basenameLen] = '\0';   // Add null terminator
+		csoFileName[basenameLen] = '\0';   // Add terminator
 	}
 	else {
 		strcpy(csoFileName, szFileName);   // Copy as is if no extension
 	}
-	strcat(csoFileName, ".cso");// Add ".cso" extension
+	strcat(csoFileName, ".cso");// Append ".cso" extension
 
-	// Open .cso file if it exists
+	// Open .cso file if exists
 	FILE* fp;
 	int ret = fopen_s(&fp, csoFileName, "rb");
 	if (ret == 0)
@@ -280,7 +284,7 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 		int size = ftell(fp);
 		fseek(fp, 0, SEEK_SET);
 
-		// Allocate memory for binary data reading
+		// Allocate memory for reading binary data
 		unsigned char* byteArray = new unsigned char[size];
 		fread(byteArray, size, 1, fp);
 		fclose(fp);
@@ -304,10 +308,10 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 		// Set shader compile options
 		DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
 #if defined( DEBUG ) || defined( _DEBUG )
-		dwShaderFlags |= D3DCOMPILE_DEBUG; // Include debug information for debug builds
+		dwShaderFlags |= D3DCOMPILE_DEBUG; // Include debug info for debug builds
 #endif
 
-		// Blobs for storing compile results and error information
+		// Blob for storing compile results and error information
 		ID3DBlob* pErrorBlob = nullptr;
 		ID3DBlob* pBlob = nullptr;
 
@@ -315,7 +319,7 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 		hr = D3DCompileFromFile(
 			filename,							// Filename
 			nullptr,							// No macro definitions 
-			D3D_COMPILE_STANDARD_FILE_INCLUDE,	// #include support 
+			D3D_COMPILE_STANDARD_FILE_INCLUDE,	// Support #include 
 			szEntryPoint,						// Entry point name
 			szShaderModel,						// Shader model
 			dwShaderFlags,						// Compile flags
@@ -334,7 +338,7 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 			return E_FAIL;
 		}
 
-		// Release error blob if it exists
+		// Release error blob if exists
 		if (pErrorBlob) pErrorBlob->Release();
 
 		// Pass compiled binary data to caller on success
@@ -379,10 +383,10 @@ HRESULT CreatePixelShader(ID3D11PixelShader** ppPixelShader, const char* szFileN
 	return S_OK;
 }
 
-// Quad rendering function
+// Quad drawing function
 void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelShader* pPS)
 {
-	// Create temporary vertex buffer
+	// Create temporary vertex buffer 
 	ID3D11Buffer* pQuadBuffer = nullptr;
 	D3D11_BUFFER_DESC bufferDesc{};
 	bufferDesc.ByteWidth = sizeof(VertexV) * 4;
@@ -394,10 +398,10 @@ void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelS
 	initData.pSysMem = vertices;
 	g_pDevice->CreateBuffer(&bufferDesc, &initData, &pQuadBuffer);
 
-	// Set render pipeline state
+	// Set rendering pipeline state 
 	UINT stride = sizeof(VertexV);
 	UINT offset = 0;
-	// Execute draw command
+	// Execute draw command 
 	g_pDeviceContext->Draw(4, 0);
 
 	// Release temporary resources
