@@ -8,7 +8,7 @@
 
 #pragma once
 
-// 全局常量定义
+// 全局常量定义ttttest
 const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
@@ -496,7 +496,7 @@ void Draw() {
             g_dashEffectTexture, 0, 1, 1);
     }
 
-    // 绘制玩家（根据状态选择不同颜色/纹理）
+    
     ID3D11ShaderResourceView* playerTexture = g_playerTexture;
 
     // 可以根据玩家状态选择不同的帧或颜色
