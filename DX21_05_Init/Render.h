@@ -10,7 +10,7 @@
 #include <d3dcompiler.h>
 #include <windowsx.h>
 #include "Texture1.h"
-#include <stb_image.h>
+#include "stb_image.h"
 #include <locale.h>
 #include <atltypes.h>
 #include <io.h>
