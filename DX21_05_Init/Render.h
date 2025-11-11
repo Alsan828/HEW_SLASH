@@ -23,6 +23,7 @@
 #define WINDOW_NAME  "SLASH ⬆️⬇️"
 #define SCREEN_WIDTH (1080)
 #define SCREEN_HEIGHT (680)
+//testtest222267
 
 
 struct VertexV {
