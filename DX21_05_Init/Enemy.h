@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Game.h"
 
+
+struct MapBlock;
 // 方向枚举
 enum Direction {
     DIR_RIGHT = 0,      // 0度

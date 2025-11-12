@@ -12,7 +12,7 @@ enum DashType {
 DashType g_currentDashType = DASH_INSTANT; // Currently used dash type
 
 GameTimer g_gameTimer;
-
+Player g_player;
 // Game state enumeration
 enum GameState {
     STATE_PLAYING,

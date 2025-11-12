@@ -46,7 +46,7 @@ struct Player {
     const float MIN_CHARGE_TIME = 0.01f; // Minimum valid charge time
 };
 
-Player g_player;
+extern Player g_player;
 
 // Global constant definitions
 const float GRID_WIDTH = 0.0625f;
