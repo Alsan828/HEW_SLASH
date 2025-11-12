@@ -28,16 +28,25 @@
 struct VertexV {
 	float x, y, z;
 	float u, v;
+	float r, g, b, a; // for the color
 };
 
-struct ConstantBuffer {
+struct ConstantBuffer 
+{
 	DirectX::XMMATRIX worldView;
 	DirectX::XMMATRIX projection;
+
+	// added november 12th
+	DirectX::XMFLOAT4 color; // for the color
+	DirectX::XMMATRIX matrixTex;   	// for the UV //send it to the const buffer
 };
 
 // Use extern to declare global variables (without initialization)
 extern ID3D11Device* g_pDevice;            // Device object
 extern ID3D11DeviceContext* g_pDeviceContext; // Device context
+
+extern ID3D11Buffer* g_pConstantBuffer; // added november 12th
+
 extern ID3D11InputLayout* g_pInputLayout;    // Input layout
 extern ID3D11ShaderResourceView* pTextureSRV;
 extern ID3D11ShaderResourceView* pTextureSRV2;
@@ -66,3 +75,5 @@ HRESULT CreatePixelShader(ID3D11PixelShader** ppPixelShader, const char* szFileN
 void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelShader* pPS);
 void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV);
 void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex, int rows, int columns);
+
+void SetColor(float r, float g, float b, float a); // added november 12th
