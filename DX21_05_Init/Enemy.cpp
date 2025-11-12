@@ -1,12 +1,5 @@
 ﻿#include "Enemy.h"
 
-// 全局变量定义
-std::vector<Enemy*> g_enemies;
-ID3D11ShaderResourceView* g_enemyTexture = nullptr;
-ID3D11ShaderResourceView* g_shieldEnemyTexture = nullptr;
-ID3D11ShaderResourceView* g_mageEnemyTexture = nullptr;
-ID3D11ShaderResourceView* g_fastEnemyTexture = nullptr;
-
 // Enemy类实现
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),

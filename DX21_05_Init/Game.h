@@ -1,17 +1,20 @@
 ﻿#pragma once
 
 #include <cstdint>
-#include "InputSystem.h"
-#include "Render.h"
 #include <vector>
 #include <map>
 #include <algorithm>
 #include <cmath>
-#include "Enemy.h"
+#include "InputSystem.h"
+#include "Render.h"
+
 
 // Remove original IsKeyDown function declaration
 // Add input system instance declaration
 extern InputSystem g_inputSystem;
+
+struct MapBlock;
+class Enemy;
 
 // Map block structure
 struct MapBlock {
@@ -20,7 +23,17 @@ struct MapBlock {
     bool isSolid;
 };
 
-extern std::vector<MapBlock> g_mapBlocks;
+// Game state enumeration
+enum GameState {
+    STATE_PLAYING,
+    STATE_GAME_OVER
+};
+
+// Dash type enumeration
+enum DashType {
+    DASH_INSTANT,    // Dash immediately on key press
+    DASH_CHARGE      // Charge dash on hold
+};
 
 // Player structure
 struct Player {
@@ -46,7 +59,19 @@ struct Player {
     const float MIN_CHARGE_TIME = 0.01f; // Minimum valid charge time
 };
 
-extern Player g_player;
+class GameTimer {
+private:
+    __int64 m_prevTime = 0;
+    __int64 m_currTime = 0;
+    double m_secondsPerCount = 0.0;
+    float m_deltaTime = 0.0f;
+
+public:
+    GameTimer();
+    void Tick();
+    float GetDeltaTime() const;
+};
+
 
 // Global constant definitions
 const float GRID_WIDTH = 0.0625f;
@@ -60,25 +85,18 @@ const float DASH_SPEED = 0.15f;      // Base dash speed
 const float DASH_DURATION = 0.05f;   // Base dash duration
 const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
 
-
-extern ID3D11ShaderResourceView* g_playerTexture ;
-extern ID3D11ShaderResourceView* g_groundTexture ;
-extern ID3D11ShaderResourceView* g_backgroundTexture ;
-extern ID3D11ShaderResourceView* g_dashEffectTexture ;
-extern ID3D11ShaderResourceView* g_chargeEffectTexture ; // Charge effect texture
-
-class GameTimer {
-private:
-    __int64 m_prevTime = 0;
-    __int64 m_currTime = 0;
-    double m_secondsPerCount = 0.0;
-    float m_deltaTime = 0.0f;
-
-public:
-    GameTimer();
-    void Tick();
-    float GetDeltaTime() const;
-};
+// 在Game.h中声明
+extern Player g_player;
+extern std::vector<MapBlock> g_mapBlocks;
+extern ID3D11ShaderResourceView* g_playerTexture;
+extern ID3D11ShaderResourceView* g_groundTexture;
+extern ID3D11ShaderResourceView* g_backgroundTexture;
+extern ID3D11ShaderResourceView* g_dashEffectTexture;
+extern ID3D11ShaderResourceView* g_chargeEffectTexture;
+extern InputSystem g_inputSystem;
+extern GameTimer g_gameTimer;
+extern GameState g_gameState;
+extern DashType g_currentDashType;
 
 // Game initialization
 void InitGameWorld();
