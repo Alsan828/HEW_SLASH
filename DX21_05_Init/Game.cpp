@@ -1,24 +1,7 @@
 ﻿#define NOMINMAX
 #include "Game.h"
-#include "Render.h"
-#include <vector>
-#include <map>
-#include <algorithm>
-#include <cmath>
 
 #pragma once
-//1111111111
-// Global constant definitions
-const float GRID_WIDTH = 0.0625f;
-const float GRID_HEIGHT = 0.085f;
-const float PLAYER_WIDTH = 0.08f;
-const float PLAYER_HEIGHT = 0.12f;
-const float GRAVITY = -0.004f;
-const float JUMP_FORCE = 0.075f;
-const float MOVE_SPEED = 0.01f;
-const float DASH_SPEED = 0.15f;      // Base dash speed
-const float DASH_DURATION = 0.05f;   // Base dash duration
-const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
 
 // Dash type enumeration
 enum DashType {
@@ -29,7 +12,7 @@ enum DashType {
 DashType g_currentDashType = DASH_INSTANT; // Currently used dash type
 
 GameTimer g_gameTimer;
-
+Player g_player;
 // Game state enumeration
 enum GameState {
     STATE_PLAYING,
@@ -37,40 +20,6 @@ enum GameState {
 };
 
 GameState g_gameState = STATE_PLAYING;
-
-// Player structure
-struct Player {
-    float posX = 0.0f;
-    float posY = 0.0f;
-    float velocityX = 0.0f;
-    float velocityY = 0.0f;
-    bool isOnGround = false;
-    bool isMoving = false;
-    bool facingRight = true; // Facing direction
-
-    // Dash related variables
-    bool isDashing = false;
-    float dashTimer = 0.0f;
-    float dashCooldown = 0.0f;
-    float dashDirectionX = 0.0f;
-    float dashDirectionY = 0.0f;
-
-    // Charge dash specific variables
-    bool isCharging = false;
-    float chargeTime = 0.0f;
-    const float MAX_CHARGE_TIME = 1.5f;  // Maximum charge time
-    const float MIN_CHARGE_TIME = 0.01f; // Minimum valid charge time
-};
-
-Player g_player;
-
-// Map block structure
-struct MapBlock {
-    float posX, posY;
-    float width, height;
-    bool isSolid;
-};
-
 std::vector<MapBlock> g_mapBlocks;
 ID3D11ShaderResourceView* g_playerTexture = nullptr;
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
@@ -119,6 +68,9 @@ void ResetGame() {
     g_player.chargeTime = 0.0f;
 
     g_gameState = STATE_PLAYING;
+
+    CleanupEnemies();
+    CreateTestEnemies();
 }
 
 // Improved collision detection function
@@ -194,7 +146,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/Space.png", &g_backgroundTexture);  // Background texture
     LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);   // Dash effect texture
     LoadTexture(g_pDevice, "asset/blockB.png", &g_chargeEffectTexture); // Charge effect texture
-
+    InitEnemies();
     CreateTestMap();
     ResetGame();
 }
@@ -463,6 +415,7 @@ void UpdateGame(float deltaTime) {
 
     // Update physics
     UpdatePlayerPhysics(deltaTime);
+    UpdateEnemies(deltaTime);
 }
 
 // Modified render function
@@ -477,6 +430,7 @@ void Draw() {
         ID3D11ShaderResourceView* texture = g_groundTexture;
         RenderImage(block.posX, block.posY, block.width, block.height, texture, 0, 1, 1);
     }
+    RenderEnemies();
 
     // Draw charge effect (if charging)
     if (g_player.isCharging) {
