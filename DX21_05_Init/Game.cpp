@@ -1,31 +1,7 @@
 ﻿#define NOMINMAX
 #include "Game.h"
+#include "Enemy.h"
 
-#pragma once
-
-// Dash type enumeration
-enum DashType {
-    DASH_INSTANT,    // Dash immediately on key press
-    DASH_CHARGE      // Charge dash on hold
-};
-
-DashType g_currentDashType = DASH_INSTANT; // Currently used dash type
-
-GameTimer g_gameTimer;
-Player g_player;
-// Game state enumeration
-enum GameState {
-    STATE_PLAYING,
-    STATE_GAME_OVER
-};
-
-GameState g_gameState = STATE_PLAYING;
-std::vector<MapBlock> g_mapBlocks;
-ID3D11ShaderResourceView* g_playerTexture = nullptr;
-ID3D11ShaderResourceView* g_groundTexture = nullptr;
-ID3D11ShaderResourceView* g_backgroundTexture = nullptr;
-ID3D11ShaderResourceView* g_dashEffectTexture = nullptr;
-ID3D11ShaderResourceView* g_chargeEffectTexture = nullptr; // Charge effect texture
 
 // Game timer implementation
 GameTimer::GameTimer() {
@@ -481,6 +457,7 @@ void Draw() {
 bool IsKeyDown(int key) {
     return (GetAsyncKeyState(key) & 0x8000) != 0;
 }
+
 void HandleInput() {
     // Update input system
     g_inputSystem.Update();
