@@ -395,21 +395,26 @@ void UpdateGame(float deltaTime) {
 }
 
 // Modified render function
-void Draw() {
+void Draw() 
+{
     RendererDrawF();
 
     // Draw background
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f); // added november 12th
     RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, g_backgroundTexture, 0, 1, 1);
 
-    // Draw map blocks
-    for (const auto& block : g_mapBlocks) {
+    // Draw map block
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f); //  added november 12th
+    for (const auto& block : g_mapBlocks) 
+    {
         ID3D11ShaderResourceView* texture = g_groundTexture;
         RenderImage(block.posX, block.posY, block.width, block.height, texture, 0, 1, 1);
     }
     RenderEnemies();
 
     // Draw charge effect (if charging)
-    if (g_player.isCharging) {
+    if (g_player.isCharging) 
+    {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
         float effectSize = PLAYER_WIDTH * (1.0f + chargeRatio * 1.0f);
         float alpha = 0.3f + chargeRatio * 0.7f;
@@ -420,28 +425,50 @@ void Draw() {
     }
 
     // Draw dash effect (if dashing)
-    if (g_player.isDashing) {
+    if (g_player.isDashing) 
+    {
         // Draw dash effect at player position
         RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH * 1.5f, PLAYER_HEIGHT * 1.5f,
             g_dashEffectTexture, 0, 1, 1);
     }
 
 
-    ID3D11ShaderResourceView* playerTexture = g_playerTexture;
+   ID3D11ShaderResourceView* playerTexture = g_playerTexture;
+
 
     // Select different frame or color based on player state
     int frameIndex = 0;
-    if (g_player.isCharging) {
+    if (g_player.isCharging) 
+    {
+        SetColor(1.0f, 1.0f, 0.0f, 1.0f); // yellow when charging
         frameIndex = 4; // Charging state
     }
-    else if (g_player.isDashing) {
+    else if (g_player.isDashing) 
+    {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // red when dashing
         frameIndex = 3; // Dashing state
     }
-    else if (!g_player.isOnGround) {
+    else if (!g_player.isOnGround) 
+    {
+        SetColor(1.0f, 0.5f, 0.0f, 1.0f); // orange when not in the ground (jumping)
         frameIndex = 2; // Airborne state
     }
-    else if (g_player.isMoving) {
+    else if (g_player.isMoving) 
+    {
         frameIndex = 1; // Moving state
+
+        if (g_player.facingRight)
+        {
+            SetColor(0.0f, 0.0f, 1.0f, 1.0f); // blue when moving right
+        }
+        else
+        {
+            SetColor(0.0f, 1.0f, 0.0f, 1.0f); // green when moving left
+        }
+    }
+    else
+    {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f); // default color when idle
     }
 
     RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,

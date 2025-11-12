@@ -11,6 +11,10 @@
 // Define global variables (initialization allowed)
 ID3D11Device* g_pDevice = nullptr;
 ID3D11DeviceContext* g_pDeviceContext = nullptr;
+
+ID3D11Buffer* g_pConstantBuffer = nullptr; // added november 12th
+
+
 ID3D11InputLayout* g_pInputLayout = nullptr;
 ID3D11ShaderResourceView* pTextureSRV = nullptr;
 ID3D11ShaderResourceView* pTextureSRV2 = nullptr;
@@ -123,6 +127,8 @@ HRESULT RendererInit(HWND hwnd) {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		// Inform that texture coordinates exist
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		// for the color part
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	unsigned int numElements = ARRAYSIZE(layout);
 
@@ -203,6 +209,23 @@ HRESULT RendererInit(HWND hwnd) {
 	}
 	g_pDeviceContext->OMSetDepthStencilState(depthStencilState, 1); // Set depth stencil state
 
+
+	// added november 12th
+	// for the constant buffer for shader
+	D3D11_BUFFER_DESC cbDesc = {};
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.ByteWidth = sizeof(ConstantBuffer);
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	hr = g_pDevice->CreateBuffer(&cbDesc, nullptr, &g_pConstantBuffer);
+	if (FAILED(hr)) {
+		MessageBoxA(NULL, "Failed to create constant buffer.", "Error", MB_OK);
+		return hr;
+	}
+	
+
+
 	return S_OK;
 }
 
@@ -257,6 +280,8 @@ void RendererUninit()
 	SAFE_RELEASE(g_pDevice);
 	SAFE_RELEASE(pTextureSRV);
 	SAFE_RELEASE(pTextureSRV2);
+
+	SAFE_RELEASE(g_pConstantBuffer); // added november 12th
 }
 
 HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, void** ppShaderObject, int* pShaderObjectSize)
@@ -497,4 +522,20 @@ void RenderNumber(int number, float startX, float startY, float digitWidth, floa
 		RenderImage(currentX, startY, digitWidth, digitHeight, textureSRV, digit, 1, 10);
 		currentX -= digitWidth; // Move left one digit
 	}
+}
+
+
+// added november 12th
+void SetColor(float r, float g, float b, float a)
+{
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+
+	ConstantBuffer* dataPtr = (ConstantBuffer*)mappedResource.pData;
+	dataPtr->color = DirectX::XMFLOAT4(r, g, b, a);
+
+	g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+
+	// Bind to pixel shader
+	g_pDeviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 }
