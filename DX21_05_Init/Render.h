@@ -21,7 +21,7 @@
 
 // Window and screen settings
 #define CLASS_NAME   "DX21Smpl"
-#define WINDOW_NAME  "SLASH ⬆️⬇️"
+#define WINDOW_NAME  "SLASH"
 #define SCREEN_WIDTH (1080)
 #define SCREEN_HEIGHT (680)
 

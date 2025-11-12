@@ -1,8 +1,5 @@
 ﻿#include "InputSystem.h"
 
-// Global input system instance
-InputSystem g_inputSystem;
-
 InputSystem::InputSystem() {
     // Initialize all key states to false
     int keys[] = {

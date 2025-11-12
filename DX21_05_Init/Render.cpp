@@ -265,7 +265,7 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 	char csoFileName[256];
 	const char* dot = strrchr(szFileName, '.');  // Find last '.'
 	if (dot) {
-		int basenameLen = dot - szFileName;
+		int basenameLen = (int)(dot - szFileName);
 		strncpy(csoFileName, szFileName, basenameLen); // Copy filename without extension if extension exists
 		csoFileName[basenameLen] = '\0';   // Add terminator
 	}
@@ -343,7 +343,7 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 
 		// Pass compiled binary data to caller on success
 		*ppShaderObject = (pBlob)->GetBufferPointer();
-		*pShaderObjectSize = (pBlob)->GetBufferSize();
+		*pShaderObjectSize = (int)(pBlob)->GetBufferSize();
 	}
 
 	return S_OK;

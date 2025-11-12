@@ -6,6 +6,7 @@
 
 
 struct MapBlock;
+struct Player;
 // 方向枚举
 enum Direction {
     DIR_RIGHT = 0,      // 0度
