@@ -68,6 +68,9 @@ void ResetGame() {
     g_player.chargeTime = 0.0f;
 
     g_gameState = STATE_PLAYING;
+
+    CleanupEnemies();
+    CreateTestEnemies();
 }
 
 // Improved collision detection function
@@ -412,6 +415,7 @@ void UpdateGame(float deltaTime) {
 
     // Update physics
     UpdatePlayerPhysics(deltaTime);
+    UpdateEnemies(deltaTime);
 }
 
 // Modified render function
@@ -426,6 +430,7 @@ void Draw() {
         ID3D11ShaderResourceView* texture = g_groundTexture;
         RenderImage(block.posX, block.posY, block.width, block.height, texture, 0, 1, 1);
     }
+    RenderEnemies();
 
     // Draw charge effect (if charging)
     if (g_player.isCharging) {

@@ -1,8 +1,4 @@
 ﻿#include "Enemy.h"
-#include "Game.h"
-#include "Render.h"
-#include <algorithm>
-#include <cmath>
 
 // 全局变量定义
 std::vector<Enemy*> g_enemies;
@@ -118,12 +114,12 @@ void Enemy::UpdateAI(float deltaTime) {
     switch (currentState) {
     case PATROL:
         PatrolBehavior(deltaTime);
-        if (distance < 1.5f) currentState = CHASE;
+        if (distance < 10.0f) currentState = CHASE;
         break;
     case CHASE:
         ChaseBehavior(deltaTime);
-        if (distance > 2.0f) currentState = PATROL;
-        if (distance < attackRange) currentState = ATTACK;
+        if (distance > 10.0f) currentState = PATROL;
+        //if (distance < attackRange) currentState = ATTACK;
         break;
     case ATTACK:
         AttackBehavior(deltaTime);
@@ -132,7 +128,7 @@ void Enemy::UpdateAI(float deltaTime) {
         break;
     case FLEE:
         FleeBehavior(deltaTime);
-        if (health > maxHealth * 0.5f) currentState = CHASE;
+        if (health > maxHealth * 0.3f) currentState = CHASE;
         break;
     }
 }
@@ -356,10 +352,10 @@ void FastEnemy::DashAttack() {
 // 敌人管理函数
 void InitEnemies() {
     // 加载敌人纹理
-    LoadTexture(g_pDevice, "asset/enemy.png", &g_enemyTexture);
-    LoadTexture(g_pDevice, "asset/enemy_shield.png", &g_shieldEnemyTexture);
-    LoadTexture(g_pDevice, "asset/enemy_mage.png", &g_mageEnemyTexture);
-    LoadTexture(g_pDevice, "asset/enemy_fast.png", &g_fastEnemyTexture);
+    LoadTexture(g_pDevice, "asset/Enemy.png", &g_enemyTexture);
+    LoadTexture(g_pDevice, "asset/Enemy.png", &g_shieldEnemyTexture);
+    LoadTexture(g_pDevice, "asset/Enemy.png", &g_mageEnemyTexture);
+    LoadTexture(g_pDevice, "asset/Enemy_Shield.png", &g_fastEnemyTexture);
 
     // 如果某些纹理加载失败，使用默认纹理
     if (!g_enemyTexture) g_enemyTexture = g_playerTexture;

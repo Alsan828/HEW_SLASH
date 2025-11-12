@@ -1,5 +1,8 @@
 ﻿#pragma once
 #include "Game.h"
+#include "Render.h"
+#include <algorithm>
+#include <cmath>
 
 
 struct MapBlock;
