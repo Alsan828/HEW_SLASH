@@ -421,7 +421,7 @@ void Draw()
 
         RenderImage(g_player.posX - (effectSize - PLAYER_WIDTH) * 0.5f,
             g_player.posY - (effectSize - PLAYER_HEIGHT) * 0.5f,
-            effectSize, effectSize, g_chargeEffectTexture, 0, alpha, 1);
+            effectSize, effectSize, g_chargeEffectTexture, 0,  alpha, 1);
     }
 
     // Draw dash effect (if dashing)

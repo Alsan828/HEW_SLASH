@@ -3,11 +3,11 @@
 // Enemy类实现
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
-    currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), attackRange(0.8f) {
+    currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), attackRange(0.08f) {
 
     width = PLAYER_WIDTH * 1.2f;
     height = PLAYER_HEIGHT * 1.2f;
-    moveSpeed = MOVE_SPEED * 0.7f;
+    moveSpeed = MOVE_SPEED * 0.65f;
 
     // 初始化伤害系数
     for (int i = 0; i < 8; i++) {
@@ -55,11 +55,10 @@ void Enemy::OnDeath() {
     // 基础敌人死亡处理
     isAlive = false;
 }
-
 void Enemy::Update(float deltaTime) {
     if (!isAlive) return;
 
-    // 应用重力（简单版本）
+    // 应用重力
     velocityY += GRAVITY * deltaTime * 60.0f;
 
     // 保存旧位置用于碰撞检测
@@ -68,18 +67,34 @@ void Enemy::Update(float deltaTime) {
 
     // 移动
     posX += velocityX * deltaTime * 60.0f;
-    posY += velocityY * deltaTime * 60.0f;
 
-    // 碰撞检测与地图块
+    // 水平碰撞检测
+    bool horizontalCollision = false;
     for (const auto& block : g_mapBlocks) {
         if (block.isSolid && CheckCollisionWithBlock(block)) {
-            // 简单碰撞响应：回退到之前的位置
             posX = oldX;
+            horizontalCollision = true;
+            break;
+        }
+    }
+
+    posY += velocityY * deltaTime * 60.0f;
+
+    // 垂直碰撞检测
+    bool verticalCollision = false;
+    for (const auto& block : g_mapBlocks) {
+        if (block.isSolid && CheckCollisionWithBlock(block)) {
             posY = oldY;
-            velocityX = 0;
+            verticalCollision = true;
+            // 只有垂直碰撞时才重置垂直速度（落地或碰头）
             velocityY = 0;
             break;
         }
+    }
+
+    // 只在水平碰撞时重置水平速度
+    if (horizontalCollision) {
+        velocityX = 0;
     }
 
     // 边界检查
@@ -103,16 +118,16 @@ void Enemy::UpdateAI(float deltaTime) {
         facingAngle = atan2(dy, dx);
     }
 
-    // 简单的状态机
+    // 修正状态机逻辑
     switch (currentState) {
     case PATROL:
-        PatrolBehavior(deltaTime);
-        if (distance < 10.0f) currentState = CHASE;
+        PatrolBehavior(deltaTime);  // 改为调用PatrolBehavior
+        if (distance < 5.0f) currentState = CHASE;  // 减小检测距离
         break;
     case CHASE:
         ChaseBehavior(deltaTime);
-        if (distance > 10.0f) currentState = PATROL;
-        //if (distance < attackRange) currentState = ATTACK;
+        if (distance > 8.0f) currentState = PATROL;  // 调整距离阈值
+        if (distance < attackRange) currentState = ATTACK;
         break;
     case ATTACK:
         AttackBehavior(deltaTime);
@@ -121,20 +136,31 @@ void Enemy::UpdateAI(float deltaTime) {
         break;
     case FLEE:
         FleeBehavior(deltaTime);
-        if (health > maxHealth * 0.3f) currentState = CHASE;
+        if (health > maxHealth * 0.5f) currentState = CHASE;  // 提高恢复阈值
         break;
     }
 }
 
 void Enemy::PatrolBehavior(float deltaTime) {
     static float patrolDirection = 1.0f;
+    static float patrolTimer = 0.0f;
 
-    // 简单的巡逻逻辑
-    if (posX <= patrolMinX) patrolDirection = 1.0f;
-    if (posX >= patrolMaxX) patrolDirection = -1.0f;
+    patrolTimer += deltaTime;
+
+    // 每2秒检查一次是否需要转向
+    if (patrolTimer >= 2.0f) {
+        if (posX <= patrolMinX || posX >= patrolMaxX) {
+            patrolDirection *= -1.0f;
+        }
+        patrolTimer = 0.0f;
+    }
 
     velocityX = patrolDirection * moveSpeed * 0.5f;
-    velocityY = 0;
+
+    // 添加小的垂直速度变化，避免完全静止
+    if (velocityY == 0) {
+        velocityY = 0.01f; // 很小的向上速度，让重力自然作用
+    }
 }
 
 void Enemy::ChaseBehavior(float deltaTime) {
