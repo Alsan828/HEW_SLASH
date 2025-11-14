@@ -102,16 +102,18 @@ extern DashType g_currentDashType;
 void InitGameWorld();
 
 // Game loop
-void GameLoop();
+//void GameLoop();
 
 // Drawing function
-void Draw();
+void DrawGame();
 
 // Input handling
 void HandleInput();
 
 // Reset game
 void ResetGame(); 
+
+void UpdateGame(float deltaTime);
 
 bool CheckCollision(float x1, float y1, float w1, float h1,
 	float x2, float y2, float w2, float h2);
