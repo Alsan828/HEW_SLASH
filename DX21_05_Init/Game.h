@@ -101,9 +101,6 @@ extern DashType g_currentDashType;
 // Game initialization
 void InitGameWorld();
 
-// Game loop
-//void GameLoop();
-
 // Drawing function
 void DrawGame();
 

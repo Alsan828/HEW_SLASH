@@ -396,7 +396,7 @@ void SetTileColor(const std::string& tileCode) {
 }
 
 // 完整的Draw函数
-void Draw()
+void DrawGame()
 {
     RendererDrawF();
 
