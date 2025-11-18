@@ -1,29 +1,31 @@
 ﻿#pragma once
 #include "Game.h"
 #include "Render.h"
+#include "Map.h"  // 包含地图头文件
 #include <algorithm>
 #include <cmath>
 
-
-struct MapBlock;
+// 前向声明
 struct Player;
+class MapManager;
+
 // 方向枚举
 enum Direction {
-    DIR_RIGHT = 0,      // 0度
-    DIR_UP_RIGHT,       // 45度
-    DIR_UP,             // 90度
-    DIR_UP_LEFT,        // 135度
-    DIR_LEFT,           // 180度
-    DIR_DOWN_LEFT,      // 225度
-    DIR_DOWN,           // 270度
-    DIR_DOWN_RIGHT      // 315度
+    DIR_RIGHT = 0,
+    DIR_UP_RIGHT,
+    DIR_UP,
+    DIR_UP_LEFT,
+    DIR_LEFT,
+    DIR_DOWN_LEFT,
+    DIR_DOWN,
+    DIR_DOWN_RIGHT
 };
 
 // 敌人类声明
 class Enemy {
 public:
     Enemy(float x, float y, float hp = 100.0f);
-    virtual ~Enemy() = default; // 虚析构函数
+    virtual ~Enemy() = default;
 
     // 设置伤害系数
     void SetDamageMultiplier(Direction dir, float multiplier);
@@ -32,13 +34,13 @@ public:
     float GetDamageMultiplier(float attackAngle);
     void TakeDamage(float damage, float attackAngle);
 
-    // 状态更新（声明为虚函数）
-    virtual void Update(float deltaTime);
+    // 状态更新
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr);
     virtual void Render(ID3D11ShaderResourceView* texture);
 
-    // 碰撞检测
+    // 碰撞检测 - 使用新的地图系统
     bool CheckPlayerCollision();
-    bool CheckCollisionWithBlock(const MapBlock& block);
+    bool CheckCollisionWithTiles(const std::vector<MapTile>& solidTiles);
 
     // 获取属性
     float GetX() const { return posX; }
@@ -84,29 +86,29 @@ protected:
     void AttackBehavior(float deltaTime);
     void FleeBehavior(float deltaTime);
 
-    // 声明为虚函数
+    // 虚函数
     virtual void OnDeath();
     virtual void OnHit(float damage);
+
+    // 新的碰撞检测辅助函数
+    bool CheckCollisionWithTile(const MapTile& tile);
 };
 
-// 衍生敌人类：盾牌敌人
+// 衍生敌人类
 class ShieldEnemy : public Enemy {
 public:
     ShieldEnemy(float x, float y);
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
 
 protected:
-    // 移除override关键字，或者确保基类函数是虚函数
-    void OnHit(float damage); // 移除了override
-    void OnDeath(); // 移除了override
+    virtual void OnHit(float damage) override;
+    virtual void OnDeath() override;
 };
 
-// 衍生敌人类：法师敌人
 class MageEnemy : public Enemy {
 public:
     MageEnemy(float x, float y);
-
-    // 声明为虚函数重写
-    virtual void Update(float deltaTime) override;
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
     virtual void Render(ID3D11ShaderResourceView* texture) override;
 
 private:
@@ -115,12 +117,10 @@ private:
     void CastSpell();
 };
 
-// 衍生敌人类：快速敌人
 class FastEnemy : public Enemy {
 public:
     FastEnemy(float x, float y);
-
-    virtual void Update(float deltaTime) override;
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
 
 private:
     float dashCooldown;
@@ -130,8 +130,7 @@ private:
 
 // 敌人管理函数声明
 void InitEnemies();
-void CreateTestEnemies();
-void UpdateEnemies(float deltaTime);
+void UpdateEnemies(float deltaTime, MapManager* mapManager = nullptr);
 void RenderEnemies();
 void CleanupEnemies();
 
