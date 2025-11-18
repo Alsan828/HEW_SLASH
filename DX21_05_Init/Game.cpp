@@ -4,7 +4,8 @@
 
 
 // Game timer implementation
-GameTimer::GameTimer() {
+GameTimer::GameTimer() 
+{
     __int64 countsPerSec;
     QueryPerformanceFrequency((LARGE_INTEGER*)&countsPerSec);
     m_secondsPerCount = 1.0 / static_cast<double>(countsPerSec);
@@ -395,7 +396,7 @@ void UpdateGame(float deltaTime) {
 }
 
 // Modified render function
-void Draw() 
+void DrawGame() 
 {
     RendererDrawF();
 
@@ -561,15 +562,4 @@ void HandleInput() {
     }
 
     wasDashKeyPressed = isDashKeyPressed;
-}
-
-// Modified game loop
-void GameLoop() {
-    g_gameTimer.Tick();
-    float delta = g_gameTimer.GetDeltaTime();
-
-    HandleInput();  // Handle keyboard input
-    // Update game state
-    UpdateGame(delta);
-    Draw();
 }

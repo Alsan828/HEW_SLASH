@@ -6,6 +6,9 @@
 #include <windowsx.h> 
 #include <atltypes.h>
 #include <time.h>
+#include "SceneManager.h"
+
+SceneManager sceneManager;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -50,7 +53,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
 
     // Initialize DirectX before entering game loop
     RendererInit(hWnd);
-    InitGameWorld();
+    //InitGameWorld();
+    sceneManager.Init(TITLE); // start with title
 
     MSG msg;
 
@@ -70,7 +74,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
         }
         else
         {
-            GameLoop();  // Handle keyboard input and update game
+            sceneManager.GameLoop();  // Handle keyboard input and update game
         }
     }
 
