@@ -2,8 +2,8 @@
 #include "Enemy.h"
 
 // 定义所有全局变量
+MapManager g_mapManager;
 Player g_player;
-std::vector<MapBlock> g_mapBlocks;
 ID3D11ShaderResourceView* g_playerTexture = nullptr;
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture = nullptr;

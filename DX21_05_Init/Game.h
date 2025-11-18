@@ -7,21 +7,16 @@
 #include <cmath>
 #include "InputSystem.h"
 #include "Render.h"
+#include "Map.h"
+
+extern MapManager g_mapManager;
 
 
 // Remove original IsKeyDown function declaration
 // Add input system instance declaration
 extern InputSystem g_inputSystem;
 
-struct MapBlock;
 class Enemy;
-
-// Map block structure
-struct MapBlock {
-    float posX, posY;
-    float width, height;
-    bool isSolid;
-};
 
 // Game state enumeration
 enum GameState {
@@ -62,14 +57,20 @@ struct Player {
 class GameTimer {
 private:
     __int64 m_prevTime = 0;
+    __int64 m_startTime = 0;
     __int64 m_currTime = 0;
     double m_secondsPerCount = 0.0;
     float m_deltaTime = 0.0f;
+    double m_totalTime;       // 总游戏时间
 
 public:
     GameTimer();
     void Tick();
     float GetDeltaTime() const;
+
+    double GetTotalTime() const {
+        return m_totalTime;
+    }
 };
 
 
@@ -87,7 +88,6 @@ const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
 
 // 在Game.h中声明
 extern Player g_player;
-extern std::vector<MapBlock> g_mapBlocks;
 extern ID3D11ShaderResourceView* g_playerTexture;
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture;
