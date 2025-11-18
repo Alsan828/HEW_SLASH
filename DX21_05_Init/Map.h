@@ -3,133 +3,139 @@
 #include <string>
 #include <unordered_map>
 
-// 使用字符串表示瓦片类型
+// Tile information using string-based representation
 struct TileInfo {
-    std::string code;      // 两个字符的代码，如 "G1", "E1", "PF"
-    std::string type;      // 类型名称：ground, wall, enemy, portal等
-    std::string subtype;   // 子类型：forest, ice, enemy1等
-    bool isSolid;          // 是否是固体
-    bool isSpawn;         // 是否是生成点
-    bool isPortal;        // 是否是传送门
-    bool isEnemy;         // 是否是敌人
+    std::string code;      // Two-character code, e.g., "G1", "E1", "PF"
+    std::string type;      // Type name: ground, wall, enemy, portal, etc.
+    std::string subtype;   // Subtype: forest, ice, enemy1, etc.
+    bool isSolid;          // Whether the tile is solid (collidable)
+    bool isSpawn;          // Whether the tile is a spawn point
+    bool isPortal;         // Whether the tile is a portal
+    bool isEnemy;          // Whether the tile represents an enemy spawn
 };
 
-// 瓦片结构
+// Map tile structure containing position, size, and tile properties
 struct MapTile {
-    float posX, posY;
-    float width, height;
-    TileInfo tileInfo;     // 使用TileInfo而不是TileType
-    std::string targetMap; // 传送门目标地图
-    int linkedSpawnId;     // 关联的生成点ID
+    float posX, posY;      // Tile position coordinates
+    float width, height;   // Tile dimensions
+    TileInfo tileInfo;     // Tile properties using TileInfo instead of TileType
+    std::string targetMap; // Target map for portal tiles
+    int linkedSpawnId;     // Associated spawn point ID
 };
 
-// 生成点信息
+// Player spawn point information
 struct SpawnPoint {
-    float posX, posY;
-    int id;
-    std::string name;
+    float posX, posY;      // Spawn position coordinates
+    int id;                // Unique spawn point identifier
+    std::string name;      // Descriptive name for the spawn point
 };
 
-// 敌人生成信息
+// Enemy spawn information
 struct EnemySpawnInfo {
-    float posX, posY;
-    std::string enemyType;  // "E1", "E2", "E3"等
-    int enemySubtype;       // 敌人子类型
+    float posX, posY;      // Enemy spawn position
+    std::string enemyType; // Enemy type code: "E1", "E2", "E3", etc.
+    int enemySubtype;      // Enemy subtype identifier
 };
 
-// 地图层类型
+// Map layer types for organizing tiles
 enum class MapLayer {
-    BACKGROUND = 0,
-    MIDGROUND = 1,
-    FOREGROUND = 2
+    BACKGROUND = 0,  // Background decorative tiles (non-collidable)
+    MIDGROUND = 1,   // Main gameplay tiles (collidable objects)
+    FOREGROUND = 2   // Foreground decorative tiles (non-collidable)
 };
 
+// Main Map class for managing game maps, tiles, and spawn points
 class Map {
 private:
-    std::string m_name;
-    std::vector<MapTile> m_backgroundTiles;
-    std::vector<MapTile> m_midgroundTiles;
-    std::vector<MapTile> m_foregroundTiles;
-    std::vector<SpawnPoint> m_spawnPoints;
-    std::vector<EnemySpawnInfo> m_enemySpawns;  // 敌人生成点
+    std::string m_name;                          // Map identifier name
+    std::vector<MapTile> m_backgroundTiles;     // Background layer tiles
+    std::vector<MapTile> m_midgroundTiles;      // Midground layer tiles (main gameplay)
+    std::vector<MapTile> m_foregroundTiles;     // Foreground layer tiles
+    std::vector<SpawnPoint> m_spawnPoints;      // Player spawn points
+    std::vector<EnemySpawnInfo> m_enemySpawns;  // Enemy spawn locations
 
-    float m_gridWidth, m_gridHeight;
-    int m_defaultSpawnId;
+    float m_gridWidth, m_gridHeight;            // Grid cell dimensions
+    int m_defaultSpawnId;                       // Default spawn point ID
 
-    // 瓦片类型查找表
+    // Tile type lookup dictionary mapping codes to TileInfo
     std::unordered_map<std::string, TileInfo> m_tileDictionary;
 
+    // Initialize the tile dictionary with all available tile types
     void InitializeTileDictionary();
+
+    // Convert tile code string to TileInfo structure
     TileInfo ParseTileCode(const std::string& code);
 
 public:
+    // Constructor: create a map with specified name and grid dimensions
     Map(const std::string& name, float gridWidth, float gridHeight);
 
-    // 地图加载
+    // Map loading methods
     void LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLayer layer);
     void AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
         const std::string& targetMap = "", int linkedSpawnId = -1);
 
-    int GetDefaultSpawnId() const {
-        return -1;
-    }
+    // Get default spawn point ID (returns -1 as placeholder)
+    int GetDefaultSpawnId() const { return -1; }
 
-    // 生成点管理
+    // Spawn point management
     void AddSpawnPoint(float x, float y, int id, const std::string& name = "");
 
-    // 敌人管理
+    // Enemy management
     const std::vector<EnemySpawnInfo>& GetEnemySpawns() const { return m_enemySpawns; }
     void ClearEnemySpawns() { m_enemySpawns.clear(); }
 
-    // 获取地图信息
+    // Map information accessors
     const std::string& GetName() const { return m_name; }
     const std::vector<MapTile>& GetTiles(MapLayer layer) const;
     std::vector<MapTile>& GetSolidTiles();
 
-    // 生成点相关
+    // Spawn point coordinate retrieval
     bool GetSpawnPoint(int spawnId, float& x, float& y) const;
     bool GetDefaultSpawnPoint(float& x, float& y) const;
 
-    // 传送门检测
+    // Portal collision detection and information retrieval
     bool CheckPortalCollision(float x, float y, float width, float height,
         std::string& targetMap, int& portalId, int& linkedSpawnId) const;
 
-    // 地图创建
+    // Predefined map creation methods
     void CreateTestMap();
     void CreateForestMap();
     void CreateIceMap();
 
+    // Map clearing methods
     void ClearLayer(MapLayer layer);
     void ClearAll();
 };
 
-
-// 地图管理器类
+// Map manager class for handling map transitions and current map state
 class MapManager {
 private:
-    std::vector<Map> m_maps;
-    Map* m_currentMap;
-    Map* m_previousMap;
-    int m_currentPortalId;
-    int m_enteredSpawnId;  // 进入时使用的生成点ID
+    std::vector<Map> m_maps;           // Collection of all available maps
+    Map* m_currentMap;                 // Currently active map
+    Map* m_previousMap;                // Previously loaded map (for transitions)
+    int m_currentPortalId;             // ID of the last used portal
+    int m_enteredSpawnId;              // Spawn point ID used when entering map
 
 public:
     MapManager();
 
-    // 地图管理
+    // Map management methods
     void AddMap(const Map& map);
     bool SwitchMap(const std::string& mapName, int enterPortalId = 0, int spawnId = -1);
     Map* GetCurrentMap() { return m_currentMap; }
     Map* GetMap(const std::string& name);
 
+    // Enemy creation for current map
     void CreateMapEnemies();
-    // 玩家重生
+
+    // Player respawn functionality
     void RespawnPlayer(int spawnId = -1);
 
-    // 初始化所有地图
+    // Initialize all game maps
     void InitializeMaps();
 
-    // 状态获取
+    // State information accessors
     const std::string& GetCurrentMapName() const;
     bool IsMapLoaded() const { return m_currentMap != nullptr; }
     int GetLastSpawnId() const { return m_enteredSpawnId; }

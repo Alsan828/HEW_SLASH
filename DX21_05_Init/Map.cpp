@@ -4,62 +4,64 @@
 #include <cmath>
 #include <algorithm>
 
-
-// Map 类实现
+// Map class implementation
 Map::Map(const std::string& name, float gridWidth, float gridHeight)
     : m_name(name), m_gridWidth(gridWidth), m_gridHeight(gridHeight), m_defaultSpawnId(0) {
     InitializeTileDictionary();
 }
 
+// Initialize the tile dictionary with all available tile types
 void Map::InitializeTileDictionary() {
-    // 初始化瓦片类型字典
+    // Initialize tile type dictionary
     m_tileDictionary = {
-        // 空地
+        // Empty space
         {"00", {"00", "empty", "none", false, false, false, false}},
 
-        // 地面类型
+        // Ground types
         {"G1", {"G1", "ground", "grass", true, false, false, false}},
         {"G2", {"G2", "ground", "dirt", true, false, false, false}},
         {"G3", {"G3", "ground", "stone", true, false, false, false}},
 
-        // 墙壁类型
+        // Wall types
         {"W1", {"W1", "wall", "brick", true, false, false, false}},
         {"W2", {"W2", "wall", "stone", true, false, false, false}},
 
-        // 平台类型
+        // Platform types
         {"P1", {"P1", "platform", "wood", true, false, false, false}},
         {"P2", {"P2", "platform", "metal", true, false, false, false}},
 
-        // 敌人类型
+        // Enemy types
         {"E1", {"E1", "enemy", "normal", false, false, false, true}},
         {"E2", {"E2", "enemy", "shield", false, false, false, true}},
         {"E3", {"E3", "enemy", "mage", false, false, false, true}},
         {"E4", {"E4", "enemy", "fast", false, false, false, true}},
 
-        // 传送门类型
+        // Portal types
         {"DF", {"DF", "door", "forest", false, false, true, false}},
         {"DI", {"DI", "door", "ice", false, false, true, false}},
         {"DT", {"DT", "door", "test", false, false, true, false}},
 
-        // 生成点类型
+        // Spawn point types
         {"S1", {"S1", "spawn", "default", false, true, false, false}},
         {"S2", {"S2", "spawn", "secondary", false, true, false, false}},
 
-        // 装饰类型（可选）
+        // Decoration types (optional)
         {"D1", {"D1", "decoration", "tree", false, false, false, false}},
         {"D2", {"D2", "decoration", "rock", false, false, false, false}}
     };
 }
 
+// Convert tile code string to TileInfo structure
 TileInfo Map::ParseTileCode(const std::string& code) {
     auto it = m_tileDictionary.find(code);
     if (it != m_tileDictionary.end()) {
         return it->second;
     }
-    // 默认返回空地
+    // Return empty tile by default
     return m_tileDictionary.at("00");
 }
 
+// Load map data from a 2D grid of tile codes
 void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLayer layer) {
     ClearLayer(layer);
 
@@ -69,42 +71,45 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
     int gridRows = static_cast<int>(grid.size());
     int gridCols = gridRows > 0 ? static_cast<int>(grid[0].size()) : 0;
 
+    // Calculate total map dimensions
     float totalWidth = gridCols * m_gridWidth;
     float totalHeight = gridRows * m_gridHeight;
 
+    // Calculate starting position (centered at origin)
     float startX = -totalWidth * 0.5f;
     float startY = -totalHeight * 0.5f;
 
+    // Process each cell in the grid
     for (int y = 0; y < gridRows; y++) {
         for (int x = 0; x < gridCols; x++) {
             std::string tileCode = grid[y][x];
-            if (tileCode == "00") continue;  // 空地块跳过
+            if (tileCode == "00") continue;  // Skip empty tiles
 
             TileInfo tileInfo = ParseTileCode(tileCode);
 
-            // 计算位置
+            // Calculate tile position
             float tileX = startX + static_cast<float>(x) * m_gridWidth;
             float tileY = startY + static_cast<float>(gridRows - 1 - y) * m_gridHeight;
 
-            // 处理敌人生成点
+            // Handle enemy spawn points
             if (tileInfo.isEnemy) {
                 EnemySpawnInfo spawn;
                 spawn.posX = tileX;
                 spawn.posY = tileY;
                 spawn.enemyType = tileCode;
-                spawn.enemySubtype = std::stoi(tileCode.substr(1)); // 提取数字部分
+                spawn.enemySubtype = std::stoi(tileCode.substr(1)); // Extract numeric part
                 m_enemySpawns.push_back(spawn);
-                continue; // 敌人不添加到瓦片列表
+                continue; // Don't add enemies to tile list
             }
 
-            // 处理生成点
+            // Handle player spawn points
             if (tileInfo.isSpawn) {
-                int spawnId = std::stoi(tileCode.substr(1)); // 提取数字部分
+                int spawnId = std::stoi(tileCode.substr(1)); // Extract numeric part
                 AddSpawnPoint(tileX, tileY, spawnId, "Spawn_" + tileCode);
-                continue; // 生成点不添加到瓦片列表
+                continue; // Don't add spawn points to tile list
             }
 
-            // 创建瓦片
+            // Create regular tile
             MapTile tile;
             tile.posX = tileX;
             tile.posY = tileY;
@@ -113,7 +118,7 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
             tile.tileInfo = tileInfo;
             tile.linkedSpawnId = -1;
 
-            // 处理传送门
+            // Handle portal tiles
             if (tileInfo.isPortal) {
                 if (tileInfo.subtype == "forest") {
                     tile.targetMap = "forest";
@@ -134,11 +139,12 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
     }
 }
 
+// Add a single tile to the map at specified position
 void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
     const std::string& targetMap, int linkedSpawnId) {
     TileInfo tileInfo = ParseTileCode(tileCode);
 
-    // 处理敌人生成
+    // Handle enemy spawn points
     if (tileInfo.isEnemy) {
         EnemySpawnInfo spawn;
         spawn.posX = x;
@@ -149,14 +155,14 @@ void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
         return;
     }
 
-    // 处理生成点
+    // Handle player spawn points
     if (tileInfo.isSpawn) {
         int spawnId = std::stoi(tileCode.substr(1));
         AddSpawnPoint(x, y, spawnId, "Spawn_" + tileCode);
         return;
     }
 
-    // 创建普通瓦片
+    // Create regular tile
     MapTile tile;
     tile.posX = x;
     tile.posY = y;
@@ -166,6 +172,7 @@ void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
     tile.targetMap = targetMap;
     tile.linkedSpawnId = linkedSpawnId;
 
+    // Add to appropriate layer
     switch (layer) {
     case MapLayer::BACKGROUND:
         m_backgroundTiles.push_back(tile);
@@ -179,6 +186,7 @@ void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
     }
 }
 
+// Add a player spawn point to the map
 void Map::AddSpawnPoint(float x, float y, int id, const std::string& name) {
     SpawnPoint spawn;
     spawn.posX = x;
@@ -187,12 +195,13 @@ void Map::AddSpawnPoint(float x, float y, int id, const std::string& name) {
     spawn.name = name;
     m_spawnPoints.push_back(spawn);
 
+    // Set as default spawn if this is the first one
     if (m_defaultSpawnId == 0) {
         m_defaultSpawnId = id;
     }
 }
 
-// 其余函数实现与之前类似，但使用新的TileInfo系统
+// Clear all tiles from a specific layer
 void Map::ClearLayer(MapLayer layer) {
     switch (layer) {
     case MapLayer::BACKGROUND:
@@ -207,6 +216,7 @@ void Map::ClearLayer(MapLayer layer) {
     }
 }
 
+// Clear all map data including tiles, spawn points, and enemy spawns
 void Map::ClearAll() {
     m_backgroundTiles.clear();
     m_midgroundTiles.clear();
@@ -215,6 +225,7 @@ void Map::ClearAll() {
     m_enemySpawns.clear();
 }
 
+// Get tiles from a specific layer
 const std::vector<MapTile>& Map::GetTiles(MapLayer layer) const {
     static const std::vector<MapTile> empty;
     switch (layer) {
@@ -225,6 +236,7 @@ const std::vector<MapTile>& Map::GetTiles(MapLayer layer) const {
     }
 }
 
+// Get all solid tiles (collidable tiles from midground layer)
 std::vector<MapTile>& Map::GetSolidTiles() {
     static std::vector<MapTile> solidTiles;
     solidTiles.clear();
@@ -237,6 +249,7 @@ std::vector<MapTile>& Map::GetSolidTiles() {
     return solidTiles;
 }
 
+// Get spawn point coordinates by ID
 bool Map::GetSpawnPoint(int spawnId, float& x, float& y) const {
     for (const auto& spawn : m_spawnPoints) {
         if (spawn.id == spawnId) {
@@ -248,10 +261,12 @@ bool Map::GetSpawnPoint(int spawnId, float& x, float& y) const {
     return false;
 }
 
+// Get the default spawn point coordinates
 bool Map::GetDefaultSpawnPoint(float& x, float& y) const {
     return GetSpawnPoint(m_defaultSpawnId, x, y);
 }
 
+// Check if a rectangle collides with any portal and get portal information
 bool Map::CheckPortalCollision(float x, float y, float width, float height,
     std::string& targetMap, int& portalId, int& linkedSpawnId) const {
     for (const auto& tile : m_midgroundTiles) {
@@ -259,7 +274,7 @@ bool Map::CheckPortalCollision(float x, float y, float width, float height,
             if (CheckCollision(x, y, width, height,
                 tile.posX, tile.posY, tile.width, tile.height)) {
                 targetMap = tile.targetMap;
-                portalId = tile.linkedSpawnId; // 使用linkedSpawnId作为portalId
+                portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
                 linkedSpawnId = tile.linkedSpawnId;
                 return true;
             }
@@ -268,13 +283,14 @@ bool Map::CheckPortalCollision(float x, float y, float width, float height,
     return false;
 }
 
-// 使用新的字符串系统创建测试地图
+// Create a test map with basic layout
 void Map::CreateTestMap() {
     ClearAll();
     m_spawnPoints.clear();
     m_enemySpawns.clear();
     m_defaultSpawnId = 1;
 
+    // Define map layout using tile codes
     std::vector<std::vector<std::string>> midgroundGrid = {
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"},
         {"00","00","00","00","00","00","E1","00","00","00","00","00","00","00","00"},
@@ -290,13 +306,14 @@ void Map::CreateTestMap() {
 
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 
-    // 添加生成点
+    // Add spawn point
     AddSpawnPoint(-0.7f, -0.5f, 1, "MainSpawn");
 
-    // 手动添加传送门
+    // Manually add portal
     AddTile(0.6f, -0.8f, "PF", MapLayer::MIDGROUND, "forest", 1);
 }
 
+// Create a forest-themed map
 void Map::CreateForestMap() {
     ClearAll();
     m_spawnPoints.clear();
@@ -322,6 +339,7 @@ void Map::CreateForestMap() {
     AddTile(-0.8f, -0.8f, "PT", MapLayer::MIDGROUND, "test", 1);
 }
 
+// Create an ice-themed map
 void Map::CreateIceMap() {
     ClearAll();
     m_spawnPoints.clear();
