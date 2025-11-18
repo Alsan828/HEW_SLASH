@@ -1,4 +1,5 @@
 ﻿#include "Enemy.h"
+#include "Map.h"
 
 // Enemy类实现
 Enemy::Enemy(float x, float y, float hp)
@@ -55,7 +56,8 @@ void Enemy::OnDeath() {
     // 基础敌人死亡处理
     isAlive = false;
 }
-void Enemy::Update(float deltaTime) {
+
+void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
     // 应用重力
@@ -68,13 +70,16 @@ void Enemy::Update(float deltaTime) {
     // 移动
     posX += velocityX * deltaTime * 60.0f;
 
-    // 水平碰撞检测
+    // 水平碰撞检测 - 使用地图管理器获取固体瓦片
     bool horizontalCollision = false;
-    for (const auto& block : g_mapBlocks) {
-        if (block.isSolid && CheckCollisionWithBlock(block)) {
-            posX = oldX;
-            horizontalCollision = true;
-            break;
+    if (mapManager && mapManager->GetCurrentMap()) {
+        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+        for (const auto& tile : solidTiles) {
+            if (CheckCollisionWithTile(tile)) {
+                posX = oldX;
+                horizontalCollision = true;
+                break;
+            }
         }
     }
 
@@ -82,13 +87,15 @@ void Enemy::Update(float deltaTime) {
 
     // 垂直碰撞检测
     bool verticalCollision = false;
-    for (const auto& block : g_mapBlocks) {
-        if (block.isSolid && CheckCollisionWithBlock(block)) {
-            posY = oldY;
-            verticalCollision = true;
-            // 只有垂直碰撞时才重置垂直速度（落地或碰头）
-            velocityY = 0;
-            break;
+    if (mapManager && mapManager->GetCurrentMap()) {
+        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+        for (const auto& tile : solidTiles) {
+            if (CheckCollisionWithTile(tile)) {
+                posY = oldY;
+                verticalCollision = true;
+                velocityY = 0;
+                break;
+            }
         }
     }
 
@@ -97,12 +104,22 @@ void Enemy::Update(float deltaTime) {
         velocityX = 0;
     }
 
-    // 边界检查
-    if (posX < -1.0f) posX = -1.0f;
-    if (posX > 1.0f - width) posX = 1.0f - width;
-    if (posY < -2.0f) {
-        isAlive = false; // 掉落死亡
-        return;
+    // 边界检查 - 使用地图边界
+    if (mapManager && mapManager->GetCurrentMap()) {
+        // 这里可以添加基于地图的边界检查
+        if (posY < -5.0f) { // 掉落死亡高度
+            isAlive = false;
+            return;
+        }
+    }
+    else {
+        // 后备边界检查
+        if (posX < -1.0f) posX = -1.0f;
+        if (posX > 1.0f - width) posX = 1.0f - width;
+        if (posY < -2.0f) {
+            isAlive = false;
+            return;
+        }
     }
 
     UpdateAI(deltaTime);
@@ -121,12 +138,12 @@ void Enemy::UpdateAI(float deltaTime) {
     // 修正状态机逻辑
     switch (currentState) {
     case PATROL:
-        PatrolBehavior(deltaTime);  // 改为调用PatrolBehavior
-        if (distance < 5.0f) currentState = CHASE;  // 减小检测距离
+        PatrolBehavior(deltaTime);
+        if (distance < 3.0f) currentState = CHASE;
         break;
     case CHASE:
         ChaseBehavior(deltaTime);
-        if (distance > 8.0f) currentState = PATROL;  // 调整距离阈值
+        if (distance > 8.0f) currentState = PATROL;
         if (distance < attackRange) currentState = ATTACK;
         break;
     case ATTACK:
@@ -136,7 +153,7 @@ void Enemy::UpdateAI(float deltaTime) {
         break;
     case FLEE:
         FleeBehavior(deltaTime);
-        if (health > maxHealth * 0.5f) currentState = CHASE;  // 提高恢复阈值
+        if (health > maxHealth * 0.5f) currentState = CHASE;
         break;
     }
 }
@@ -159,7 +176,7 @@ void Enemy::PatrolBehavior(float deltaTime) {
 
     // 添加小的垂直速度变化，避免完全静止
     if (velocityY == 0) {
-        velocityY = 0.01f; // 很小的向上速度，让重力自然作用
+        velocityY = 0.01f;
     }
 }
 
@@ -181,8 +198,6 @@ void Enemy::AttackBehavior(float deltaTime) {
     // 停止移动进行攻击
     velocityX = 0;
     velocityY = 0;
-
-    // 这里可以添加攻击逻辑
 }
 
 void Enemy::FleeBehavior(float deltaTime) {
@@ -199,14 +214,12 @@ void Enemy::Render(ID3D11ShaderResourceView* texture) {
     if (!isAlive) return;
 
     // 根据血量状态选择不同的帧
-    int frameIndex = 0; // 默认帧
+    int frameIndex = 0;
 
-    // 如果血量低于30%，使用受伤帧
     if (health < maxHealth * 0.3f) {
         frameIndex = 1;
     }
 
-    // 如果正在攻击，使用攻击帧
     if (currentState == ATTACK) {
         frameIndex = 2;
     }
@@ -224,10 +237,10 @@ void Enemy::RenderHealthBar() {
     float barX = posX;
     float barY = posY + height + 0.02f;
 
-    // 背景条（红色）- 使用地面纹理，帧索引0
+    // 背景条（红色）
     RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
 
-    // 血量条（绿色）- 使用地面纹理，帧索引1
+    // 血量条（绿色）
     float healthRatio = health / maxHealth;
     RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_groundTexture, 1, 1, 1);
 }
@@ -237,9 +250,18 @@ bool Enemy::CheckPlayerCollision() {
         g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT);
 }
 
-bool Enemy::CheckCollisionWithBlock(const MapBlock& block) {
+bool Enemy::CheckCollisionWithTiles(const std::vector<MapTile>& solidTiles) {
+    for (const auto& tile : solidTiles) {
+        if (CheckCollisionWithTile(tile)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
     return CheckCollision(posX, posY, width, height,
-        block.posX, block.posY, block.width, block.height);
+        tile.posX, tile.posY, tile.width, tile.height);
 }
 
 float Enemy::NormalizeAngle(float angle) {
@@ -270,16 +292,25 @@ ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     moveSpeed = MOVE_SPEED * 0.5f;
 }
 
+void ShieldEnemy::Update(float deltaTime, MapManager* mapManager) {
+    Enemy::Update(deltaTime, mapManager);
+
+    // 盾牌敌人的特殊AI逻辑
+    if (currentState == PATROL) {
+        // 盾牌敌人巡逻更慢但更稳定
+        velocityX *= 0.8f;
+    }
+}
+
 void ShieldEnemy::OnHit(float damage) {
     // 盾牌敌人被击中时可能会格挡
-    if (damage < 5.0f) { // 小伤害完全格挡
+    if (damage < 5.0f) {
         health += damage; // 回滚伤害
     }
 }
 
 void ShieldEnemy::OnDeath() {
     Enemy::OnDeath();
-    // 盾牌敌人死亡时可能掉落盾牌
 }
 
 // MageEnemy 实现
@@ -294,8 +325,8 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     moveSpeed = MOVE_SPEED * 0.4f;
 }
 
-void MageEnemy::Update(float deltaTime) {
-    Enemy::Update(deltaTime);
+void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
+    Enemy::Update(deltaTime, mapManager);
 
     if (currentSpellCooldown > 0) {
         currentSpellCooldown -= deltaTime;
@@ -310,21 +341,19 @@ void MageEnemy::Update(float deltaTime) {
 
 void MageEnemy::CastSpell() {
     // 这里可以实现施法逻辑
-    // 比如创建火球、闪电等
 }
 
 void MageEnemy::Render(ID3D11ShaderResourceView* texture) {
     if (!isAlive) return;
 
-    // 法师敌人有特殊的帧索引逻辑
-    int frameIndex = 0; // 默认帧
+    int frameIndex = 0;
 
     if (health < maxHealth * 0.3f) {
-        frameIndex = 1; // 受伤帧
+        frameIndex = 1;
     }
 
     if (currentState == ATTACK) {
-        frameIndex = 2; // 施法帧
+        frameIndex = 2;
     }
 
     // 渲染法师敌人
@@ -333,10 +362,9 @@ void MageEnemy::Render(ID3D11ShaderResourceView* texture) {
     // 渲染血条
     RenderHealthBar();
 
-    // 法师敌人有魔法特效（如果正在攻击）
+    // 法师敌人有魔法特效
     if (currentState == ATTACK) {
         float effectSize = width * 1.3f;
-        // 使用特效纹理，假设有3帧动画
         RenderImage(posX - (effectSize - width) * 0.5f,
             posY - (effectSize - height) * 0.5f,
             effectSize, effectSize, g_chargeEffectTexture, 0, 1, 3);
@@ -350,8 +378,8 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     currentDashCooldown = 0.0f;
 }
 
-void FastEnemy::Update(float deltaTime) {
-    Enemy::Update(deltaTime);
+void FastEnemy::Update(float deltaTime, MapManager* mapManager) {
+    Enemy::Update(deltaTime, mapManager);
 
     if (currentDashCooldown > 0) {
         currentDashCooldown -= deltaTime;
@@ -364,7 +392,6 @@ void FastEnemy::Update(float deltaTime) {
 }
 
 void FastEnemy::DashAttack() {
-    // 快速敌人进行冲刺攻击
     velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 3.0f;
 }
 
@@ -376,26 +403,16 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_mageEnemyTexture);
     LoadTexture(g_pDevice, "asset/Enemy_Shield.png", &g_fastEnemyTexture);
 
-    // 如果某些纹理加载失败，使用默认纹理
     if (!g_enemyTexture) g_enemyTexture = g_playerTexture;
     if (!g_shieldEnemyTexture) g_shieldEnemyTexture = g_enemyTexture;
     if (!g_mageEnemyTexture) g_mageEnemyTexture = g_enemyTexture;
     if (!g_fastEnemyTexture) g_fastEnemyTexture = g_enemyTexture;
 }
 
-void CreateTestEnemies() {
-    CleanupEnemies();
 
-    // 创建各种类型的敌人
-    g_enemies.push_back(new Enemy(-0.3f, -0.5f, 80.0f));
-    g_enemies.push_back(new ShieldEnemy(0.4f, -0.3f));
-    g_enemies.push_back(new MageEnemy(0.0f, 0.0f));
-    g_enemies.push_back(new FastEnemy(0.6f, -0.7f));
-}
-
-void UpdateEnemies(float deltaTime) {
+void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     for (auto& enemy : g_enemies) {
-        enemy->Update(deltaTime);
+        enemy->Update(deltaTime, mapManager);
     }
 
     // 移除死亡的敌人
@@ -414,7 +431,6 @@ void UpdateEnemies(float deltaTime) {
 
 void RenderEnemies() {
     for (auto& enemy : g_enemies) {
-        // 根据敌人类型选择不同的纹理
         ID3D11ShaderResourceView* texture = g_enemyTexture;
 
         if (dynamic_cast<ShieldEnemy*>(enemy)) {

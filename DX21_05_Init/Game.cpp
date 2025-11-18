@@ -17,6 +17,8 @@ void GameTimer::Tick() {
         m_deltaTime = static_cast<float>((m_currTime - m_prevTime) * m_secondsPerCount);
     }
     m_prevTime = m_currTime;
+    // 计算总时间（从计时器创建开始）
+    m_totalTime = (m_currTime - m_startTime) * m_secondsPerCount;
 }
 
 float GameTimer::GetDeltaTime() const {
@@ -24,30 +26,13 @@ float GameTimer::GetDeltaTime() const {
 }
 
 void ResetGame() {
-    // Reset player state - place player on ground
-    g_player.posX = 0.0f;
-    g_player.posY = -0.7f;  // Place above ground
-    g_player.velocityX = 0.0f;
-    g_player.velocityY = 0.0f;
-    g_player.isOnGround = false;
-    g_player.isMoving = false;
-    g_player.facingRight = true;
 
-    // Reset dash state
-    g_player.isDashing = false;
-    g_player.dashTimer = 0.0f;
-    g_player.dashCooldown = 0.0f;
-    g_player.dashDirectionX = 0.0f;
-    g_player.dashDirectionY = 0.0f;
-
-    // Reset charge state
-    g_player.isCharging = false;
-    g_player.chargeTime = 0.0f;
-
+    if (g_mapManager.IsMapLoaded()) {
+        g_mapManager.RespawnPlayer(-1);
+    }
     g_gameState = STATE_PLAYING;
 
     CleanupEnemies();
-    CreateTestEnemies();
 }
 
 // Improved collision detection function
@@ -57,63 +42,6 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
         y1 < y2 + h2 && y1 + h1 > y2);
 }
 
-// Create simple map
-void CreateTestMap() {
-    g_mapBlocks.clear();
-
-    // Create continuous ground
-    for (int i = 0; i < 20; i++) {
-        MapBlock ground;
-        ground.posX = -1.0f + i * GRID_WIDTH * 8; // Ensure no gaps
-        ground.posY = -0.9f;
-        ground.width = GRID_WIDTH * 8;
-        ground.height = GRID_HEIGHT;
-        ground.isSolid = true;
-        g_mapBlocks.push_back(ground);
-    }
-
-    // Adjust platform positions to give player more jumping space
-    MapBlock platform1;
-    platform1.posX = -0.5f;
-    platform1.posY = -0.6f;  // Raise platform position
-    platform1.width = 0.3f;
-    platform1.height = 0.05f;
-    platform1.isSolid = true;
-    g_mapBlocks.push_back(platform1);
-
-    MapBlock platform2;
-    platform2.posX = 0.2f;
-    platform2.posY = -0.4f;  // Raise platform position
-    platform2.width = 0.3f;
-    platform2.height = 0.05f;
-    platform2.isSolid = true;
-    g_mapBlocks.push_back(platform2);
-
-    MapBlock platform3;
-    platform3.posX = -0.2f;
-    platform3.posY = -0.2f;  // Raise platform position
-    platform3.width = 0.3f;
-    platform3.height = 0.05f;
-    platform3.isSolid = true;
-    g_mapBlocks.push_back(platform3);
-
-    // Add walls and obstacles for collision testing
-    MapBlock leftWall;
-    leftWall.posX = -1.0f;
-    leftWall.posY = -0.9f;
-    leftWall.width = 0.05f;
-    leftWall.height = 1.8f;  // From ground to top
-    leftWall.isSolid = true;
-    g_mapBlocks.push_back(leftWall);
-
-    MapBlock rightWall;
-    rightWall.posX = 0.95f;  // Right side of screen
-    rightWall.posY = -0.9f;
-    rightWall.width = 0.05f;
-    rightWall.height = 1.8f;
-    rightWall.isSolid = true;
-    g_mapBlocks.push_back(rightWall);
-}
 
 // Game initialization
 void InitGameWorld() {
@@ -124,80 +52,67 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);   // Dash effect texture
     LoadTexture(g_pDevice, "asset/blockB.png", &g_chargeEffectTexture); // Charge effect texture
     InitEnemies();
-    CreateTestMap();
+    g_mapManager.InitializeMaps();
     ResetGame();
 }
 
 void UpdatePlayerPhysics(float deltaTime) {
-    // Apply gravity (if not dashing)
+    // 应用重力...
     if (!g_player.isDashing) {
         float fixedDeltaTime = std::min(deltaTime, 0.033f);
         g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
-
-        // Limit maximum fall speed
         if (g_player.velocityY < -0.3f) {
             g_player.velocityY = -0.3f;
         }
     }
 
-    // Save current position for collision detection
     float originalX = g_player.posX;
     float originalY = g_player.posY;
 
-    // Apply horizontal movement first
+    // 水平移动
     g_player.posX += g_player.velocityX * deltaTime * 60.0f;
 
-    // Horizontal collision detection
-    for (const auto& block : g_mapBlocks) {
-        if (!block.isSolid) continue;
-
+    // 使用新的地图系统进行碰撞检测
+    auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
+    for (const auto& tile : solidTiles) {
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-            block.posX, block.posY, block.width, block.height)) {
+            tile.posX, tile.posY, tile.width, tile.height)) {
             g_player.velocityX = 0.0f;
         }
     }
 
-    // Apply vertical movement
+    // 垂直移动
     g_player.posY += g_player.velocityY * deltaTime * 60.0f;
-
     g_player.isOnGround = false;
 
-    for (const auto& block : g_mapBlocks) {
-        if (!block.isSolid) continue;
-
+    for (const auto& tile : solidTiles) {
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-            block.posX, block.posY, block.width, block.height)) {
+            tile.posX, tile.posY, tile.width, tile.height)) {
 
-            // Calculate player and block center points
             float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
             float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
-            float blockCenterX = block.posX + block.width / 2;
-            float blockCenterY = block.posY + block.height / 2;
+            float tileCenterX = tile.posX + tile.width / 2;
+            float tileCenterY = tile.posY + tile.height / 2;
 
-            // Calculate overlap amount
-            float overlapX = (PLAYER_WIDTH / 2 + block.width / 2) - fabs(playerCenterX - blockCenterX);
-            float overlapY = (PLAYER_HEIGHT / 2 + block.height / 2) - fabs(playerCenterY - blockCenterY);
+            float overlapX = (PLAYER_WIDTH / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
+            float overlapY = (PLAYER_HEIGHT / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
 
-            // Resolve collision based on minimum overlap direction
             if (overlapX < overlapY) {
-                // X-axis collision
-                if (playerCenterX < blockCenterX) {
-                    g_player.posX = block.posX - PLAYER_WIDTH;
+                if (playerCenterX < tileCenterX) {
+                    g_player.posX = tile.posX - PLAYER_WIDTH;
                 }
                 else {
-                    g_player.posX = block.posX + block.width;
+                    g_player.posX = tile.posX + tile.width;
                 }
                 g_player.velocityX = 0.0f;
             }
             else {
-                // Y-axis collision
-                if (playerCenterY < blockCenterY) {
-                    g_player.posY = block.posY - PLAYER_HEIGHT;
+                if (playerCenterY < tileCenterY) {
+                    g_player.posY = tile.posY - PLAYER_HEIGHT;
                     g_player.velocityY = 0.0f;
                 }
                 else {
-                    // Collision from above (landing)
-                    g_player.posY = block.posY + block.height;
+                    g_player.posY = tile.posY + tile.height;
                     g_player.velocityY = 0.0f;
                     g_player.isOnGround = true;
                 }
@@ -205,12 +120,32 @@ void UpdatePlayerPhysics(float deltaTime) {
         }
     }
 
-    // Boundary check - fall detection
+    // 传送门检测 - 修正参数
+    static float portalCooldown = 0.0f;
+    if (portalCooldown > 0.0f) {
+        portalCooldown -= deltaTime;
+    }
+
+    // 修改传送门检测部分
+    if (portalCooldown <= 0.0f) {
+        std::string targetMap;
+        int portalId, linkedSpawnId;
+        if (g_mapManager.GetCurrentMap()->CheckPortalCollision(
+            g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+            targetMap, portalId, linkedSpawnId)) {
+
+            g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
+            portalCooldown = 1.0f;
+            // 敌人会在SwitchMap中自动重新生成
+        }
+    }
+
+    // 边界检查
     if (g_player.posY < -2.0f) {
         ResetGame();
     }
-
 }
+
 // Method 1: Dash immediately on press
 void Dash1() {
     if (g_player.dashCooldown > 0.0f || g_player.isDashing) {
@@ -392,91 +327,211 @@ void UpdateGame(float deltaTime) {
 
     // Update physics
     UpdatePlayerPhysics(deltaTime);
-    UpdateEnemies(deltaTime);
+    UpdateEnemies(deltaTime, &g_mapManager);
 }
 
-// Modified render function
-void DrawGame() 
+// 辅助函数：根据瓦片代码获取纹理
+ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
+    if (tileCode == "G1" || tileCode == "G2" || tileCode == "G3") {
+        return g_groundTexture;  // 地面使用地面纹理
+    }
+    else if (tileCode == "W1" || tileCode == "W2") {
+        return g_groundTexture;  // 墙壁也使用地面纹理，但颜色不同
+    }
+    else if (tileCode == "P1" || tileCode == "P2") {
+        return g_groundTexture;  // 平台使用地面纹理
+    }
+    else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT") {
+        return g_fastEnemyTexture;  // 传送门使用冲刺效果纹理
+    }
+    else if (tileCode == "D1" || tileCode == "D2") {
+        return g_backgroundTexture;  // 装饰物使用背景纹理
+    }
+    else {
+        return g_groundTexture;  // 默认使用地面纹理
+    }
+}
+
+// 辅助函数：根据瓦片代码设置颜色
+void SetTileColor(const std::string& tileCode) {
+    if (tileCode == "G1") { // 草土地面
+        SetColor(0.4f, 0.8f, 0.3f, 1.0f);
+    }
+    else if (tileCode == "G2") { // 泥土地面
+        SetColor(0.6f, 0.4f, 0.2f, 1.0f);
+    }
+    else if (tileCode == "G3") { // 石质地面的
+        SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+    }
+    else if (tileCode == "W1") { // 砖墙
+        SetColor(0.7f, 0.3f, 0.2f, 1.0f);
+    }
+    else if (tileCode == "W2") { // 石墙
+        SetColor(0.4f, 0.4f, 0.4f, 1.0f);
+    }
+    else if (tileCode == "P1") { // 木质平台
+        SetColor(0.8f, 0.6f, 0.3f, 1.0f);
+    }
+    else if (tileCode == "P2") { // 金属平台
+        SetColor(0.7f, 0.7f, 0.8f, 1.0f);
+    }
+    else if (tileCode == "PF") { // 森林传送门
+        SetColor(0.3f, 0.7f, 0.3f, 1.0f);
+    }
+    else if (tileCode == "PI") { // 冰传送门
+        SetColor(0.3f, 0.5f, 0.9f, 1.0f);
+    }
+    else if (tileCode == "PT") { // 测试传送门
+        SetColor(0.8f, 0.3f, 0.8f, 1.0f);
+    }
+    else if (tileCode == "D1") { // 树装饰
+        SetColor(0.2f, 0.5f, 0.1f, 1.0f);
+    }
+    else if (tileCode == "D2") { // 石头装饰
+        SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+    }
+    else {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f); // 默认白色
+    }
+}
+
+// 完整的Draw函数
+void Draw()
 {
     RendererDrawF();
 
-    // Draw background
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f); // added november 12th
+    // 绘制背景
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, g_backgroundTexture, 0, 1, 1);
 
-    // Draw map block
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f); //  added november 12th
-    for (const auto& block : g_mapBlocks) 
-    {
-        ID3D11ShaderResourceView* texture = g_groundTexture;
-        RenderImage(block.posX, block.posY, block.width, block.height, texture, 0, 1, 1);
-    }
-    RenderEnemies();
+    // 使用新的地图系统绘制瓦片
+    if (g_mapManager.IsMapLoaded()) {
+        Map* currentMap = g_mapManager.GetCurrentMap();
 
-    // Draw charge effect (if charging)
-    if (g_player.isCharging) 
+        // 绘制背景层瓦片
+        auto& bgTiles = currentMap->GetTiles(MapLayer::BACKGROUND);
+        for (const auto& tile : bgTiles) {
+            if (tile.tileInfo.code == "00") continue; // 跳过空瓦片
+
+            ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
+            SetTileColor(tile.tileInfo.code);
+            float alpha = 0.7f; // 背景层半透明
+
+            RenderImage(tile.posX, tile.posY, tile.width, tile.height,
+                texture, 0, alpha, 1);
+        }
+
+        // 绘制中间层瓦片（玩家活动层）
+        auto& mgTiles = currentMap->GetTiles(MapLayer::MIDGROUND);
+        for (const auto& tile : mgTiles) {
+            if (tile.tileInfo.code == "00") continue; // 跳过空瓦片
+
+            ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
+            SetTileColor(tile.tileInfo.code);
+
+            // 传送门有特殊效果
+            float alpha = 1.0f;
+            if (tile.tileInfo.isPortal) {
+                alpha = 0.8f + 0.2f * sin(g_gameTimer.GetTotalTime() * 3.0f); // 脉动效果
+            }
+
+            RenderImage(tile.posX, tile.posY, tile.width, tile.height,
+                texture, 0, alpha, 1);
+        }
+
+        // 绘制前景层瓦片（可选，用于装饰）
+        auto& fgTiles = currentMap->GetTiles(MapLayer::FOREGROUND);
+        for (const auto& tile : fgTiles) {
+            if (tile.tileInfo.code == "00") continue;
+
+            ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
+            SetTileColor(tile.tileInfo.code);
+            float alpha = 0.8f; // 前景层稍微透明
+
+            RenderImage(tile.posX, tile.posY, tile.width, tile.height,
+                texture, 0, alpha, 1);
+        }
+    }
+
+    // 绘制敌人（在玩家后面绘制，确保玩家在最前面）
+    RenderEnemies();
+    // 绘制充能效果
+    if (g_player.isCharging)
     {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
         float effectSize = PLAYER_WIDTH * (1.0f + chargeRatio * 1.0f);
         float alpha = 0.3f + chargeRatio * 0.7f;
 
+        // 充能效果颜色渐变：黄 -> 橙 -> 红
+        float r = 1.0f;
+        float g = 1.0f - chargeRatio * 0.5f;
+        float b = 0.0f;
+        SetColor(r, g, b, alpha);
+
         RenderImage(g_player.posX - (effectSize - PLAYER_WIDTH) * 0.5f,
             g_player.posY - (effectSize - PLAYER_HEIGHT) * 0.5f,
-            effectSize, effectSize, g_chargeEffectTexture, 0,  alpha, 1);
+            effectSize, effectSize, g_chargeEffectTexture, 0, alpha, 1);
     }
 
-    // Draw dash effect (if dashing)
-    if (g_player.isDashing) 
+    // 绘制冲刺效果
+    if (g_player.isDashing)
     {
-        // Draw dash effect at player position
-        RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH * 1.5f, PLAYER_HEIGHT * 1.5f,
-            g_dashEffectTexture, 0, 1, 1);
+        float dashProgress = 1.0f - (g_player.dashTimer / DASH_DURATION);
+        float effectSize = PLAYER_WIDTH * (1.2f + dashProgress * 0.3f);
+        float alpha = 0.7f + dashProgress * 0.3f;
+
+        SetColor(1.0f, 0.3f, 0.3f, alpha); // 红色冲刺效果
+
+        RenderImage(g_player.posX - (effectSize - PLAYER_WIDTH) * 0.5f,
+            g_player.posY - (effectSize - PLAYER_HEIGHT) * 0.5f,
+            effectSize, effectSize, g_dashEffectTexture, 0, alpha, 1);
     }
 
+    // 绘制玩家
+    ID3D11ShaderResourceView* playerTexture = g_playerTexture;
 
-   ID3D11ShaderResourceView* playerTexture = g_playerTexture;
-
-
-    // Select different frame or color based on player state
+    // 根据玩家状态选择不同的帧和颜色
     int frameIndex = 0;
-    if (g_player.isCharging) 
+    if (g_player.isCharging)
     {
-        SetColor(1.0f, 1.0f, 0.0f, 1.0f); // yellow when charging
-        frameIndex = 4; // Charging state
+        SetColor(1.0f, 1.0f, 0.0f, 1.0f); // 黄色充能
+        frameIndex = 4; // 充能状态帧
     }
-    else if (g_player.isDashing) 
+    else if (g_player.isDashing)
     {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // red when dashing
-        frameIndex = 3; // Dashing state
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色冲刺
+        frameIndex = 3; // 冲刺状态帧
     }
-    else if (!g_player.isOnGround) 
+    else if (!g_player.isOnGround)
     {
-        SetColor(1.0f, 0.5f, 0.0f, 1.0f); // orange when not in the ground (jumping)
-        frameIndex = 2; // Airborne state
+        SetColor(1.0f, 0.5f, 0.0f, 1.0f); // 橙色跳跃
+        frameIndex = 2; // 空中状态帧
     }
-    else if (g_player.isMoving) 
+    else if (g_player.isMoving)
     {
-        frameIndex = 1; // Moving state
+        frameIndex = 1; // 移动状态帧
 
         if (g_player.facingRight)
         {
-            SetColor(0.0f, 0.0f, 1.0f, 1.0f); // blue when moving right
+            SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 蓝色向右移动
         }
         else
         {
-            SetColor(0.0f, 1.0f, 0.0f, 1.0f); // green when moving left
+            SetColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色向左移动
         }
     }
     else
     {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f); // default color when idle
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f); // 白色待机
+        frameIndex = 0; // 待机状态帧
     }
 
+    // 渲染玩家（确保玩家在最前面）
     RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-        playerTexture, frameIndex, 1, 5); // 5 frames: idle, moving, jumping, dashing, charging
+        playerTexture, frameIndex, 1, 5); // 5帧动画
 
-    // Draw UI information
-    // Can add text to show current dash type here
+    // 绘制UI信息
+    //DrawUI();
 
     RendererDrawB();
 }
