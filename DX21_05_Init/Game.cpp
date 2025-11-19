@@ -53,6 +53,11 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/blockB.png", &g_chargeEffectTexture); // Charge effect texture
     InitEnemies();
     g_mapManager.InitializeMaps();
+
+    g_camera.SetSmoothness(0.05f);
+    g_camera.SetLookAhead(0.4f);
+    g_camera.SetDeadZone(0.3f);
+
     ResetGame();
 }
 
@@ -325,9 +330,11 @@ void UpdateGame(float deltaTime) {
     // Update dash state
     UpdateDash(deltaTime);
 
+    g_camera.Update(deltaTime);
     // Update physics
     UpdatePlayerPhysics(deltaTime);
     UpdateEnemies(deltaTime, &g_mapManager);
+
 }
 
 // 辅助函数：根据瓦片代码获取纹理
@@ -394,15 +401,23 @@ void SetTileColor(const std::string& tileCode) {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f); // 默认白色
     }
 }
-
-// 完整的Draw函数
-void DrawGame()
-{
+void DrawGame() {
     RendererDrawF();
 
-    // 绘制背景
+    // 获取相机位置
+    float cameraX = g_camera.GetX();
+    float cameraY = g_camera.GetY();
+
+    // 辅助函数：将世界坐标转换为屏幕坐标
+    auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
+        return { worldX - cameraX, worldY - cameraY };
+        };
+
+    // 绘制背景（使用视差效果）
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, g_backgroundTexture, 0, 1, 1);
+    float bgOffsetX = cameraX * 0.3f;
+    float bgOffsetY = cameraY * 0.3f;
+    RenderImage(-1.0f + bgOffsetX, -1.0f + bgOffsetY, 2.0f, 2.0f, g_backgroundTexture, 0, 1, 1);
 
     // 使用新的地图系统绘制瓦片
     if (g_mapManager.IsMapLoaded()) {
@@ -411,131 +426,144 @@ void DrawGame()
         // 绘制背景层瓦片
         auto& bgTiles = currentMap->GetTiles(MapLayer::BACKGROUND);
         for (const auto& tile : bgTiles) {
-            if (tile.tileInfo.code == "00") continue; // 跳过空瓦片
+            if (tile.tileInfo.code == "00") continue;
+
+            // 修复：使用传统方式获取坐标
+            std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
+            float screenX = screenPos.first;
+            float screenY = screenPos.second;
 
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
-            float alpha = 0.7f; // 背景层半透明
+            float alpha = 0.7f;
 
-            RenderImage(tile.posX, tile.posY, tile.width, tile.height,
-                texture, 0, alpha, 1);
+            RenderImage(screenX, screenY, tile.width, tile.height, texture, 0, alpha, 1);
         }
 
         // 绘制中间层瓦片（玩家活动层）
         auto& mgTiles = currentMap->GetTiles(MapLayer::MIDGROUND);
         for (const auto& tile : mgTiles) {
-            if (tile.tileInfo.code == "00") continue; // 跳过空瓦片
+            if (tile.tileInfo.code == "00") continue;
+
+            // 修复：使用传统方式获取坐标
+            std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
+            float screenX = screenPos.first;
+            float screenY = screenPos.second;
 
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
 
-            // 传送门有特殊效果
             float alpha = 1.0f;
             if (tile.tileInfo.isPortal) {
-                alpha = 0.8f + 0.2f * sin(g_gameTimer.GetTotalTime() * 3.0f); // 脉动效果
+                alpha = 0.8f + 0.2f * sin(g_gameTimer.GetTotalTime() * 3.0f);
             }
 
-            RenderImage(tile.posX, tile.posY, tile.width, tile.height,
-                texture, 0, alpha, 1);
+            RenderImage(screenX, screenY, tile.width, tile.height, texture, 0, alpha, 1);
         }
 
-        // 绘制前景层瓦片（可选，用于装饰）
+        // 绘制前景层瓦片
         auto& fgTiles = currentMap->GetTiles(MapLayer::FOREGROUND);
         for (const auto& tile : fgTiles) {
             if (tile.tileInfo.code == "00") continue;
 
+            // 修复：使用传统方式获取坐标
+            std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
+            float screenX = screenPos.first;
+            float screenY = screenPos.second;
+
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
-            float alpha = 0.8f; // 前景层稍微透明
+            float alpha = 0.8f;
 
-            RenderImage(tile.posX, tile.posY, tile.width, tile.height,
-                texture, 0, alpha, 1);
+            RenderImage(screenX, screenY, tile.width, tile.height, texture, 0, alpha, 1);
         }
     }
 
-    // 绘制敌人（在玩家后面绘制，确保玩家在最前面）
-    RenderEnemies();
     // 绘制充能效果
-    if (g_player.isCharging)
-    {
+    if (g_player.isCharging) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
         float effectSize = PLAYER_WIDTH * (1.0f + chargeRatio * 1.0f);
         float alpha = 0.3f + chargeRatio * 0.7f;
 
-        // 充能效果颜色渐变：黄 -> 橙 -> 红
+        // 修复：使用传统方式获取坐标
+        std::pair<float, float> effectPos = worldToScreen(
+            g_player.posX - (effectSize - PLAYER_WIDTH) * 0.5f,
+            g_player.posY - (effectSize - PLAYER_HEIGHT) * 0.5f
+        );
+        float effectX = effectPos.first;
+        float effectY = effectPos.second;
+
         float r = 1.0f;
         float g = 1.0f - chargeRatio * 0.5f;
         float b = 0.0f;
         SetColor(r, g, b, alpha);
 
-        RenderImage(g_player.posX - (effectSize - PLAYER_WIDTH) * 0.5f,
-            g_player.posY - (effectSize - PLAYER_HEIGHT) * 0.5f,
-            effectSize, effectSize, g_chargeEffectTexture, 0, alpha, 1);
+        RenderImage(effectX, effectY, effectSize, effectSize, g_chargeEffectTexture, 0, alpha, 1);
     }
 
     // 绘制冲刺效果
-    if (g_player.isDashing)
-    {
+    if (g_player.isDashing) {
         float dashProgress = 1.0f - (g_player.dashTimer / DASH_DURATION);
         float effectSize = PLAYER_WIDTH * (1.2f + dashProgress * 0.3f);
         float alpha = 0.7f + dashProgress * 0.3f;
 
-        SetColor(1.0f, 0.3f, 0.3f, alpha); // 红色冲刺效果
+        // 修复：使用传统方式获取坐标
+        std::pair<float, float> dashPos = worldToScreen(
+            g_player.posX - (effectSize - PLAYER_WIDTH) * 0.5f,
+            g_player.posY - (effectSize - PLAYER_HEIGHT) * 0.5f
+        );
+        float dashX = dashPos.first;
+        float dashY = dashPos.second;
 
-        RenderImage(g_player.posX - (effectSize - PLAYER_WIDTH) * 0.5f,
-            g_player.posY - (effectSize - PLAYER_HEIGHT) * 0.5f,
-            effectSize, effectSize, g_dashEffectTexture, 0, alpha, 1);
+        SetColor(1.0f, 0.3f, 0.3f, alpha);
+        RenderImage(dashX, dashY, effectSize, effectSize, g_dashEffectTexture, 0, alpha, 1);
     }
 
     // 绘制玩家
+    // 修复：使用传统方式获取玩家坐标
+    std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
+    float playerScreenX = playerPos.first;
+    float playerScreenY = playerPos.second;
+
     ID3D11ShaderResourceView* playerTexture = g_playerTexture;
 
     // 根据玩家状态选择不同的帧和颜色
     int frameIndex = 0;
-    if (g_player.isCharging)
-    {
-        SetColor(1.0f, 1.0f, 0.0f, 1.0f); // 黄色充能
-        frameIndex = 4; // 充能状态帧
+    if (g_player.isCharging) {
+        SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+        frameIndex = 4;
     }
-    else if (g_player.isDashing)
-    {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色冲刺
-        frameIndex = 3; // 冲刺状态帧
+    else if (g_player.isDashing) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+        frameIndex = 3;
     }
-    else if (!g_player.isOnGround)
-    {
-        SetColor(1.0f, 0.5f, 0.0f, 1.0f); // 橙色跳跃
-        frameIndex = 2; // 空中状态帧
+    else if (!g_player.isOnGround) {
+        SetColor(1.0f, 0.5f, 0.0f, 1.0f);
+        frameIndex = 2;
     }
-    else if (g_player.isMoving)
-    {
-        frameIndex = 1; // 移动状态帧
-
-        if (g_player.facingRight)
-        {
+    else if (g_player.isMoving) {
+        frameIndex = 1;
+        if (g_player.facingRight) {
             SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 蓝色向右移动
         }
-        else
-        {
+        else {
             SetColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色向左移动
         }
     }
-    else
-    {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f); // 白色待机
-        frameIndex = 0; // 待机状态帧
+    else {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        frameIndex = 0;
     }
 
-    // 渲染玩家（确保玩家在最前面）
-    RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-        playerTexture, frameIndex, 1, 5); // 5帧动画
+    // 渲染玩家
+    RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
+        playerTexture, frameIndex, 1, 5);
 
     // 绘制UI信息
-    //DrawUI();
+    // DrawUI();
 
     RendererDrawB();
 }
-
 // Keyboard detection
 bool IsKeyDown(int key) {
     return (GetAsyncKeyState(key) & 0x8000) != 0;

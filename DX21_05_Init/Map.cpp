@@ -305,12 +305,6 @@ void Map::CreateTestMap() {
     };
 
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
-
-    // Add spawn point
-    AddSpawnPoint(-0.7f, -0.5f, 1, "MainSpawn");
-
-    // Manually add portal
-    AddTile(0.6f, -0.8f, "PF", MapLayer::MIDGROUND, "forest", 1);
 }
 
 // Create a forest-themed map
@@ -334,9 +328,6 @@ void Map::CreateForestMap() {
     };
 
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
-
-    AddSpawnPoint(-0.8f, -0.8f, 1, "ForestSpawn");
-    AddTile(-0.8f, -0.8f, "PT", MapLayer::MIDGROUND, "test", 1);
 }
 
 // Create an ice-themed map

@@ -14,9 +14,17 @@ GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;
 DashType g_currentDashType = DASH_INSTANT;
 
+
+ float camera_Smoothness = 0.4f;
+ float camera_LookAhead = 0.3f;
+ float camera_DeadZone = 0.3f;
+
 // 敌人相关的全局变量
 std::vector<Enemy*> g_enemies;
 ID3D11ShaderResourceView* g_enemyTexture = nullptr;
 ID3D11ShaderResourceView* g_shieldEnemyTexture = nullptr;
 ID3D11ShaderResourceView* g_mageEnemyTexture = nullptr;
 ID3D11ShaderResourceView* g_fastEnemyTexture = nullptr;
+
+// Define global camera object
+Camera g_camera;
