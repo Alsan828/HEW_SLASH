@@ -54,9 +54,9 @@ void InitGameWorld() {
     InitEnemies();
     g_mapManager.InitializeMaps();
 
-    g_camera.SetSmoothness(0.05f);
-    g_camera.SetLookAhead(0.4f);
-    g_camera.SetDeadZone(0.3f);
+    g_camera.SetSmoothness(camera_Smoothness);
+    g_camera.SetLookAhead(camera_LookAhead);
+    g_camera.SetDeadZone(camera_DeadZone);
 
     ResetGame();
 }

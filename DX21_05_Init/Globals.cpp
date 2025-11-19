@@ -15,8 +15,8 @@ GameState g_gameState = STATE_PLAYING;
 DashType g_currentDashType = DASH_INSTANT;
 
 
- float camera_Smoothness = 0.4f;
- float camera_LookAhead = 0.3f;
+ float camera_Smoothness = 0.004f;
+ float camera_LookAhead = 0.5f;
  float camera_DeadZone = 0.3f;
 
 // 敌人相关的全局变量
