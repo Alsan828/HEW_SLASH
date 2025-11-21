@@ -8,6 +8,7 @@
 #include "InputSystem.h"
 #include "Render.h"
 #include "Map.h"
+#include "Animation.h"
 
 extern MapManager g_mapManager;
 
@@ -52,6 +53,8 @@ struct Player {
     float chargeTime = 0.0f;
     const float MAX_CHARGE_TIME = 1.5f;  // Maximum charge time
     const float MIN_CHARGE_TIME = 0.01f; // Minimum valid charge time
+
+    Animation anim; // added november 19th
 };
 
 class GameTimer {

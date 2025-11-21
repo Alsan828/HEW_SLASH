@@ -1,8 +1,16 @@
 #pragma once
-//#include <DirectXMath.h>
-//#include <Windows.h>
 #include "Render.h"   
+#include <string>
+#include <unordered_map>
 
+
+struct AnimationClip
+{
+    int startFrame;     // first frame index in the clip
+    int endFrame;       // last frame index in the clip
+    float frameTime;    // time per frame
+    bool loop;          // should this clip loop?
+};
 
 class Animation 
 {
@@ -13,15 +21,32 @@ private:
     int m_currentFrame;     // for the current frame
     float m_frameTime;      // for the time per frame in seconds
     float m_elapsedTime;    // for the time since last the frame switched
+
     DirectX::XMFLOAT2 m_uvOffset; // for the uv offset for current frame
+
+    AnimationClip m_currentClip;   // for the current animation clip
+    std::unordered_map<std::string, AnimationClip> m_clips; // for all the animation clips
+
+    bool m_paused;  // if the game is paused or not
 
 public:
     Animation(void);  //construct
 
     HRESULT Init(int splitX, int splitY, float frameTime, int startFrame = 0);
-    void Update(float deltaTime);
-    DirectX::XMFLOAT2 GetUVOffset(void) const;
-    void SetFrame(int frame);
-    void Reset(void);
-    int GetFrameCount(void) const { return m_frameCount; }
+
+    // so you can use it for idle, run, jump, dash, gameover, etc
+    void AddClip(const std::string& name, int startFrame, int endFrame, float frameTime, bool loop);
+    void SetClip(const std::string& name);
+    std::string GetCurrentClipName() const; // gets the current clip name
+
+    void Update(float deltaTime); // for updating the animation
+    DirectX::XMFLOAT2 GetUVOffset(void) const; 
+
+    void Reset();
+    bool IsFinished() const;
+    int GetCurrentFrame() const;
+
+    void Pause();    // when the game is paused
+    void Resume();   // when you resume the game
+    bool IsPaused() const; // check if paused 
 };
