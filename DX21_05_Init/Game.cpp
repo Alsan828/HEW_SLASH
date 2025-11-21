@@ -46,7 +46,20 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 // Game initialization
 void InitGameWorld() {
     // Load textures (temporarily using existing textures)
-    LoadTexture(g_pDevice, "asset/block.png", &g_playerTexture);      // Player texture
+    //LoadTexture(g_pDevice, "asset/block.png", &g_playerTexture);      // Player texture
+
+     // added november 19th
+    LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);      // Player texture testing for animation
+    g_player.anim.Init(10, 1, 0.15f, 0); // (10 columns, 1 row)
+    // define clips
+    g_player.anim.AddClip("Idle", 0, 1, 0.3f, true);   // col 1–2
+    g_player.anim.AddClip("RunRight", 2, 4, 0.15f, true); // col 3–5
+    g_player.anim.AddClip("RunLeft", 5, 6, 0.15f, true); // col 6–7
+    g_player.anim.AddClip("Jump", 7, 7, 0.2f, false); // col 8 only
+    g_player.anim.AddClip("Charge", 8, 8, 0.25f, true); // col 9 only
+    g_player.anim.AddClip("Dash", 9, 9, 0.1f, false); // col 10 only
+
+
     LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture);     // Ground texture
     LoadTexture(g_pDevice, "asset/Space.png", &g_backgroundTexture);  // Background texture
     LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);   // Dash effect texture
@@ -328,6 +341,38 @@ void UpdateGame(float deltaTime) {
     // Update physics
     UpdatePlayerPhysics(deltaTime);
     UpdateEnemies(deltaTime, &g_mapManager);
+
+    // added november 19th
+    // fir the animation state 
+    if (g_player.isCharging) 
+    {
+        g_player.anim.SetClip("Charge");
+    }
+    else if (g_player.isDashing) 
+    {
+        g_player.anim.SetClip("Dash");
+    }
+    else if (!g_player.isOnGround) 
+    {
+        g_player.anim.SetClip("Jump");
+    }
+    else if (g_player.isMoving) 
+    {
+        if (g_player.facingRight)
+        {
+            g_player.anim.SetClip("RunRight");
+        }
+        else
+        {
+            g_player.anim.SetClip("RunLeft");
+        } 
+    }
+    else 
+    {
+        g_player.anim.SetClip("Idle");
+    }
+
+    g_player.anim.Update(deltaTime);
 }
 
 // 辅助函数：根据瓦片代码获取纹理
@@ -491,44 +536,51 @@ void DrawGame()
     ID3D11ShaderResourceView* playerTexture = g_playerTexture;
 
     // 根据玩家状态选择不同的帧和颜色
-    int frameIndex = 0;
+    //int frameIndex = 0;
     if (g_player.isCharging)
     {
-        SetColor(1.0f, 1.0f, 0.0f, 1.0f); // 黄色充能
-        frameIndex = 4; // 充能状态帧
+        SetColor(0.0f, 1.0f, 0.0f, 1.0f); // bright green
+        //frameIndex = 4; // 充能状态帧
     }
     else if (g_player.isDashing)
     {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色冲刺
-        frameIndex = 3; // 冲刺状态帧
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // bright red 
+        //frameIndex = 3; // 冲刺状态帧
     }
     else if (!g_player.isOnGround)
     {
-        SetColor(1.0f, 0.5f, 0.0f, 1.0f); // 橙色跳跃
-        frameIndex = 2; // 空中状态帧
+        SetColor(1.0f, 1.0f, 0.0f, 1.0f); // bright yellow
+       // frameIndex = 2; // 空中状态帧
     }
     else if (g_player.isMoving)
     {
-        frameIndex = 1; // 移动状态帧
+       // frameIndex = 1; // 移动状态帧
 
         if (g_player.facingRight)
         {
-            SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 蓝色向右移动
+            SetColor(0.0f, 1.0f, 1.0f, 1.0f); // bright cyan 
         }
         else
         {
-            SetColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色向左移动
+            SetColor(1.0f, 0.0f, 1.0f, 1.0f); // bright magenta
         }
     }
     else
     {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f); // 白色待机
-        frameIndex = 0; // 待机状态帧
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f); // bright white 
+        //frameIndex = 0; // 待机状态帧
     }
 
-    // 渲染玩家（确保玩家在最前面）
+    // added november 19th
+    // Use animation system for frame index
+    int frameIndex = g_player.anim.GetCurrentFrame();
+
     RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-        playerTexture, frameIndex, 1, 5); // 5帧动画
+        g_playerTexture, frameIndex, 1, 10); // 10 total frames
+
+    // 渲染玩家（确保玩家在最前面）
+    //RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+        //playerTexture, frameIndex, 1, 5); // 5帧动画
 
     // 绘制UI信息
     //DrawUI();
