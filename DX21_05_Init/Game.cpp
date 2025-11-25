@@ -664,65 +664,39 @@ void DrawGame() {
 
     RendererDrawB();
 }
-
-
 void HandleInput() {
-    // Update input system
     g_inputSystem.Update();
 
     if (g_inputSystem.IsResetting()) {
         ResetGame();
     }
 
-
-    // Toggle dash type
-    static bool wasToggleKeyPressed = false;
-    bool isToggleKeyPressed = g_inputSystem.IsToggling();
-    if (isToggleKeyPressed && !wasToggleKeyPressed) {
-        ToggleDashType();
-    }
-    wasToggleKeyPressed = isToggleKeyPressed;
-
-
-    // 获取输入状态
-    bool isDashKeyPressed = g_inputSystem.IsDashing();
+    // 获取鼠标输入状态
     bool isMouseLeftPressed = g_inputSystem.IsMouseLeftPressed();
     bool isMouseLeftDown = g_inputSystem.IsMouseLeftDown();
     bool isMouseLeftReleased = g_inputSystem.IsMouseLeftReleased();
 
-    static bool wasDashKeyPressed = false;
     static bool wasMouseLeftDown = false;
-    // 鼠标冲刺输入处理（优先于键盘）
-    if (isMouseLeftPressed || (isDashKeyPressed && !wasDashKeyPressed)) {
-        if (g_currentDashType == DASH_INSTANT) {
-            // 即时冲刺：鼠标点击或按键按下
-            DashToMouse();
-        }
-        else {
-            // 蓄力冲刺：开始蓄力
-            StartMouseChargeDash();
-        }
+
+    // 纯鼠标控制：按下开始蓄力
+    if (isMouseLeftPressed) {
+        StartMouseChargeDash();
     }
 
-    // 蓄力冲刺释放检测
-    if (g_currentDashType == DASH_CHARGE) {
-        if ((isMouseLeftReleased && wasMouseLeftDown) ||
-            (!isDashKeyPressed && wasDashKeyPressed)) {
-            ExecuteMouseChargeDash();
-        }
-
-        // 取消蓄力（如果中途取消）
-        if ((!isMouseLeftDown && !isDashKeyPressed) && g_player.isCharging) {
-            CancelChargeDash();
-        }
+    // 纯鼠标控制：释放执行冲刺
+    if (isMouseLeftReleased && wasMouseLeftDown && g_player.isCharging) {
+        ExecuteMouseChargeDash();
     }
 
-    wasDashKeyPressed = isDashKeyPressed;
+    // 取消蓄力（如果中途右键点击或其他取消条件）
+    if (!isMouseLeftDown && g_player.isCharging) {
+        // 可以添加取消条件，比如按下右键取消
+        CancelChargeDash();
+    }
+
     wasMouseLeftDown = isMouseLeftDown;
 
-    wasDashKeyPressed = isDashKeyPressed;
-
-    // Horizontal movement
+    // 移动控制保持不变
     bool moving = false;
     if (g_inputSystem.IsMovingLeft()) {
         if (!g_player.isDashing && !g_player.isCharging) {
@@ -746,44 +720,14 @@ void HandleInput() {
         g_player.isMoving = false;
     }
 
-    // Jump input
+    // 跳跃控制
     static bool wasJumpKeyPressed = false;
     bool isJumpKeyPressed = g_inputSystem.IsJumping();
-
     if (isJumpKeyPressed && !wasJumpKeyPressed) {
         Jump();
     }
     wasJumpKeyPressed = isJumpKeyPressed;
-
-    // Dash input handling
-    wasDashKeyPressed = false;
-    isDashKeyPressed = g_inputSystem.IsDashing();
-
-    if (g_currentDashType == DASH_INSTANT) {
-        // Method 1: Dash immediately on press
-        if (isDashKeyPressed && !wasDashKeyPressed) {
-            Dash1();
-        }
-    }
-    else {
-        // Method 2: Charge dash on hold
-        if (isDashKeyPressed && !wasDashKeyPressed) {
-            // Press to start charging
-            StartChargeDash();
-        }
-        else if (!isDashKeyPressed && wasDashKeyPressed) {
-            // Release to trigger dash
-            ExecuteChargeDash();
-        }
-        else if (!isDashKeyPressed && g_player.isCharging) {
-            // Prevent abnormal situations
-            CancelChargeDash();
-        }
-    }
-
-    wasDashKeyPressed = isDashKeyPressed;
 }
-
 // 方法3: 鼠标方向冲刺
 void DashToMouse() {
     if (g_player.dashCooldown > 0.0f || g_player.isDashing) {
