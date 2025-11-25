@@ -45,6 +45,10 @@ struct Player {
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
 
+    float mouseTargetX = 0.0f;
+    float mouseTargetY = 0.0f;
+    bool hasMouseTarget = false;
+
     // Charge dash specific variables
     bool isCharging = false;
     float chargeTime = 0.0f;
@@ -111,6 +115,9 @@ void HandleInput();
 void ResetGame(); 
 
 void UpdateGame(float deltaTime);
-
+void DashToMouse();
+void StartMouseChargeDash();
+void ExecuteMouseChargeDash();
+void CancelChargeDash();
 bool CheckCollision(float x1, float y1, float w1, float h1,
 	float x2, float y2, float w2, float h2);

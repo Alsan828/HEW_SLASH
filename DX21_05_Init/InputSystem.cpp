@@ -1,4 +1,5 @@
 ﻿#include "InputSystem.h"
+#include "Game.h"
 
 InputSystem::InputSystem() {
     // Initialize all key states to false
@@ -13,15 +14,6 @@ InputSystem::InputSystem() {
     }
 }
 
-void InputSystem::Update() {
-    // Save previous frame's states
-    m_previousKeyStates = m_currentKeyStates;
-
-    // Update current frame's states
-    for (auto& pair : m_currentKeyStates) {
-        pair.second = (GetAsyncKeyState(pair.first) & 0x8000) != 0;
-    }
-}
 
 bool InputSystem::IsKeyDown(int key) const {
     auto it = m_currentKeyStates.find(key);
@@ -86,4 +78,45 @@ void InputSystem::GetMoveDirection(float& dirX, float& dirY) const {
 void InputSystem::RebindKey(int action, int newKey) {
     // Key rebinding functionality can be implemented here
     // Simplified implementation, can be expanded as needed
+}
+
+void InputSystem::Update() {
+    // 更新键盘状态（现有代码）
+    m_previousKeyStates = m_currentKeyStates;
+    for (auto& pair : m_currentKeyStates) {
+        pair.second = (GetAsyncKeyState(pair.first) & 0x8000) != 0;
+    }
+
+    // 更新鼠标状态
+    UpdateMouseState();
+}
+
+// 在 InputSystem.cpp 中实现鼠标状态更新
+void InputSystem::UpdateMouseState() {
+    // 保存上一帧状态
+    m_prevMouseLeftDown = m_mouseLeftDown;
+
+    // 获取当前鼠标状态
+    m_mouseLeftDown = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+    m_mouseLeftPressed = m_mouseLeftDown && !m_prevMouseLeftDown;
+    m_mouseLeftReleased = !m_mouseLeftDown && m_prevMouseLeftDown;
+
+    // 获取鼠标位置
+    GetCursorPos(&m_mousePos);
+}
+
+void InputSystem::GetMousePosition(float& worldX, float& worldY) const {
+    // 将屏幕坐标转换为世界坐标
+    // 这里需要根据你的渲染系统调整转换逻辑
+    HWND hwnd = GetForegroundWindow();
+    RECT clientRect;
+    GetClientRect(hwnd, &clientRect);
+
+    // 将鼠标坐标归一化到 [-1, 1] 范围
+    float screenX = (2.0f * m_mousePos.x / clientRect.right) - 1.0f;
+    float screenY = 1.0f - (2.0f * m_mousePos.y / clientRect.bottom);
+
+    // 转换为世界坐标（考虑相机偏移）
+    worldX = screenX + g_camera.GetX();
+    worldY = screenY + g_camera.GetY();
 }

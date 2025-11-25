@@ -252,40 +252,48 @@ void CancelChargeDash() {
         g_player.chargeTime = 0.0f;
     }
 }
-
-// Update dash state
 void UpdateDash(float deltaTime) {
-    // Update charge state
+    // 更新蓄力状态
     if (g_player.isCharging) {
         g_player.chargeTime += deltaTime;
         if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-            // Auto trigger dash at max charge time
-            ExecuteChargeDash();
+            ExecuteMouseChargeDash(); // 达到最大蓄力自动触发
         }
     }
 
+    // 更新冷却时间
     if (g_player.dashCooldown > 0.0f) {
         g_player.dashCooldown -= deltaTime;
     }
 
+    // 更新冲刺状态
     if (g_player.isDashing) {
         g_player.dashTimer -= deltaTime;
 
         if (g_player.dashTimer <= 0.0f) {
-            // Dash ended
+            // 冲刺结束
             g_player.isDashing = false;
+            g_player.hasMouseTarget = false; // 清除鼠标目标显示
 
-            // If not on ground, maintain Y velocity, otherwise stop Y movement
+            // 垂直速度处理
             if (!g_player.isOnGround) {
-                g_player.velocityY *= 0.5f; // Keep some velocity
+                g_player.velocityY *= 0.5f; // 空中保持部分Y速度
             }
             else {
                 g_player.velocityY = 0.0f;
             }
 
-            // Stop horizontal movement unless there's input
-            if (!g_player.isMoving) {
-                g_player.velocityX *= 0.3f; // Keep some inertia
+            // 水平惯性调整：保留10%速度，让过渡更自然
+            g_player.velocityX *= 0.1f;
+
+            // 如果玩家有输入，覆盖惯性
+            if (g_player.isMoving) {
+                if (g_player.facingRight) {
+                    g_player.velocityX = MOVE_SPEED;
+                }
+                else {
+                    g_player.velocityX = -MOVE_SPEED;
+                }
             }
         }
     }
@@ -340,13 +348,20 @@ void UpdateGame(float deltaTime) {
         return;
     }
 
-    // Update dash state
-    UpdateDash(deltaTime);
+    // 应用时间减缓效果（如果正在蓄力）
+    float timeScale = 1.0f;
+    if (g_player.isCharging) {
+        float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
+        chargeRatio = std::min(chargeRatio * 2, 1.0f);
+        timeScale = 1.0f - chargeRatio * 0.8f; // 最大减缓到0.2倍速度
+    }
+    float scaledDeltaTime = deltaTime * timeScale;
 
-    g_camera.Update(deltaTime);
-    // Update physics
-    UpdatePlayerPhysics(deltaTime);
-    UpdateEnemies(deltaTime, &g_mapManager);
+    // 使用调整后的时间更新游戏逻辑
+    UpdateDash(scaledDeltaTime);
+    g_camera.Update(scaledDeltaTime);
+    UpdatePlayerPhysics(scaledDeltaTime);
+    UpdateEnemies(scaledDeltaTime, &g_mapManager);
 
     // added november 19th
     // Check player state and set animation clip only if it changed
@@ -399,7 +414,7 @@ void UpdateGame(float deltaTime) {
         }
     }
     // Advance the current clips frame and updates it
-    g_player.anim.Update(deltaTime);
+    g_player.anim.Update(scaledDeltaTime);
 }
 
 // 辅助函数：根据瓦片代码获取纹理
@@ -658,6 +673,7 @@ void HandleInput() {
         ResetGame();
     }
 
+
     // Toggle dash type
     static bool wasToggleKeyPressed = false;
     bool isToggleKeyPressed = g_inputSystem.IsToggling();
@@ -665,6 +681,45 @@ void HandleInput() {
         ToggleDashType();
     }
     wasToggleKeyPressed = isToggleKeyPressed;
+
+
+    // 获取输入状态
+    bool isDashKeyPressed = g_inputSystem.IsDashing();
+    bool isMouseLeftPressed = g_inputSystem.IsMouseLeftPressed();
+    bool isMouseLeftDown = g_inputSystem.IsMouseLeftDown();
+    bool isMouseLeftReleased = g_inputSystem.IsMouseLeftReleased();
+
+    static bool wasDashKeyPressed = false;
+    static bool wasMouseLeftDown = false;
+    // 鼠标冲刺输入处理（优先于键盘）
+    if (isMouseLeftPressed || (isDashKeyPressed && !wasDashKeyPressed)) {
+        if (g_currentDashType == DASH_INSTANT) {
+            // 即时冲刺：鼠标点击或按键按下
+            DashToMouse();
+        }
+        else {
+            // 蓄力冲刺：开始蓄力
+            StartMouseChargeDash();
+        }
+    }
+
+    // 蓄力冲刺释放检测
+    if (g_currentDashType == DASH_CHARGE) {
+        if ((isMouseLeftReleased && wasMouseLeftDown) ||
+            (!isDashKeyPressed && wasDashKeyPressed)) {
+            ExecuteMouseChargeDash();
+        }
+
+        // 取消蓄力（如果中途取消）
+        if ((!isMouseLeftDown && !isDashKeyPressed) && g_player.isCharging) {
+            CancelChargeDash();
+        }
+    }
+
+    wasDashKeyPressed = isDashKeyPressed;
+    wasMouseLeftDown = isMouseLeftDown;
+
+    wasDashKeyPressed = isDashKeyPressed;
 
     // Horizontal movement
     bool moving = false;
@@ -700,8 +755,8 @@ void HandleInput() {
     wasJumpKeyPressed = isJumpKeyPressed;
 
     // Dash input handling
-    static bool wasDashKeyPressed = false;
-    bool isDashKeyPressed = g_inputSystem.IsDashing();
+    wasDashKeyPressed = false;
+    isDashKeyPressed = g_inputSystem.IsDashing();
 
     if (g_currentDashType == DASH_INSTANT) {
         // Method 1: Dash immediately on press
@@ -726,4 +781,122 @@ void HandleInput() {
     }
 
     wasDashKeyPressed = isDashKeyPressed;
+}
+
+// 方法3: 鼠标方向冲刺
+void DashToMouse() {
+    if (g_player.dashCooldown > 0.0f || g_player.isDashing) {
+        return;
+    }
+
+    // 获取鼠标世界坐标
+    float mouseX, mouseY;
+    g_inputSystem.GetMousePosition(mouseX, mouseY);
+
+    // 计算从玩家指向鼠标的方向向量
+    float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+
+    float dirX = mouseX - playerCenterX;
+    float dirY = mouseY - playerCenterY;
+
+    // 归一化方向向量
+    float length = sqrt(dirX * dirX + dirY * dirY);
+    if (length > 0.0f) {
+        dirX /= length;
+        dirY /= length;
+    }
+    else {
+        // 如果鼠标就在玩家位置上，使用玩家面向方向
+        dirX = g_player.facingRight ? 1.0f : -1.0f;
+        dirY = 0.0f;
+    }
+
+    // 设置冲刺状态
+    g_player.isDashing = true;
+    g_player.dashTimer = DASH_DURATION;
+    g_player.dashCooldown = DASH_COOLDOWN;
+    g_player.dashDirectionX = dirX;
+    g_player.dashDirectionY = dirY;
+
+    // 设置冲刺速度
+    g_player.velocityX = dirX * DASH_SPEED;
+    g_player.velocityY = dirY * DASH_SPEED;
+
+    // 存储鼠标目标位置（用于可视化）
+    g_player.mouseTargetX = mouseX;
+    g_player.mouseTargetY = mouseY;
+    g_player.hasMouseTarget = true;
+}
+
+// 方法4: 鼠标蓄力冲刺
+void StartMouseChargeDash() {
+    if (g_player.dashCooldown > 0.0f || g_player.isDashing || g_player.isCharging) {
+        return;
+    }
+
+    g_player.isCharging = true;
+    g_player.chargeTime = 0.0f;
+
+    // 记录初始鼠标位置
+    g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
+    g_player.hasMouseTarget = true;
+}
+
+void ExecuteMouseChargeDash() {
+    if (!g_player.isCharging || g_player.chargeTime < g_player.MIN_CHARGE_TIME) {
+        return;
+    }
+
+    // 获取当前鼠标位置
+    float currentMouseX, currentMouseY;
+    g_inputSystem.GetMousePosition(currentMouseX, currentMouseY);
+
+    // 计算从玩家指向鼠标的方向
+    float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+
+    float dirX = currentMouseX - playerCenterX;
+    float dirY = currentMouseY - playerCenterY;
+
+    // 归一化
+    float length = sqrt(dirX * dirX + dirY * dirY);
+    if (length > 0.0f) {
+        dirX /= length;
+        dirY /= length;
+    }
+    else {
+        dirX = g_player.facingRight ? 1.0f : -1.0f;
+        dirY = 0.0f;
+    }
+
+    // 根据蓄力时间计算冲刺参数
+    float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
+    chargeRatio = std::min(chargeRatio, 1.0f);
+
+    // 蓄力效果：时间减缓效果（最大减缓到0.3倍速度）
+    float timeSlowFactor = 1.0f - (chargeRatio * 0.7f);
+
+    // 冲刺距离和速度增强
+    float speedMultiplier = 1.0f + chargeRatio * 2.0f;
+    float durationMultiplier = 1.0f + chargeRatio * 2.0f;
+
+    // 设置冲刺状态
+    g_player.isDashing = true;
+    g_player.dashTimer = DASH_DURATION * durationMultiplier * timeSlowFactor;
+    g_player.dashCooldown = DASH_COOLDOWN * (0.5f + chargeRatio * 0.5f);
+    g_player.dashDirectionX = dirX;
+    g_player.dashDirectionY = dirY;
+
+    // 应用时间减缓效果到冲刺速度
+    g_player.velocityX = dirX * DASH_SPEED * speedMultiplier * timeSlowFactor;
+    g_player.velocityY = dirY * DASH_SPEED * speedMultiplier * timeSlowFactor;
+
+    // 存储最终鼠标位置
+    g_player.mouseTargetX = currentMouseX;
+    g_player.mouseTargetY = currentMouseY;
+
+    // 结束蓄力状态
+    g_player.isCharging = false;
+    g_player.chargeTime = 0.0f;
 }

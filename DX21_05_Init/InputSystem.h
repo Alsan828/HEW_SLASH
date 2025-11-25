@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <map>
 #include <Xinput.h> //XInputを使うためのヘッダーファイル
+#include "Camera.h"
 #pragma comment (lib, "xinput.lib") //XInputを使うために必要
 
 
@@ -86,6 +87,13 @@ private:
     int m_resetKey = 'R';
     int m_toggleKey = 'T';
 
+
+    POINT m_mousePos;
+    bool m_mouseLeftDown = false;
+    bool m_mouseLeftPressed = false;
+    bool m_mouseLeftReleased = false;
+    bool m_prevMouseLeftDown = false;
+
 public:
     InputSystem();
 
@@ -104,6 +112,12 @@ public:
     bool IsDashing() const;
     bool IsResetting() const;
     bool IsToggling() const;
+
+    void UpdateMouseState();
+    void GetMousePosition(float& worldX, float& worldY) const;
+    bool IsMouseLeftDown() const { return m_mouseLeftDown; }
+    bool IsMouseLeftPressed() const { return m_mouseLeftPressed; }
+    bool IsMouseLeftReleased() const { return m_mouseLeftReleased; }
 
     // Get movement direction vector
     void GetMoveDirection(float& dirX, float& dirY) const;
