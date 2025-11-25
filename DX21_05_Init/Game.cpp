@@ -641,7 +641,7 @@ void DrawGame() {
 
     RenderEnemies(g_camera);
     // added november 19th
-    int frameIndex = g_player.anim.GetCurrentFrame();
+    frameIndex = g_player.anim.GetCurrentFrame();
 
     RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
         g_playerTexture, frameIndex, 1, 10); // 10 total frames
