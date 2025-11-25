@@ -348,8 +348,6 @@ void UpdateGame(float deltaTime) {
     UpdatePlayerPhysics(deltaTime);
     UpdateEnemies(deltaTime, &g_mapManager);
 
-}
-
     // added november 19th
     // fir the animation state 
     if (g_player.isCharging) 
@@ -447,6 +445,7 @@ void SetTileColor(const std::string& tileCode) {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f); // 默认白色
     }
 }
+
 void DrawGame() {
     RendererDrawF();
 
@@ -578,6 +577,7 @@ void DrawGame() {
     if (g_player.isCharging) {
         SetColor(1.0f, 1.0f, 0.0f, 1.0f);
         frameIndex = 4;
+    }
     //int frameIndex = 0;
     if (g_player.isCharging)
     {
@@ -587,6 +587,7 @@ void DrawGame() {
     else if (g_player.isDashing) {
         SetColor(1.0f, 0.0f, 0.0f, 1.0f);
         frameIndex = 3;
+    }
     else if (g_player.isDashing)
     {
         SetColor(1.0f, 0.0f, 0.0f, 1.0f); // bright red 
@@ -595,6 +596,7 @@ void DrawGame() {
     else if (!g_player.isOnGround) {
         SetColor(1.0f, 0.5f, 0.0f, 1.0f);
         frameIndex = 2;
+    }
     else if (!g_player.isOnGround)
     {
         SetColor(1.0f, 1.0f, 0.0f, 1.0f); // bright yellow
@@ -604,24 +606,24 @@ void DrawGame() {
         frameIndex = 1;
         if (g_player.facingRight) {
             SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 蓝色向右移动
-    else if (g_player.isMoving)
-    {
-       // frameIndex = 1; // 移动状态帧
-
-        if (g_player.facingRight)
+        }
+        else if (g_player.isMoving)
         {
-            SetColor(0.0f, 1.0f, 1.0f, 1.0f); // bright cyan 
+            // frameIndex = 1; // 移动状态帧
+
+            if (g_player.facingRight)
+            {
+                SetColor(0.0f, 1.0f, 1.0f, 1.0f); // bright cyan 
+            }
+            else {
+                SetColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色向左移动
+            }
         }
         else {
-            SetColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色向左移动
-        else
-        {
-            SetColor(1.0f, 0.0f, 1.0f, 1.0f); // bright magenta
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+            frameIndex = 0;
         }
     }
-    else {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        frameIndex = 0;
     else
     {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f); // bright white 
@@ -633,7 +635,7 @@ void DrawGame() {
         playerTexture, frameIndex, 1, 5);
     // added november 19th
     // Use animation system for frame index
-    int frameIndex = g_player.anim.GetCurrentFrame();
+    frameIndex = g_player.anim.GetCurrentFrame();
 
     RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
         g_playerTexture, frameIndex, 1, 10); // 10 total frames
@@ -647,10 +649,7 @@ void DrawGame() {
 
     RendererDrawB();
 }
-// Keyboard detection
-bool IsKeyDown(int key) {
-    return (GetAsyncKeyState(key) & 0x8000) != 0;
-}
+
 
 void HandleInput() {
     // Update input system
