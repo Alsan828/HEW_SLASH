@@ -285,6 +285,7 @@ void UpdateDash(float deltaTime) {
 
             // 水平惯性调整：保留10%速度，让过渡更自然
             g_player.velocityX *= 0.1f;
+            g_player.velocityY *= 0.1f;
 
             // 如果玩家有输入，覆盖惯性
             if (g_player.isMoving) {
@@ -352,7 +353,7 @@ void UpdateGame(float deltaTime) {
     float timeScale = 1.0f;
     if (g_player.isCharging) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
-        chargeRatio = std::min(chargeRatio * 2, 1.0f);
+        chargeRatio = std::min(chargeRatio * 8, 1.0f);
         timeScale = 1.0f - chargeRatio * 0.8f; // 最大减缓到0.2倍速度
     }
     float scaledDeltaTime = deltaTime * timeScale;
@@ -874,23 +875,20 @@ void ExecuteMouseChargeDash() {
     float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
     chargeRatio = std::min(chargeRatio, 1.0f);
 
-    // 蓄力效果：时间减缓效果（最大减缓到0.3倍速度）
-    float timeSlowFactor = 1.0f - (chargeRatio * 0.7f);
-
     // 冲刺距离和速度增强
     float speedMultiplier = 1.0f + chargeRatio * 2.0f;
     float durationMultiplier = 1.0f + chargeRatio * 2.0f;
 
     // 设置冲刺状态
     g_player.isDashing = true;
-    g_player.dashTimer = DASH_DURATION * durationMultiplier * timeSlowFactor;
+    g_player.dashTimer = DASH_DURATION * durationMultiplier ;
     g_player.dashCooldown = DASH_COOLDOWN * (0.5f + chargeRatio * 0.5f);
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 
     // 应用时间减缓效果到冲刺速度
-    g_player.velocityX = dirX * DASH_SPEED * speedMultiplier * timeSlowFactor;
-    g_player.velocityY = dirY * DASH_SPEED * speedMultiplier * timeSlowFactor;
+    g_player.velocityX = dirX * DASH_SPEED * speedMultiplier ;
+    g_player.velocityY = dirY * DASH_SPEED * speedMultiplier ;
 
     // 存储最终鼠标位置
     g_player.mouseTargetX = currentMouseX;
