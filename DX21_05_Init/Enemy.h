@@ -59,7 +59,7 @@ protected:
     float maxHealth;
     float moveSpeed;
     bool isAlive;
-
+    
     // 移动相关
     float velocityX;
     float velocityY;
