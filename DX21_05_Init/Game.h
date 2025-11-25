@@ -8,15 +8,12 @@
 #include "InputSystem.h"
 #include "Render.h"
 #include "Map.h"
+#include "Camera.h"
 #include "Animation.h"
 
 extern MapManager g_mapManager;
-
-
-// Remove original IsKeyDown function declaration
-// Add input system instance declaration
 extern InputSystem g_inputSystem;
-
+extern Camera g_camera;
 class Enemy;
 
 // Game state enumeration

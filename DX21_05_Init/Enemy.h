@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Game.h"
 #include "Render.h"
+#include "Camera.h"
 #include "Map.h"  // 包含地图头文件
 #include <algorithm>
 #include <cmath>
@@ -36,7 +37,9 @@ public:
 
     // 状态更新
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr);
-    virtual void Render(ID3D11ShaderResourceView* texture);
+    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera); // 修改渲染方法签名
+    void RenderHealthBar(const Camera& camera); // 修改血条渲染
+
 
     // 碰撞检测 - 使用新的地图系统
     bool CheckPlayerCollision();
@@ -59,7 +62,7 @@ protected:
     float maxHealth;
     float moveSpeed;
     bool isAlive;
-
+    
     // 移动相关
     float velocityX;
     float velocityY;
@@ -77,8 +80,9 @@ protected:
     // 工具函数
     float NormalizeAngle(float angle);
     int AngleToDirectionIndex(float angle);
-    void UpdateAI(float deltaTime);
-    void RenderHealthBar();
+    void UpdateAI(float deltaTime); 
+    void WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera);
+
 
     // AI行为方法
     void PatrolBehavior(float deltaTime);
@@ -109,7 +113,7 @@ class MageEnemy : public Enemy {
 public:
     MageEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
-    virtual void Render(ID3D11ShaderResourceView* texture) override;
+    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera);
 
 private:
     float spellCooldown;
@@ -131,7 +135,8 @@ private:
 // 敌人管理函数声明
 void InitEnemies();
 void UpdateEnemies(float deltaTime, MapManager* mapManager = nullptr);
-void RenderEnemies();
+
+void RenderEnemies(const Camera& camera);
 void CleanupEnemies();
 
 // 全局敌人列表和纹理
