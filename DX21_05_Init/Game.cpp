@@ -630,20 +630,13 @@ void DrawGame() {
         //frameIndex = 0; // 待机状态帧
     }
 
-    // 渲染玩家
-    RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
-        playerTexture, frameIndex, 1, 5);
     RenderEnemies(g_camera);
     // added november 19th
     // Use animation system for frame index
     frameIndex = g_player.anim.GetCurrentFrame();
 
-    RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+    RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
         g_playerTexture, frameIndex, 1, 10); // 10 total frames
-
-    // 渲染玩家（确保玩家在最前面）
-    //RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-        //playerTexture, frameIndex, 1, 5); // 5帧动画
 
     // 绘制UI信息
     // DrawUI();
