@@ -51,13 +51,13 @@ void InitGameWorld() {
      // added november 19th
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);      // Player texture testing for animation
     g_player.anim.Init(10, 1, 0.15f, 0); // (10 columns, 1 row)
-    // define clips
-    g_player.anim.AddClip("Idle", 0, 1, 0.3f, true);   // col 1–2
-    g_player.anim.AddClip("RunRight", 2, 4, 0.15f, true); // col 3–5
-    g_player.anim.AddClip("RunLeft", 5, 6, 0.15f, true); // col 6–7
-    g_player.anim.AddClip("Jump", 7, 7, 0.2f, false); // col 8 only
-    g_player.anim.AddClip("Charge", 8, 8, 0.25f, true); // col 9 only
-    g_player.anim.AddClip("Dash", 9, 9, 0.1f, false); // col 10 only
+    g_player.anim.AddClip("Idle", 0, 9, 0.25f, true); // frames 0–9 loop
+
+    //g_player.anim.AddClip("RunRight", 2, 4, 0.15f, true); // col 3–5
+    //g_player.anim.AddClip("RunLeft", 5, 6, 0.15f, true); // col 6–7
+    //g_player.anim.AddClip("Jump", 7, 7, 0.2f, false); // col 8 only
+    //g_player.anim.AddClip("Charge", 8, 8, 0.25f, true); // col 9 only
+    //g_player.anim.AddClip("Dash", 9, 9, 0.1f, false); // col 10 only
 
 
     LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture);     // Ground texture
@@ -343,35 +343,56 @@ void UpdateGame(float deltaTime) {
     UpdateEnemies(deltaTime, &g_mapManager);
 
     // added november 19th
-    // fir the animation state 
+    // Check player state and set animation clip only if it changed
     if (g_player.isCharging) 
     {
-        g_player.anim.SetClip("Charge");
+        if (g_player.anim.GetCurrentClipName() != "Charge")   // charging state, for charge clip
+        {
+            g_player.anim.SetClip("Charge");
+        }
     }
     else if (g_player.isDashing) 
     {
-        g_player.anim.SetClip("Dash");
+        // dashing state, for dash clip
+        if (g_player.anim.GetCurrentClipName() != "Dash")
+        {
+            g_player.anim.SetClip("Dash");
+        }   
     }
     else if (!g_player.isOnGround) 
     {
-        g_player.anim.SetClip("Jump");
+        // jumping state, for jump clip
+        if (g_player.anim.GetCurrentClipName() != "Jump")
+        {
+            g_player.anim.SetClip("Jump");
+        } 
     }
     else if (g_player.isMoving) 
     {
-        if (g_player.facingRight)
+        // running state, for right
+        if (g_player.facingRight) 
         {
-            g_player.anim.SetClip("RunRight");
+            if (g_player.anim.GetCurrentClipName() != "RunRight")
+            {
+                g_player.anim.SetClip("RunRight");
+            }  
         }
-        else
+        else  // for left
         {
-            g_player.anim.SetClip("RunLeft");
-        } 
+            if (g_player.anim.GetCurrentClipName() != "RunLeft")
+            {
+                g_player.anim.SetClip("RunLeft");
+            }  
+        }
     }
     else 
     {
-        g_player.anim.SetClip("Idle");
+        if (g_player.anim.GetCurrentClipName() != "Idle") // idle state,  loop through idle frames
+        {
+            g_player.anim.SetClip("Idle");
+        }
     }
-
+    // Advance the current clips frame and updates it
     g_player.anim.Update(deltaTime);
 }
 
@@ -563,7 +584,7 @@ void DrawGame()
         else
         {
             SetColor(1.0f, 0.0f, 1.0f, 1.0f); // bright magenta
-        }
+        }   
     }
     else
     {
@@ -572,18 +593,10 @@ void DrawGame()
     }
 
     // added november 19th
-    // Use animation system for frame index
     int frameIndex = g_player.anim.GetCurrentFrame();
 
     RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
         g_playerTexture, frameIndex, 1, 10); // 10 total frames
-
-    // 渲染玩家（确保玩家在最前面）
-    //RenderImage(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-        //playerTexture, frameIndex, 1, 5); // 5帧动画
-
-    // 绘制UI信息
-    //DrawUI();
 
     RendererDrawB();
 }
