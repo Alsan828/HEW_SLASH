@@ -633,6 +633,7 @@ void DrawGame() {
     // 渲染玩家
     RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
         playerTexture, frameIndex, 1, 5);
+    RenderEnemies(g_camera);
     // added november 19th
     // Use animation system for frame index
     frameIndex = g_player.anim.GetCurrentFrame();
