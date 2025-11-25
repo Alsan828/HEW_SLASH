@@ -209,33 +209,50 @@ void Enemy::FleeBehavior(float deltaTime) {
         velocityX = moveSpeed;
     }
 }
+ 
+void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera) {
+    // 获取相机位置（相机中心坐标）
+    float cameraX = camera.GetX();
+    float cameraY = camera.GetY();
 
-void Enemy::Render(ID3D11ShaderResourceView* texture) {
+    // 将世界坐标转换为屏幕坐标（相对坐标）
+    // 假设渲染系统以屏幕中心为原点(0,0)
+    screenX = worldX - cameraX;
+    screenY = worldY - cameraY;
+}
+
+void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
+
+    // 将世界坐标转换为屏幕坐标
+    float screenX, screenY;
+    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
     // 根据血量状态选择不同的帧
     int frameIndex = 0;
-
     if (health < maxHealth * 0.3f) {
         frameIndex = 1;
     }
-
     if (currentState == ATTACK) {
         frameIndex = 2;
     }
 
-    // 渲染敌人
-    RenderImage(posX, posY, width, height, texture, frameIndex, 1, 3);
+    // 使用屏幕坐标渲染敌人
+    RenderImage(screenX, screenY, width, height, texture, frameIndex, 1, 3);
 
-    // 渲染血条
-    RenderHealthBar();
+    // 渲染血条（也需要使用屏幕坐标）
+    RenderHealthBar(camera);
 }
 
-void Enemy::RenderHealthBar() {
+void Enemy::RenderHealthBar(const Camera& camera) {
+    // 将世界坐标转换为屏幕坐标
+    float screenX, screenY;
+    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
+
     float barWidth = width;
     float barHeight = 0.02f;
-    float barX = posX;
-    float barY = posY + height + 0.02f;
+    float barX = screenX;
+    float barY = screenY + height + 0.02f;
 
     // 背景条（红色）
     RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
@@ -343,34 +360,36 @@ void MageEnemy::CastSpell() {
     // 这里可以实现施法逻辑
 }
 
-void MageEnemy::Render(ID3D11ShaderResourceView* texture) {
+void MageEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
 
-    int frameIndex = 0;
+    // 将世界坐标转换为屏幕坐标
+    float screenX, screenY;
+    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
+    int frameIndex = 0;
     if (health < maxHealth * 0.3f) {
         frameIndex = 1;
     }
-
     if (currentState == ATTACK) {
         frameIndex = 2;
     }
 
     // 渲染法师敌人
-    RenderImage(posX, posY, width, height, texture, frameIndex, 1, 3);
+    RenderImage(screenX, screenY, width, height, texture, frameIndex, 1, 3);
 
     // 渲染血条
-    RenderHealthBar();
+    RenderHealthBar(camera);
 
-    // 法师敌人有魔法特效
+    // 法师敌人有魔法特效（也需要屏幕坐标）
     if (currentState == ATTACK) {
         float effectSize = width * 1.3f;
-        RenderImage(posX - (effectSize - width) * 0.5f,
-            posY - (effectSize - height) * 0.5f,
-            effectSize, effectSize, g_chargeEffectTexture, 0, 1, 3);
+        float effectX = screenX - (effectSize - width) * 0.5f;
+        float effectY = screenY - (effectSize - height) * 0.5f;
+
+        RenderImage(effectX, effectY, effectSize, effectSize, g_chargeEffectTexture, 0, 1, 3);
     }
 }
-
 // FastEnemy 实现
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     moveSpeed = MOVE_SPEED * 1.5f;
@@ -429,7 +448,8 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     );
 }
 
-void RenderEnemies() {
+// 修改RenderEnemies函数，传入相机参数
+void RenderEnemies(const Camera& camera) {
     for (auto& enemy : g_enemies) {
         ID3D11ShaderResourceView* texture = g_enemyTexture;
 
@@ -443,7 +463,7 @@ void RenderEnemies() {
             texture = g_fastEnemyTexture;
         }
 
-        enemy->Render(texture);
+        enemy->Render(texture, camera); // 传递相机参数
     }
 }
 

@@ -558,7 +558,7 @@ void DrawGame() {
     // 渲染玩家
     RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
         playerTexture, frameIndex, 1, 5);
-
+    RenderEnemies(g_camera);
     // 绘制UI信息
     // DrawUI();
 
