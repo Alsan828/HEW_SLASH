@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "Texture1.h"
 #include "Render.h"
+#include "Camera.h"
 #include "Game.h"
 #include <windowsx.h> 
 #include <atltypes.h>
@@ -35,6 +36,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
     // Get screen resolution
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    g_windowWidth = screenWidth;
+    g_windowHeight = screenHeight;
 
     // Create borderless window covering entire screen
     HWND hWnd;
@@ -90,30 +94,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-    case WM_DESTROY:    // Window destruction message
-        PostQuitMessage(0); // Send WM_QUIT message → Application termination
+    case WM_SIZE: {
+        // 窗口尺寸变化时更新全局变量和相机
+        g_windowWidth = LOWORD(lParam);
+        g_windowHeight = HIWORD(lParam);
+        g_camera.SetWindowSize(g_windowWidth, g_windowHeight);
+
+        break;
+    }
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
         break;
 
-    case WM_CLOSE:      // When 'x' button is pressed
-    {
+    case WM_CLOSE: {
         int res = MessageBoxA(NULL, "Are you sure you want to exit?", "Confirmation", MB_OKCANCEL);
         if (res == IDOK) {
-            DestroyWindow(hWnd);  // Send WM_DESTROY message
+            DestroyWindow(hWnd);
         }
+        break;
     }
-    break;
 
-    case WM_KEYDOWN: // Key input message
-        if (LOWORD(wParam) == VK_ESCAPE)
-        { // If ESCAPE key is pressed
-            PostMessage(hWnd, WM_CLOSE, wParam, lParam); // Send WM_CLOSE message
+    case WM_KEYDOWN:
+        if (LOWORD(wParam) == VK_ESCAPE) {
+            PostMessage(hWnd, WM_CLOSE, wParam, lParam);
         }
         break;
 
     default:
-        // Execute default processing for received message
         return DefWindowProc(hWnd, uMsg, wParam, lParam);
-        break;
     }
 
     return 0;

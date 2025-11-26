@@ -63,9 +63,11 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture);     // Ground texture
     LoadTexture(g_pDevice, "asset/Space.png", &g_backgroundTexture);  // Background texture
     LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);   // Dash effect texture
-    LoadTexture(g_pDevice, "asset/blockB.png", &g_chargeEffectTexture); // Charge effect texture
+    LoadTexture(g_pDevice, "asset/completed.png", &g_chargeEffectTexture); // Charge effect texture
     InitEnemies();
     g_mapManager.InitializeMaps();
+
+    g_mouseIndicator.Initialize();
 
     g_camera.SetSmoothness(camera_Smoothness);
     g_camera.SetLookAhead(camera_LookAhead);
@@ -414,6 +416,8 @@ void UpdateGame(float deltaTime) {
             g_player.anim.SetClip("Idle");
         }
     }
+
+    g_mouseIndicator.Update(scaledDeltaTime);
     // Advance the current clips frame and updates it
     g_player.anim.Update(scaledDeltaTime);
 }
@@ -487,6 +491,11 @@ void DrawGame() {
     RendererDrawF();
 
     // 获取相机位置
+    int currentWidth = g_camera.GetWidth(); // 或者使用 g_windowWidth
+    int currentHeight = g_camera.GetHeight(); // 或者使用 g_windowHeight
+
+    float aspectRatio = static_cast<float>(currentWidth) / static_cast<float>(currentHeight);
+
     float cameraX = g_camera.GetX();
     float cameraY = g_camera.GetY();
 
@@ -659,8 +668,12 @@ void DrawGame() {
     // added november 19th
     frameIndex = g_player.anim.GetCurrentFrame();
 
+    g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
+
     RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
         g_playerTexture, frameIndex, 1, 10); // 10 total frames
+
+    float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
 
     RendererDrawB();
 }
@@ -841,4 +854,78 @@ void ExecuteMouseChargeDash() {
     // 结束蓄力状态
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
+}
+
+void MouseIndicatorSystem::Initialize() {
+    // 加载指示器纹理（可以使用现有纹理或创建新的）
+    m_mouseIndicatorTexture = g_chargeEffectTexture; // 临时使用充能效果纹理
+    m_arrowTexture = g_dashEffectTexture; // 临时使用冲刺效果纹理
+    m_showMouseIndicator = true;
+    m_arrowAngle = 0.0f;
+}
+
+void MouseIndicatorSystem::Update(float deltaTime) {
+    // 采用与冲刺功能相同的方式直接获取鼠标世界坐标
+    float mouseX, mouseY;
+    g_inputSystem.GetMousePosition(mouseX, mouseY); // 此方式与ExecuteMouseChargeDash中一致
+
+    // 直接使用获取到的鼠标世界坐标，避免额外的复杂转换
+    m_mouseWorldX = mouseX;
+    m_mouseWorldY = mouseY;
+
+    // 计算从玩家指向鼠标的方向
+    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+
+    float deltaX = m_mouseWorldX - playerCenterX;
+    float deltaY = m_mouseWorldY - playerCenterY;
+
+    // 使用atan2计算角度（弧度制），与常见数学库一致
+    m_arrowAngle = atan2(deltaY, deltaX);
+
+    // 调试输出（完成后可移除）
+    static int debugCounter = 0;
+    if (debugCounter++ % 60 == 0) {
+        printf("Mouse World: (%.2f, %.2f), Player: (%.2f, %.2f)\n",
+            m_mouseWorldX, m_mouseWorldY, playerCenterX, playerCenterY);
+    }
+}
+// 在Render函数中，确保箭头正确指向鼠标位置
+void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
+    if (!m_showMouseIndicator) return;
+
+    auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
+        return { worldX - cameraX, worldY - cameraY };
+        };
+
+    // 绘制鼠标位置指示器
+    float indicatorSize = 0.1f;
+    auto mousePos = worldToScreen(m_mouseWorldX - indicatorSize / 2, m_mouseWorldY - indicatorSize / 2);
+
+    SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色指示器
+    RenderImage(mousePos.first, mousePos.second, indicatorSize, indicatorSize,
+        m_mouseIndicatorTexture, 0, 1.0f, 1);
+
+    // 绘制方向箭头（从玩家指向鼠标）
+    float arrowDistance = 0.08f;
+    float arrowSize = 0.15f;
+
+    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+
+    // 箭头位置：从玩家位置向鼠标方向偏移固定距离
+    float arrowX = playerCenterX + cosf(m_arrowAngle) * arrowDistance;
+    float arrowY = playerCenterY + sinf(m_arrowAngle) * arrowDistance;
+
+    auto arrowScreenPos = worldToScreen(arrowX - arrowSize / 2, arrowY - arrowSize / 2);
+
+    SetColor(0.0f, 1.0f, 0.0f, 1.0f); // 绿色箭头
+    RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
+        m_arrowTexture, 0, 1.0f, 1);
+}
+
+void MouseIndicatorSystem::Cleanup() {
+    // 清理资源
+    m_mouseIndicatorTexture = nullptr;
+    m_arrowTexture = nullptr;
 }

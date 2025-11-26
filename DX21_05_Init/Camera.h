@@ -1,5 +1,8 @@
 ﻿#pragma once
+#define NOMINMAX  // 必须在包含windows.h之前
+#include <windows.h>
 #include <cmath>
+#include <algorithm>
 
 #if __cplusplus < 201703L
 namespace std {
@@ -26,8 +29,18 @@ private:
     float m_lookAheadFactor;       // Look ahead factor for player movement direction
     float m_deadZoneRadius;        // Dead zone radius where camera doesn't move
 
+    float m_zoomLevel; // 缩放级别
+
+    int m_windowWidth, m_windowHeight; // 添加窗口尺寸记录
+
 public:
     Camera();
+
+    // 获取和设置缩放级别
+    float GetZoom() const { return m_zoomLevel; }
+    void SetZoom(float zoom) {
+        m_zoomLevel = (std::max)(0.1f, (std::min)(zoom, 5.0f)); // 在函数名和括号之间加空格
+    }
 
     void SetTarget(float x, float y);
     void Update(float deltaTime);
@@ -42,4 +55,38 @@ public:
     void SetSmoothness(float smoothness) { m_smoothSpeed = std::clamp(smoothness, 0.01f, 1.0f); }
     void SetLookAhead(float lookAhead) { m_lookAheadFactor = std::clamp(lookAhead, 0.0f, 1.0f); }
     void SetDeadZone(float radius) { m_deadZoneRadius = (radius > 0.0f) ? radius : 0.0f; }
+
+
+    // 获取屏幕中心的世界坐标
+    void GetScreenCenterWorld(float& centerX, float& centerY) const {
+        centerX = m_posX + (m_windowWidth * 0.5f) / (m_zoomLevel * 100.0f);
+        centerY = m_posY + (m_windowHeight * 0.5f) / (m_zoomLevel * 100.0f);
+    }
+
+    // 世界坐标到屏幕坐标的转换
+    void WorldToScreen(float worldX, float worldY, int& screenX, int& screenY) const {
+        screenX = static_cast<int>((worldX - m_posX) * m_zoomLevel + m_windowWidth * 0.5f);
+        screenY = static_cast<int>((worldY - m_posY) * m_zoomLevel + m_windowHeight * 0.5f);
+    }
+
+    // 屏幕坐标到世界坐标的转换
+    void ScreenToWorld(int screenX, int screenY, float& worldX, float& worldY) const {
+        worldX = (screenX - m_windowWidth * 0.5f) / m_zoomLevel + m_posX;
+        worldY = (screenY - m_windowHeight * 0.5f) / m_zoomLevel + m_posY;
+    }
+
+    // 获取视口边界（世界坐标）
+    void GetViewportBounds(float& left, float& right, float& top, float& bottom) const {
+        left = m_posX - (m_windowWidth * 0.5f) / m_zoomLevel;
+        right = m_posX + (m_windowWidth * 0.5f) / m_zoomLevel;
+        top = m_posY - (m_windowHeight * 0.5f) / m_zoomLevel;
+        bottom = m_posY + (m_windowHeight * 0.5f) / m_zoomLevel;
+    }
+
+    int GetWidth() const { return m_windowWidth; }
+    int GetHeight() const { return m_windowHeight; }
+    void SetWindowSize(int width, int height) {
+        m_windowWidth = width;
+        m_windowHeight = height;
+    }
 };

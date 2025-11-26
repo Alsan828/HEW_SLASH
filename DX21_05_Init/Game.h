@@ -77,7 +77,6 @@ public:
     }
 };
 
-
 // Global constant definitions
 const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
@@ -89,6 +88,9 @@ const float MOVE_SPEED = 0.01f;
 const float DASH_SPEED = 0.15f;      // Base dash speed
 const float DASH_DURATION = 0.05f;   // Base dash duration
 const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
+
+extern int g_windowWidth;
+extern int g_windowHeight;
 
 // 在Game.h中声明
 extern Player g_player;
@@ -121,3 +123,22 @@ void ExecuteMouseChargeDash();
 void CancelChargeDash();
 bool CheckCollision(float x1, float y1, float w1, float h1,
 	float x2, float y2, float w2, float h2);
+
+// 在Game.h中添加这些变量声明
+class MouseIndicatorSystem {
+private:
+    float m_mouseWorldX, m_mouseWorldY;
+    float m_arrowAngle;
+    bool m_showMouseIndicator;
+    ID3D11ShaderResourceView* m_mouseIndicatorTexture;
+    ID3D11ShaderResourceView* m_arrowTexture;
+
+public:
+    void Initialize();
+    void Update(float deltaTime);
+    void Render(float cameraX, float cameraY);
+    void Cleanup();
+};
+
+// 全局实例
+extern MouseIndicatorSystem g_mouseIndicator;
