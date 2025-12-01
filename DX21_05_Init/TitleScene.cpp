@@ -31,24 +31,21 @@ void TitleScene::Update(float deltaTime)
 {
     g_inputSystem.Update();
 
-    if (g_inputSystem.IsKeyDown(VK_RETURN))   // by pressing enter key
+    // it goes to the menu scene
+    if (g_inputSystem.IsKeyDown(VK_RETURN)) // at the end you will use mouse
     {
-        sceneManager->SwitchScene(STAGE); // it goes to the stage scene
+        sceneManager->SwitchScene(MENU);
     }
 }
 
 //it draws the objects in title
 void TitleScene::Draw() 
 {
-    RendererDrawF();
-
     if (backgroundTexture) {
         // Always set a color before drawing so the texture is visible
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, backgroundTexture, 0, 1, 1);
     }
-
-    RendererDrawB();
 }
 
 //it erases the objects in title

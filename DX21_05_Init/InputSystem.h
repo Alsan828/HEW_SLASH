@@ -74,6 +74,7 @@ private:
     // Store key states
     std::map<int, bool> m_currentKeyStates;
     std::map<int, bool> m_previousKeyStates;
+    std::map<int, bool> m_toggleConsumed;
 
     // Key mappings
     int m_moveLeftKey = VK_LEFT;
@@ -93,6 +94,8 @@ private:
     bool m_mouseLeftPressed = false;
     bool m_mouseLeftReleased = false;
     bool m_prevMouseLeftDown = false;
+
+    bool m_pauseConsumed = false; // for the pause
 
 public:
     InputSystem();
@@ -124,4 +127,6 @@ public:
 
     // Modify key bindings (optional functionality)
     void RebindKey(int action, int newKey);
+
+    bool IsTogglePressed(int key); // for the pause
 };

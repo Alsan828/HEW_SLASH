@@ -6,6 +6,8 @@ enum SCENE
     TITLE,
     MENU,
     STAGE,
+    PAUSE,
+    HOWTOPLAY,
 
     // ADD MORE HERE LATER
 };
@@ -16,6 +18,8 @@ private:
     SceneBase* currentScene = nullptr; // this is for for the current scene. It starts empty until a scene is loaded
     SCENE currentSceneType;
 
+    SceneBase* previousScene = nullptr;
+
 public:
     bool Init(SCENE startScene);
     void Update(float deltaTime);
@@ -25,4 +29,8 @@ public:
 
     // Game loop
     void GameLoop();
+
+    // helper to access previous scene
+    SCENE GetCurrentSceneType() const { return currentSceneType; }
+    SceneBase* GetPreviousScene() const { return previousScene; }
 };

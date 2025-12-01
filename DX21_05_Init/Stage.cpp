@@ -31,6 +31,5 @@ void StageScene::Draw()
 // Cleanup
 void StageScene::Uninit()
 {
-    // Reset game state
-    ResetGame();
+    ResetGame();  // Reset game state
 }

@@ -1,8 +1,8 @@
 #pragma once
-
 #include "SceneBase.h"
 #include "SceneManager.h"
 #include "Game.h"
+
 
 // added November 14th
 class StageScene : public SceneBase 

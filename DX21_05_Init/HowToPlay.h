@@ -5,24 +5,18 @@
 #include <vector>
 #include "Render.h"
 
-// title background structure
-struct Background 
-{
-    float posX, posY;
-    float width, height;
-};
 
-class TitleScene : public SceneBase 
+class HowToPlayScene : public SceneBase
 {
 private:
     SceneManager* sceneManager;   // pointer to the scene manager
 
     ID3D11ShaderResourceView* backgroundTexture;
-    
-    //InputSystem input;
+
+    SCENE returnScene; // for going to back to then scene I want to
 
 public:
-    TitleScene(SceneManager* manager); // constructor
+    HowToPlayScene(SceneManager* manager, SCENE returnTo); // constructor
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -32,3 +26,4 @@ public:
 
 extern InputSystem g_inputSystem;   // use the global input system
 extern ID3D11Device* g_pDevice;     // device for texture loading
+
