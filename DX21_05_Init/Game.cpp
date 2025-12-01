@@ -75,7 +75,7 @@ void UpdateGame(float deltaTime) {
     float scaledDeltaTime = deltaTime * timeScale;
 
     // 使用调整后的时间更新游戏逻辑
-    UpdateDash(scaledDeltaTime);
+    UpdateDash(deltaTime);
     g_camera.Update(scaledDeltaTime);
     UpdatePlayerPhysics(scaledDeltaTime);
     UpdateEnemies(scaledDeltaTime, &g_mapManager);
@@ -438,8 +438,21 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     auto arrowScreenPos = worldToScreen(arrowX - arrowSize / 2, arrowY - arrowSize / 2);
 
     SetColor(0.0f, 1.0f, 0.0f, 1.0f);
+    // 更新颜色设置代码
+    if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_LOW && g_player.chargeTime < g_player.CHARGE_THRESHOLD_MID) {
+        SetColor(0.0f, 0.0f, 1.0f, 1.0f);
+    }
+    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_MID && g_player.chargeTime < g_player.CHARGE_THRESHOLD_HIGH) {
+        SetColor(0.0f, 1.0f, 1.0f, 1.0f);
+    }
+    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_HIGH) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+    }
+
     RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
         m_arrowTexture, 0, 1, 1);
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void MouseIndicatorSystem::Cleanup() {

@@ -33,7 +33,6 @@ enum DashType {
     DASH_INSTANT,    // Dash immediately on key press
     DASH_CHARGE      // Charge dash on hold
 };
-
 // Player structure
 struct Player {
     float posX = 0.0f;
@@ -50,6 +49,7 @@ struct Player {
     float dashCooldown = 0.0f;
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
+    int dashLevel = 0; // For charge dash levels
 
     float mouseTargetX = 0.0f;
     float mouseTargetY = 0.0f;
@@ -58,12 +58,16 @@ struct Player {
     // Charge dash specific variables
     bool isCharging = false;
     float chargeTime = 0.0f;
-    const float MAX_CHARGE_TIME = 1.5f;  // Maximum charge time
+    const float MAX_CHARGE_TIME = 2.5f;  // Maximum charge time
     const float MIN_CHARGE_TIME = 0.01f; // Minimum valid charge time
+
+    // 充能时间阈值 - 统一管理
+    const float CHARGE_THRESHOLD_LOW = 0.2f;   // 低级充能阈值
+    const float CHARGE_THRESHOLD_MID = 0.7f;   // 中级充能阈值  
+    const float CHARGE_THRESHOLD_HIGH = 1.5f;  // 高级充能阈值
 
     Animation anim; // added november 19th
 };
-
 class GameTimer {
 private:
     __int64 m_prevTime = 0;

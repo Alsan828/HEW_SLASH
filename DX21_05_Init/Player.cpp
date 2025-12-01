@@ -138,60 +138,6 @@ void UpdateDash(float deltaTime) {
     }
 }
 
-// Method 2: Charge dash on hold
-void StartChargeDash() {
-    if (g_player.dashCooldown > 0.0f || g_player.isDashing || g_player.isCharging) {
-        return;
-    }
-
-    g_player.isCharging = true;
-    g_player.chargeTime = 0.0f;
-}
-
-void ExecuteChargeDash() {
-    if (!g_player.isCharging || g_player.chargeTime < g_player.MIN_CHARGE_TIME) {
-        return;
-    }
-
-    // Get direction from input system
-    float dirX = 0.0f, dirY = 0.0f;
-    g_inputSystem.GetMoveDirection(dirX, dirY);
-
-    // If no direction input, use player facing direction
-    if (dirX == 0.0f && dirY == 0.0f) {
-        dirX = g_player.facingRight ? 1.0f : -1.0f;
-    }
-
-    // Normalize direction vector
-    float length = sqrt(dirX * dirX + dirY * dirY);
-    if (length > 0.0f) {
-        dirX /= length;
-        dirY /= length;
-    }
-
-    // Calculate dash parameters based on charge time
-    float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
-    chargeRatio = std::min(chargeRatio, 1.0f);
-
-    float speedMultiplier = 1.0f + chargeRatio * 2.0f;
-    float durationMultiplier = 1.0f + chargeRatio * 1.5f;
-
-    // Set dash state
-    g_player.isDashing = true;
-    g_player.dashTimer = DASH_DURATION * durationMultiplier;
-    g_player.dashCooldown = DASH_COOLDOWN * (0.5f + chargeRatio * 0.5f);
-    g_player.dashDirectionX = dirX;
-    g_player.dashDirectionY = dirY;
-
-    // Set dash speed
-    g_player.velocityX = dirX * DASH_SPEED * speedMultiplier;
-    g_player.velocityY = dirY * DASH_SPEED * speedMultiplier;
-
-    // End charge state
-    g_player.isCharging = false;
-    g_player.chargeTime = 0.0f;
-}
-
 void CancelChargeDash() {
     if (g_player.isCharging) {
         g_player.isCharging = false;
@@ -301,6 +247,8 @@ void StartMouseChargeDash() {
     g_player.hasMouseTarget = true;
 }
 
+
+// 鼠标方向的三段蓄力冲刺
 void ExecuteMouseChargeDash() {
     if (!g_player.isCharging || g_player.chargeTime < g_player.MIN_CHARGE_TIME) {
         return;
@@ -328,17 +276,33 @@ void ExecuteMouseChargeDash() {
         dirY = 0.0f;
     }
 
-    // 根据蓄力时间计算冲刺参数
-    float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
-    chargeRatio = std::min(chargeRatio, 1.0f);
+    // 三段蓄力判定（与ExecuteChargeDash相同的逻辑）
+    float speedMultiplier = 1.0f;
+    float durationMultiplier = 1.0f;
+    float cooldownMultiplier = 1.0f;
 
-    float speedMultiplier = 1.0f + chargeRatio * 2.0f;
-    float durationMultiplier = 1.0f + chargeRatio * 2.0f;
+
+    // 更新属性倍率代码
+    if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_LOW && g_player.chargeTime < g_player.CHARGE_THRESHOLD_MID) {
+        speedMultiplier = 1.3f;
+        durationMultiplier = 1.2f;
+        cooldownMultiplier = 0.8f;
+    }
+    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_MID && g_player.chargeTime < g_player.CHARGE_THRESHOLD_HIGH) {
+        speedMultiplier = 1.6f;
+        durationMultiplier = 1.4f;
+        cooldownMultiplier = 0.6f;
+    }
+    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_HIGH) {
+        speedMultiplier = 2.0f;
+        durationMultiplier = 1.8f;
+        cooldownMultiplier = 0.5f;
+    }
 
     // 设置冲刺状态
     g_player.isDashing = true;
     g_player.dashTimer = DASH_DURATION * durationMultiplier;
-    g_player.dashCooldown = DASH_COOLDOWN * (0.5f + chargeRatio * 0.5f);
+    g_player.dashCooldown = DASH_COOLDOWN * cooldownMultiplier;
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 

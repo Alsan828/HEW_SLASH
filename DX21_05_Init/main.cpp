@@ -31,7 +31,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
     wc.hIconSm = NULL;
 
     RegisterClassEx(&wc);
-    srand(time(NULL));
+    srand(static_cast<unsigned int>(time(NULL)));
 
     // Get screen resolution
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
