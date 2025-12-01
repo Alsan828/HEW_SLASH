@@ -465,10 +465,10 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     SetColor(0.0f, 1.0f, 0.0f, 1.0f);
     // 更新颜色设置代码
     if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_LOW && g_player.chargeTime < g_player.CHARGE_THRESHOLD_MID) {
-        SetColor(0.0f, 0.0f, 1.0f, 1.0f);
+        SetColor(0.0f, 1.0f, 1.0f, 1.0f);
     }
     else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_MID && g_player.chargeTime < g_player.CHARGE_THRESHOLD_HIGH) {
-        SetColor(0.0f, 1.0f, 1.0f, 1.0f);
+        SetColor(0.0f, 0.0f, 1.0f, 1.0f);
     }
     else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_HIGH) {
         SetColor(1.0f, 0.0f, 0.0f, 1.0f);
