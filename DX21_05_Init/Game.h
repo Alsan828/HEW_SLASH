@@ -10,7 +10,11 @@
 #include "Map.h"
 #include "Camera.h"
 #include "Animation.h"
+#include "SceneManager.h"
+#include "SceneBase.h"
+#include "Pause.h"
 
+extern SceneManager sceneManager;
 extern MapManager g_mapManager;
 extern InputSystem g_inputSystem;
 extern Camera g_camera;
@@ -19,7 +23,8 @@ class Enemy;
 // Game state enumeration
 enum GameState {
     STATE_PLAYING,
-    STATE_GAME_OVER
+    STATE_GAME_OVER,
+    STATE_PAUSED
 };
 
 // Dash type enumeration
@@ -101,6 +106,9 @@ extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
 extern DashType g_currentDashType;
+
+// added november 27th for the pause 
+extern ID3D11ShaderResourceView* g_pauseTexture;
 
 // Game initialization
 void InitGameWorld();

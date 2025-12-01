@@ -45,19 +45,10 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 
 // Game initialization
 void InitGameWorld() {
-    // Load textures (temporarily using existing textures)
-    //LoadTexture(g_pDevice, "asset/block.png", &g_playerTexture);      // Player texture
-
      // added november 19th
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);      // Player texture testing for animation
     g_player.anim.Init(10, 1, 0.15f, 0); // (10 columns, 1 row)
     g_player.anim.AddClip("Idle", 0, 9, 0.25f, true); // frames 0–9 loop
-
-    //g_player.anim.AddClip("RunRight", 2, 4, 0.15f, true); // col 3–5
-    //g_player.anim.AddClip("RunLeft", 5, 6, 0.15f, true); // col 6–7
-    //g_player.anim.AddClip("Jump", 7, 7, 0.2f, false); // col 8 only
-    //g_player.anim.AddClip("Charge", 8, 8, 0.25f, true); // col 9 only
-    //g_player.anim.AddClip("Dash", 9, 9, 0.1f, false); // col 10 only
 
 
     LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture);     // Ground texture
@@ -484,7 +475,7 @@ void SetTileColor(const std::string& tileCode) {
 }
 
 void DrawGame() {
-    RendererDrawF();
+    //RendererDrawF();
 
     // 获取相机位置
     float cameraX = g_camera.GetX();
@@ -662,13 +653,32 @@ void DrawGame() {
     RenderImage(playerScreenX, playerScreenY, PLAYER_WIDTH, PLAYER_HEIGHT,
         g_playerTexture, frameIndex, 1, 10); // 10 total frames
 
-    RendererDrawB();
+    //RendererDrawB();
 }
+
 void HandleInput() {
-    g_inputSystem.Update();
+    //g_inputSystem.Update(); 
 
     if (g_inputSystem.IsResetting()) {
         ResetGame();
+    }
+
+    // for the pause
+    /*if (g_inputSystem.IsTogglePressed(VK_P)) {
+        if (g_gameState == STATE_PLAYING) {
+            g_gameState = STATE_PAUSED;
+        }
+        else if (g_gameState == STATE_PAUSED) {
+            g_gameState = STATE_PLAYING;
+        }
+    }*/
+    if (g_inputSystem.IsTogglePressed(VK_P)) {
+        if (sceneManager.GetCurrentSceneType() == STAGE) {
+            sceneManager.SwitchScene(PAUSE);
+        }
+        else if (sceneManager.GetCurrentSceneType() == PAUSE) {
+            sceneManager.SwitchScene(STAGE);
+        }
     }
 
     // 获取鼠标输入状态
