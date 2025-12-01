@@ -300,7 +300,7 @@ ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     SetDamageMultiplier(DIR_UP_RIGHT, 0.3f);
     SetDamageMultiplier(DIR_UP, 0.5f);
     SetDamageMultiplier(DIR_UP_LEFT, 0.7f);
-    SetDamageMultiplier(DIR_LEFT, 2.0f);
+    SetDamageMultiplier(DIR_LEFT, 10.0f);
     SetDamageMultiplier(DIR_DOWN_LEFT, 1.8f);
     SetDamageMultiplier(DIR_DOWN, 1.5f);
     SetDamageMultiplier(DIR_DOWN_RIGHT, 0.3f);
