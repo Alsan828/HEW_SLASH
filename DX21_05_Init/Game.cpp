@@ -212,8 +212,7 @@ void DrawGame() {
             std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
-            float alpha = 0.7f;
-            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, alpha, 1);
+            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
         }
 
         // 绘制中间层瓦片（玩家活动层）
@@ -223,11 +222,7 @@ void DrawGame() {
             std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
-            float alpha = 1.0f;
-            if (tile.tileInfo.isPortal) {
-                alpha = 0.8f + 0.2f * sin(g_gameTimer.GetTotalTime() * 3.0f);
-            }
-            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, alpha, 1);
+            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
         }
 
         // 绘制前景层瓦片
@@ -237,8 +232,7 @@ void DrawGame() {
             std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
-            float alpha = 0.8f;
-            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, alpha, 1);
+            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
         }
     }
 
@@ -257,7 +251,7 @@ void DrawGame() {
         float g = 1.0f - chargeRatio * 0.5f;
         float b = 0.0f;
         SetColor(r, g, b, alpha);
-        RenderImage(effectPos.first, effectPos.second, effectSize, effectSize, g_chargeEffectTexture, 0, alpha, 1);
+        RenderImage(effectPos.first, effectPos.second, effectSize, effectSize, g_chargeEffectTexture, 0, 1, 1);
     }
 
     // 绘制冲刺效果
@@ -272,7 +266,7 @@ void DrawGame() {
         );
 
         SetColor(1.0f, 0.3f, 0.3f, alpha);
-        RenderImage(dashPos.first, dashPos.second, effectSize, effectSize, g_dashEffectTexture, 0, alpha, 1);
+        RenderImage(dashPos.first, dashPos.second, effectSize, effectSize, g_dashEffectTexture, 0, 1, 1);
     }
 
     // 绘制玩家
@@ -429,7 +423,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     SetColor(1.0f, 0.0f, 0.0f, 1.0f);
     RenderImage(mousePos.first, mousePos.second, indicatorSize, indicatorSize,
-        m_mouseIndicatorTexture, 0, 1.0f, 1);
+        m_mouseIndicatorTexture, 0, 1, 1);
 
     // 绘制方向箭头
     float arrowDistance = 0.08f;
@@ -445,7 +439,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     SetColor(0.0f, 1.0f, 0.0f, 1.0f);
     RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
-        m_arrowTexture, 0, 1.0f, 1);
+        m_arrowTexture, 0, 1, 1);
 }
 
 void MouseIndicatorSystem::Cleanup() {
