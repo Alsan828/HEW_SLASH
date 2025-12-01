@@ -350,7 +350,7 @@ void HandleInput() {
     // 移动控制
     bool moving = false;
     if (g_inputSystem.IsMovingLeft()) {
-        if (!g_player.isDashing && !g_player.isCharging) {
+        if (!g_player.isDashing) {
             g_player.velocityX = -MOVE_SPEED;
         }
         g_player.isMoving = true;
@@ -358,7 +358,7 @@ void HandleInput() {
         moving = true;
     }
     if (g_inputSystem.IsMovingRight()) {
-        if (!g_player.isDashing && !g_player.isCharging) {
+        if (!g_player.isDashing) {
             g_player.velocityX = MOVE_SPEED;
         }
         g_player.isMoving = true;
@@ -366,7 +366,7 @@ void HandleInput() {
         moving = true;
     }
 
-    if (!moving && !g_player.isDashing && !g_player.isCharging) {
+    if (!moving && !g_player.isDashing) {
         g_player.velocityX = 0.0f;
         g_player.isMoving = false;
     }
@@ -417,13 +417,38 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    // 绘制鼠标位置指示器
+    // 绘制鼠标位置指示器（原有代码）
     float indicatorSize = 0.1f;
     auto mousePos = worldToScreen(m_mouseWorldX - indicatorSize / 2, m_mouseWorldY - indicatorSize / 2);
 
     SetColor(1.0f, 0.0f, 0.0f, 1.0f);
     RenderImage(mousePos.first, mousePos.second, indicatorSize, indicatorSize,
         m_mouseIndicatorTexture, 0, 1, 1);
+
+    // 在屏幕右上角固定显示冲刺点数
+    float dashPointsX = 0.9f; // 屏幕右侧
+    float dashPointsY = 0.1f; // 屏幕顶部
+    float digitWidth = 0.08f;
+    float digitHeight = 0.12f;
+
+    // 添加背景框提高可读性
+    SetColor(0.0f, 0.0f, 0.0f, 0.7f); // 半透明黑色背景
+    // 渲染背景矩形（需要实现RenderRect函数或使用现有方法）
+
+    // 设置数字颜色
+    if (g_player.dashPoints <= 1) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+    }
+    else if (g_player.dashPoints <= 2) {
+        SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+    }
+    else {
+        SetColor(0.0f, 1.0f, 0.0f, 1.0f);
+    }
+
+    // 渲染冲刺点数
+    RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
+
 
     // 绘制方向箭头
     float arrowDistance = 0.08f;

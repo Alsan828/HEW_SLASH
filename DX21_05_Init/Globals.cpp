@@ -12,6 +12,7 @@ ID3D11ShaderResourceView* g_chargeEffectTexture = nullptr;
 InputSystem g_inputSystem;
 GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;
+
 ID3D11ShaderResourceView* g_pauseTexture = nullptr; // added for pause overlay
 
  float camera_Smoothness = 0.004f;

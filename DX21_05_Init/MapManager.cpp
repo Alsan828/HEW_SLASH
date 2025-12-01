@@ -101,7 +101,6 @@ void MapManager::RespawnPlayer(int spawnId) {
     g_player.isMoving = false;
     g_player.isDashing = false;
     g_player.dashTimer = 0.0f;
-    g_player.dashCooldown = 0.0f;
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
     g_player.facingRight = true;

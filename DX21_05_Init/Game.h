@@ -41,7 +41,6 @@ struct Player {
     // Dash related variables
     bool isDashing = false;
     float dashTimer = 0.0f;
-    float dashCooldown = 0.0f;
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
     int dashLevel = 0; // For charge dash levels
@@ -49,7 +48,8 @@ struct Player {
     float mouseTargetX = 0.0f;
     float mouseTargetY = 0.0f;
     bool hasMouseTarget = false;
-
+    // 在Player结构体中添加
+    bool allowMoveWhileCharging = true;  // 控制蓄力中是否可以移动
     // Charge dash specific variables
     bool isCharging = false;
     float chargeTime = 0.0f;
@@ -62,7 +62,22 @@ struct Player {
     const float CHARGE_THRESHOLD_HIGH = 1.5f;  // 高级充能阈值
 
     Animation anim; // added november 19th
+
+    // 新增：冲刺点数系统
+    int dashPoints = 3;                    // 当前冲刺点数
+    const int MAX_DASH_POINTS = 3;         // 最大冲刺点数
+    float dashPointRecoverTimer = 0.0f;    // 点数恢复计时器
+    const float DASH_POINT_RECOVER_TIME = 0.55f; // 地面恢复间隔
+
+    // 新增：冲刺后硬直状态
+    bool isInDashAftermath = false;        // 是否处于冲刺后硬直状态
+    float dashAftermathTimer = 0.0f;       // 硬直状态计时器
+    const float DASH_AFTERMATH_DURATION = 0.7f; // 硬直持续时间
+
+    const float AFTERIMAGE_DURATION = 0.1f; // 残影显示时间
 };
+
+
 class GameTimer {
 private:
     __int64 m_prevTime = 0;
@@ -87,8 +102,8 @@ const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
-const float GRAVITY = -0.004f;
-const float JUMP_FORCE = 0.075f;
+const float GRAVITY = -0.003f;
+const float JUMP_FORCE = 0.065f;
 const float MOVE_SPEED = 0.01f;
 const float DASH_SPEED = 0.15f;      // Base dash speed
 const float DASH_DURATION = 0.05f;   // Base dash duration
@@ -135,6 +150,12 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 void Jump();
 void UpdateDash(float deltaTime);
 void UpdatePlayerPhysics(float deltaTime);
+void OnEnemyDefeated();
+bool ConsumeDashPoint();
+void UpdateDashPoints(float deltaTime);
+void UpdateDashAftermath(float deltaTime);
+void EnterDashAftermath();
+
 // 在Game.h中添加这些变量声明
 class MouseIndicatorSystem {
 private:
