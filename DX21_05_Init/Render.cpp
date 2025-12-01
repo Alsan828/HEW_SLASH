@@ -145,12 +145,6 @@ HRESULT RendererInit(HWND hwnd) {
 		return hr;
 	}
 
-	hr = LoadTexture(g_pDevice, "asset/char02.png", &pTextureSRV);
-	if (FAILED(hr)) {
-		// Handle error		
-		MessageBoxA(NULL, "OP error", "error", MB_OK);
-		return hr;
-	}
 	hr = LoadTexture(g_pDevice, "asset/back_img_01.png", &pTextureSRV2);
 	if (FAILED(hr)) {
 		// Handle error		
@@ -158,12 +152,6 @@ HRESULT RendererInit(HWND hwnd) {
 		return hr;
 	}
 
-	hr = LoadTexture(g_pDevice, "asset/char01.png", &pTextureSRV3);
-	if (FAILED(hr)) {
-		// Handle error		
-		MessageBoxA(NULL, "OP error", "error", MB_OK);
-		return hr;
-	}
 	hr = LoadTexture(g_pDevice, "asset/Number.png", &pTextureNum);
 	if (FAILED(hr)) {
 		// Handle error		
