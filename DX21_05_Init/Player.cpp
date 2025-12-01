@@ -147,13 +147,6 @@ void CancelChargeDash() {
 
 // Toggle dash type (for testing)
 void ToggleDashType() {
-    if (g_currentDashType == DASH_INSTANT) {
-        g_currentDashType = DASH_CHARGE;
-    }
-    else {
-        g_currentDashType = DASH_INSTANT;
-    }
-
     // Cancel current charge state
     if (g_player.isCharging) {
         CancelChargeDash();

@@ -28,11 +28,6 @@ enum GameState {
     STATE_PAUSED
 };
 
-// Dash type enumeration
-enum DashType {
-    DASH_INSTANT,    // Dash immediately on key press
-    DASH_CHARGE      // Charge dash on hold
-};
 // Player structure
 struct Player {
     float posX = 0.0f;
@@ -102,7 +97,6 @@ const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
 extern int g_windowWidth;
 extern int g_windowHeight;
 
-// 在Game.h中声明
 extern Player g_player;
 extern ID3D11ShaderResourceView* g_playerTexture;
 extern ID3D11ShaderResourceView* g_groundTexture;
@@ -112,7 +106,6 @@ extern ID3D11ShaderResourceView* g_chargeEffectTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
-extern DashType g_currentDashType;
 
 // added november 27th for the pause 
 extern ID3D11ShaderResourceView* g_pauseTexture;
