@@ -479,7 +479,6 @@ void SetTileColor(const std::string& tileCode) {
 }
 
 void DrawGame() {
-    //RendererDrawF();
 
     // 获取相机位置
     int currentWidth = g_camera.GetWidth(); // 或者使用 g_windowWidth
@@ -666,7 +665,6 @@ void DrawGame() {
 
     float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
 
-    RendererDrawB();
 }
 
 void HandleInput() {
