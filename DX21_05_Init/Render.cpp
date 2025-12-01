@@ -14,7 +14,6 @@ ID3D11DeviceContext* g_pDeviceContext = nullptr;
 
 ID3D11Buffer* g_pConstantBuffer = nullptr; // added november 12th
 
-
 ID3D11InputLayout* g_pInputLayout = nullptr;
 ID3D11ShaderResourceView* pTextureSRV = nullptr;
 ID3D11ShaderResourceView* pTextureSRV2 = nullptr;

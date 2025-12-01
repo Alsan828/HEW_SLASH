@@ -14,6 +14,7 @@ GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;
 DashType g_currentDashType = DASH_INSTANT;
 
+ID3D11ShaderResourceView* g_pauseTexture = nullptr; // added for pause overlay
 
  float camera_Smoothness = 0.004f;
  float camera_LookAhead = 0.5f;

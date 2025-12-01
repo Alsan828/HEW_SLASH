@@ -82,10 +82,12 @@ void InputSystem::RebindKey(int action, int newKey) {
 
 void InputSystem::Update() {
     // 更新键盘状态（现有代码）
-    m_previousKeyStates = m_currentKeyStates;
+    //m_previousKeyStates = m_currentKeyStates;
     for (auto& pair : m_currentKeyStates) {
         pair.second = (GetAsyncKeyState(pair.first) & 0x8000) != 0;
     }
+
+    m_previousKeyStates = m_currentKeyStates;
 
     // 更新鼠标状态
     UpdateMouseState();
@@ -119,4 +121,17 @@ void InputSystem::GetMousePosition(float& worldX, float& worldY) const {
     // 转换为世界坐标（考虑相机偏移）
     worldX = screenX + g_camera.GetX();
     worldY = screenY + g_camera.GetY();
+}
+
+bool InputSystem::IsTogglePressed(int key) {
+    if (IsKeyDown(key)) {
+        if (!m_toggleConsumed[key]) {
+            m_toggleConsumed[key] = true;
+            return true; // fire once
+        }
+    }
+    else {
+        m_toggleConsumed[key] = false; // reset when released
+    }
+    return false;
 }
