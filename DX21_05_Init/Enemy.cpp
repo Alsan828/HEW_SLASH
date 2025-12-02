@@ -79,17 +79,17 @@ float Enemy::NormalizeAngle(float angle) {
 }
 
 // 根据攻击角度计算伤害
-float Enemy::CalculateDamageFromPlayer(float baseDamage, float playerDashAngle) {
+int Enemy::CalculateDamageFromPlayer(int baseDamage, float playerDashAngle) {
     float multiplier = GetDamageMultiplier(playerDashAngle);
-    return baseDamage * multiplier;
+    return (int)(baseDamage * multiplier);
 }
 
 // 在TakeDamage方法中改用DamageNumberManager
-void Enemy::TakeDamage(float damage, float attackAngle) {
+void Enemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
     float multiplier = GetDamageMultiplier(attackAngle);
-    float actualDamage = damage * multiplier;
+    int actualDamage = (int)(damage * multiplier);
 
     // 使用独立的伤害数字管理器
     bool isCritical = (multiplier > 1.5f);
@@ -113,7 +113,7 @@ void Enemy::TakeDamage(float damage, float attackAngle) {
 }
 
 
-void Enemy::OnHit(float damage) {
+void Enemy::OnHit(int damage) {
     // 基础敌人被击中时没有特殊行为
 }
 
@@ -385,9 +385,9 @@ void ShieldEnemy::Update(float deltaTime, MapManager* mapManager) {
     }
 }
 
-void ShieldEnemy::OnHit(float damage) {
+void ShieldEnemy::OnHit(int damage) {
     // 盾牌敌人被击中时可能会格挡
-    if (damage < 5.0f) {
+    if (damage < 5) {
         health += damage; // 回滚伤害
     }
 }
@@ -545,7 +545,7 @@ void CleanupEnemies() {
 }
 
 
-void DamageNumberManager::AddDamageNumber(float x, float y, float damage, bool isCritical) {
+void DamageNumberManager::AddDamageNumber(float x, float y, int damage, bool isCritical) {
     damageNumbers.emplace_back(x, y, damage, isCritical);
 }
 

@@ -29,7 +29,7 @@ struct DamageNumber {
 // 独立的伤害数字管理器
 class DamageNumberManager {
 public:
-    static void AddDamageNumber(float x, float y, float damage, bool isCritical = false);
+    static void AddDamageNumber(float x, float y, int damage, bool isCritical = false);
     static void Update(float deltaTime);
     static void Render(const Camera& camera);
     static void Clear();
@@ -61,7 +61,7 @@ public:
 
     // 伤害处理
     float GetDamageMultiplier(float attackAngle);
-    void TakeDamage(float damage, float attackAngle);
+    void TakeDamage(int damage, float attackAngle);
 
     // 状态更新
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr);
@@ -69,7 +69,7 @@ public:
     void RenderHealthBar(const Camera& camera);
 
     // 攻击角度计算
-    float CalculateDamageFromPlayer(float baseDamage, float playerDashAngle);
+    int CalculateDamageFromPlayer(int baseDamage, float playerDashAngle);
 
     // 获取敌人面向方向（true=右, false=左）
     bool IsFacingRight() const { return facingRight; }
@@ -127,7 +127,7 @@ protected:
 
     // 虚函数
     virtual void OnDeath();
-    virtual void OnHit(float damage);
+    virtual void OnHit(int damage);
 
     // 碰撞检测辅助函数
     bool CheckCollisionWithTile(const MapTile& tile);
@@ -146,7 +146,7 @@ public:
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
 
 protected:
-    virtual void OnHit(float damage) override;
+    virtual void OnHit(int damage) override;
     virtual void OnDeath() override;
 };
 

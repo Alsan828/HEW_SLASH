@@ -421,7 +421,7 @@ void CheckDashAttack() {
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
             // 直接传入玩家冲刺角度，敌人自己计算相对方向
-            float actualDamage = enemy->CalculateDamageFromPlayer(g_player.attackDamage, dashAngle);
+            int actualDamage = enemy->CalculateDamageFromPlayer(g_player.attackDamage, dashAngle);
 
             // 对敌人造成伤害
             enemy->TakeDamage(actualDamage, dashAngle);
