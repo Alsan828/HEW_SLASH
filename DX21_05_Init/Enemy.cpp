@@ -1,7 +1,10 @@
 ﻿#include "Enemy.h"
 #include "Map.h"
 
-// Enemy类实现
+// Initialize damage number manager
+std::vector<DamageNumber> DamageNumberManager::damageNumbers;
+
+// Enemy class implementation
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
     currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), attackRange(0.08f) {
@@ -10,35 +13,96 @@ Enemy::Enemy(float x, float y, float hp)
     height = PLAYER_HEIGHT * 1.2f;
     moveSpeed = MOVE_SPEED * 0.65f;
 
-    // 初始化伤害系数
+    // Initialize damage multipliers
     for (int i = 0; i < 8; i++) {
         damageMultipliers[i] = 1.0f;
     }
 
-    facingAngle = 0.0f;
+    facingRight = true;  // Default facing right
     velocityX = 0.0f;
     velocityY = 0.0f;
+
+    // Set base 8-direction damage multipliers
+    SetDamageMultiplier(DIR_FRONT, 1.0f);
+    SetDamageMultiplier(DIR_FRONT_UP, 1.0f);
+    SetDamageMultiplier(DIR_UP, 1.0f);
+    SetDamageMultiplier(DIR_BACK_UP, 1.0f);
+    SetDamageMultiplier(DIR_BACK, 1.0f);
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.0f);
+    SetDamageMultiplier(DIR_DOWN, 1.0f);
+    SetDamageMultiplier(DIR_FRONT_DOWN, 1.0f);
 }
 
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
-    if (dir >= DIR_RIGHT && dir <= DIR_DOWN_RIGHT) {
+    if (dir >= DIR_FRONT && dir <= DIR_FRONT_DOWN) {
         damageMultipliers[static_cast<int>(dir)] = multiplier;
     }
 }
 
 float Enemy::GetDamageMultiplier(float attackAngle) {
-    float relativeAngle = NormalizeAngle(attackAngle - facingAngle);
+    float relativeAngle = GetRelativeAngle(attackAngle);
     int directionIndex = AngleToDirectionIndex(relativeAngle);
     return damageMultipliers[directionIndex];
 }
 
-void Enemy::TakeDamage(float damage, float attackAngle) {
+// Calculate relative angle (based on enemy facing direction)
+float Enemy::GetRelativeAngle(float attackAngle) const {
+    // When facing right, 0 degrees is front; when facing left, 180 degrees is front
+    float enemyFrontAngle = facingRight ? 0.0f : 3.14159f;
+    float relativeAngle = attackAngle - enemyFrontAngle;
+
+    // Normalize to [-π, π]
+    while (relativeAngle > 3.14159f) relativeAngle -= 2 * 3.14159f;
+    while (relativeAngle < -3.14159f) relativeAngle += 2 * 3.14159f;
+
+    return relativeAngle;
+}
+
+// Convert angle to direction index (8 directions)
+int Enemy::AngleToDirectionIndex(float relativeAngle) {
+    // Normalize relative angle to [0, 2π]
+    float angle = relativeAngle;
+    if (angle < 0) angle += 2 * 3.14159f;
+
+    // 8 directions, each 45 degrees
+    float sector = 3.14159f / 4.0f;
+
+    // Calculate direction index
+    int index = static_cast<int>((angle + sector / 2) / sector) % 8;
+    return index;
+}
+
+float Enemy::NormalizeAngle(float angle) {
+    while (angle < 0) angle += 2 * 3.14159f;
+    while (angle >= 2 * 3.14159f) angle -= 2 * 3.14159f;
+    return angle;
+}
+
+// Calculate damage based on attack angle
+int Enemy::CalculateDamageFromPlayer(int baseDamage, float playerDashAngle) {
+    float multiplier = GetDamageMultiplier(playerDashAngle);
+    return (int)(baseDamage * multiplier);
+}
+
+// Use DamageNumberManager in TakeDamage method
+void Enemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
     float multiplier = GetDamageMultiplier(attackAngle);
-    float actualDamage = damage * multiplier;
+    int actualDamage = (int)(damage * multiplier);
+
+    // Use independent damage number manager
+    bool isCritical = (multiplier > 1.5f);
+    DamageNumberManager::AddDamageNumber(
+        posX + width * 0.5f,  // Enemy center X
+        posY + height,        // Top of enemy
+        actualDamage,
+        isCritical
+    );
 
     health -= actualDamage;
+    isHit = true;
+    hitTimer = HIT_DURATION;
     OnHit(actualDamage);
 
     if (health <= 0) {
@@ -48,29 +112,39 @@ void Enemy::TakeDamage(float damage, float attackAngle) {
     }
 }
 
-void Enemy::OnHit(float damage) {
-    // 基础敌人被击中时没有特殊行为
+
+void Enemy::OnHit(int damage) {
+    // Base enemy has no special behavior when hit
 }
 
 void Enemy::OnDeath() {
-    // 基础敌人死亡处理
+    // Base enemy death handling
     isAlive = false;
+    OnEnemyDefeated();
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
-    // 应用重力
+    // Update hit state
+    if (isHit) {
+        hitTimer -= deltaTime;
+        if (hitTimer <= 0.0f) {
+            isHit = false;
+        }
+    }
+
+    // Apply gravity
     velocityY += GRAVITY * deltaTime * 60.0f;
 
-    // 保存旧位置用于碰撞检测
+    // Save old position for collision detection
     float oldX = posX;
     float oldY = posY;
 
-    // 移动
+    // Move
     posX += velocityX * deltaTime * 60.0f;
 
-    // 水平碰撞检测 - 使用地图管理器获取固体瓦片
+    // Horizontal collision detection - use map manager to get solid tiles
     bool horizontalCollision = false;
     if (mapManager && mapManager->GetCurrentMap()) {
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
@@ -85,7 +159,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
 
     posY += velocityY * deltaTime * 60.0f;
 
-    // 垂直碰撞检测
+    // Vertical collision detection
     bool verticalCollision = false;
     if (mapManager && mapManager->GetCurrentMap()) {
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
@@ -99,21 +173,21 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // 只在水平碰撞时重置水平速度
+    // Reset horizontal velocity only on horizontal collision
     if (horizontalCollision) {
         velocityX = 0;
     }
 
-    // 边界检查 - 使用地图边界
+    // Boundary check - use map boundaries
     if (mapManager && mapManager->GetCurrentMap()) {
-        // 这里可以添加基于地图的边界检查
-        if (posY < -5.0f) { // 掉落死亡高度
+        // Can add map-based boundary checks here
+        if (posY < -5.0f) { // Fall death height
             isAlive = false;
             return;
         }
     }
     else {
-        // 后备边界检查
+        // Fallback boundary check
         if (posX < -1.0f) posX = -1.0f;
         if (posX > 1.0f - width) posX = 1.0f - width;
         if (posY < -2.0f) {
@@ -130,12 +204,12 @@ void Enemy::UpdateAI(float deltaTime) {
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // 更新朝向
-    if (dx != 0 || dy != 0) {
-        facingAngle = atan2(dy, dx);
+    // Update facing direction
+    if (dx != 0) {
+        facingRight = (dx > 0);
     }
 
-    // 修正状态机逻辑
+    // State machine logic
     switch (currentState) {
     case PATROL:
         PatrolBehavior(deltaTime);
@@ -164,7 +238,7 @@ void Enemy::PatrolBehavior(float deltaTime) {
 
     patrolTimer += deltaTime;
 
-    // 每2秒检查一次是否需要转向
+    // Check if need to change direction every 2 seconds
     if (patrolTimer >= 2.0f) {
         if (posX <= patrolMinX || posX >= patrolMaxX) {
             patrolDirection *= -1.0f;
@@ -174,7 +248,7 @@ void Enemy::PatrolBehavior(float deltaTime) {
 
     velocityX = patrolDirection * moveSpeed * 0.5f;
 
-    // 添加小的垂直速度变化，避免完全静止
+    // Add small vertical velocity variation to avoid complete stillness
     if (velocityY == 0) {
         velocityY = 0.01f;
     }
@@ -188,20 +262,20 @@ void Enemy::ChaseBehavior(float deltaTime) {
         velocityX = -moveSpeed;
     }
 
-    // 简单的跳跃尝试
+    // Simple jump attempt
     if (abs(g_player.posX - posX) < 0.3f && g_player.posY > posY + 0.2f) {
         velocityY = JUMP_FORCE * 0.8f;
     }
 }
 
 void Enemy::AttackBehavior(float deltaTime) {
-    // 停止移动进行攻击
+    // Stop moving to attack
     velocityX = 0;
     velocityY = 0;
 }
 
 void Enemy::FleeBehavior(float deltaTime) {
-    // 远离玩家
+    // Move away from player
     if (g_player.posX > posX) {
         velocityX = -moveSpeed;
     }
@@ -209,14 +283,15 @@ void Enemy::FleeBehavior(float deltaTime) {
         velocityX = moveSpeed;
     }
 }
- 
+
+
 void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera) {
-    // 获取相机位置（相机中心坐标）
+    // Get camera position (camera center coordinates)
     float cameraX = camera.GetX();
     float cameraY = camera.GetY();
 
-    // 将世界坐标转换为屏幕坐标（相对坐标）
-    // 假设渲染系统以屏幕中心为原点(0,0)
+    // Convert world coordinates to screen coordinates (relative coordinates)
+    // Assume rendering system uses screen center as origin (0,0)
     screenX = worldX - cameraX;
     screenY = worldY - cameraY;
 }
@@ -224,11 +299,11 @@ void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, fl
 void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
 
-    // 将世界坐标转换为屏幕坐标
+    // Convert world coordinates to screen coordinates
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
-    // 根据血量状态选择不同的帧
+    // Select different frames based on health status
     int frameIndex = 0;
     if (health < maxHealth * 0.3f) {
         frameIndex = 1;
@@ -236,16 +311,21 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (currentState == ATTACK) {
         frameIndex = 2;
     }
+    // Hit state: flicker or color change effect
+    if (isHit) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+    }
 
-    // 使用屏幕坐标渲染敌人
+    // Render enemy using screen coordinates
     RenderImage(screenX, screenY, width, height, texture, frameIndex, 1, 3);
 
-    // 渲染血条（也需要使用屏幕坐标）
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // Render health bar (also needs screen coordinates)
     RenderHealthBar(camera);
 }
 
 void Enemy::RenderHealthBar(const Camera& camera) {
-    // 将世界坐标转换为屏幕坐标
+    // Convert world coordinates to screen coordinates
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
@@ -254,10 +334,10 @@ void Enemy::RenderHealthBar(const Camera& camera) {
     float barX = screenX;
     float barY = screenY + height + 0.02f;
 
-    // 背景条（红色）
+    // Background bar (red)
     RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
 
-    // 血量条（绿色）
+    // Health bar (green)
     float healthRatio = health / maxHealth;
     RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_groundTexture, 1, 1, 1);
 }
@@ -281,58 +361,44 @@ bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
         tile.posX, tile.posY, tile.width, tile.height);
 }
 
-float Enemy::NormalizeAngle(float angle) {
-    while (angle < 0) angle += 2 * 3.14159f;
-    while (angle >= 2 * 3.14159f) angle -= 2 * 3.14159f;
-    return angle;
-}
-
-int Enemy::AngleToDirectionIndex(float angle) {
-    float sector = 3.14159f / 4.0f;
-    int index = static_cast<int>((angle + sector / 2) / sector) % 8;
-    return index;
-}
-
-// ShieldEnemy 实现
+// ShieldEnemy implementation - modify damage multiplier settings
 ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
-    // 盾牌敌人：正面减伤，背面增伤
-    SetDamageMultiplier(DIR_RIGHT, 0.1f);
-    SetDamageMultiplier(DIR_UP_RIGHT, 0.3f);
-    SetDamageMultiplier(DIR_UP, 0.5f);
-    SetDamageMultiplier(DIR_UP_LEFT, 0.7f);
-    SetDamageMultiplier(DIR_LEFT, 10.0f);
-    SetDamageMultiplier(DIR_DOWN_LEFT, 1.8f);
-    SetDamageMultiplier(DIR_DOWN, 1.5f);
-    SetDamageMultiplier(DIR_DOWN_RIGHT, 0.3f);
+    // Shield enemy: reduced damage from front, increased damage from back
+    SetDamageMultiplier(DIR_FRONT, 0.1f);
+    SetDamageMultiplier(DIR_FRONT_UP, 0.3f);
+    SetDamageMultiplier(DIR_FRONT_DOWN, 0.3f);
+    SetDamageMultiplier(DIR_BACK, 2.0f);
+    SetDamageMultiplier(DIR_BACK_UP, 1.5f);
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.5f);
 
     width = PLAYER_WIDTH * 1.5f;
     moveSpeed = MOVE_SPEED * 0.5f;
 }
 
+
 void ShieldEnemy::Update(float deltaTime, MapManager* mapManager) {
     Enemy::Update(deltaTime, mapManager);
 
-    // 盾牌敌人的特殊AI逻辑
+    // Shield enemy special AI logic
     if (currentState == PATROL) {
-        // 盾牌敌人巡逻更慢但更稳定
+        // Shield enemy patrols slower but more stable
         velocityX *= 0.8f;
     }
 }
 
-void ShieldEnemy::OnHit(float damage) {
-    // 盾牌敌人被击中时可能会格挡
-    if (damage < 5.0f) {
-        health += damage; // 回滚伤害
+void ShieldEnemy::OnHit(int damage) {
+    // Shield enemy may block when hit
+    if (damage < 5) {
+        health += damage; // Rollback damage
     }
 }
 
 void ShieldEnemy::OnDeath() {
     Enemy::OnDeath();
 }
-
-// MageEnemy 实现
+// MageEnemy implementation
 MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
-    // 法师敌人：脆弱但远程
+    // Mage enemy: vulnerable from top and bottom
     SetDamageMultiplier(DIR_UP, 2.0f);
     SetDamageMultiplier(DIR_DOWN, 2.0f);
 
@@ -349,7 +415,7 @@ void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
         currentSpellCooldown -= deltaTime;
     }
 
-    // 在攻击状态下施法
+    // Cast spell in attack state
     if (currentState == ATTACK && currentSpellCooldown <= 0) {
         CastSpell();
         currentSpellCooldown = spellCooldown;
@@ -357,13 +423,13 @@ void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
 }
 
 void MageEnemy::CastSpell() {
-    // 这里可以实现施法逻辑
+    // Implement spell casting logic here
 }
 
 void MageEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
 
-    // 将世界坐标转换为屏幕坐标
+    // Convert world coordinates to screen coordinates
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
@@ -375,13 +441,13 @@ void MageEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
         frameIndex = 2;
     }
 
-    // 渲染法师敌人
+    // Render mage enemy
     RenderImage(screenX, screenY, width, height, texture, frameIndex, 1, 3);
 
-    // 渲染血条
+    // Render health bar
     RenderHealthBar(camera);
 
-    // 法师敌人有魔法特效（也需要屏幕坐标）
+    // Mage enemy has magic effects (also needs screen coordinates)
     if (currentState == ATTACK) {
         float effectSize = width * 1.3f;
         float effectX = screenX - (effectSize - width) * 0.5f;
@@ -390,7 +456,8 @@ void MageEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
         RenderImage(effectX, effectY, effectSize, effectSize, g_chargeEffectTexture, 0, 1, 3);
     }
 }
-// FastEnemy 实现
+
+// FastEnemy implementation
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     moveSpeed = MOVE_SPEED * 1.5f;
     dashCooldown = 2.0f;
@@ -414,9 +481,9 @@ void FastEnemy::DashAttack() {
     velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 3.0f;
 }
 
-// 敌人管理函数
+// Enemy management functions
 void InitEnemies() {
-    // 加载敌人纹理
+    // Load enemy textures
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_enemyTexture);
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_shieldEnemyTexture);
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_mageEnemyTexture);
@@ -429,12 +496,14 @@ void InitEnemies() {
 }
 
 
-void UpdateEnemies(float deltaTime, MapManager* mapManager) {
+void UpdateEnemies(float deltaTime, MapManager* mapManager) {    // Update damage numbers
+
+    DamageNumberManager::Update(deltaTime);
     for (auto& enemy : g_enemies) {
         enemy->Update(deltaTime, mapManager);
     }
 
-    // 移除死亡的敌人
+    // Remove dead enemies
     g_enemies.erase(
         std::remove_if(g_enemies.begin(), g_enemies.end(),
             [](Enemy* e) {
@@ -448,7 +517,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     );
 }
 
-// 修改RenderEnemies函数，传入相机参数
+// Modify RenderEnemies function to pass camera parameter
 void RenderEnemies(const Camera& camera) {
     for (auto& enemy : g_enemies) {
         ID3D11ShaderResourceView* texture = g_enemyTexture;
@@ -463,13 +532,68 @@ void RenderEnemies(const Camera& camera) {
             texture = g_fastEnemyTexture;
         }
 
-        enemy->Render(texture, camera); // 传递相机参数
+        enemy->Render(texture, camera); // Pass camera parameter
     }
+    DamageNumberManager::Render(camera);
 }
 
 void CleanupEnemies() {
+    DamageNumberManager::Clear();
     for (auto& enemy : g_enemies) {
         delete enemy;
     }
     g_enemies.clear();
+}
+
+
+void DamageNumberManager::AddDamageNumber(float x, float y, int damage, bool isCritical) {
+    damageNumbers.emplace_back(x, y, damage, isCritical);
+}
+
+void DamageNumberManager::Update(float deltaTime) {
+    for (auto it = damageNumbers.begin(); it != damageNumbers.end();) {
+        it->timer += deltaTime;
+        it->posY += it->velocityY * deltaTime;
+        it->velocityY -= 2.0f * deltaTime; // Gravity effect
+
+        if (it->timer >= it->lifeTime) {
+            it = damageNumbers.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+void DamageNumberManager::Render(const Camera& camera) {
+    for (auto& number : damageNumbers) {
+        float screenX, screenY;
+        // Use static world-to-screen coordinate conversion function
+        float cameraX = camera.GetX();
+        float cameraY = camera.GetY();
+        screenX = number.posX - cameraX;
+        screenY = number.posY - cameraY;
+
+        // Calculate alpha (fade-out effect)
+        float alpha = 1.0f - (number.timer / number.lifeTime);
+
+        // Set color based on whether it's critical
+        if (number.isCritical) {
+            //SetColor(1.0f, 0.0f, 0.0f, alpha); // Red critical numbers
+            SetColor(1.0f, 1.0f, 1.0f, alpha); // White normal numbers
+        }
+        else {
+            SetColor(1.0f, 1.0f, 1.0f, alpha); // White normal numbers
+        }
+
+        // Use existing number rendering functionality
+        RenderNumber(number.value, screenX, screenY, 0.07f, 0.1f, pTextureNum);
+    }
+
+    // Reset color
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+void DamageNumberManager::Clear() {
+    damageNumbers.clear();
 }

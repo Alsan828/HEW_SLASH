@@ -153,6 +153,7 @@
     <ClCompile Include="MapManager.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="Pause.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Render.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>

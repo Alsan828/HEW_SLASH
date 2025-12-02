@@ -1,4 +1,5 @@
 ﻿#pragma once
+#define NOMINMAX
 
 #include <cstdint>
 #include <vector>
@@ -26,13 +27,6 @@ enum GameState {
     STATE_GAME_OVER,
     STATE_PAUSED
 };
-
-// Dash type enumeration
-enum DashType {
-    DASH_INSTANT,    // Dash immediately on key press
-    DASH_CHARGE      // Charge dash on hold
-};
-
 // Player structure
 struct Player {
     float posX = 0.0f;
@@ -41,26 +35,131 @@ struct Player {
     float velocityY = 0.0f;
     bool isOnGround = false;
     bool isMoving = false;
-    bool facingRight = true; // Facing direction
+    bool facingRight = true;
+
+    // 生命值系统
+    float health = 100.0f;
+    float maxHealth = 100.0f;
+    bool isAlive = true;
+
+    // 攻击系统
+    float attackDamage = 30.0f;  // 基础攻击力
+    bool isAttacking = false;    // 攻击状态
+    float attackTimer = 0.0f;
+    const float ATTACK_DURATION = 0.2f;
 
     // Dash related variables
     bool isDashing = false;
     float dashTimer = 0.0f;
-    float dashCooldown = 0.0f;
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
+    int dashLevel = 0;
 
     float mouseTargetX = 0.0f;
     float mouseTargetY = 0.0f;
     bool hasMouseTarget = false;
+    bool allowMoveWhileCharging = true;
 
     // Charge dash specific variables
     bool isCharging = false;
     float chargeTime = 0.0f;
-    const float MAX_CHARGE_TIME = 1.5f;  // Maximum charge time
-    const float MIN_CHARGE_TIME = 0.01f; // Minimum valid charge time
+    const float MAX_CHARGE_TIME = 2.5f;
+    const float MIN_CHARGE_TIME = 0.01f;
+    const float CHARGE_THRESHOLD_LOW = 0.2f;
+    const float CHARGE_THRESHOLD_MID = 0.7f;
+    const float CHARGE_THRESHOLD_HIGH = 1.5f;
 
-    Animation anim; // added november 19th
+    // 新增：蓄力层数系统
+    float savedChargeTime = 0.0f;        // 保存的蓄力时间
+    bool hasSavedCharge = false;         // 是否有保存的蓄力
+    float chargeDecayTimer = 0.0f;        // 蓄力衰减计时器
+    const float CHARGE_DECAY_TIME = 1.0f; // 蓄力保存时间
+
+    Animation anim;
+
+    // 冲刺点数系统
+    int dashPoints = 3;
+    const int MAX_DASH_POINTS = 3;
+    float dashPointRecoverTimer = 0.0f;
+    const float DASH_POINT_RECOVER_TIME = 0.55f;
+
+    // 冲刺后硬直状态
+    bool isInDashAftermath = false;
+    float dashAftermathTimer = 0.0f;
+    const float DASH_AFTERMATH_DURATION = 0.7f;
+
+    const float AFTERIMAGE_DURATION = 0.1f;
+
+    // 新增：攻击检测相关
+    std::vector<Enemy*> hitEnemies; // 本次冲刺已击中的敌人（避免重复伤害）
+
+    // 重置攻击状态
+    void ResetAttack() {
+        isAttacking = false;
+        attackTimer = 0.0f;
+        hitEnemies.clear();
+    }
+
+    // 受到伤害
+    void TakeDamage(float damage) {
+        if (!isAlive) return;
+
+        health -= damage;
+        if (health <= 0) {
+            health = 0;
+            isAlive = false;
+            // 玩家死亡处理
+        }
+    }
+
+    // 获取当前蓄力等级
+    int GetChargeLevel() const {
+        if (chargeTime >= CHARGE_THRESHOLD_HIGH) return 3;
+        if (chargeTime >= CHARGE_THRESHOLD_MID) return 2;
+        if (chargeTime >= CHARGE_THRESHOLD_LOW) return 1;
+        return 0;
+    }
+
+    // 保存当前蓄力
+    void SaveCharge() {
+        if (chargeTime > MIN_CHARGE_TIME) {
+            savedChargeTime = chargeTime;
+            hasSavedCharge = true;
+            chargeDecayTimer = CHARGE_DECAY_TIME;
+        }
+    }
+
+    // 加载保存的蓄力
+    void LoadSavedCharge() {
+        if (hasSavedCharge) {
+            chargeTime = savedChargeTime;
+            chargeDecayTimer = CHARGE_DECAY_TIME; // 重置衰减计时器
+        }
+    }
+
+    // 清空保存的蓄力
+    void ClearSavedCharge() {
+        hasSavedCharge = false;
+        savedChargeTime = 0.0f;
+        chargeDecayTimer = 0.0f;
+    }
+
+    // 更新蓄力衰减
+    void UpdateChargeDecay(float deltaTime) {
+        if (hasSavedCharge) {
+            chargeDecayTimer -= deltaTime;
+            if (chargeDecayTimer <= 0.0f) {
+                ClearSavedCharge(); // 时间到，清空保存的蓄力
+            }
+        }
+    }
+    // 根据时间获取蓄力等级
+    int GetChargeLevelFromTime(float chargeTime) const {
+        if (chargeTime >= CHARGE_THRESHOLD_HIGH) return 3;
+        if (chargeTime >= CHARGE_THRESHOLD_MID) return 2;
+        if (chargeTime >= CHARGE_THRESHOLD_LOW) return 1;
+        return 0;
+    }
 };
 
 class GameTimer {
@@ -70,7 +169,7 @@ private:
     __int64 m_currTime = 0;
     double m_secondsPerCount = 0.0;
     float m_deltaTime = 0.0f;
-    double m_totalTime;       // 总游戏时间
+    double m_totalTime = 0.0f;       // 总游戏时间
 
 public:
     GameTimer();
@@ -87,8 +186,8 @@ const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
-const float GRAVITY = -0.004f;
-const float JUMP_FORCE = 0.075f;
+const float GRAVITY = -0.003f;
+const float JUMP_FORCE = 0.065f;
 const float MOVE_SPEED = 0.01f;
 const float DASH_SPEED = 0.15f;      // Base dash speed
 const float DASH_DURATION = 0.05f;   // Base dash duration
@@ -97,7 +196,6 @@ const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
 extern int g_windowWidth;
 extern int g_windowHeight;
 
-// 在Game.h中声明
 extern Player g_player;
 extern ID3D11ShaderResourceView* g_playerTexture;
 extern ID3D11ShaderResourceView* g_groundTexture;
@@ -107,8 +205,11 @@ extern ID3D11ShaderResourceView* g_chargeEffectTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
-extern DashType g_currentDashType;
 
+// 在Game.h的全局变量部分添加
+extern float g_slowMoTimer;      // 时间减慢计时器
+extern float g_slowMoFactor;     // 时间减慢倍率
+extern bool g_isSlowMotion;      // 是否处于时间减慢状态
 // added november 27th for the pause 
 extern ID3D11ShaderResourceView* g_pauseTexture;
 
@@ -121,6 +222,7 @@ void DrawGame();
 // Input handling
 void HandleInput();
 
+void TriggerSlowMotion(float i, float a); // 1秒时间，减慢到20%速度
 // Reset game
 void ResetGame(); 
 
@@ -132,6 +234,17 @@ void CancelChargeDash();
 bool CheckCollision(float x1, float y1, float w1, float h1,
 	float x2, float y2, float w2, float h2);
 
+
+//Player Movement Control
+void Jump();
+void UpdateDash(float deltaTime);
+void UpdatePlayerPhysics(float deltaTime);
+void OnEnemyDefeated();
+bool ConsumeDashPoint();
+void UpdateDashPoints(float deltaTime);
+void UpdateDashAftermath(float deltaTime);
+void EnterDashAftermath();
+void CheckDashAttack();
 
 
 // 在Game.h中添加这些变量声明
