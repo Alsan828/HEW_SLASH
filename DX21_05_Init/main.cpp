@@ -115,11 +115,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
     }
 
-    case WM_KEYDOWN:
+   /* case WM_KEYDOWN:
         if (LOWORD(wParam) == VK_ESCAPE) {
             PostMessage(hWnd, WM_CLOSE, wParam, lParam);
         }
-        break;
+        break;*/
 
     default:
         return DefWindowProc(hWnd, uMsg, wParam, lParam);

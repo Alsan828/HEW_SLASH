@@ -341,6 +341,22 @@ void HandleInput() {
     }
 
     if (g_inputSystem.IsTogglePressed(VK_P)) {
+        if (g_gameState == STATE_PLAYING) {
+            g_gameState = STATE_PAUSED;
+        }
+        else if (g_gameState == STATE_PAUSED) {
+            g_gameState = STATE_PLAYING;
+        }
+    }*/
+    if (g_inputSystem.IsTogglePressed(VK_P)) {
+        if (g_gameState == STATE_PLAYING) {
+            g_gameState = STATE_PAUSED;
+        }
+        else if (g_gameState == STATE_PAUSED) {
+            g_gameState = STATE_PLAYING;
+        }
+    }*/
+    if (g_inputSystem.IsTogglePressed(VK_P)) {
         if (sceneManager.GetCurrentSceneType() == STAGE) {
             sceneManager.SwitchScene(PAUSE);
         }
@@ -390,26 +406,26 @@ void HandleInput() {
         g_player.isMoving = true;
         g_player.facingRight = true;
         moving = true;
+// MouseIndicatorSystem 实现
     }
-
-    if (!moving && !g_player.isDashing) {
-        g_player.velocityX = 0.0f;
-        g_player.isMoving = false;
+    m_mouseIndicatorTexture = g_chargeEffectTexture;
+    m_arrowTexture = g_dashEffectTexture;
+    m_showMouseIndicator = true;
     }
 
     // 跳跃控制
     static bool wasJumpKeyPressed = false;
-    bool isJumpKeyPressed = g_inputSystem.IsJumping();
-    if (isJumpKeyPressed && !wasJumpKeyPressed) {
-        Jump();
-    }
+    // 加载指示器纹理（可以使用现有纹理或创建新的）
+    m_mouseIndicatorTexture = g_chargeEffectTexture; // 临时使用充能效果纹理
+    m_arrowTexture = g_dashEffectTexture; // 临时使用冲刺效果纹理
+    m_showMouseIndicator = true;
     wasJumpKeyPressed = isJumpKeyPressed;
 }
 
-// MouseIndicatorSystem 实现
 void MouseIndicatorSystem::Initialize() {
-    m_mouseIndicatorTexture = g_chargeEffectTexture;
-    m_arrowTexture = g_dashEffectTexture;
+    // 加载指示器纹理（可以使用现有纹理或创建新的）
+    m_mouseIndicatorTexture = g_chargeEffectTexture; // 临时使用充能效果纹理
+    m_arrowTexture = g_dashEffectTexture; // 临时使用冲刺效果纹理
     m_showMouseIndicator = true;
     m_arrowAngle = 0.0f;
 }
@@ -419,7 +435,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
     m_mouseWorldX = mouseX;
-    m_mouseWorldY = mouseY;
+
 
     float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
@@ -427,7 +443,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
     float deltaX = m_mouseWorldX - playerCenterX;
     float deltaY = m_mouseWorldY - playerCenterY;
 
-    m_arrowAngle = atan2(deltaY, deltaX);
+// 在Render函数中，确保箭头正确指向鼠标位置
 
     static int debugCounter = 0;
     if (debugCounter++ % 60 == 0) {
@@ -435,7 +451,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
             m_mouseWorldX, m_mouseWorldY, playerCenterX, playerCenterY);
     }
 }
-
+// 在Render函数中，确保箭头正确指向鼠标位置
 void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     if (!m_showMouseIndicator) return;
 

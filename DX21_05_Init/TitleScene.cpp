@@ -16,12 +16,15 @@ TitleScene::TitleScene(SceneManager* manager)
 //it initializes the objects in title
 bool TitleScene::Init() 
 {
-    //background.Init("asset/title.png");
-   // background.SetPos(0.0f, 0.0f, 0.0f);
-   // background.SetSize(960.0f, 640.0f, 0.0f);
-
     LoadTexture(g_pDevice, "asset/title.png", &backgroundTexture);      // abckground texture
 
+    LoadTexture(g_pDevice, "asset/block.png", &buttonTexture); // for the button
+
+
+    uiButtons.clear();
+    g_mouseIndicator.ShowMouseIndicator(false);
+
+    uiButtons.emplace_back(0.0f, -0.9f, 0.5f, 0.2f, MENU, buttonTexture);
 
     return true;
 }
@@ -32,9 +35,19 @@ void TitleScene::Update(float deltaTime)
     g_inputSystem.Update();
 
     // it goes to the menu scene
-    if (g_inputSystem.IsKeyDown(VK_RETURN)) // at the end you will use mouse
+    //if (g_inputSystem.IsKeyDown(VK_RETURN)) // at the end you will use mouse
+    //{
+    //    sceneManager->SwitchScene(MENU);
+    //}
+
+    // for the buttons
+    for (auto& btn : uiButtons)
     {
-        sceneManager->SwitchScene(MENU);
+        if (btn.Process() == UIButtonResult::Clicked)
+        {
+            sceneManager->SwitchScene(btn.GetTargetScene());
+            return;
+        }
     }
 }
 
@@ -46,15 +59,26 @@ void TitleScene::Draw()
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, backgroundTexture, 0, 1, 1);
     }
+
+    for (const auto& btn : uiButtons)
+        btn.Draw(0.65f);
 }
 
 //it erases the objects in title
 void TitleScene::Uninit() 
 {
-    //RendererUninit();
+
     if (backgroundTexture) 
     {
         backgroundTexture->Release();
         backgroundTexture = nullptr;
     }
+
+    if (buttonTexture) {
+        buttonTexture->Release();
+        buttonTexture = nullptr;
+    }
+
+    uiButtons.clear();
+    g_mouseIndicator.Cleanup();
 }
