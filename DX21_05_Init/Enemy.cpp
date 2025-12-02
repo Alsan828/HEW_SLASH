@@ -1,8 +1,8 @@
 ﻿#include "Enemy.h"
 #include "Map.h"
 
-// 初始化静态成员
-std::vector<DamageNumber> Enemy::damageNumbers;
+// 初始化伤害数字管理器
+std::vector<DamageNumber> DamageNumberManager::damageNumbers;
 
 // Enemy类实现
 Enemy::Enemy(float x, float y, float hp)
@@ -32,6 +32,7 @@ Enemy::Enemy(float x, float y, float hp)
     SetDamageMultiplier(DIR_DOWN, 1.0f);
     SetDamageMultiplier(DIR_FRONT_DOWN, 1.0f);
 }
+
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
     if (dir >= DIR_FRONT && dir <= DIR_FRONT_DOWN) {
         damageMultipliers[static_cast<int>(dir)] = multiplier;
@@ -83,16 +84,21 @@ float Enemy::CalculateDamageFromPlayer(float baseDamage, float playerDashAngle) 
     return baseDamage * multiplier;
 }
 
-// 在TakeDamage方法中添加伤害数字显示
+// 在TakeDamage方法中改用DamageNumberManager
 void Enemy::TakeDamage(float damage, float attackAngle) {
     if (!isAlive) return;
 
     float multiplier = GetDamageMultiplier(attackAngle);
     float actualDamage = damage * multiplier;
 
-    // 添加伤害数字显示
-    bool isCritical = (multiplier > 1.5f); // 伤害系数大于1.5算暴击
-    AddDamageNumber(actualDamage, isCritical);
+    // 使用独立的伤害数字管理器
+    bool isCritical = (multiplier > 1.5f);
+    DamageNumberManager::AddDamageNumber(
+        posX + width * 0.5f,  // 敌人中心X
+        posY + height,        // 敌人头顶
+        actualDamage,
+        isCritical
+    );
 
     health -= actualDamage;
     isHit = true;
@@ -105,6 +111,7 @@ void Enemy::TakeDamage(float damage, float attackAngle) {
         OnDeath();
     }
 }
+
 
 void Enemy::OnHit(float damage) {
     // 基础敌人被击中时没有特殊行为
@@ -276,52 +283,6 @@ void Enemy::FleeBehavior(float deltaTime) {
     }
 }
 
-// 渲染伤害数字
-void Enemy::RenderDamageNumbers(const Camera& camera) {
-    for (auto& number : damageNumbers) {
-        float screenX, screenY;
-        WorldToScreenPosition(number.posX, number.posY, screenX, screenY, camera);
-
-        // 根据是否为暴击设置颜色
-        if (number.isCritical) {
-            SetColor(1.0f, 0.0f, 0.0f, number.timer); // 红色暴击数字
-        }
-        else {
-            SetColor(1.0f, 1.0f, 1.0f, number.timer); // 白色普通数字
-        }
-
-        RenderNumber(number.value, screenX, screenY, width*0.5f, height * 0.5f, pTextureNum);
-    }
-
-    // 重置颜色
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-}
-// 添加伤害数字
-void Enemy::AddDamageNumber(float damage, bool isCritical) {
-    damageNumbers.emplace_back(posX + width * 0.5f, posY + height, damage, isCritical);
-}
-
-
-// 清空伤害数字
-void Enemy::ClearDamageNumbers() {
-    damageNumbers.clear();
-}
-
-// 更新所有伤害数字
-void Enemy::UpdateDamageNumbers(float deltaTime) {
-    for (auto it = damageNumbers.begin(); it != damageNumbers.end();) {
-        it->timer -= deltaTime;
-        it->posY += it->velocityY * deltaTime;
-        it->velocityY -= 1.0f * deltaTime; // 重力效果
-
-        if (it->timer <= 0.0f) {
-            it = damageNumbers.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
-}
  
 void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera) {
     // 获取相机位置（相机中心坐标）
@@ -535,8 +496,8 @@ void InitEnemies() {
 
 
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {    // 更新伤害数字
-    Enemy::UpdateDamageNumbers(deltaTime);
 
+    DamageNumberManager::Update(deltaTime);
     for (auto& enemy : g_enemies) {
         enemy->Update(deltaTime, mapManager);
     }
@@ -571,14 +532,66 @@ void RenderEnemies(const Camera& camera) {
         }
 
         enemy->Render(texture, camera); // 传递相机参数
-        enemy->RenderDamageNumbers(camera);
     }
+    DamageNumberManager::Render(camera);
 }
 
 void CleanupEnemies() {
-    Enemy::ClearDamageNumbers(); // 清空伤害数字
+    DamageNumberManager::Clear();
     for (auto& enemy : g_enemies) {
         delete enemy;
     }
     g_enemies.clear();
+}
+
+
+void DamageNumberManager::AddDamageNumber(float x, float y, float damage, bool isCritical) {
+    damageNumbers.emplace_back(x, y, damage, isCritical);
+}
+
+void DamageNumberManager::Update(float deltaTime) {
+    for (auto it = damageNumbers.begin(); it != damageNumbers.end();) {
+        it->timer += deltaTime;
+        it->posY += it->velocityY * deltaTime;
+        it->velocityY -= 2.0f * deltaTime; // 重力效果
+
+        if (it->timer >= it->lifeTime) {
+            it = damageNumbers.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+void DamageNumberManager::Render(const Camera& camera) {
+    for (auto& number : damageNumbers) {
+        float screenX, screenY;
+        // 使用静态的世界坐标转屏幕坐标函数
+        float cameraX = camera.GetX();
+        float cameraY = camera.GetY();
+        screenX = number.posX - cameraX;
+        screenY = number.posY - cameraY;
+
+        // 计算透明度（淡出效果）
+        float alpha = 1.0f - (number.timer / number.lifeTime);
+
+        // 根据是否为暴击设置颜色
+        if (number.isCritical) {
+            SetColor(1.0f, 0.0f, 0.0f, alpha); // 红色暴击数字
+        }
+        else {
+            SetColor(1.0f, 1.0f, 1.0f, alpha); // 白色普通数字
+        }
+
+        // 使用你现有的数字渲染功能
+        RenderNumber(number.value, screenX, screenY, 0.03f, 0.03f, pTextureNum);
+    }
+
+    // 重置颜色
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+void DamageNumberManager::Clear() {
+    damageNumbers.clear();
 }

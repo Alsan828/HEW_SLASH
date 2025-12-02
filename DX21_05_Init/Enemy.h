@@ -5,22 +5,37 @@
 #include "Map.h"
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 // 前向声明
 struct Player;
 class MapManager;
 
-// 伤害数字结构
+// 伤害数字结构 - 独立于敌人
 struct DamageNumber {
     float posX, posY;
-    float value;
+    int value;
     float timer;
     float velocityY;
     bool isCritical;
+    float lifeTime; // 总生存时间
 
-    DamageNumber(float x, float y, float damage, bool critical = false)
-        : posX(x), posY(y), value(damage), timer(1.0f), velocityY(0.5f), isCritical(critical) {
-    }
+    DamageNumber(float x, float y, int damage, bool critical = false)
+        : posX(x), posY(y), value(damage), timer(0.0f), velocityY(0.5f),
+        isCritical(critical), lifeTime(1.5f) {
+    } // 生存1.5秒
+};
+
+// 独立的伤害数字管理器
+class DamageNumberManager {
+public:
+    static void AddDamageNumber(float x, float y, float damage, bool isCritical = false);
+    static void Update(float deltaTime);
+    static void Render(const Camera& camera);
+    static void Clear();
+
+private:
+    static std::vector<DamageNumber> damageNumbers;
 };
 
 // 方向枚举 - 使用前后上下概念
@@ -74,13 +89,8 @@ public:
     bool IsAlive() const { return isAlive; }
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
-    void AddDamageNumber(float damage, bool isCritical = false);
-    static void UpdateDamageNumbers(float deltaTime);
-    void RenderDamageNumbers(const Camera& camera);
-    static void ClearDamageNumbers();
 
 protected:
-    static std::vector<DamageNumber> damageNumbers;
     // 基本属性
     float posX, posY;
     float width, height;
@@ -126,9 +136,9 @@ protected:
     bool isHit = false;
     float hitTimer = 0.0f;
     const float HIT_DURATION = 0.3f;
+
+    // 删除原有的伤害数字相关静态成员
 };
-
-
 // 衍生敌人类
 class ShieldEnemy : public Enemy {
 public:
