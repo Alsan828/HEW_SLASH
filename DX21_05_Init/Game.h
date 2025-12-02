@@ -27,7 +27,6 @@ enum GameState {
     STATE_GAME_OVER,
     STATE_PAUSED
 };
-
 // Player structure
 struct Player {
     float posX = 0.0f;
@@ -36,47 +35,77 @@ struct Player {
     float velocityY = 0.0f;
     bool isOnGround = false;
     bool isMoving = false;
-    bool facingRight = true; // Facing direction
+    bool facingRight = true;
+
+    // 生命值系统
+    float health = 100.0f;
+    float maxHealth = 100.0f;
+    bool isAlive = true;
+
+    // 攻击系统
+    float attackDamage = 30.0f;  // 基础攻击力
+    bool isAttacking = false;    // 攻击状态
+    float attackTimer = 0.0f;
+    const float ATTACK_DURATION = 0.2f;
 
     // Dash related variables
     bool isDashing = false;
     float dashTimer = 0.0f;
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
-    int dashLevel = 0; // For charge dash levels
+    int dashLevel = 0;
 
     float mouseTargetX = 0.0f;
     float mouseTargetY = 0.0f;
     bool hasMouseTarget = false;
-    // 在Player结构体中添加
-    bool allowMoveWhileCharging = true;  // 控制蓄力中是否可以移动
+    bool allowMoveWhileCharging = true;
+
     // Charge dash specific variables
     bool isCharging = false;
     float chargeTime = 0.0f;
-    const float MAX_CHARGE_TIME = 2.5f;  // Maximum charge time
-    const float MIN_CHARGE_TIME = 0.01f; // Minimum valid charge time
+    const float MAX_CHARGE_TIME = 2.5f;
+    const float MIN_CHARGE_TIME = 0.01f;
+    const float CHARGE_THRESHOLD_LOW = 0.2f;
+    const float CHARGE_THRESHOLD_MID = 0.7f;
+    const float CHARGE_THRESHOLD_HIGH = 1.5f;
 
-    // 充能时间阈值 - 统一管理
-    const float CHARGE_THRESHOLD_LOW = 0.2f;   // 低级充能阈值
-    const float CHARGE_THRESHOLD_MID = 0.7f;   // 中级充能阈值  
-    const float CHARGE_THRESHOLD_HIGH = 1.5f;  // 高级充能阈值
+    Animation anim;
 
-    Animation anim; // added november 19th
+    // 冲刺点数系统
+    int dashPoints = 3;
+    const int MAX_DASH_POINTS = 3;
+    float dashPointRecoverTimer = 0.0f;
+    const float DASH_POINT_RECOVER_TIME = 0.55f;
 
-    // 新增：冲刺点数系统
-    int dashPoints = 3;                    // 当前冲刺点数
-    const int MAX_DASH_POINTS = 3;         // 最大冲刺点数
-    float dashPointRecoverTimer = 0.0f;    // 点数恢复计时器
-    const float DASH_POINT_RECOVER_TIME = 0.55f; // 地面恢复间隔
+    // 冲刺后硬直状态
+    bool isInDashAftermath = false;
+    float dashAftermathTimer = 0.0f;
+    const float DASH_AFTERMATH_DURATION = 0.7f;
 
-    // 新增：冲刺后硬直状态
-    bool isInDashAftermath = false;        // 是否处于冲刺后硬直状态
-    float dashAftermathTimer = 0.0f;       // 硬直状态计时器
-    const float DASH_AFTERMATH_DURATION = 0.7f; // 硬直持续时间
+    const float AFTERIMAGE_DURATION = 0.1f;
 
-    const float AFTERIMAGE_DURATION = 0.1f; // 残影显示时间
+    // 新增：攻击检测相关
+    std::vector<Enemy*> hitEnemies; // 本次冲刺已击中的敌人（避免重复伤害）
+
+    // 重置攻击状态
+    void ResetAttack() {
+        isAttacking = false;
+        attackTimer = 0.0f;
+        hitEnemies.clear();
+    }
+
+    // 受到伤害
+    void TakeDamage(float damage) {
+        if (!isAlive) return;
+
+        health -= damage;
+        if (health <= 0) {
+            health = 0;
+            isAlive = false;
+            // 玩家死亡处理
+        }
+    }
 };
-
 
 class GameTimer {
 private:
@@ -155,6 +184,8 @@ bool ConsumeDashPoint();
 void UpdateDashPoints(float deltaTime);
 void UpdateDashAftermath(float deltaTime);
 void EnterDashAftermath();
+void CheckDashAttack();
+
 
 // 在Game.h中添加这些变量声明
 class MouseIndicatorSystem {

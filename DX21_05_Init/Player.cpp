@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "Enemy.h"
 
 // 玩家物理更新
 void UpdatePlayerPhysics(float deltaTime) {
@@ -101,6 +102,8 @@ void UpdatePlayerPhysics(float deltaTime) {
     if (g_player.posY < -2.0f) {
         ResetGame();
     }
+
+    CheckDashAttack();
 }
 
 void UpdateDash(float deltaTime) {
@@ -393,5 +396,38 @@ bool ConsumeDashPoint() {
 void OnEnemyDefeated() {
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
+    }
+}
+// 在Game.cpp中修改CheckDashAttack函数
+void CheckDashAttack() {
+    if (!g_player.isDashing) {
+        g_player.hitEnemies.clear();
+        return;
+    }
+
+    // 计算玩家冲刺角度
+    float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
+
+    for (auto& enemy : g_enemies) {
+        if (!enemy->IsAlive()) continue;
+
+        // 检查是否已经击中过这个敌人
+        if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
+            continue;
+        }
+
+        // 检测碰撞
+        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
+
+            // 直接传入玩家冲刺角度，敌人自己计算相对方向
+            float actualDamage = enemy->CalculateDamageFromPlayer(g_player.attackDamage, dashAngle);
+
+            // 对敌人造成伤害
+            enemy->TakeDamage(actualDamage, dashAngle);
+
+            // 标记为已击中
+            g_player.hitEnemies.push_back(enemy);
+        }
     }
 }

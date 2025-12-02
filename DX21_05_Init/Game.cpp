@@ -431,20 +431,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     float digitWidth = 0.08f;
     float digitHeight = 0.12f;
 
-    // 添加背景框提高可读性
-    SetColor(0.0f, 0.0f, 0.0f, 0.7f); // 半透明黑色背景
-    // 渲染背景矩形（需要实现RenderRect函数或使用现有方法）
-
-    // 设置数字颜色
-    if (g_player.dashPoints <= 1) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-    }
-    else if (g_player.dashPoints <= 2) {
-        SetColor(1.0f, 1.0f, 0.0f, 1.0f);
-    }
-    else {
-        SetColor(0.0f, 1.0f, 0.0f, 1.0f);
-    }
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // 渲染冲刺点数
     RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
