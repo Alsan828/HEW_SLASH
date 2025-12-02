@@ -35,11 +35,11 @@ void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
 }
 
 void ResetGame() {
+    CleanupEnemies();
     if (g_mapManager.IsMapLoaded()) {
-        g_mapManager.RespawnPlayer(-1);
+        g_mapManager.ReloadCurrentMap();
     }
     g_gameState = STATE_PLAYING;
-    CleanupEnemies();
 
 }
 
