@@ -338,6 +338,7 @@ void Jump() {
 
 // Modified game update function
 void UpdateGame(float deltaTime) {
+
     if (g_gameState != STATE_PLAYING) {
         return;
     }
@@ -666,7 +667,7 @@ void DrawGame() {
 
     float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
 
-    RendererDrawB();
+    //RendererDrawB();
 }
 
 void HandleInput() {
@@ -677,15 +678,7 @@ void HandleInput() {
     }
 
     // for the pause
-    /*if (g_inputSystem.IsTogglePressed(VK_P)) {
-        if (g_gameState == STATE_PLAYING) {
-            g_gameState = STATE_PAUSED;
-        }
-        else if (g_gameState == STATE_PAUSED) {
-            g_gameState = STATE_PLAYING;
-        }
-    }*/
-    if (g_inputSystem.IsTogglePressed(VK_P)) {
+    if (g_inputSystem.IsTogglePressed(VK_ESCAPE)) {
         if (sceneManager.GetCurrentSceneType() == STAGE) {
             sceneManager.SwitchScene(PAUSE);
         }
@@ -866,11 +859,13 @@ void ExecuteMouseChargeDash() {
     g_player.chargeTime = 0.0f;
 }
 
+
 void MouseIndicatorSystem::Initialize() {
     // 加载指示器纹理（可以使用现有纹理或创建新的）
     m_mouseIndicatorTexture = g_chargeEffectTexture; // 临时使用充能效果纹理
     m_arrowTexture = g_dashEffectTexture; // 临时使用冲刺效果纹理
-    m_showMouseIndicator = true;
+    //m_showMouseIndicator = true;
+    g_mouseIndicator.ShowMouseIndicator(true);
     m_arrowAngle = 0.0f;
 }
 
@@ -900,6 +895,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
             m_mouseWorldX, m_mouseWorldY, playerCenterX, playerCenterY);
     }
 }
+
 // 在Render函数中，确保箭头正确指向鼠标位置
 void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     if (!m_showMouseIndicator) return;

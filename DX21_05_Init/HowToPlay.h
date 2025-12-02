@@ -4,6 +4,7 @@
 #include "SceneManager.h"
 #include <vector>
 #include "Render.h"
+#include "UIButton.h"
 
 
 class HowToPlayScene : public SceneBase
@@ -14,6 +15,9 @@ private:
     ID3D11ShaderResourceView* backgroundTexture;
 
     SCENE returnScene; // for going to back to then scene I want to
+
+    std::vector<UIButton> uiButtons;
+    ID3D11ShaderResourceView* buttonTexture = nullptr;
 
 public:
     HowToPlayScene(SceneManager* manager, SCENE returnTo); // constructor

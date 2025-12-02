@@ -132,20 +132,30 @@ void CancelChargeDash();
 bool CheckCollision(float x1, float y1, float w1, float h1,
 	float x2, float y2, float w2, float h2);
 
+
+
 // 在Game.h中添加这些变量声明
 class MouseIndicatorSystem {
 private:
     float m_mouseWorldX, m_mouseWorldY;
     float m_arrowAngle;
     bool m_showMouseIndicator;
+
+    bool m_leftClicked; // added december 1st
+
     ID3D11ShaderResourceView* m_mouseIndicatorTexture;
     ID3D11ShaderResourceView* m_arrowTexture;
+
+    //MouseMode m_mode;
 
 public:
     void Initialize();
     void Update(float deltaTime);
     void Render(float cameraX, float cameraY);
     void Cleanup();
+
+    void ShowMouseIndicator(bool show) { m_showMouseIndicator = show; }
+
 };
 
 // 全局实例

@@ -12,39 +12,47 @@ bool PauseScene::Init()
     // Load the pause background texture
     LoadTexture(g_pDevice, "asset/pause.png", &backgroundTexture);
 
+    LoadTexture(g_pDevice, "asset/block.png", &buttonTexture); // for the button
+
+    uiButtons.clear();
+    g_mouseIndicator.ShowMouseIndicator(false);
+
+    uiButtons.emplace_back(-0.7f, -0.3f, 0.25f, 0.3f, STAGE, buttonTexture);
+    uiButtons.emplace_back(-0.25f, -0.3f, 0.25f, 0.3f, HOWTOPLAY, buttonTexture);
+    uiButtons.emplace_back(+0.25f, -0.3f, 0.25f, 0.3f, MENU, buttonTexture);
+    uiButtons.emplace_back(+0.7f, -0.3f, 0.25f, 0.3f, QUIT_GAME, buttonTexture);
+
     return true;
 }   
 
 void PauseScene::Update(float deltaTime)
 {
     // resume game
-    if (g_inputSystem.IsTogglePressed(VK_RETURN)) // at the end you will use mouse
-    {
-        sceneManager->SwitchScene(STAGE); // back to stage
-    }
+    g_inputSystem.Update();
 
-    // go to HowToPlay
-    if (g_inputSystem.IsTogglePressed(VK_C))  // at the end you will use mouse
+    for (auto& btn : uiButtons)
     {
-        sceneManager->SwitchScene(HOWTOPLAY);
-    }
+        if (btn.Process() == UIButtonResult::Clicked)
+        {
+            SCENE target = btn.GetTargetScene();
 
-    // go to Title
-    if (g_inputSystem.IsTogglePressed(VK_M))  // at the end you will use mouse
-    {
-        sceneManager->SwitchScene(MENU);
+            if (target == QUIT_GAME)
+            {
+                PostQuitMessage(0);// it quits the game
+                return;
+            }
+            else
+            {
+                sceneManager->SwitchScene(target);
+                return;
+            }
+        }
     }
 }
 
 void PauseScene::Draw()
 {
-    // for the pause
-    //if (backgroundTexture) {
-    //    // Always set a color before drawing so the texture is visible
-    //    SetColor(1.0f, 1.0f, 1.0f, 0.5f);
-    //    RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, backgroundTexture, 0, 1, 1);
-    //}
-
+ 
     if (underlyingScene) {
         underlyingScene->Draw(); // draw stage frozen
     }
@@ -52,6 +60,11 @@ void PauseScene::Draw()
         SetColor(1, 1, 1, 0.5f);
         RenderImage(-1, -1, 2, 2, backgroundTexture, 0, 1, 1);
     }
+
+    // for the buttons
+    for (const auto& btn : uiButtons)
+        btn.Draw(0.65f);
+   
 }
 
 void PauseScene::Uninit()
@@ -61,4 +74,12 @@ void PauseScene::Uninit()
         backgroundTexture->Release();
         backgroundTexture = nullptr;
     }
+
+    if (buttonTexture) {
+        buttonTexture->Release();
+        buttonTexture = nullptr;
+    }
+
+    uiButtons.clear();
+    g_mouseIndicator.Cleanup();
 }
