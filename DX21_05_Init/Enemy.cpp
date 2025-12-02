@@ -1,6 +1,9 @@
 ﻿#include "Enemy.h"
 #include "Map.h"
 
+// 初始化静态成员
+std::vector<DamageNumber> Enemy::damageNumbers;
+
 // Enemy类实现
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
@@ -15,30 +18,85 @@ Enemy::Enemy(float x, float y, float hp)
         damageMultipliers[i] = 1.0f;
     }
 
-    facingAngle = 0.0f;
+    facingRight = true;  // 默认朝右
     velocityX = 0.0f;
     velocityY = 0.0f;
-}
 
+    // 设置基础的8方向伤害系数
+    SetDamageMultiplier(DIR_FRONT, 1.0f);
+    SetDamageMultiplier(DIR_FRONT_UP, 1.0f);
+    SetDamageMultiplier(DIR_UP, 1.0f);
+    SetDamageMultiplier(DIR_BACK_UP, 1.0f);
+    SetDamageMultiplier(DIR_BACK, 1.0f);
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.0f);
+    SetDamageMultiplier(DIR_DOWN, 1.0f);
+    SetDamageMultiplier(DIR_FRONT_DOWN, 1.0f);
+}
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
-    if (dir >= DIR_RIGHT && dir <= DIR_DOWN_RIGHT) {
+    if (dir >= DIR_FRONT && dir <= DIR_FRONT_DOWN) {
         damageMultipliers[static_cast<int>(dir)] = multiplier;
     }
 }
 
 float Enemy::GetDamageMultiplier(float attackAngle) {
-    float relativeAngle = NormalizeAngle(attackAngle - facingAngle);
+    float relativeAngle = GetRelativeAngle(attackAngle);
     int directionIndex = AngleToDirectionIndex(relativeAngle);
     return damageMultipliers[directionIndex];
 }
 
+// 计算相对角度（基于敌人面向方向）
+float Enemy::GetRelativeAngle(float attackAngle) const {
+    // 敌人朝右时，0度是正前方；朝左时，180度是正前方
+    float enemyFrontAngle = facingRight ? 0.0f : 3.14159f;
+    float relativeAngle = attackAngle - enemyFrontAngle;
+
+    // 标准化到 [-π, π]
+    while (relativeAngle > 3.14159f) relativeAngle -= 2 * 3.14159f;
+    while (relativeAngle < -3.14159f) relativeAngle += 2 * 3.14159f;
+
+    return relativeAngle;
+}
+
+// 角度转方向索引（8方向）
+int Enemy::AngleToDirectionIndex(float relativeAngle) {
+    // 将相对角度标准化到 [0, 2π]
+    float angle = relativeAngle;
+    if (angle < 0) angle += 2 * 3.14159f;
+
+    // 8个方向，每个45度
+    float sector = 3.14159f / 4.0f;
+
+    // 计算方向索引
+    int index = static_cast<int>((angle + sector / 2) / sector) % 8;
+    return index;
+}
+
+float Enemy::NormalizeAngle(float angle) {
+    while (angle < 0) angle += 2 * 3.14159f;
+    while (angle >= 2 * 3.14159f) angle -= 2 * 3.14159f;
+    return angle;
+}
+
+// 根据攻击角度计算伤害
+float Enemy::CalculateDamageFromPlayer(float baseDamage, float playerDashAngle) {
+    float multiplier = GetDamageMultiplier(playerDashAngle);
+    return baseDamage * multiplier;
+}
+
+// 在TakeDamage方法中添加伤害数字显示
 void Enemy::TakeDamage(float damage, float attackAngle) {
     if (!isAlive) return;
 
     float multiplier = GetDamageMultiplier(attackAngle);
     float actualDamage = damage * multiplier;
 
+    // 添加伤害数字显示
+    bool isCritical = (multiplier > 1.5f); // 伤害系数大于1.5算暴击
+    AddDamageNumber(actualDamage, isCritical);
+
     health -= actualDamage;
+    isHit = true;
+    hitTimer = HIT_DURATION;
     OnHit(actualDamage);
 
     if (health <= 0) {
@@ -59,6 +117,14 @@ void Enemy::OnDeath() {
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
+
+    // 更新受击状态
+    if (isHit) {
+        hitTimer -= deltaTime;
+        if (hitTimer <= 0.0f) {
+            isHit = false;
+        }
+    }
 
     // 应用重力
     velocityY += GRAVITY * deltaTime * 60.0f;
@@ -130,12 +196,12 @@ void Enemy::UpdateAI(float deltaTime) {
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // 更新朝向
-    if (dx != 0 || dy != 0) {
-        facingAngle = atan2(dy, dx);
+    // 更新面向方向
+    if (dx != 0) {
+        facingRight = (dx > 0);
     }
 
-    // 修正状态机逻辑
+    // 状态机逻辑
     switch (currentState) {
     case PATROL:
         PatrolBehavior(deltaTime);
@@ -209,6 +275,53 @@ void Enemy::FleeBehavior(float deltaTime) {
         velocityX = moveSpeed;
     }
 }
+
+// 渲染伤害数字
+void Enemy::RenderDamageNumbers(const Camera& camera) {
+    for (auto& number : damageNumbers) {
+        float screenX, screenY;
+        WorldToScreenPosition(number.posX, number.posY, screenX, screenY, camera);
+
+        // 根据是否为暴击设置颜色
+        if (number.isCritical) {
+            SetColor(1.0f, 0.0f, 0.0f, number.timer); // 红色暴击数字
+        }
+        else {
+            SetColor(1.0f, 1.0f, 1.0f, number.timer); // 白色普通数字
+        }
+
+        RenderNumber(number.value, screenX, screenY, width*0.5f, height * 0.5f, pTextureNum);
+    }
+
+    // 重置颜色
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+}
+// 添加伤害数字
+void Enemy::AddDamageNumber(float damage, bool isCritical) {
+    damageNumbers.emplace_back(posX + width * 0.5f, posY + height, damage, isCritical);
+}
+
+
+// 清空伤害数字
+void Enemy::ClearDamageNumbers() {
+    damageNumbers.clear();
+}
+
+// 更新所有伤害数字
+void Enemy::UpdateDamageNumbers(float deltaTime) {
+    for (auto it = damageNumbers.begin(); it != damageNumbers.end();) {
+        it->timer -= deltaTime;
+        it->posY += it->velocityY * deltaTime;
+        it->velocityY -= 1.0f * deltaTime; // 重力效果
+
+        if (it->timer <= 0.0f) {
+            it = damageNumbers.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
  
 void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera) {
     // 获取相机位置（相机中心坐标）
@@ -236,10 +349,15 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (currentState == ATTACK) {
         frameIndex = 2;
     }
+    // 受击状态：闪烁或变色效果
+    if (isHit) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+    }
 
     // 使用屏幕坐标渲染敌人
     RenderImage(screenX, screenY, width, height, texture, frameIndex, 1, 3);
 
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     // 渲染血条（也需要使用屏幕坐标）
     RenderHealthBar(camera);
 }
@@ -281,33 +399,20 @@ bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
         tile.posX, tile.posY, tile.width, tile.height);
 }
 
-float Enemy::NormalizeAngle(float angle) {
-    while (angle < 0) angle += 2 * 3.14159f;
-    while (angle >= 2 * 3.14159f) angle -= 2 * 3.14159f;
-    return angle;
-}
-
-int Enemy::AngleToDirectionIndex(float angle) {
-    float sector = 3.14159f / 4.0f;
-    int index = static_cast<int>((angle + sector / 2) / sector) % 8;
-    return index;
-}
-
-// ShieldEnemy 实现
+// ShieldEnemy 实现 - 修改伤害系数设置
 ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     // 盾牌敌人：正面减伤，背面增伤
-    SetDamageMultiplier(DIR_RIGHT, 0.1f);
-    SetDamageMultiplier(DIR_UP_RIGHT, 0.3f);
-    SetDamageMultiplier(DIR_UP, 0.5f);
-    SetDamageMultiplier(DIR_UP_LEFT, 0.7f);
-    SetDamageMultiplier(DIR_LEFT, 10.0f);
-    SetDamageMultiplier(DIR_DOWN_LEFT, 1.8f);
-    SetDamageMultiplier(DIR_DOWN, 1.5f);
-    SetDamageMultiplier(DIR_DOWN_RIGHT, 0.3f);
+    SetDamageMultiplier(DIR_FRONT, 0.1f);
+    SetDamageMultiplier(DIR_FRONT_UP, 0.3f);
+    SetDamageMultiplier(DIR_FRONT_DOWN, 0.3f);
+    SetDamageMultiplier(DIR_BACK, 2.0f);
+    SetDamageMultiplier(DIR_BACK_UP, 1.5f);
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.5f);
 
     width = PLAYER_WIDTH * 1.5f;
     moveSpeed = MOVE_SPEED * 0.5f;
 }
+
 
 void ShieldEnemy::Update(float deltaTime, MapManager* mapManager) {
     Enemy::Update(deltaTime, mapManager);
@@ -329,10 +434,9 @@ void ShieldEnemy::OnHit(float damage) {
 void ShieldEnemy::OnDeath() {
     Enemy::OnDeath();
 }
-
 // MageEnemy 实现
 MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
-    // 法师敌人：脆弱但远程
+    // 法师敌人：上下方向脆弱
     SetDamageMultiplier(DIR_UP, 2.0f);
     SetDamageMultiplier(DIR_DOWN, 2.0f);
 
@@ -390,6 +494,7 @@ void MageEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
         RenderImage(effectX, effectY, effectSize, effectSize, g_chargeEffectTexture, 0, 1, 3);
     }
 }
+
 // FastEnemy 实现
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     moveSpeed = MOVE_SPEED * 1.5f;
@@ -429,7 +534,9 @@ void InitEnemies() {
 }
 
 
-void UpdateEnemies(float deltaTime, MapManager* mapManager) {
+void UpdateEnemies(float deltaTime, MapManager* mapManager) {    // 更新伤害数字
+    Enemy::UpdateDamageNumbers(deltaTime);
+
     for (auto& enemy : g_enemies) {
         enemy->Update(deltaTime, mapManager);
     }
@@ -464,10 +571,12 @@ void RenderEnemies(const Camera& camera) {
         }
 
         enemy->Render(texture, camera); // 传递相机参数
+        enemy->RenderDamageNumbers(camera);
     }
 }
 
 void CleanupEnemies() {
+    Enemy::ClearDamageNumbers(); // 清空伤害数字
     for (auto& enemy : g_enemies) {
         delete enemy;
     }

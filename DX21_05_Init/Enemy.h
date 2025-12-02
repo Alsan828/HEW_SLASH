@@ -2,7 +2,7 @@
 #include "Game.h"
 #include "Render.h"
 #include "Camera.h"
-#include "Map.h"  // 包含地图头文件
+#include "Map.h"
 #include <algorithm>
 #include <cmath>
 
@@ -10,16 +10,29 @@
 struct Player;
 class MapManager;
 
-// 方向枚举
+// 伤害数字结构
+struct DamageNumber {
+    float posX, posY;
+    float value;
+    float timer;
+    float velocityY;
+    bool isCritical;
+
+    DamageNumber(float x, float y, float damage, bool critical = false)
+        : posX(x), posY(y), value(damage), timer(1.0f), velocityY(0.5f), isCritical(critical) {
+    }
+};
+
+// 方向枚举 - 使用前后上下概念
 enum Direction {
-    DIR_RIGHT = 0,
-    DIR_UP_RIGHT,
-    DIR_UP,
-    DIR_UP_LEFT,
-    DIR_LEFT,
-    DIR_DOWN_LEFT,
-    DIR_DOWN,
-    DIR_DOWN_RIGHT
+    DIR_FRONT = 0,      // 正面
+    DIR_FRONT_UP,       // 前上
+    DIR_UP,             // 上方
+    DIR_BACK_UP,        // 后上
+    DIR_BACK,           // 背面
+    DIR_BACK_DOWN,      // 后下
+    DIR_DOWN,           // 下方
+    DIR_FRONT_DOWN      // 前下
 };
 
 // 敌人类声明
@@ -37,11 +50,19 @@ public:
 
     // 状态更新
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr);
-    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera); // 修改渲染方法签名
-    void RenderHealthBar(const Camera& camera); // 修改血条渲染
+    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera);
+    void RenderHealthBar(const Camera& camera);
 
+    // 攻击角度计算
+    float CalculateDamageFromPlayer(float baseDamage, float playerDashAngle);
 
-    // 碰撞检测 - 使用新的地图系统
+    // 获取敌人面向方向（true=右, false=左）
+    bool IsFacingRight() const { return facingRight; }
+
+    // 判断相对角度
+    float GetRelativeAngle(float attackAngle) const;
+
+    // 碰撞检测
     bool CheckPlayerCollision();
     bool CheckCollisionWithTiles(const std::vector<MapTile>& solidTiles);
 
@@ -53,8 +74,13 @@ public:
     bool IsAlive() const { return isAlive; }
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
+    void AddDamageNumber(float damage, bool isCritical = false);
+    static void UpdateDamageNumbers(float deltaTime);
+    void RenderDamageNumbers(const Camera& camera);
+    static void ClearDamageNumbers();
 
 protected:
+    static std::vector<DamageNumber> damageNumbers;
     // 基本属性
     float posX, posY;
     float width, height;
@@ -62,11 +88,11 @@ protected:
     float maxHealth;
     float moveSpeed;
     bool isAlive;
-    
+
     // 移动相关
     float velocityX;
     float velocityY;
-    float facingAngle;
+    bool facingRight;  // true=右, false=左
 
     // 伤害系统
     float damageMultipliers[8];
@@ -80,9 +106,8 @@ protected:
     // 工具函数
     float NormalizeAngle(float angle);
     int AngleToDirectionIndex(float angle);
-    void UpdateAI(float deltaTime); 
+    void UpdateAI(float deltaTime);
     void WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera);
-
 
     // AI行为方法
     void PatrolBehavior(float deltaTime);
@@ -94,9 +119,15 @@ protected:
     virtual void OnDeath();
     virtual void OnHit(float damage);
 
-    // 新的碰撞检测辅助函数
+    // 碰撞检测辅助函数
     bool CheckCollisionWithTile(const MapTile& tile);
+
+    // 受击状态
+    bool isHit = false;
+    float hitTimer = 0.0f;
+    const float HIT_DURATION = 0.3f;
 };
+
 
 // 衍生敌人类
 class ShieldEnemy : public Enemy {
