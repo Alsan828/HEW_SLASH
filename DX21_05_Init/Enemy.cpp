@@ -120,6 +120,7 @@ void Enemy::OnHit(int damage) {
 void Enemy::OnDeath() {
     // Base enemy death handling
     isAlive = false;
+    OnEnemyDefeated();
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
