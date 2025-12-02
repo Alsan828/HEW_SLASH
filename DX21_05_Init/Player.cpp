@@ -106,6 +106,37 @@ void UpdatePlayerPhysics(float deltaTime) {
     CheckDashAttack();
 }
 
+void UpdateDash(float deltaTime) {
+    // 优先更新冲刺状态
+    if (g_player.isDashing) {
+        g_player.dashTimer -= deltaTime;
+
+        if (g_player.dashTimer <= 0.0f) {
+            g_player.isDashing = false;
+            g_player.hasMouseTarget = false;
+            EnterDashAftermath(); // 冲刺结束进入硬直
+        }
+    }
+
+    // 然后更新硬直状态
+    UpdateDashAftermath(deltaTime);
+    // 最后更新点数恢复系统
+    UpdateDashPoints(deltaTime);
+
+    // 蓄力逻辑应该独立于硬直状态
+    if (g_player.isCharging) {
+        g_player.chargeTime += deltaTime;
+
+        // 硬直状态下允许蓄力，但蓄力完成时检查条件
+        if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
+            // 蓄力完成时，如果处于硬直状态，先清除硬直
+            if (g_player.isInDashAftermath) {
+                g_player.isInDashAftermath = false;
+            }
+            ExecuteMouseChargeDash();
+        }
+    }
+}
 
 void CancelChargeDash() {
     if (g_player.isCharging) {
@@ -210,6 +241,7 @@ void DashToMouse() {
     g_player.mouseTargetY = mouseY;
     g_player.hasMouseTarget = true;
 }
+
 // 方法4: 鼠标蓄力冲刺
 void StartMouseChargeDash() {
     // 检查条件：是否正在冲刺、是否正在蓄力、点数是否足够、是否处于可行动状态
@@ -218,14 +250,7 @@ void StartMouseChargeDash() {
     }
 
     g_player.isCharging = true;
-
-    // 如果有保存的蓄力，就加载它
-    if (g_player.hasSavedCharge) {
-        g_player.LoadSavedCharge();
-    }
-    else {
-        g_player.chargeTime = 0.0f; // 否则从头开始
-    }
+    g_player.chargeTime = 0.0f;
 
     // 记录初始鼠标位置
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
@@ -238,16 +263,12 @@ void ExecuteMouseChargeDash() {
     // 允许在硬直状态下进行蓄力冲刺
     if (g_player.dashPoints <= 0) return;
 
-    // 保存当前蓄力等级，用于后续可能的重用
-    int currentChargeLevel = g_player.GetChargeLevel();
-
     // 清除硬直状态，允许新的冲刺
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
 
     if (!ConsumeDashPoint()) return;
-
     // 获取当前鼠标位置
     float currentMouseX, currentMouseY;
     g_inputSystem.GetMousePosition(currentMouseX, currentMouseY);
@@ -275,7 +296,7 @@ void ExecuteMouseChargeDash() {
     float durationMultiplier = 1.0f;
     float cooldownMultiplier = 1.0f;
 
-    // 根据蓄力时间设置属性倍率
+    // 更新属性倍率代码
     if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_LOW && g_player.chargeTime < g_player.CHARGE_THRESHOLD_MID) {
         speedMultiplier = 1.3f;
         durationMultiplier = 1.2f;
@@ -306,76 +327,26 @@ void ExecuteMouseChargeDash() {
     g_player.mouseTargetX = currentMouseX;
     g_player.mouseTargetY = currentMouseY;
 
-    // 如果还有冲刺点数，保存当前蓄力
-    if (g_player.dashPoints > 0) {
-        g_player.SaveCharge();
-    }
-    else {
-        g_player.ClearSavedCharge(); // 没有点数了，清空保存的蓄力
-    }
-
     // 结束蓄力状态
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
-}// 进入冲刺后硬直状态
+}
+
+// 进入冲刺后硬直状态
 void EnterDashAftermath() {
     // 清除所有速度，使玩家完全停止
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;
 
-    // 如果没有点数则不进入硬直状态，并清空保存的蓄力
+    // 如果没有点数则不进入硬直状态
     if (g_player.dashPoints <= 0) {
-        g_player.ClearSavedCharge();
         return;
     }
 
     g_player.isInDashAftermath = true;
     g_player.dashAftermathTimer = g_player.DASH_AFTERMATH_DURATION;
-
-    // 如果有冲刺点数，保持保存的蓄力（不清空）
-    // 硬直状态结束后如果没有开始新的蓄力，会在UpdateDashAftermath中清空
 }
 
-void UpdateDash(float deltaTime) {
-    // 优先更新冲刺状态
-    if (g_player.isDashing) {
-        g_player.dashTimer -= deltaTime;
-
-        if (g_player.dashTimer <= 0.0f) {
-            g_player.isDashing = false;
-            g_player.hasMouseTarget = false;
-            EnterDashAftermath(); // 冲刺结束进入硬直
-        }
-    }
-
-    // 然后更新硬直状态
-    UpdateDashAftermath(deltaTime);
-    // 最后更新点数恢复系统
-    UpdateDashPoints(deltaTime);
-
-    // 蓄力逻辑应该独立于硬直状态
-    if (g_player.isCharging) {
-        g_player.chargeTime += deltaTime;
-
-        // 更新蓄力衰减计时器（蓄力时会重置）
-        if (g_player.hasSavedCharge) {
-            g_player.chargeDecayTimer = g_player.CHARGE_DECAY_TIME;
-        }
-
-        // 硬直状态下允许蓄力，但蓄力完成时检查条件
-        if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-            // 蓄力完成时，如果处于硬直状态，先清除硬直
-            if (g_player.isInDashAftermath) {
-                g_player.isInDashAftermath = false;
-            }
-            ExecuteMouseChargeDash();
-        }
-    }
-    else {
-        // 不在蓄力时也更新衰减（主要用于硬直状态中的保存蓄力）
-        g_player.UpdateChargeDecay(deltaTime);
-    }
-}
 // 更新硬直状态
 void UpdateDashAftermath(float deltaTime) {
     if (!g_player.isInDashAftermath) return;
@@ -426,8 +397,6 @@ void OnEnemyDefeated() {
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
     }
-
-    TriggerSlowMotion(1.0f, 0.4f); // 1秒时间，减慢到20%速度
 }
 // 在Game.cpp中修改CheckDashAttack函数
 void CheckDashAttack() {
@@ -452,7 +421,7 @@ void CheckDashAttack() {
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
             // 直接传入玩家冲刺角度，敌人自己计算相对方向
-            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
+            int actualDamage = enemy->CalculateDamageFromPlayer(g_player.attackDamage, dashAngle);
 
             // 对敌人造成伤害
             enemy->TakeDamage(actualDamage, dashAngle);

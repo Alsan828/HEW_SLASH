@@ -1,11 +1,6 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
 
-// 在Game.cpp的全局变量定义部分添加
-float g_slowMoTimer = 0.0f;
-float g_slowMoFactor = 1.0f;
-bool g_isSlowMotion = false;
-
 // Game timer implementation
 GameTimer::GameTimer()
 {
@@ -27,20 +22,12 @@ float GameTimer::GetDeltaTime() const {
     return m_deltaTime;
 }
 
-// 触发时间减慢效果
-void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
-    g_isSlowMotion = true;
-    g_slowMoTimer = duration;
-    g_slowMoFactor = factor;
-}
-
 void ResetGame() {
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.RespawnPlayer(-1);
     }
     g_gameState = STATE_PLAYING;
     CleanupEnemies();
-
 }
 
 // Improved collision detection function
@@ -78,26 +65,13 @@ void UpdateGame(float deltaTime) {
         return;
     }
 
-    // 更新时间减慢效果
-    if (g_isSlowMotion) {
-        g_slowMoTimer -= deltaTime;
-        if (g_slowMoTimer <= 0.0f) {
-            g_isSlowMotion = false;
-            g_slowMoFactor = 1.0f; // 恢复正常时间
-        }
-    }
-
-    // 应用时间减缓效果（优先级：时间减慢 > 蓄力效果）
+    // 应用时间减缓效果（如果正在蓄力）
     float timeScale = 1.0f;
-    if (g_isSlowMotion) {
-        timeScale = g_slowMoFactor; // 使用时间减慢倍率
-    }
-    else if (g_player.isCharging) {
+    if (g_player.isCharging) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
         chargeRatio = std::min(chargeRatio * 8, 1.0f);
         timeScale = 1.0f - chargeRatio * 0.8f;
     }
-
     float scaledDeltaTime = deltaTime * timeScale;
 
     // 使用调整后的时间更新游戏逻辑
@@ -478,6 +452,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     // 渲染冲刺点数
     RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
 
+
     // 绘制方向箭头
     float arrowDistance = 0.08f;
     float arrowSize = 0.15f;
@@ -491,24 +466,17 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     auto arrowScreenPos = worldToScreen(arrowX - arrowSize / 2, arrowY - arrowSize / 2);
 
     SetColor(0.0f, 1.0f, 0.0f, 1.0f);
-    float levelX = 0.85f;
-    float levelY = 0.2f;
-    float levelSize = 0.05f;
-    int chargeLevel = g_player.GetChargeLevelFromTime(g_player.chargeTime);
-    if (g_player.hasSavedCharge) {
-        chargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
+    // 更新颜色设置代码
+    if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_LOW && g_player.chargeTime < g_player.CHARGE_THRESHOLD_MID) {
+        SetColor(0.0f, 1.0f, 1.0f, 1.0f);
     }
-    // 根据蓄力等级显示不同颜色
-    if (chargeLevel >= 1) {
-        SetColor(0.0f, 1.0f, 1.0f, 1.0f); // 蓝色
+    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_MID && g_player.chargeTime < g_player.CHARGE_THRESHOLD_HIGH) {
+        SetColor(0.0f, 0.0f, 1.0f, 1.0f);
     }
-    if (chargeLevel >= 2) {
-        SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 深蓝色
+    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_HIGH) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
     }
-    if (chargeLevel >= 3) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色
-    }
-    
+
     RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
         m_arrowTexture, 0, 1, 1);
 

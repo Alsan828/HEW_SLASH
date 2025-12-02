@@ -69,12 +69,6 @@ struct Player {
     const float CHARGE_THRESHOLD_MID = 0.7f;
     const float CHARGE_THRESHOLD_HIGH = 1.5f;
 
-    // 新增：蓄力层数系统
-    float savedChargeTime = 0.0f;        // 保存的蓄力时间
-    bool hasSavedCharge = false;         // 是否有保存的蓄力
-    float chargeDecayTimer = 0.0f;        // 蓄力衰减计时器
-    const float CHARGE_DECAY_TIME = 1.0f; // 蓄力保存时间
-
     Animation anim;
 
     // 冲刺点数系统
@@ -111,55 +105,6 @@ struct Player {
             // 玩家死亡处理
         }
     }
-
-    // 获取当前蓄力等级
-    int GetChargeLevel() const {
-        if (chargeTime >= CHARGE_THRESHOLD_HIGH) return 3;
-        if (chargeTime >= CHARGE_THRESHOLD_MID) return 2;
-        if (chargeTime >= CHARGE_THRESHOLD_LOW) return 1;
-        return 0;
-    }
-
-    // 保存当前蓄力
-    void SaveCharge() {
-        if (chargeTime > MIN_CHARGE_TIME) {
-            savedChargeTime = chargeTime;
-            hasSavedCharge = true;
-            chargeDecayTimer = CHARGE_DECAY_TIME;
-        }
-    }
-
-    // 加载保存的蓄力
-    void LoadSavedCharge() {
-        if (hasSavedCharge) {
-            chargeTime = savedChargeTime;
-            chargeDecayTimer = CHARGE_DECAY_TIME; // 重置衰减计时器
-        }
-    }
-
-    // 清空保存的蓄力
-    void ClearSavedCharge() {
-        hasSavedCharge = false;
-        savedChargeTime = 0.0f;
-        chargeDecayTimer = 0.0f;
-    }
-
-    // 更新蓄力衰减
-    void UpdateChargeDecay(float deltaTime) {
-        if (hasSavedCharge) {
-            chargeDecayTimer -= deltaTime;
-            if (chargeDecayTimer <= 0.0f) {
-                ClearSavedCharge(); // 时间到，清空保存的蓄力
-            }
-        }
-    }
-    // 根据时间获取蓄力等级
-    int GetChargeLevelFromTime(float chargeTime) const {
-        if (chargeTime >= CHARGE_THRESHOLD_HIGH) return 3;
-        if (chargeTime >= CHARGE_THRESHOLD_MID) return 2;
-        if (chargeTime >= CHARGE_THRESHOLD_LOW) return 1;
-        return 0;
-    }
 };
 
 class GameTimer {
@@ -169,7 +114,7 @@ private:
     __int64 m_currTime = 0;
     double m_secondsPerCount = 0.0;
     float m_deltaTime = 0.0f;
-    double m_totalTime = 0.0f;       // 总游戏时间
+    double m_totalTime;       // 总游戏时间
 
 public:
     GameTimer();
@@ -206,10 +151,6 @@ extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
 
-// 在Game.h的全局变量部分添加
-extern float g_slowMoTimer;      // 时间减慢计时器
-extern float g_slowMoFactor;     // 时间减慢倍率
-extern bool g_isSlowMotion;      // 是否处于时间减慢状态
 // added november 27th for the pause 
 extern ID3D11ShaderResourceView* g_pauseTexture;
 
@@ -222,7 +163,6 @@ void DrawGame();
 // Input handling
 void HandleInput();
 
-void TriggerSlowMotion(float i, float a); // 1秒时间，减慢到20%速度
 // Reset game
 void ResetGame(); 
 
