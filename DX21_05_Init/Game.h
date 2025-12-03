@@ -28,7 +28,6 @@ enum GameState {
     STATE_PAUSED
 };
 
-
 // Global constant definitions
 const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
@@ -39,7 +38,8 @@ const float JUMP_FORCE = 0.065f;
 const float MOVE_SPEED = 0.01f;
 const float DASH_SPEED = 0.1f;      // Base dash speed
 const float DASH_DURATION = 0.07f;   // Base dash duration
-const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
+const float DASH_COOLDOWN = 0.1f;    // Dash cooldown time
+
 // Player structure
 struct Player {
     float posX = 0.0f;

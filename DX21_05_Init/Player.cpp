@@ -268,6 +268,7 @@ void ExecuteMouseChargeDash() {
         g_player.isInDashAftermath = false;
     }
 
+    g_player.hitEnemies.clear();
     if (!ConsumeDashPoint()) return;
     // 获取当前鼠标位置
     float currentMouseX, currentMouseY;
@@ -398,7 +399,8 @@ void OnEnemyDefeated() {
         g_player.dashPoints++;
     }
 }
-// 在Game.cpp中修改CheckDashAttack函数
+
+
 void CheckDashAttack() {
     if (!g_player.isDashing) {
         g_player.hitEnemies.clear();
