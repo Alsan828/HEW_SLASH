@@ -299,6 +299,7 @@ void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, fl
 void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
 
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     // Convert world coordinates to screen coordinates
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);

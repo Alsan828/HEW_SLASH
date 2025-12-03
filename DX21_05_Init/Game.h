@@ -261,6 +261,7 @@ public:
     void Update(float deltaTime);
     void Render(float cameraX, float cameraY);
     void Cleanup();
+    void ShowMouseIndicator(bool i);
 };
 
 // 全局实例
