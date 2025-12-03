@@ -106,6 +106,7 @@ void UpdatePlayerPhysics(float deltaTime) {
     CheckDashAttack();
 }
 
+// 修改UpdateDash函数，添加蓄力衰减更新
 void UpdateDash(float deltaTime) {
     // 优先更新冲刺状态
     if (g_player.isDashing) {
@@ -122,6 +123,9 @@ void UpdateDash(float deltaTime) {
     UpdateDashAftermath(deltaTime);
     // 最后更新点数恢复系统
     UpdateDashPoints(deltaTime);
+
+    // 更新蓄力衰减计时器
+    g_player.UpdateChargeDecay(deltaTime);
 
     // 蓄力逻辑应该独立于硬直状态
     if (g_player.isCharging) {
@@ -242,7 +246,7 @@ void DashToMouse() {
     g_player.hasMouseTarget = true;
 }
 
-// 方法4: 鼠标蓄力冲刺
+// 修改StartMouseChargeDash函数，添加蓄力继承逻辑
 void StartMouseChargeDash() {
     // 检查条件：是否正在冲刺、是否正在蓄力、点数是否足够、是否处于可行动状态
     if (g_player.isDashing || g_player.isCharging || g_player.dashPoints <= 0) {
@@ -250,13 +254,22 @@ void StartMouseChargeDash() {
     }
 
     g_player.isCharging = true;
-    g_player.chargeTime = 0.0f;
+
+    // 检查是否有保存的蓄力，如果有则继承
+    if (g_player.hasSavedCharge) {
+        g_player.LoadSavedCharge(); // 加载保存的蓄力时间
+        // 不清除保存的蓄力，允许连续继承（直到衰减时间结束）
+    }
+    else {
+        g_player.chargeTime = 0.0f; // 没有保存的蓄力，从头开始
+    }
 
     // 记录初始鼠标位置
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
 }
 
+// 修改ExecuteMouseChargeDash函数，在冲刺结束时保存蓄力
 void ExecuteMouseChargeDash() {
     if (!g_player.isCharging) return;
 
@@ -270,6 +283,7 @@ void ExecuteMouseChargeDash() {
 
     g_player.hitEnemies.clear();
     if (!ConsumeDashPoint()) return;
+
     // 获取当前鼠标位置
     float currentMouseX, currentMouseY;
     g_inputSystem.GetMousePosition(currentMouseX, currentMouseY);
@@ -292,26 +306,36 @@ void ExecuteMouseChargeDash() {
         dirY = 0.0f;
     }
 
+    // 获取当前蓄力等级
+    int chargeLevel = g_player.GetChargeLevel();
+
     // 三段蓄力判定
     float speedMultiplier = 1.0f;
     float durationMultiplier = 1.0f;
     float cooldownMultiplier = 1.0f;
 
-    // 更新属性倍率代码
-    if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_LOW && g_player.chargeTime < g_player.CHARGE_THRESHOLD_MID) {
+    // 根据蓄力等级设置属性倍率
+    switch (chargeLevel) {
+    case 1:
         speedMultiplier = 1.3f;
         durationMultiplier = 1.2f;
         cooldownMultiplier = 0.8f;
-    }
-    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_MID && g_player.chargeTime < g_player.CHARGE_THRESHOLD_HIGH) {
+        break;
+    case 2:
         speedMultiplier = 1.6f;
         durationMultiplier = 1.4f;
         cooldownMultiplier = 0.6f;
-    }
-    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_HIGH) {
+        break;
+    case 3:
         speedMultiplier = 2.0f;
         durationMultiplier = 1.8f;
         cooldownMultiplier = 0.5f;
+        break;
+    default:
+        speedMultiplier = 1.0f;
+        durationMultiplier = 1.0f;
+        cooldownMultiplier = 1.0f;
+        break;
     }
 
     // 设置冲刺状态
@@ -328,10 +352,17 @@ void ExecuteMouseChargeDash() {
     g_player.mouseTargetX = currentMouseX;
     g_player.mouseTargetY = currentMouseY;
 
+    // === 关键修改：在冲刺结束时保存当前蓄力层数 ===
+    // 只有当蓄力时间达到最小阈值时才保存（避免保存无效的短按）
+    if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
+        g_player.SaveCharge(); // 保存当前蓄力时间
+    }
+
     // 结束蓄力状态
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
 }
+
 
 // 进入冲刺后硬直状态
 void EnterDashAftermath() {
