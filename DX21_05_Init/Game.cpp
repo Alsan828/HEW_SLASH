@@ -1,6 +1,11 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
 
+// 在Game.cpp的全局变量定义部分添加
+float g_slowMoTimer = 0.0f;
+float g_slowMoFactor = 1.0f;
+bool g_isSlowMotion = false;
+
 // Game timer implementation
 GameTimer::GameTimer()
 {
@@ -22,12 +27,20 @@ float GameTimer::GetDeltaTime() const {
     return m_deltaTime;
 }
 
+// 触发时间减慢效果
+void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
+    g_isSlowMotion = true;
+    g_slowMoTimer = duration;
+    g_slowMoFactor = factor;
+}
+
 void ResetGame() {
+    CleanupEnemies();
     if (g_mapManager.IsMapLoaded()) {
-        g_mapManager.RespawnPlayer(-1);
+        g_mapManager.ReloadCurrentMap();
     }
     g_gameState = STATE_PLAYING;
-    CleanupEnemies();
+
 }
 
 // Improved collision detection function
@@ -65,13 +78,26 @@ void UpdateGame(float deltaTime) {
         return;
     }
 
-    // 应用时间减缓效果（如果正在蓄力）
+    // 更新时间减慢效果
+    if (g_isSlowMotion) {
+        g_slowMoTimer -= deltaTime;
+        if (g_slowMoTimer <= 0.0f) {
+            g_isSlowMotion = false;
+            g_slowMoFactor = 1.0f; // 恢复正常时间
+        }
+    }
+
+    // 应用时间减缓效果（优先级：时间减慢 > 蓄力效果）
     float timeScale = 1.0f;
-    if (g_player.isCharging) {
+    if (g_isSlowMotion) {
+        timeScale = g_slowMoFactor; // 使用时间减慢倍率
+    }
+    else if (g_player.isCharging) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
         chargeRatio = std::min(chargeRatio * 8, 1.0f);
         timeScale = 1.0f - chargeRatio * 0.8f;
     }
+
     float scaledDeltaTime = deltaTime * timeScale;
 
     // 使用调整后的时间更新游戏逻辑
@@ -269,8 +295,6 @@ void DrawGame() {
         RenderImage(dashPos.first, dashPos.second, effectSize, effectSize, g_dashEffectTexture, 0, 1, 1);
     }
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    RenderEnemies(g_camera);
     // 绘制玩家
     std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
     ID3D11ShaderResourceView* playerTexture = g_playerTexture;
@@ -301,6 +325,7 @@ void DrawGame() {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
+    RenderEnemies(g_camera);
     frameIndex = g_player.anim.GetCurrentFrame();
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
 
@@ -315,22 +340,6 @@ void HandleInput() {
         ResetGame();
     }
 
-    if (g_inputSystem.IsTogglePressed(VK_P)) {
-        if (g_gameState == STATE_PLAYING) {
-            g_gameState = STATE_PAUSED;
-        }
-        else if (g_gameState == STATE_PAUSED) {
-            g_gameState = STATE_PLAYING;
-        }
-    }*/
-    if (g_inputSystem.IsTogglePressed(VK_P)) {
-        if (g_gameState == STATE_PLAYING) {
-            g_gameState = STATE_PAUSED;
-        }
-        else if (g_gameState == STATE_PAUSED) {
-            g_gameState = STATE_PLAYING;
-        }
-    }*/
     if (g_inputSystem.IsTogglePressed(VK_P)) {
         if (sceneManager.GetCurrentSceneType() == STAGE) {
             sceneManager.SwitchScene(PAUSE);
@@ -381,26 +390,26 @@ void HandleInput() {
         g_player.isMoving = true;
         g_player.facingRight = true;
         moving = true;
-// MouseIndicatorSystem 实现
     }
-    m_mouseIndicatorTexture = g_chargeEffectTexture;
-    m_arrowTexture = g_dashEffectTexture;
-    m_showMouseIndicator = true;
+
+    if (!moving && !g_player.isDashing) {
+        g_player.velocityX = 0.0f;
+        g_player.isMoving = false;
     }
 
     // 跳跃控制
     static bool wasJumpKeyPressed = false;
-    // 加载指示器纹理（可以使用现有纹理或创建新的）
-    m_mouseIndicatorTexture = g_chargeEffectTexture; // 临时使用充能效果纹理
-    m_arrowTexture = g_dashEffectTexture; // 临时使用冲刺效果纹理
-    m_showMouseIndicator = true;
+    bool isJumpKeyPressed = g_inputSystem.IsJumping();
+    if (isJumpKeyPressed && !wasJumpKeyPressed) {
+        Jump();
+    }
     wasJumpKeyPressed = isJumpKeyPressed;
 }
 
+// MouseIndicatorSystem 实现
 void MouseIndicatorSystem::Initialize() {
-    // 加载指示器纹理（可以使用现有纹理或创建新的）
-    m_mouseIndicatorTexture = g_chargeEffectTexture; // 临时使用充能效果纹理
-    m_arrowTexture = g_dashEffectTexture; // 临时使用冲刺效果纹理
+    m_mouseIndicatorTexture = g_chargeEffectTexture;
+    m_arrowTexture = g_dashEffectTexture;
     m_showMouseIndicator = true;
     m_arrowAngle = 0.0f;
 }
@@ -410,7 +419,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
     m_mouseWorldX = mouseX;
-
+    m_mouseWorldY = mouseY;
 
     float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
@@ -418,7 +427,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
     float deltaX = m_mouseWorldX - playerCenterX;
     float deltaY = m_mouseWorldY - playerCenterY;
 
-// 在Render函数中，确保箭头正确指向鼠标位置
+    m_arrowAngle = atan2(deltaY, deltaX);
 
     static int debugCounter = 0;
     if (debugCounter++ % 60 == 0) {
@@ -426,7 +435,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
             m_mouseWorldX, m_mouseWorldY, playerCenterX, playerCenterY);
     }
 }
-// 在Render函数中，确保箭头正确指向鼠标位置
+
 void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     if (!m_showMouseIndicator) return;
 
@@ -453,7 +462,6 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     // 渲染冲刺点数
     RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
 
-
     // 绘制方向箭头
     float arrowDistance = 0.08f;
     float arrowSize = 0.15f;
@@ -467,15 +475,22 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     auto arrowScreenPos = worldToScreen(arrowX - arrowSize / 2, arrowY - arrowSize / 2);
 
     SetColor(0.0f, 1.0f, 0.0f, 1.0f);
-    // 更新颜色设置代码
-    if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_LOW && g_player.chargeTime < g_player.CHARGE_THRESHOLD_MID) {
-        SetColor(0.0f, 1.0f, 1.0f, 1.0f);
+    float levelX = 0.85f;
+    float levelY = 0.2f;
+    float levelSize = 0.05f;
+    int chargeLevel = g_player.GetChargeLevelFromTime(g_player.chargeTime);
+    if (g_player.hasSavedCharge) {
+        chargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
     }
-    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_MID && g_player.chargeTime < g_player.CHARGE_THRESHOLD_HIGH) {
-        SetColor(0.0f, 0.0f, 1.0f, 1.0f);
+    // 根据蓄力等级显示不同颜色
+    if (chargeLevel >= 1) {
+        SetColor(0.0f, 1.0f, 1.0f, 1.0f); // 蓝色
     }
-    else if (g_player.chargeTime >= g_player.CHARGE_THRESHOLD_HIGH) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+    if (chargeLevel >= 2) {
+        SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 深蓝色
+    }
+    if (chargeLevel >= 3) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色
     }
 
     RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
