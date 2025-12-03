@@ -47,7 +47,7 @@ void MapManager::CreateMapEnemies() {
 
         // Create appropriate enemy type based on spawn code
         if (enemyType == "E1") {
-            g_enemies.push_back(new Enemy(x, y, 50.0f));  // Normal enemy
+            g_enemies.push_back(new Enemy(x, y, 100.0f));  // Normal enemy
         }
         else if (enemyType == "E2") {
             g_enemies.push_back(new ShieldEnemy(x, y));    // Shield enemy
@@ -69,6 +69,22 @@ Map* MapManager::GetMap(const std::string& name) {
         }
     }
     return nullptr;
+}
+
+void MapManager::ReloadCurrentMap() {
+    if (!m_currentMap) return;
+    // Respawn player at the last entered spawn point
+    RespawnPlayer(m_enteredSpawnId);
+    // Recreate enemies for the current map
+    CreateMapEnemies();
+}
+
+const std::string& MapManager::GetCurrentMapName() const {
+    static std::string empty = "";
+    if (m_currentMap) {
+        return m_currentMap->GetName();
+    }
+    return empty;
 }
 
 // Respawn the player at the specified spawn point or default location
