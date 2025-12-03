@@ -173,6 +173,23 @@ private:
     void DashAttack();
 };
 
+// 在MageEnemy类声明后添加BombEnemy类
+class BombEnemy : public Enemy {
+public:
+    BombEnemy(float x, float y);
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
+
+private:
+
+    void Explode(); // 死亡时爆炸的空函数
+
+    // 视觉特效相关
+    float pulseTimer;
+    float baseSize;
+};
+
+
 // 敌人管理函数声明
 void InitEnemies();
 void UpdateEnemies(float deltaTime, MapManager* mapManager = nullptr);
@@ -182,6 +199,8 @@ void CleanupEnemies();
 
 // 全局敌人列表和纹理
 extern std::vector<Enemy*> g_enemies;
+// 在全局纹理声明中添加爆炸敌人纹理
+extern ID3D11ShaderResourceView* g_bombEnemyTexture;
 extern ID3D11ShaderResourceView* g_enemyTexture;
 extern ID3D11ShaderResourceView* g_shieldEnemyTexture;
 extern ID3D11ShaderResourceView* g_mageEnemyTexture;

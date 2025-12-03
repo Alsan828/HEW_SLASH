@@ -482,6 +482,145 @@ void FastEnemy::DashAttack() {
     velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 3.0f;
 }
 
+// 在全局纹理定义中添加
+ID3D11ShaderResourceView* g_bombEnemyTexture = nullptr;
+
+// BombEnemy实现
+BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
+    // 爆炸敌人：上下方向是弱点，其他方向减伤
+    SetDamageMultiplier(DIR_UP, 2.0f);        // 上方弱点
+    SetDamageMultiplier(DIR_DOWN, 2.0f);      // 下方弱点
+    SetDamageMultiplier(DIR_FRONT, 0.7f);     // 正面减伤
+    SetDamageMultiplier(DIR_BACK, 0.7f);      // 背面减伤
+    SetDamageMultiplier(DIR_FRONT_UP, 1.2f);  // 前上中等
+    SetDamageMultiplier(DIR_FRONT_DOWN, 1.2f);// 前下中等
+    SetDamageMultiplier(DIR_BACK_UP, 1.2f);   // 后上中等
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.2f); // 后下中等
+
+    // 爆炸敌人属性
+    width = PLAYER_WIDTH * 1.3f;
+    height = PLAYER_HEIGHT * 1.3f;
+    moveSpeed = 0.0f;  // 不会移动
+    explosionRadius = 0.8f;
+
+    // 视觉特效
+    flashTimer = 0.0f;
+    isFlashing = false;
+    pulseTimer = 0.0f;
+    baseSize = 1.0f;
+
+    // 设置巡逻范围为0，因为不会移动
+    patrolMinX = posX;
+    patrolMaxX = posX;
+}
+
+void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
+    if (!isAlive) return;
+
+    // 调用基类的受击状态更新
+    if (isHit) {
+        hitTimer -= deltaTime;
+        if (hitTimer <= 0.0f) {
+            isHit = false;
+        }
+    }
+
+    // 爆炸敌人不移动，所以不需要处理重力和碰撞
+    velocityX = 0.0f;
+    velocityY = 0.0f;
+
+    // 闪烁效果（低血量时）
+    if (health < maxHealth * 0.3f) {
+        flashTimer += deltaTime;
+        if (flashTimer >= 0.1f) {
+            isFlashing = !isFlashing;
+            flashTimer = 0.0f;
+        }
+    }
+    else {
+        isFlashing = false;
+    }
+
+    // 脉动效果
+    pulseTimer += deltaTime;
+    baseSize = 1.0f + 0.1f * sin(pulseTimer * 3.0f);
+
+    // 简化AI：只检测玩家距离
+    float dx = g_player.posX - posX;
+    float dy = g_player.posY - posY;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    // 更新面向方向
+    if (dx != 0) {
+        facingRight = (dx > 0);
+    }
+
+    // 简单状态机
+    if (distance < 2.0f) {
+        currentState = ATTACK;  // 玩家靠近时进入攻击状态
+    }
+    else {
+        currentState = PATROL;  // 否则保持巡逻状态（静止）
+    }
+
+    // 死亡时触发爆炸
+    if (health <= 0 && isAlive) {
+        isAlive = false;
+        PrepareExplosion();
+        OnDeath();
+    }
+}
+
+void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
+    if (!isAlive) return;
+
+    // 转换为屏幕坐标
+    float screenX, screenY;
+    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
+
+    // 根据状态选择帧
+    int frameIndex = 0;
+    if (health < maxHealth * 0.3f) {
+        frameIndex = 1;  // 低血量帧
+    }
+    if (currentState == ATTACK) {
+        frameIndex = 2;  // 攻击状态帧
+    }
+
+    if (isHit) {
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);  // 受击红色
+    }
+    else if (currentState == ATTACK) {
+        SetColor(1.0f, 0.8f, 0.3f, 1.0f);  // 攻击状态橙色
+    }
+    else {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // 正常颜色
+    }
+
+    // 应用脉动缩放
+    float renderWidth = width * baseSize;
+    float renderHeight = height * baseSize;
+    float offsetX = (width - renderWidth) * 0.5f;
+    float offsetY = (height - renderHeight) * 0.5f;
+
+    // 渲染敌人
+    RenderImage(screenX + offsetX, screenY + offsetY, renderWidth, renderHeight,
+        texture, frameIndex, 1, 3);
+
+    // 渲染生命条
+    RenderHealthBar(camera);
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+
+void BombEnemy::Explode() {
+    // TODO: 实现爆炸效果
+    // 爆炸逻辑可以包括：
+    // 1. 对周围玩家和物体造成伤害
+    // 2. 播放爆炸动画和音效
+}
+
 // Enemy management functions
 void InitEnemies() {
     // Load enemy textures
