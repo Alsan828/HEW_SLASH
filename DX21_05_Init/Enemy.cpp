@@ -501,11 +501,6 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
     moveSpeed = 0.0f;  // 不会移动
-    explosionRadius = 0.8f;
-
-    // 视觉特效
-    flashTimer = 0.0f;
-    isFlashing = false;
     pulseTimer = 0.0f;
     baseSize = 1.0f;
 
@@ -528,18 +523,6 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     // 爆炸敌人不移动，所以不需要处理重力和碰撞
     velocityX = 0.0f;
     velocityY = 0.0f;
-
-    // 闪烁效果（低血量时）
-    if (health < maxHealth * 0.3f) {
-        flashTimer += deltaTime;
-        if (flashTimer >= 0.1f) {
-            isFlashing = !isFlashing;
-            flashTimer = 0.0f;
-        }
-    }
-    else {
-        isFlashing = false;
-    }
 
     // 脉动效果
     pulseTimer += deltaTime;
@@ -566,7 +549,6 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     // 死亡时触发爆炸
     if (health <= 0 && isAlive) {
         isAlive = false;
-        PrepareExplosion();
         OnDeath();
     }
 }
