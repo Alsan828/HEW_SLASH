@@ -8,6 +8,7 @@ enum SCENE
     STAGE,
     PAUSE,
     HOWTOPLAY,
+    QUIT_GAME = -1
 
     // ADD MORE HERE LATER
 };

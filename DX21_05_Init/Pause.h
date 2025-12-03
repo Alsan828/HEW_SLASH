@@ -5,6 +5,9 @@
 #include <vector>
 #include "Render.h"
 #include "Game.h"
+#include "UIButton.h"
+
+class UIButton;
 
 class PauseScene : public SceneBase 
 {
@@ -14,6 +17,9 @@ private:
     SceneBase* underlyingScene;
 
     ID3D11ShaderResourceView* backgroundTexture = nullptr;
+
+    std::vector<UIButton> uiButtons;
+    ID3D11ShaderResourceView* buttonTexture = nullptr;
 
 public:
     PauseScene(SceneManager* manager, SceneBase* stage);

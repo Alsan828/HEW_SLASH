@@ -4,6 +4,7 @@
 #include "SceneManager.h"
 #include <vector>
 #include "Render.h"
+#include "UIButton.h"
 
 // title background structure
 struct Background 
@@ -19,7 +20,8 @@ private:
 
     ID3D11ShaderResourceView* backgroundTexture;
     
-    //InputSystem input;
+    std::vector<UIButton> uiButtons;
+    ID3D11ShaderResourceView* buttonTexture = nullptr;
 
 public:
     TitleScene(SceneManager* manager); // constructor

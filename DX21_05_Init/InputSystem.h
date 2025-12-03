@@ -129,4 +129,7 @@ public:
     void RebindKey(int action, int newKey);
 
     bool IsTogglePressed(int key); // for the pause
+
+    // added december 1st
+    POINT GetRawMousePosition() const { return m_mousePos; }
 };

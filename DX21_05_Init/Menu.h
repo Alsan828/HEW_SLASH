@@ -4,6 +4,8 @@
 #include "SceneManager.h"
 #include <vector>
 #include "Render.h"
+#include "Game.h"
+#include "UIButton.h"
 
 
 class MenuScene : public SceneBase
@@ -13,7 +15,9 @@ private:
 
     ID3D11ShaderResourceView* backgroundTexture;
 
-    //InputSystem input;
+    // added december 1st
+    std::vector<UIButton> uiButtons;
+    ID3D11ShaderResourceView* buttonTexture = nullptr;
 
 public:
     MenuScene(SceneManager* manager); // constructor
