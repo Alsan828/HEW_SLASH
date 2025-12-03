@@ -135,7 +135,7 @@ protected:
     // 受击状态
     bool isHit = false;
     float hitTimer = 0.0f;
-    const float HIT_DURATION = 0.2f;
+    const float HIT_DURATION = 0.01f;
 
     // 删除原有的伤害数字相关静态成员
 };

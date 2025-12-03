@@ -295,6 +295,8 @@ void DrawGame() {
         RenderImage(dashPos.first, dashPos.second, effectSize, effectSize, g_dashEffectTexture, 0, 1, 1);
     }
 
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    RenderEnemies(g_camera);
     // 绘制玩家
     std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
     ID3D11ShaderResourceView* playerTexture = g_playerTexture;
@@ -325,7 +327,6 @@ void DrawGame() {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
-    RenderEnemies(g_camera);
     frameIndex = g_player.anim.GetCurrentFrame();
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
 

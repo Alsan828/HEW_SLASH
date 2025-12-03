@@ -27,6 +27,14 @@ enum GameState {
     STATE_GAME_OVER,
     STATE_PAUSED
 };
+
+
+const float JUMP_FORCE = 0.065f;
+const float MOVE_SPEED = 0.01f;
+const float DASH_SPEED = 0.07f;      // Base dash speed
+const float DASH_DURATION = 0.17f;   // Base dash duration
+const float DASH_COOLDOWN = 0.1f;    // Dash cooldown time
+
 // Player structure
 struct Player {
     float posX = 0.0f;
@@ -187,11 +195,6 @@ const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
 const float GRAVITY = -0.003f;
-const float JUMP_FORCE = 0.065f;
-const float MOVE_SPEED = 0.01f;
-const float DASH_SPEED = 0.15f;      // Base dash speed
-const float DASH_DURATION = 0.05f;   // Base dash duration
-const float DASH_COOLDOWN = 0.2f;    // Dash cooldown time
 
 extern int g_windowWidth;
 extern int g_windowHeight;
