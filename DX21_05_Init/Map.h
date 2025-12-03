@@ -129,6 +129,7 @@ public:
     // Enemy creation for current map
     void CreateMapEnemies();
 
+    void ReloadCurrentMap();
     // Player respawn functionality
     void RespawnPlayer(int spawnId = -1);
 
