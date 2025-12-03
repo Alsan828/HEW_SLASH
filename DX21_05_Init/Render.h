@@ -24,7 +24,9 @@
 #define WINDOW_NAME  "SLASH"
 #define SCREEN_WIDTH (1080)
 #define SCREEN_HEIGHT (680)
-
+#ifndef SAFE_RELEASE
+#define SAFE_RELEASE(p) { if (p) { (p)->Release(); (p) = nullptr; } }
+#endif
 struct VertexV {
 	float x, y, z;
 	float u, v;
@@ -62,6 +64,8 @@ extern ID3D11PixelShader* g_pPixelShader;
 
 extern D3D11_SAMPLER_DESC sampDesc;
 extern ID3D11SamplerState* pSamplerState;
+// 在Render.h的全局变量区域添加
+extern ID3D11BlendState* g_pBlendState;
 
 // Function declarations
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

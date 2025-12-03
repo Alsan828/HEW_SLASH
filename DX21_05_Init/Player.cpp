@@ -433,33 +433,35 @@ void OnEnemyDefeated() {
 
 
 void CheckDashAttack() {
-    if (!g_player.isDashing) {
-        g_player.hitEnemies.clear();
-        return;
-    }
+    if (!g_player.isDashing) return; // 仅在冲刺时检测
 
-    // 计算玩家冲刺角度
+    // 计算玩家冲刺角度（用于伤害计算）
     float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
 
     for (auto& enemy : g_enemies) {
+        // 跳过已死亡的敌人
         if (!enemy->IsAlive()) continue;
 
-        // 检查是否已经击中过这个敌人
+        // 跳过已击中的敌人（避免重复伤害）
         if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
             continue;
         }
 
-        // 检测碰撞
-        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
+        // 完整的碰撞检测参数（玩家与敌人）
+        bool isColliding = CheckCollision(
+            g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight()
+        );
 
-            // 直接传入玩家冲刺角度，敌人自己计算相对方向
+        if (isColliding) {
+            // 计算实际伤害（基于攻击角度）
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
-
-            // 对敌人造成伤害
             enemy->TakeDamage(actualDamage, dashAngle);
 
-            // 标记为已击中
+            // 标记敌人进入分裂状态（使用公共方法）
+            enemy->SetSplit(true);
+
+            // 记录已击中的敌人
             g_player.hitEnemies.push_back(enemy);
         }
     }

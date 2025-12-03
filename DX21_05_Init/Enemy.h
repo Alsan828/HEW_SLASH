@@ -52,6 +52,7 @@ enum Direction {
 
 // 敌人类声明
 class Enemy {
+    friend class Player;
 public:
     Enemy(float x, float y, float hp = 100.0f);
     virtual ~Enemy() = default;
@@ -89,7 +90,8 @@ public:
     bool IsAlive() const { return isAlive; }
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
-
+    bool IsSplit() const { return isSplit; }
+    void SetSplit(bool split) { isSplit = split; }
 protected:
     // 基本属性
     float posX, posY;
@@ -138,6 +140,24 @@ protected:
     const float HIT_DURATION = 0.01f;
 
     // 删除原有的伤害数字相关静态成员
+    void DrawSplitDeathEffect(ID3D11ShaderResourceView* texture, const Camera& camera);
+    // 绘制分割的图像（辅助方法）
+    void RenderSplitImage(float posX, float posY, float width, float height,
+        ID3D11ShaderResourceView* textureSRV,
+        float u0, float v0, float u1, float v1, float rotation);
+
+    bool isDeathAnimating = false;
+    float deathTimer = 0.0f;
+    float deathDuration = 0.5f;
+    float splitOffset = 0.0f;  // 分裂部分的偏移距离
+    float alpha = 1.0f;        // 透明度
+
+    // 新增分裂特效参数
+    float splitAngle1 = 0.0f;  // 第一部分旋转角度
+    float splitAngle2 = 0.0f;  // 第二部分旋转角度
+    float rotateSpeed = 3.14f; // 旋转速度（弧度/秒）
+    bool isSplit = false;      // 是否进入分裂状态
+
 };
 // 衍生敌人类
 class ShieldEnemy : public Enemy {

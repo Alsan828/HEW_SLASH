@@ -526,3 +526,28 @@ void SetColor(float r, float g, float b, float a)
 	// Bind to pixel shader
 	g_pDeviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 }
+void RenderImageWithUV(
+	float x, float y, float width, float height,
+	ID3D11ShaderResourceView* texture,
+	float u0, float v0, float u1, float v1  // UV坐标（左上角到右下角）
+) {
+	// 假设你的渲染逻辑使用顶点缓冲区和UV坐标
+	// 以下是核心思路（需根据你的实际渲染管线调整）：
+	VertexV vertices[] = {
+		// 顶点位置          // UV坐标
+		{x, y + height, 0.0f, u0, v1},  // 左下
+		{x + width, y + height, 0.0f, u1, v1},  // 右下
+		{x + width, y, 0.0f, u1, v0},  // 右上
+		{x, y, 0.0f, u0, v0}   // 左上
+	};
+
+	// 更新顶点缓冲区（你的现有代码应该有类似逻辑）
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	g_pDeviceContext->Map(g_pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	memcpy(mappedResource.pData, vertices, sizeof(vertices));
+	g_pDeviceContext->Unmap(g_pVertexBuffer, 0);
+
+	// 绑定纹理并绘制（复用你的现有渲染代码）
+	g_pDeviceContext->PSSetShaderResources(0, 1, &texture);
+	g_pDeviceContext->Draw(4, 0);
+}

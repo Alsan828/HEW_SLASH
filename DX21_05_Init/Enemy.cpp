@@ -118,13 +118,42 @@ void Enemy::OnHit(int damage) {
 }
 
 void Enemy::OnDeath() {
-    // Base enemy death handling
     isAlive = false;
+    isDeathAnimating = true;  // 开始死亡动画
+    deathTimer = 0.0f;
+    splitOffset = 0.0f;       // 初始化分裂偏移
+    alpha = 1.0f;
+    isSplit = true;           // 激活分裂状态（斩击效果核心）
+    // 初始化分裂角度（例如根据攻击方向）
+    splitAngle1 = 0.0f;
+    splitAngle2 = 3.14f;      // 两部分呈180度分裂（模拟斩击）
     OnEnemyDefeated();
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
-    if (!isAlive) return;
+    if (!isAlive) {
+        // 处理死亡动画
+        if (isDeathAnimating) {
+            deathTimer += deltaTime;
+            float progress = deathTimer / deathDuration;  // 0~1的进度值
+
+            // 分裂偏移随时间增大（模拟分离效果）
+            splitOffset = progress * 0.5f;  // 0.5f为最大偏移距离
+
+            // 分裂部分旋转角度随时间增加（模拟旋转效果）
+            splitAngle1 += rotateSpeed * deltaTime;
+            splitAngle2 -= rotateSpeed * deltaTime;
+
+            // 透明度随时间降低
+            alpha = 1.0f - progress;
+
+            // 动画结束
+            if (progress >= 1.0f) {
+                isDeathAnimating = false;
+            }
+        }
+        return;  // 非存活状态下只更新死亡动画
+    }
 
     // Update hit state
     if (isHit) {
@@ -297,7 +326,13 @@ void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, fl
 }
 
 void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
-    if (!isAlive) return;
+    if (!isAlive) {
+        // 死亡动画期间绘制分裂效果
+        if (isDeathAnimating) {
+            DrawSplitDeathEffect(texture, camera);
+        }
+        return;  // 不渲染存活状态的模型
+    }
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     // Convert world coordinates to screen coordinates
@@ -501,11 +536,6 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
     moveSpeed = 0.0f;  // 不会移动
-    explosionRadius = 0.8f;
-
-    // 视觉特效
-    flashTimer = 0.0f;
-    isFlashing = false;
     pulseTimer = 0.0f;
     baseSize = 1.0f;
 
@@ -515,7 +545,29 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
 }
 
 void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
-    if (!isAlive) return;
+    if (!isAlive) {
+        if (isDeathAnimating) {
+            deathTimer += deltaTime;
+            float progress = deathTimer / deathDuration;
+
+            // 分裂偏移随进度增加（非线性曲线让效果更自然）
+            splitOffset = 0.6f * (1.0f - cosf(progress * 3.14159f * 0.5f));
+
+            // 旋转角度随时间增加（右半部分反向旋转）
+            splitAngle1 += rotateSpeed * 1.5f * deltaTime;
+            splitAngle2 -= rotateSpeed * 1.5f * deltaTime;
+
+            // 透明度衰减（最后阶段加速消失）
+            alpha = 1.0f - (progress * progress);
+
+            if (progress >= 1.0f) {
+                isDeathAnimating = false;
+                isSplit = false;  // 动画结束后关闭分裂状态
+            }
+        }
+        return;
+    }
+
 
     // 调用基类的受击状态更新
     if (isHit) {
@@ -528,18 +580,6 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     // 爆炸敌人不移动，所以不需要处理重力和碰撞
     velocityX = 0.0f;
     velocityY = 0.0f;
-
-    // 闪烁效果（低血量时）
-    if (health < maxHealth * 0.3f) {
-        flashTimer += deltaTime;
-        if (flashTimer >= 0.1f) {
-            isFlashing = !isFlashing;
-            flashTimer = 0.0f;
-        }
-    }
-    else {
-        isFlashing = false;
-    }
 
     // 脉动效果
     pulseTimer += deltaTime;
@@ -566,13 +606,19 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     // 死亡时触发爆炸
     if (health <= 0 && isAlive) {
         isAlive = false;
-        PrepareExplosion();
         OnDeath();
     }
 }
 
 void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
-    if (!isAlive) return;
+    if (!isAlive) {
+        // 死亡アニメーション中のみ描画
+        if (isDeathAnimating) {
+            DrawSplitDeathEffect(texture, camera);
+        }
+        return;
+    }
+
 
     // 转换为屏幕坐标
     float screenX, screenY;
@@ -736,4 +782,123 @@ void DamageNumberManager::Render(const Camera& camera) {
 
 void DamageNumberManager::Clear() {
     damageNumbers.clear();
+}
+void Enemy::DrawSplitDeathEffect(ID3D11ShaderResourceView* texture, const Camera& camera) {
+    // 计算屏幕位置
+    float screenX, screenY;
+    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
+
+    // 分裂部分的宽度（各占一半）
+    float halfWidth = width * 0.5f;
+    float halfHeight = height * 0.5f;
+
+    // 左半部分
+    {
+        // 计算左半部分位置（基于分裂偏移和角度）
+        float offsetX = cosf(splitAngle1) * splitOffset;
+        float offsetY = sinf(splitAngle1) * splitOffset;
+        float leftX = screenX - halfWidth + offsetX;
+        float leftY = screenY - halfHeight + offsetY;
+
+        // 设置颜色（应用透明度）
+        SetColor(1.0f, 1.0f, 1.0f, alpha);
+        // 绘制左半部分（UV坐标取左半部分）
+        RenderSplitImage(leftX, leftY, halfWidth, height, texture,
+            0.0f, 0.0f, 0.5f, 1.0f, splitAngle1);
+    }
+
+    // 右半部分
+    {
+        // 计算右半部分位置（基于分裂偏移和角度）
+        float offsetX = cosf(splitAngle2) * splitOffset;
+        float offsetY = sinf(splitAngle2) * splitOffset;
+        float rightX = screenX + offsetX;  // 右半部分起始点在原位置中间
+        float rightY = screenY - halfHeight + offsetY;
+
+        // 设置颜色（应用透明度）
+        SetColor(1.0f, 1.0f, 1.0f, alpha);
+        // 绘制右半部分（UV坐标取右半部分）
+        RenderSplitImage(rightX, rightY, halfWidth, height, texture,
+            0.5f, 0.0f, 1.0f, 1.0f, splitAngle2);
+    }
+}
+// 分割描画用のヘルパーメソッドを追加
+void Enemy::RenderSplitImage(float posX, float posY, float width, float height,
+    ID3D11ShaderResourceView* textureSRV,
+    float u0, float v0, float u1, float v1, float rotation) {
+    // 1. 保存当前常量缓冲区状态（用于恢复）
+    ConstantBuffer originalCB;
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    HRESULT hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+    if (SUCCEEDED(hr)) {
+        originalCB = *(ConstantBuffer*)mappedResource.pData;
+        g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+    }
+
+    // 2. 计算旋转中心（图像中心）
+    float centerX = posX + width * 0.5f;
+    float centerY = posY + height * 0.5f;
+
+    // 3. 创建旋转矩阵（围绕中心旋转）
+    DirectX::XMMATRIX translateToOrigin = DirectX::XMMatrixTranslation(-centerX, -centerY, 0.0f);
+    DirectX::XMMATRIX rotate = DirectX::XMMatrixRotationZ(rotation);
+    DirectX::XMMATRIX translateBack = DirectX::XMMatrixTranslation(centerX, centerY, 0.0f);
+    DirectX::XMMATRIX world = translateToOrigin * rotate * translateBack;
+
+    // 4. 更新常量缓冲区的世界矩阵
+    ConstantBuffer cb;
+    cb.worldView = DirectX::XMMatrixTranspose(world * originalCB.worldView);
+    cb.projection = originalCB.projection;
+    cb.color = originalCB.color; // 保留当前颜色设置
+    cb.matrixTex = originalCB.matrixTex;
+
+    hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr)) {
+        *(ConstantBuffer*)mappedResource.pData = cb;
+        g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+    }
+    g_pDeviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+
+    // 5. 定义分裂部分的顶点数据（带UV坐标）
+    VertexV vertices[4] = {
+        // 左下角
+        { posX, posY, 0.0f, u0, v1, 1.0f, 1.0f, 1.0f, alpha },
+        // 左上角
+        { posX, posY + height, 0.0f, u0, v0, 1.0f, 1.0f, 1.0f, alpha },
+        // 右下角
+        { posX + width, posY, 0.0f, u1, v1, 1.0f, 1.0f, 1.0f, alpha },
+        // 右上角
+        { posX + width, posY + height, 0.0f, u1, v0, 1.0f, 1.0f, 1.0f, alpha }
+    };
+
+    // 6. 创建临时顶点缓冲区
+    ID3D11Buffer* pTempVertexBuffer = nullptr;
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DYNAMIC;
+    bd.ByteWidth = sizeof(VertexV) * 4;
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    D3D11_SUBRESOURCE_DATA initData = {};
+    initData.pSysMem = vertices;
+    g_pDevice->CreateBuffer(&bd, &initData, &pTempVertexBuffer);
+
+    // 7. 设置顶点缓冲区并绘制
+    UINT stride = sizeof(VertexV);
+    UINT offset = 0;
+    g_pDeviceContext->IASetVertexBuffers(0, 1, &pTempVertexBuffer, &stride, &offset);
+    g_pDeviceContext->PSSetShaderResources(0, 1, &textureSRV);
+    g_pDeviceContext->PSSetSamplers(0, 1, &pSamplerState);
+    g_pDeviceContext->Draw(4, 0);
+
+    // 8. 清理临时资源
+    SAFE_RELEASE(pTempVertexBuffer);
+
+    // 9. 恢复原始常量缓冲区
+    hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr)) {
+        *(ConstantBuffer*)mappedResource.pData = originalCB;
+        g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+    }
+    g_pDeviceContext->VSSetConstantBuffers(0, 1, &g_pConstantBuffer);
 }
