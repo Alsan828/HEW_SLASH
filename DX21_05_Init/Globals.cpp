@@ -3,6 +3,7 @@
 
 // 定义所有全局变量
 MapManager g_mapManager;
+ProjectileManager& g_projectileManager = ProjectileManager::GetInstance();
 Player g_player;
 ID3D11ShaderResourceView* g_playerTexture = nullptr;
 ID3D11ShaderResourceView* g_groundTexture = nullptr;

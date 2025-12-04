@@ -35,6 +35,7 @@ void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
 }
 
 void ResetGame() {
+    g_projectileManager.ClearAll();  // 新增：清除所有射弹
     CleanupEnemies();
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
@@ -49,9 +50,9 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
     return (x1 < x2 + w2 && x1 + w1 > x2 &&
         y1 < y2 + h2 && y1 + h1 > y2);
 }
-
 // Game initialization
 void InitGameWorld() {
+    g_projectileManager.LoadTextures(g_pDevice);
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);
     g_player.anim.Init(10, 1, 0.15f, 0);
     g_player.anim.AddClip("Idle", 0, 9, 0.25f, true);
@@ -78,6 +79,18 @@ void UpdateGame(float deltaTime) {
         return;
     }
 
+    float mouseX, mouseY;
+    g_inputSystem.GetMousePosition(mouseX, mouseY);
+
+    // 从玩家位置向鼠标位置发射火球
+    g_projectileManager.CreateFireball(
+        g_player.posX + PLAYER_WIDTH / 2,  // 从玩家中心发射
+        g_player.posY + PLAYER_HEIGHT / 2,
+        mouseX,
+        mouseY,
+        true  // 来自玩家
+    );
+
     // 更新时间减慢效果
     if (g_isSlowMotion) {
         g_slowMoTimer -= deltaTime;
@@ -91,6 +104,7 @@ void UpdateGame(float deltaTime) {
     float timeScale = 1.0f;
     if (g_isSlowMotion) {
         timeScale = g_slowMoFactor; // 使用时间减慢倍率
+
     }
     else if (g_player.isCharging) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
@@ -105,7 +119,8 @@ void UpdateGame(float deltaTime) {
     g_camera.Update(scaledDeltaTime);
     UpdatePlayerPhysics(scaledDeltaTime);
     UpdateEnemies(scaledDeltaTime, &g_mapManager);
-
+    // 更新所有射弹
+    g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
     // 动画状态更新
     if (g_player.isCharging) {
         if (g_player.anim.GetCurrentClipName() != "Charge") {
@@ -331,6 +346,8 @@ void DrawGame() {
 
     RenderImage(playerPos.first, playerPos.second, PLAYER_WIDTH, PLAYER_HEIGHT,
         g_playerTexture, frameIndex, 1, 10);
+
+    g_projectileManager.Render(g_camera);
 
     float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
 }

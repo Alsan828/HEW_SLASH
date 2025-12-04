@@ -14,7 +14,11 @@
 #include "SceneManager.h"
 #include "SceneBase.h"
 #include "Pause.h"
+#include "Projectile.h"
 
+class ProjectileManager;
+
+extern ProjectileManager& g_projectileManager;  // 全局射弹管理器
 extern SceneManager sceneManager;
 extern MapManager g_mapManager;
 extern InputSystem g_inputSystem;
@@ -216,7 +220,6 @@ extern ID3D11ShaderResourceView* g_pauseTexture;
 
 // Game initialization
 void InitGameWorld();
-
 // Drawing function
 void DrawGame();
 
