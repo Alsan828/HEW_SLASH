@@ -83,13 +83,13 @@ void UpdateGame(float deltaTime) {
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
     // 从玩家位置向鼠标位置发射火球
-    g_projectileManager.CreateFireball(
+    /*g_projectileManager.CreateFireball(
         g_player.posX + PLAYER_WIDTH / 2,  // 从玩家中心发射
         g_player.posY + PLAYER_HEIGHT / 2,
         mouseX,
         mouseY,
         true  // 来自玩家
-    );
+    );*/
 
     // 更新时间减慢效果
     if (g_isSlowMotion) {

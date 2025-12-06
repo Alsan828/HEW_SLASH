@@ -29,8 +29,7 @@ bool MapManager::SwitchMap(const std::string& mapName, int enterPortalId, int sp
 
     return true;
 }
-
-// Create enemies based on spawn points defined in the current map
+// Map.cpp
 void MapManager::CreateMapEnemies() {
     if (!m_currentMap) return;
 
@@ -58,9 +57,11 @@ void MapManager::CreateMapEnemies() {
         else if (enemyType == "E4") {
             g_enemies.push_back(new FastEnemy(x, y));      // Fast enemy
         }
+        else if (enemyType == "E5") {  // 添加爆炸敌人
+            g_enemies.push_back(new BombEnemy(x, y));      // Bomb enemy
+        }
     }
 }
-
 // Find and return a map by name from the map collection
 Map* MapManager::GetMap(const std::string& name) {
     for (auto& map : m_maps) {

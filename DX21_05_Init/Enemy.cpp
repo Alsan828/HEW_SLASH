@@ -1,5 +1,6 @@
 ﻿#include "Enemy.h"
 #include "Map.h"
+#include "Projectile.h"
 
 // Initialize damage number manager
 std::vector<DamageNumber> DamageNumberManager::damageNumbers;
@@ -486,10 +487,12 @@ void FastEnemy::DashAttack() {
 ID3D11ShaderResourceView* g_bombEnemyTexture = nullptr;
 
 // BombEnemy实现
+// Enemy.cpp
+// BombEnemy实现
 BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
-    // 爆炸敌人：上下方向是弱点，其他方向减伤
-    SetDamageMultiplier(DIR_UP, 2.0f);        // 上方弱点
-    SetDamageMultiplier(DIR_DOWN, 2.0f);      // 下方弱点
+    // 爆炸敌人：上下方向是十倍伤害，其他方向减伤
+    SetDamageMultiplier(DIR_UP, 10.0f);        // 上方十倍伤害
+    SetDamageMultiplier(DIR_DOWN, 10.0f);      // 下方十倍伤害
     SetDamageMultiplier(DIR_FRONT, 0.7f);     // 正面减伤
     SetDamageMultiplier(DIR_BACK, 0.7f);      // 背面减伤
     SetDamageMultiplier(DIR_FRONT_UP, 1.2f);  // 前上中等
@@ -509,6 +512,49 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     patrolMaxX = posX;
 }
 
+// 重写TakeDamage函数，添加爆炸检测
+void BombEnemy::TakeDamage(int damage, float attackAngle) {
+    if (!isAlive) return;
+
+    // 获取伤害倍率
+    float multiplier = GetDamageMultiplier(attackAngle);
+    int actualDamage = (int)(damage * multiplier);
+
+    // 使用独立的伤害数字管理器
+    bool isCritical = (multiplier > 1.5f);
+    DamageNumberManager::AddDamageNumber(
+        posX + width * 0.5f,  // 敌人中心X
+        posY + height,        // 敌人顶部
+        actualDamage,
+        multiplier >= 10.0f  // 如果是上下方向，显示为暴击
+    );
+
+    // 检查是否为上下方向攻击
+    float relativeAngle = GetRelativeAngle(attackAngle);
+    int directionIndex = AngleToDirectionIndex(relativeAngle);
+    bool isVerticalAttack = (directionIndex == DIR_UP || directionIndex == DIR_DOWN);
+
+    // 如果是上下方向攻击，立即死亡并触发爆炸
+    if (multiplier >= 10.0f) {
+        health = 0;  // 立即死亡
+        isAlive = false;
+        OnDeath();  // 触发爆炸
+        return;     // 直接返回，不执行后续逻辑
+    }
+
+    // 非上下方向攻击，正常处理伤害
+    health -= actualDamage;
+    isHit = true;
+    hitTimer = HIT_DURATION;
+    OnHit(actualDamage);
+
+    if (health <= 0) {
+        health = 0;
+        isAlive = false;
+        OnDeath();
+    }
+}
+
 void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
@@ -526,7 +572,8 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
 
     // 脉动效果
     pulseTimer += deltaTime;
-    baseSize = 1.0f + 0.1f * sin(pulseTimer * 3.0f);
+    float pulseEffect = sin(pulseTimer * 3.0f) * 0.1f;
+    baseSize = 1.0f + pulseEffect;
 
     // 简化AI：只检测玩家距离
     float dx = g_player.posX - posX;
@@ -553,6 +600,15 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     }
 }
 
+// 重写OnDeath函数，处理爆炸效果
+void BombEnemy::OnDeath() {
+    // 先调用基类的OnDeath
+    Enemy::OnDeath();
+
+    // 然后触发爆炸效果
+    Explode();
+}
+
 void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
 
@@ -560,7 +616,7 @@ void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
-    // 根据状态选择帧
+    // 根据状态和血量选择帧
     int frameIndex = 0;
     if (health < maxHealth * 0.3f) {
         frameIndex = 1;  // 低血量帧
@@ -569,11 +625,14 @@ void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
         frameIndex = 2;  // 攻击状态帧
     }
 
+    // 应用颜色效果
     if (isHit) {
         SetColor(1.0f, 0.0f, 0.0f, 1.0f);  // 受击红色
     }
     else if (currentState == ATTACK) {
-        SetColor(1.0f, 0.8f, 0.3f, 1.0f);  // 攻击状态橙色
+        // 攻击状态时，脉动颜色变化
+        float pulse = 0.5f + 0.5f * sin(pulseTimer * 5.0f);
+        SetColor(1.0f, 0.3f + pulse * 0.5f, 0.3f, 1.0f);  // 红-橙脉动
     }
     else {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // 正常颜色
@@ -592,15 +651,119 @@ void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
     // 渲染生命条
     RenderHealthBar(camera);
 
+    // 如果处于攻击状态，显示警告效果
+    if (currentState == ATTACK) {
+        float warningSize = renderWidth * 1.5f;
+        float warningX = screenX - (warningSize - renderWidth) * 0.5f;
+        float warningY = screenY - (warningSize - renderHeight) * 0.5f;
+
+        float alpha = 0.3f + 0.3f * sin(pulseTimer * 4.0f);
+        SetColor(1.0f, 0.3f, 0.1f, alpha);
+        RenderImage(warningX, warningY, warningSize, warningSize,
+            g_groundTexture, 0, 1, 1);
+    }
+
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-
 void BombEnemy::Explode() {
-    // TODO: 实现爆炸效果
-    // 爆炸逻辑可以包括：
-    // 1. 对周围玩家和物体造成伤害
-    // 2. 播放爆炸动画和音效
+    // 播放爆炸音效
+    // PlaySound("explosion.wav");
+
+    // 创建爆炸特效
+    // CreateExplosionEffect(posX, posY);
+
+    // 对周围敌人造成伤害
+    float explosionRadius = 1.5f;  // 爆炸半径
+
+    for (Enemy* otherEnemy : g_enemies) {
+        if (otherEnemy == this || !otherEnemy->IsAlive()) continue;
+
+        float dx = otherEnemy->GetX() - posX;
+        float dy = otherEnemy->GetY() - posY;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        // 如果在爆炸半径内
+        if (distance <= explosionRadius) {
+            // 向左右发射子弹的逻辑
+            // 这里可以创建一个Projectile对象或直接造成伤害
+
+            // 简单实现：直接造成伤害
+            // 计算攻击角度（从左到右）
+            float attackAngle = (dx > 0) ? 0.0f : 3.14159f;  // 左或右
+
+            // 对敌人造成伤害
+            int explosionDamage = 30;  // 爆炸基础伤害
+            otherEnemy->TakeDamage(explosionDamage, attackAngle);
+        }
+    }
+
+    // 对玩家造成伤害
+    if (g_player.isAlive) {
+        float dx = g_player.posX - posX;
+        float dy = g_player.posY - posY;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        if (distance <= explosionRadius) {
+            // 对玩家造成伤害
+            // 这里需要调用玩家的受伤函数
+            // g_player.TakeDamage(20);
+
+            // 显示伤害数字
+            DamageNumberManager::AddDamageNumber(
+                posX + width * 0.5f,
+                posY + height * 0.5f,
+                20,
+                false
+            );
+        }
+    }
+
+    // 创建向左和向右的射弹
+    CreateProjectiles();
+}
+
+// Enemy.cpp
+void BombEnemy::CreateProjectiles() {
+    // 获取 ProjectileManager 实例
+    ProjectileManager& projectileManager = ProjectileManager::GetInstance();
+
+    // 创建火球效果配置
+    ProjectileEffect fireballEffect;
+    fireballEffect.damage = 30.0f;  // 基础伤害
+    fireballEffect.burnDamage = 5.0f;  // 燃烧持续伤害
+    fireballEffect.areaRadius = 0.3f;  // 范围爆炸半径
+    fireballEffect.pierce = false;  // 不穿透
+
+    float projectileSpeed = 3.0f;  // 射弹速度
+
+    // 向左发射火球
+    projectileManager.CreateFireball(
+        posX,  // 起点X
+        posY + height * 0.5f,  // 从敌人中心高度发射
+        posX - 10.0f,  // 向左很远的位置
+        posY + height * 0.5f,  // 水平方向
+        false  // 来自敌人
+    );
+
+    // 向右发射火球
+    projectileManager.CreateFireball(
+        posX,  // 起点X
+        posY + height * 0.5f,  // 从敌人中心高度发射
+        posX + 10.0f,  // 向右很远的位置
+        posY + height * 0.5f,  // 水平方向
+        false  // 来自敌人
+    );
+
+    // 保留伤害数字显示作为反馈
+    DamageNumberManager::AddDamageNumber(
+        posX, posY + height + 0.5f,
+        0,  // 显示0表示爆炸特效
+        true
+    );
+
+    // 可以在这里添加粒子效果
+    // CreateParticleEffect(posX, posY, "explosion");
 }
 
 // Enemy management functions

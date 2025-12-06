@@ -61,7 +61,7 @@ public:
 
     // 伤害处理
     float GetDamageMultiplier(float attackAngle);
-    void TakeDamage(int damage, float attackAngle);
+    virtual void TakeDamage(int damage, float attackAngle);
 
     // 状态更新
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr);
@@ -183,7 +183,9 @@ public:
 private:
 
     void Explode(); // 死亡时爆炸的空函数
-
+    virtual void TakeDamage(int damage, float attackAngle) override;
+    void CreateProjectiles();
+    virtual void OnDeath() override;
     // 视觉特效相关
     float pulseTimer;
     float baseSize;
