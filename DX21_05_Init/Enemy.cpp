@@ -123,11 +123,39 @@ void Enemy::OnDeath() {
     isAlive = false;
     OnEnemyDefeated();
 }
-
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
-    // Update hit state
+    // 可见性检测和优化逻辑
+    bool isCurrentlyVisible = IsVisible(g_camera); // 假设有全局相机对象
+
+    // 如果不可见且不需要最小更新，则跳过完整更新
+    if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
+        // 只更新离开屏幕计时器
+        offScreenTimer += deltaTime;
+
+        // 如果离开屏幕时间过长且状态简单，完全跳过更新
+        if (offScreenTimer > MAX_OFFSCREEN_TIME &&
+            currentState == PATROL &&
+            !isHit &&
+            health >= maxHealth) {
+            return;
+        }
+    }
+
+    // 如果从不可见变为可见，重置计时器
+    if (isCurrentlyVisible && !wasVisible) {
+        ResetOffScreenTimer();
+    }
+    wasVisible = isCurrentlyVisible;
+
+    // 如果不可见但需要最小更新，执行简化版更新
+    if (!isCurrentlyVisible && NeedsMinimalUpdate()) {
+        UpdateMinimal(deltaTime);
+        return;
+    }
+
+    // 完整更新逻辑（原有代码）
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -135,17 +163,17 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Apply gravity
+    // 应用重力
     velocityY += GRAVITY * deltaTime * 60.0f;
 
-    // Save old position for collision detection
+    // 保存旧位置用于碰撞检测
     float oldX = posX;
     float oldY = posY;
 
-    // Move
+    // 移动和碰撞检测（原有完整逻辑）
     posX += velocityX * deltaTime * 60.0f;
 
-    // Horizontal collision detection - use map manager to get solid tiles
+    // 水平碰撞检测
     bool horizontalCollision = false;
     if (mapManager && mapManager->GetCurrentMap()) {
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
@@ -160,7 +188,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
 
     posY += velocityY * deltaTime * 60.0f;
 
-    // Vertical collision detection
+    // 垂直碰撞检测
     bool verticalCollision = false;
     if (mapManager && mapManager->GetCurrentMap()) {
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
@@ -174,21 +202,18 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Reset horizontal velocity only on horizontal collision
     if (horizontalCollision) {
         velocityX = 0;
     }
 
-    // Boundary check - use map boundaries
+    // 边界检查
     if (mapManager && mapManager->GetCurrentMap()) {
-        // Can add map-based boundary checks here
-        if (posY < -5.0f) { // Fall death height
+        if (posY < -5.0f) {
             isAlive = false;
             return;
         }
     }
     else {
-        // Fallback boundary check
         if (posX < -1.0f) posX = -1.0f;
         if (posX > 1.0f - width) posX = 1.0f - width;
         if (posY < -2.0f) {
@@ -197,7 +222,69 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    UpdateAI(deltaTime);
+    // 只在可见时更新AI（避免屏幕外敌人消耗计算资源）
+    if (isCurrentlyVisible) {
+        UpdateAI(deltaTime);
+    }
+    else {
+        // 屏幕外敌人简化AI更新
+        UpdateAIMinimal(deltaTime);
+    }
+
+    // 更新离开屏幕计时器
+    if (!isCurrentlyVisible) {
+        offScreenTimer += deltaTime;
+    }
+    else {
+        offScreenTimer = 0.0f;
+    }
+}
+
+// 简化版更新（用于屏幕外但需要更新的敌人）
+void Enemy::UpdateMinimal(float deltaTime) {
+    // 简化版AI更新（只处理状态转换，不计算路径等）
+    UpdateAIMinimal(deltaTime);
+
+    // 更新离开屏幕计时器
+    offScreenTimer += deltaTime;
+}
+
+// 简化版AI更新
+void Enemy::UpdateAIMinimal(float deltaTime) {
+    // 只处理最基本的状态维护，不进行复杂计算
+    float dx = g_player.posX - posX;
+
+    // 更新面向方向
+    if (dx != 0) {
+        facingRight = (dx > 0);
+    }
+
+    // 简化状态机：只处理超时或关键状态转换
+    static float stateTimer = 0.0f;
+    stateTimer += deltaTime;
+
+    // 每5秒检查一次状态转换（降低频率）
+    if (stateTimer >= 5.0f) {
+        float distance = fabs(dx);
+
+        // 简化版状态转换逻辑
+        switch (currentState) {
+        case PATROL:
+            if (distance < 3.0f) currentState = CHASE;
+            break;
+        case CHASE:
+            if (distance > 8.0f) currentState = PATROL;
+            break;
+        case ATTACK:
+            // 攻击状态保持，直到条件改变
+            break;
+        case FLEE:
+            if (health > maxHealth * 0.5f) currentState = CHASE;
+            break;
+        }
+
+        stateTimer = 0.0f;
+    }
 }
 
 void Enemy::UpdateAI(float deltaTime) {
@@ -780,15 +867,34 @@ void InitEnemies() {
     if (!g_fastEnemyTexture) g_fastEnemyTexture = g_enemyTexture;
 }
 
-
-void UpdateEnemies(float deltaTime, MapManager* mapManager) {    // Update damage numbers
-
+void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     DamageNumberManager::Update(deltaTime);
+
+    int visibleEnemyCount = 0;
+    int totalEnemyCount = g_enemies.size();
+
     for (auto& enemy : g_enemies) {
+        // 调试信息：统计可见敌人数量
+        if (enemy->IsVisible(g_camera)) {
+            visibleEnemyCount++;
+        }
+
         enemy->Update(deltaTime, mapManager);
     }
 
-    // Remove dead enemies
+    // 调试输出（可选）
+    static float debugTimer = 0.0f;
+    debugTimer += deltaTime;
+    if (debugTimer > 2.0f) {
+        char debugMsg[256];
+        sprintf_s(debugMsg, "敌人优化: 总数=%d, 可见=%d, 优化率=%.1f%%\n",
+            totalEnemyCount, visibleEnemyCount,
+            (1.0f - (float)visibleEnemyCount / totalEnemyCount) * 100.0f);
+        OutputDebugStringA(debugMsg);
+        debugTimer = 0.0f;
+    }
+
+    // 移除死亡敌人
     g_enemies.erase(
         std::remove_if(g_enemies.begin(), g_enemies.end(),
             [](Enemy* e) {
@@ -801,7 +907,6 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {    // Update damag
         g_enemies.end()
     );
 }
-
 // Modify RenderEnemies function to pass camera parameter
 void RenderEnemies(const Camera& camera) {
     for (auto& enemy : g_enemies) {

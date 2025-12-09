@@ -59,6 +59,24 @@ public:
     // 设置伤害系数
     void SetDamageMultiplier(Direction dir, float multiplier);
 
+    // 添加可见性检测方法
+    bool IsVisible(const Camera& camera) const {
+        return camera.IsRectVisible(posX, posY, width, height);
+    }
+
+    // 获取离开屏幕的时间
+    float GetOffScreenTime() const { return offScreenTimer; }
+
+    // 重置离开屏幕计时器
+    void ResetOffScreenTimer() { offScreenTimer = 0.0f; }
+
+    void UpdateMinimal(float deltaTime);
+    // 检查是否需要最小更新（即使不在屏幕内）
+    void UpdateAIMinimal(float deltaTime);
+    bool NeedsMinimalUpdate() const {
+        return offScreenTimer < MAX_OFFSCREEN_TIME ||
+            currentState == ATTACK || isHit || health < maxHealth;
+    }
     // 伤害处理
     float GetDamageMultiplier(float attackAngle);
     virtual void TakeDamage(int damage, float attackAngle);
@@ -98,6 +116,10 @@ protected:
     float maxHealth;
     float moveSpeed;
     bool isAlive;
+    bool wasVisible = false;  // 上次更新时是否可见
+    float offScreenTimer = 0.0f;  // 离开屏幕的时间计时器
+    static constexpr float MAX_OFFSCREEN_TIME = 5.0f;  // 最大离开屏幕时间
+
 
     // 移动相关
     float velocityX;
