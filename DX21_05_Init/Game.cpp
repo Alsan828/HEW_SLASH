@@ -68,9 +68,10 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);
     LoadTexture(g_pDevice, "asset/completed.png", &g_chargeEffectTexture);
 
-    //LoadTexture(g_pDevice, "asset/Number.png", &g_numberTexture);
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
     LoadTexture(g_pDevice, "asset/UI/time.png", &g_uiNumberTexture);
+
+    LoadTexture(g_pDevice, "asset/UI/arrow.png", &g_arrowTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -458,7 +459,7 @@ void HandleInput() {
 // MouseIndicatorSystem 实现
 void MouseIndicatorSystem::Initialize() {
     m_mouseIndicatorTexture = g_chargeEffectTexture;
-    m_arrowTexture = g_dashEffectTexture;
+    m_arrowTexture = g_arrowTexture;
     m_showMouseIndicator = true;
     m_arrowAngle = 0.0f;
 }
@@ -552,7 +553,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     auto arrowScreenPos = worldToScreen(arrowX - arrowSize / 2, arrowY - arrowSize / 2);
 
-    SetColor(0.0f, 1.0f, 0.0f, 1.0f);
+    //SetColor(0.0f, 1.0f, 0.0f, 1.0f);
     float levelX = 0.85f;
     float levelY = 0.2f;
     float levelSize = 0.05f;

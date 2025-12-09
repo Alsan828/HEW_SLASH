@@ -209,6 +209,7 @@ extern ID3D11ShaderResourceView* g_dashEffectTexture;
 extern ID3D11ShaderResourceView* g_chargeEffectTexture;
 extern ID3D11ShaderResourceView* g_numberTexture;
 extern ID3D11ShaderResourceView* g_uiNumberTexture;
+extern ID3D11ShaderResourceView* g_arrowTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
