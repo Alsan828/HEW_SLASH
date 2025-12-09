@@ -1,17 +1,17 @@
-#include "Stage.h"
+#include "Stage3.h"
 
 //the construct
-StageScene::StageScene(SceneManager* manager)
+Stage3Scene::Stage3Scene(SceneManager* manager)
 {
     sceneManager = manager;
 }
 
 // Initialize the stage
-bool StageScene::Init()
+bool Stage3Scene::Init()
 {
     InitGameWorld();
 
-    g_mapManager.SwitchMap("stage1", 0, 1);
+    g_mapManager.SwitchMap("ice", 0, 1);
 
     g_gameState = STATE_PLAYING;
 
@@ -19,20 +19,20 @@ bool StageScene::Init()
 }
 
 // Update the stage logic
-void StageScene::Update(float deltaTime)
+void Stage3Scene::Update(float deltaTime)
 {
     UpdateGame(deltaTime);
 }
 
 // Draw the stage
-void StageScene::Draw()
+void Stage3Scene::Draw()
 {
     // Call your global draw function
     DrawGame();
 }
 
 // Cleanup
-void StageScene::Uninit()
+void Stage3Scene::Uninit()
 {
     ResetGame();  // Reset game state
 }

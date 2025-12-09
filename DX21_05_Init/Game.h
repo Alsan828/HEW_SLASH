@@ -203,6 +203,8 @@ extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture;
 extern ID3D11ShaderResourceView* g_dashEffectTexture;
 extern ID3D11ShaderResourceView* g_chargeEffectTexture;
+extern ID3D11ShaderResourceView* g_numberTexture;
+extern ID3D11ShaderResourceView* g_uiNumberTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
@@ -211,6 +213,12 @@ extern GameState g_gameState;
 extern float g_slowMoTimer;      // 时间减慢计时器
 extern float g_slowMoFactor;     // 时间减慢倍率
 extern bool g_isSlowMotion;      // 是否处于时间减慢状态
+
+// for the timer counting
+extern float g_gameElapsedTime;  
+extern int g_gameMinutes;        
+extern int g_gameSeconds;
+
 // added november 27th for the pause 
 extern ID3D11ShaderResourceView* g_pauseTexture;
 

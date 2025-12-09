@@ -1,15 +1,16 @@
-﻿#include "Menu.h"
+#include "StageSelect.h"
 
-MenuScene::MenuScene(SceneManager* manager)
+
+StageSelect::StageSelect(SceneManager* manager)
 {
 	sceneManager = manager;
-
 }
 
-bool MenuScene::Init()
+
+bool StageSelect::Init()
 {
 
-	LoadTexture(g_pDevice, "asset/menu.png", &backgroundTexture);      // abckground texture
+	LoadTexture(g_pDevice, "asset/stageselect.png", &backgroundTexture);      // abckground texture
 
 	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
 	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
@@ -17,9 +18,12 @@ bool MenuScene::Init()
 	uiButtons.clear();
 	g_mouseIndicator.ShowMouseIndicator(false);
 
-	uiButtons.emplace_back(-0.60f, -0.3f, 0.6f, 0.8f, STAGESELECT, buttonTexture, buttonHoverTexture);
-	uiButtons.emplace_back(0.0f, -0.3f, 0.6f, 0.8f, HOWTOPLAY, buttonTexture, buttonHoverTexture);
-	uiButtons.emplace_back(+0.6f, -0.3f, 0.6f, 0.8f, QUIT_GAME, buttonTexture, buttonHoverTexture);
+	uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, STAGE, buttonTexture, buttonHoverTexture); // go to 1-1
+	uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, STAGE2, buttonTexture, buttonHoverTexture); // go to 1-2
+	uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, STAGE3, buttonTexture, buttonHoverTexture); // go to 1-3
+
+	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, buttonTexture, buttonHoverTexture); // go back to menu
+
 
 	for (auto& btn : uiButtons)
 	{
@@ -27,31 +31,28 @@ bool MenuScene::Init()
 		btn.SetHitboxOffset(-0.05f);
 	}
 
+
 	return true;
 }
 
-void MenuScene::Update(float deltaTime)
+
+void StageSelect::Update(float deltaTime)
 {
 	g_inputSystem.Update();
 
+	// for the buttons
 	for (auto& btn : uiButtons)
 	{
 		if (btn.Process() == UIButtonResult::Clicked)
 		{
-			if (btn.GetTargetScene() == QUIT_GAME)
-			{
-				PostQuitMessage(0); // it quits the game
-			}
-			else
-			{
-				sceneManager->SwitchScene(btn.GetTargetScene());
-			}
+			sceneManager->SwitchScene(btn.GetTargetScene());
 			return;
 		}
 	}
 }
 
-void MenuScene::Draw()
+
+void StageSelect::Draw()
 {
 	if (backgroundTexture) {
 		// Always set a color before drawing so the texture is visible
@@ -65,7 +66,8 @@ void MenuScene::Draw()
 
 }
 
-void MenuScene::Uninit()
+
+void StageSelect::Uninit()
 {
 	if (backgroundTexture)
 	{
@@ -73,9 +75,9 @@ void MenuScene::Uninit()
 		backgroundTexture = nullptr;
 	}
 
-	if (buttonTexture) { 
-		buttonTexture->Release();      
-		buttonTexture = nullptr; 
+	if (buttonTexture) {
+		buttonTexture->Release();
+		buttonTexture = nullptr;
 	}
 
 	if (buttonHoverTexture)

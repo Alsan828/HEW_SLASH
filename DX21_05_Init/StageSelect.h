@@ -4,28 +4,24 @@
 #include "SceneManager.h"
 #include <vector>
 #include "Render.h"
+#include "Game.h"
 #include "UIButton.h"
 
-// title background structure
-struct Background 
-{
-    float posX, posY;
-    float width, height;
-};
 
-class TitleScene : public SceneBase 
+class StageSelect : public SceneBase
 {
 private:
     SceneManager* sceneManager;   // pointer to the scene manager
 
     ID3D11ShaderResourceView* backgroundTexture;
-    
+
+    // added december 1st
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* buttonTexture = nullptr;
     ID3D11ShaderResourceView* buttonHoverTexture = nullptr;
 
 public:
-    TitleScene(SceneManager* manager); // constructor
+    StageSelect(SceneManager* manager); // constructor
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -35,3 +31,4 @@ public:
 
 extern InputSystem g_inputSystem;   // use the global input system
 extern ID3D11Device* g_pDevice;     // device for texture loading
+

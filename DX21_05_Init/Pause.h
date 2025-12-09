@@ -20,9 +20,12 @@ private:
 
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* buttonTexture = nullptr;
+    ID3D11ShaderResourceView* buttonHoverTexture = nullptr;
+
+    SCENE pausedSceneType; // for depending on the scene you are to pause the game
 
 public:
-    PauseScene(SceneManager* manager, SceneBase* stage);
+    PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE);
 
     bool Init() override;
     void Update(float deltaTime) override;

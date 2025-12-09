@@ -10,7 +10,6 @@ TitleScene::TitleScene(SceneManager* manager)
 {
     sceneManager = manager;
     backgroundTexture = nullptr;
-    // I dont need to use "this" but its better for a clearer code
 }
 
 //it initializes the objects in title
@@ -18,13 +17,17 @@ bool TitleScene::Init()
 {
     LoadTexture(g_pDevice, "asset/title.png", &backgroundTexture);      // abckground texture
 
-    LoadTexture(g_pDevice, "asset/block.png", &buttonTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
 
 
     uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
 
-    uiButtons.emplace_back(0.0f, -0.9f, 0.5f, 0.2f, MENU, buttonTexture);
+    uiButtons.emplace_back(0.0f, -0.0f, 0.8f, 1.0f, MENU, buttonTexture, buttonHoverTexture);
+
+    uiButtons[0].SetHitboxScale(0.7f, 0.22f);  // change this values if needed depending on the size of the button
+    uiButtons[0].SetHitboxOffset(-0.07f);
 
     return true;
 }
@@ -77,6 +80,11 @@ void TitleScene::Uninit()
     if (buttonTexture) {
         buttonTexture->Release();
         buttonTexture = nullptr;
+    }
+
+    if (buttonHoverTexture) {  
+        buttonHoverTexture->Release();
+        buttonHoverTexture = nullptr;
     }
 
     uiButtons.clear();

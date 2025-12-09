@@ -10,12 +10,16 @@ bool HowToPlayScene::Init()
 {
 	LoadTexture(g_pDevice, "asset/howtoplay.png", &backgroundTexture);      // abckground texture
 
-	LoadTexture(g_pDevice, "asset/block.png", &buttonTexture); // for the button
+	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
+	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
 
 	uiButtons.clear();
 	g_mouseIndicator.ShowMouseIndicator(false);
 
-	uiButtons.emplace_back(0.8f, -0.8f, 0.3f, 0.1f, MENU, buttonTexture);
+	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, buttonTexture, buttonHoverTexture);
+
+	uiButtons[0].SetHitboxScale(0.7f, 0.22f);  // change this values if needed depending on the size of the button
+	uiButtons[0].SetHitboxOffset(-0.04f);
 
 	return true;
 }
@@ -64,6 +68,12 @@ void HowToPlayScene::Uninit()
 	if (buttonTexture) {
 		buttonTexture->Release();
 		buttonTexture = nullptr;
+	}
+
+	if (buttonHoverTexture)
+	{
+		buttonHoverTexture->Release();
+		buttonHoverTexture = nullptr;
 	}
 
 	uiButtons.clear();
