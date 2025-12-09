@@ -161,6 +161,9 @@
     </ClCompile>
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Stage.cpp" />
+    <ClCompile Include="Stage2.cpp" />
+    <ClCompile Include="Stage3.cpp" />
+    <ClCompile Include="StageSelect.cpp" />
     <ClCompile Include="stb_image.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -209,6 +212,9 @@
     <ClInclude Include="SceneBase.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Stage.h" />
+    <ClInclude Include="Stage2.h" />
+    <ClInclude Include="Stage3.h" />
+    <ClInclude Include="StageSelect.h" />
     <ClInclude Include="stb_image.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>

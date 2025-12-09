@@ -18,6 +18,7 @@ private:
 
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* buttonTexture = nullptr;
+    ID3D11ShaderResourceView* buttonHoverTexture = nullptr;
 
 public:
     HowToPlayScene(SceneManager* manager, SCENE returnTo); // constructor

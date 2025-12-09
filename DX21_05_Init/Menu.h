@@ -18,6 +18,7 @@ private:
     // added december 1st
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* buttonTexture = nullptr;
+    ID3D11ShaderResourceView* buttonHoverTexture = nullptr;
 
 public:
     MenuScene(SceneManager* manager); // constructor

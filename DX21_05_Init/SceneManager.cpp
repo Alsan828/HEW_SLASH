@@ -1,9 +1,12 @@
 ﻿#include "SceneManager.h"
 #include "TitleScene.h"
 #include "Stage.h"
+#include "Stage2.h"
+#include "Stage3.h"
 #include "Menu.h"
 #include "HowToPlay.h"
 #include "Pause.h"
+#include "StageSelect.h"
 
 //for initializing it
 bool SceneManager::Init(SCENE startScene) 
@@ -42,15 +45,79 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case STAGE:
+        // Clear previous scene when coming from stage select or menu
+        if (caller == STAGESELECT) 
+        {
+            if (previousScene) 
+            {
+                previousScene->Uninit();
+                delete previousScene;
+                previousScene = nullptr;
+            }
+        }
+        // resume if coming from pause
         if (previousScene) 
         {
             currentScene = previousScene;
             previousScene = nullptr;
             return true;  // resume without restarting the game
         }
+        // default start the stage
         else 
         {
             currentScene = new StageScene(this);
+            return currentScene->Init();
+        }
+        break;
+
+    case STAGE2:
+        // Clear previous scene when coming from stage select or menu
+        if (caller == STAGESELECT) 
+        {
+            if (previousScene) 
+            {
+                previousScene->Uninit();
+                delete previousScene;
+                previousScene = nullptr;
+            }
+        }
+        // Only resume if coming from pause
+        if (previousScene)
+        {
+            currentScene = previousScene;
+            previousScene = nullptr;
+            return true;  // resume without restarting the game
+        }
+        // default start the stage
+        else
+        {
+            currentScene = new Stage2Scene(this);
+            return currentScene->Init();
+        }
+        break;
+
+    case STAGE3:
+        // Clear previous scene when coming from stage select or menu
+        if (caller == STAGESELECT) 
+        {
+            if (previousScene) 
+            {
+                previousScene->Uninit();
+                delete previousScene;
+                previousScene = nullptr;
+            }
+        }
+        // Only resume if coming from pause
+        if (previousScene)
+        {
+            currentScene = previousScene;
+            previousScene = nullptr;
+            return true;  // resume without restarting the game
+        }
+        // default start the stage
+        else
+        {
+            currentScene = new Stage3Scene(this);
             return currentScene->Init();
         }
         break;
@@ -84,18 +151,23 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case PAUSE:
-        if (caller == STAGE)  // coming directly from stage to pause
+        if (caller == STAGE || caller == STAGE2 || caller == STAGE3)  // coming directly from stage to pause. ADD more stages depending on how many there are
         { 
             previousScene = oldScene; // Stage
         }
         if (previousScene) // reuse stage if it exists (so I can see it again)
         {
-            currentScene = new PauseScene(this, previousScene);
+            currentScene = new PauseScene(this, previousScene, originalPausedScene);
         }
         else // if no stage saved, fallback
         { 
-            currentScene = new PauseScene(this, nullptr);
+            currentScene = new PauseScene(this, nullptr, STAGE);
         }
+        return currentScene->Init();
+        break;
+
+    case STAGESELECT:
+        currentScene = new StageSelect(this); // for the title
         return currentScene->Init();
         break;
 
@@ -108,11 +180,6 @@ bool SceneManager::SwitchScene(SCENE newScene)
 //for updating 
 void SceneManager::Update(float deltaTime) 
 {
-    /*if (currentScene)
-    {
-        currentScene->Update(deltaTime);
-    }*/
-
     if (currentScene && g_gameState == STATE_PLAYING) 
     {
         currentScene->Update(deltaTime);  // only update when playing

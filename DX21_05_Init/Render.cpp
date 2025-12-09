@@ -152,7 +152,7 @@ HRESULT RendererInit(HWND hwnd) {
 		return hr;
 	}
 
-	hr = LoadTexture(g_pDevice, "asset/Number.png", &pTextureNum);
+	hr = LoadTexture(g_pDevice, "asset/UI/number.png", &pTextureNum);
 	if (FAILED(hr)) {
 		// Handle error		
 		MessageBoxA(NULL, "OP error", "error", MB_OK);
@@ -267,6 +267,7 @@ void RendererUninit()
 	SAFE_RELEASE(g_pDevice);
 	SAFE_RELEASE(pTextureSRV);
 	SAFE_RELEASE(pTextureSRV2);
+	SAFE_RELEASE(g_uiNumberTexture); // for the ui number texture
 
 	SAFE_RELEASE(g_pConstantBuffer); // added november 12th
 }

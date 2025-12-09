@@ -1,10 +1,11 @@
 #include "Pause.h"
 
 // construct
-PauseScene::PauseScene(SceneManager* manager, SceneBase* stage)
+PauseScene::PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE)
 {
     sceneManager = manager;
     underlyingScene = stage; // keep pointer to StageScene
+    pausedSceneType = PAUSE;
 }
 
 bool PauseScene::Init()
@@ -12,15 +13,22 @@ bool PauseScene::Init()
     // Load the pause background texture
     LoadTexture(g_pDevice, "asset/pause.png", &backgroundTexture);
 
-    LoadTexture(g_pDevice, "asset/block.png", &buttonTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
 
     uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
 
-    uiButtons.emplace_back(-0.7f, -0.3f, 0.25f, 0.3f, STAGE, buttonTexture);
-    uiButtons.emplace_back(-0.25f, -0.3f, 0.25f, 0.3f, HOWTOPLAY, buttonTexture);
-    uiButtons.emplace_back(+0.25f, -0.3f, 0.25f, 0.3f, MENU, buttonTexture);
-    uiButtons.emplace_back(+0.7f, -0.3f, 0.25f, 0.3f, QUIT_GAME, buttonTexture);
+    uiButtons.emplace_back(-0.7f, -0.3f, 0.5f, 0.8f, pausedSceneType, buttonTexture, buttonHoverTexture);
+    uiButtons.emplace_back(-0.25f, -0.3f, 0.5f, 0.8f, HOWTOPLAY, buttonTexture, buttonHoverTexture);
+    uiButtons.emplace_back(+0.25f, -0.3f, 0.5f, 0.8f, STAGESELECT, buttonTexture, buttonHoverTexture);
+    uiButtons.emplace_back(+0.7f, -0.3f, 0.5f, 0.8f, QUIT_GAME, buttonTexture, buttonHoverTexture);
+
+    for (auto& btn : uiButtons)
+    {
+        btn.SetHitboxScale(0.7f, 0.2f);
+        btn.SetHitboxOffset(-0.05f);
+    }
 
     return true;
 }   
@@ -80,6 +88,11 @@ void PauseScene::Uninit()
         buttonTexture = nullptr;
     }
 
-    uiButtons.clear();
-    g_mouseIndicator.Cleanup();
+    if (buttonHoverTexture)
+    {
+        buttonHoverTexture->Release();
+        buttonHoverTexture = nullptr;
+    }
+
+    g_mouseIndicator.ShowMouseIndicator(true);
 }

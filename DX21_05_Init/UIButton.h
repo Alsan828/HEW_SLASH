@@ -29,6 +29,10 @@ private:
     bool s_wasMouseDown = false;
     bool s_wasMouseDownInitialized = false;
 
+    float hitboxScaleWidth = 1.0f;
+    float hitboxScaleHeight = 1.0f;
+    float hitboxOffsetY = 0.0f;
+
 public:
 
     UIButton(); // default contructor
@@ -47,4 +51,7 @@ public:
 
     void SetTargetScene(SCENE scene) { targetScene = scene; }
     SCENE GetTargetScene() const { return targetScene; }
+
+    void SetHitboxScale(float scaleWidth, float scaleHeight); 
+    void SetHitboxOffset(float offsetY); 
 };

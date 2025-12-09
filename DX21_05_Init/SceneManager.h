@@ -6,8 +6,11 @@ enum SCENE
     TITLE,
     MENU,
     STAGE,
+    STAGE2,
+    STAGE3,
     PAUSE,
     HOWTOPLAY,
+    STAGESELECT,
     QUIT_GAME = -1
 
     // ADD MORE HERE LATER
@@ -20,6 +23,8 @@ private:
     SCENE currentSceneType;
 
     SceneBase* previousScene = nullptr;
+
+    SCENE originalPausedScene = STAGE;
 
 public:
     bool Init(SCENE startScene);
@@ -34,4 +39,7 @@ public:
     // helper to access previous scene
     SCENE GetCurrentSceneType() const { return currentSceneType; }
     SceneBase* GetPreviousScene() const { return previousScene; }
+
+    SCENE GetOriginalPausedScene() const { return originalPausedScene; }
+    void SetOriginalPausedScene(SCENE scene) { originalPausedScene = scene; }
 };

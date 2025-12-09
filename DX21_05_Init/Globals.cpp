@@ -10,6 +10,8 @@ ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture = nullptr;
 ID3D11ShaderResourceView* g_dashEffectTexture = nullptr;
 ID3D11ShaderResourceView* g_chargeEffectTexture = nullptr;
+ID3D11ShaderResourceView* g_numberTexture = nullptr;
+ID3D11ShaderResourceView* g_uiNumberTexture = nullptr;
 InputSystem g_inputSystem;
 GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;

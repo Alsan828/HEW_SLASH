@@ -6,6 +6,12 @@ float g_slowMoTimer = 0.0f;
 float g_slowMoFactor = 1.0f;
 bool g_isSlowMotion = false;
 
+// added december 4th
+// for the timer of the game
+float g_gameElapsedTime = 0.0f;
+int g_gameMinutes = 0;
+int g_gameSeconds = 0;
+
 // Game timer implementation
 GameTimer::GameTimer()
 {
@@ -57,10 +63,14 @@ void InitGameWorld() {
     g_player.anim.Init(10, 1, 0.15f, 0);
     g_player.anim.AddClip("Idle", 0, 9, 0.25f, true);
 
-    LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture); 
     LoadTexture(g_pDevice, "asset/Space.png", &g_backgroundTexture);
     LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);
     LoadTexture(g_pDevice, "asset/completed.png", &g_chargeEffectTexture);
+
+    //LoadTexture(g_pDevice, "asset/Number.png", &g_numberTexture);
+    LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
+    LoadTexture(g_pDevice, "asset/UI/time.png", &g_uiNumberTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -78,6 +88,13 @@ void UpdateGame(float deltaTime) {
     if (g_gameState != STATE_PLAYING) {
         return;
     }
+
+    g_gameTimer.Tick(); // added december 3rd
+
+    // added december 4th
+    g_gameElapsedTime += deltaTime;
+    g_gameMinutes = static_cast<int>(g_gameElapsedTime) / 60;
+    g_gameSeconds = static_cast<int>(g_gameElapsedTime) % 60;
 
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);
@@ -350,6 +367,7 @@ void DrawGame() {
     g_projectileManager.Render(g_camera);
 
     float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
+
 }
 
 void HandleInput() {
@@ -357,12 +375,26 @@ void HandleInput() {
         ResetGame();
     }
 
-    if (g_inputSystem.IsTogglePressed(VK_P)) {
+  /*  if (g_inputSystem.IsTogglePressed(VK_P)) {
         if (sceneManager.GetCurrentSceneType() == STAGE) {
             sceneManager.SwitchScene(PAUSE);
         }
         else if (sceneManager.GetCurrentSceneType() == PAUSE) {
             sceneManager.SwitchScene(STAGE);
+        }
+    }*/
+    if (g_inputSystem.IsTogglePressed(VK_P)) {
+        SCENE currentScene = sceneManager.GetCurrentSceneType();
+
+        if (currentScene == STAGE || currentScene == STAGE2 || currentScene == STAGE3) {
+            sceneManager.SwitchScene(PAUSE);  // Pause any stage
+        }
+        else if (currentScene == PAUSE) {
+            // Return to whichever stage was paused
+            if (sceneManager.GetPreviousScene()) {
+                // This will resume the previous stage
+                sceneManager.SwitchScene(sceneManager.GetCurrentSceneType());
+            }
         }
     }
 
@@ -478,6 +510,35 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     // 渲染冲刺点数
     RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
+
+
+    float uiX = -1.1f; 
+    float uiY = 0.3f;   
+    float uiWidth = 0.78f;  
+    float uiHeight = 1.0f; 
+    RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
+    
+    // for the timer counting
+    float timerX = -0.83f;  // position x axis
+    float timerY = 0.75f;   // position y axis
+    float timerDigitWidth = 0.05f;  // width
+    float timerDigitHeight = 0.08f; // height
+
+    // for the minues
+    int minuteTens = g_gameMinutes / 10;
+    int minuteOnes = g_gameMinutes % 10;
+    RenderNumber(minuteTens, timerX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(minuteOnes, timerX + timerDigitWidth * 1.2f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+
+    // for the seconds
+    int secondTens = g_gameSeconds / 10;
+    int secondOnes = g_gameSeconds % 10;
+    RenderNumber(secondTens, timerX + timerDigitWidth * 2.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(secondOnes, timerX + timerDigitWidth * 4.0f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+
+    //SetColor(1.0f, 1.0f, 1.0f, 1.0f); 
+
+
 
     // 绘制方向箭头
     float arrowDistance = 0.08f;

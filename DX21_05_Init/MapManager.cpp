@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Enemy.h"
 
+
 // Constructor: initialize map manager with null pointers and default values
 MapManager::MapManager() : m_currentMap(nullptr), m_previousMap(nullptr),
 m_currentPortalId(0), m_enteredSpawnId(-1) {

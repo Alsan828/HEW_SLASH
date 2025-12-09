@@ -3,16 +3,14 @@
 #include "SceneManager.h"
 #include "Game.h"
 
-
-// added November 14th
-class StageScene : public SceneBase 
+// for the stage 3
+class Stage3Scene : public SceneBase
 {
 private:
     SceneManager* sceneManager;
 
 public:
-    StageScene(SceneManager* manager);
-
+    Stage3Scene(SceneManager* manager);
     bool Init() override;
     void Update(float deltaTime) override;
     void Draw() override;
