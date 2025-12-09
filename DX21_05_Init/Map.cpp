@@ -6,7 +6,7 @@
 
 // Map class implementation
 Map::Map(const std::string& name, float gridWidth, float gridHeight)
-    : m_name(name), m_gridWidth(gridWidth), m_gridHeight(gridHeight), m_defaultSpawnId(0) {
+    : m_name(name), m_gridWidth(gridWidth), m_gridHeight(gridHeight), m_defaultSpawnId(0), m_spatialGrid(nullptr) {
     InitializeTileDictionary();
 }
 
@@ -267,17 +267,42 @@ bool Map::GetDefaultSpawnPoint(float& x, float& y) const {
     return GetSpawnPoint(m_defaultSpawnId, x, y);
 }
 
-// Check if a rectangle collides with any portal and get portal information
+
+// 同样可以优化传送门检测
 bool Map::CheckPortalCollision(float x, float y, float width, float height,
     std::string& targetMap, int& portalId, int& linkedSpawnId) const {
-    for (const auto& tile : m_midgroundTiles) {
-        if (tile.tileInfo.isPortal) {
-            if (CheckCollision(x, y, width, height,
-                tile.posX, tile.posY, tile.width, tile.height)) {
-                targetMap = tile.targetMap;
-                portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
-                linkedSpawnId = tile.linkedSpawnId;
-                return true;
+    if (m_spatialGrid) {
+        std::vector<MapTile*> nearbyTiles;
+        float padding = 1.0f;
+        m_spatialGrid->GetTilesInArea(
+            x - padding, y - padding,
+            width + padding * 2, height + padding * 2,
+            nearbyTiles
+        );
+
+        for (const auto& tile : nearbyTiles) {
+            if (tile->tileInfo.isPortal) {
+                if (CheckCollision(x, y, width, height,
+                    tile->posX, tile->posY, tile->width, tile->height)) {
+                    targetMap = tile->targetMap;
+                    portalId = tile->linkedSpawnId;
+                    linkedSpawnId = tile->linkedSpawnId;
+                    return true;
+                }
+            }
+        }
+    }
+    else {
+        // 回退到原始方法
+        for (const auto& tile : m_midgroundTiles) {
+            if (tile.tileInfo.isPortal) {
+                if (CheckCollision(x, y, width, height,
+                    tile.posX, tile.posY, tile.width, tile.height)) {
+                    targetMap = tile.targetMap;
+                    portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
+                    linkedSpawnId = tile.linkedSpawnId;
+                    return true;
+                }
             }
         }
     }
@@ -388,4 +413,40 @@ void Map::CreateIceMap() {
 
     AddSpawnPoint(-0.5f, -0.5f, 1, "IceSpawn");
     AddTile(0.7f, -0.8f, "PT", MapLayer::MIDGROUND, "test", 1);
+}
+
+
+void Map::BuildSpatialGrid(float cellSize) {
+    // 计算地图边界
+    float minX = 0, minY = 0, maxX = 0, maxY = 0;
+    bool first = true;
+
+    for (const auto& tile : m_midgroundTiles) {
+        if (first) {
+            minX = tile.posX;
+            minY = tile.posY;
+            maxX = tile.posX + tile.width;
+            maxY = tile.posY + tile.height;
+            first = false;
+        }
+        else {
+            minX = std::min(minX, tile.posX);
+            minY = std::min(minY, tile.posY);
+            maxX = std::max(maxX, tile.posX + tile.width);
+            maxY = std::max(maxY, tile.posY + tile.height);
+        }
+    }
+
+    // 扩展一些边界
+    minX -= 5.0f;
+    minY -= 5.0f;
+    maxX += 5.0f;
+    maxY += 5.0f;
+
+    // 创建或重新构建空间网格
+    if (m_spatialGrid) {
+        delete m_spatialGrid;
+    }
+    m_spatialGrid = new SpatialGrid(cellSize, minX, minY, maxX, maxY);
+    m_spatialGrid->BuildFromMap(*this);
 }

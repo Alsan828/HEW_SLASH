@@ -2,7 +2,10 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
-
+#include <unordered_set>
+#include "Camera.h"
+class SpatialGrid;
+struct GridCell;
 // Tile information using string-based representation
 struct TileInfo {
     std::string code;      // Two-character code, e.g., "G1", "E1", "PF"
@@ -44,6 +47,7 @@ enum class MapLayer {
     FOREGROUND = 2   // Foreground decorative tiles (non-collidable)
 };
 
+
 // Main Map class for managing game maps, tiles, and spawn points
 class Map {
 private:
@@ -56,6 +60,7 @@ private:
 
     float m_gridWidth, m_gridHeight;            // Grid cell dimensions
     int m_defaultSpawnId;                       // Default spawn point ID
+    SpatialGrid* m_spatialGrid;  // 新增
 
     // Tile type lookup dictionary mapping codes to TileInfo
     std::unordered_map<std::string, TileInfo> m_tileDictionary;
@@ -70,6 +75,8 @@ public:
     // Constructor: create a map with specified name and grid dimensions
     Map(const std::string& name, float gridWidth, float gridHeight);
 
+    SpatialGrid* GetSpatialGrid() { return m_spatialGrid; }
+    void BuildSpatialGrid(float cellSize = 2.0f);
     // Map loading methods
     void LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLayer layer);
     void AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
@@ -140,4 +147,45 @@ public:
     const std::string& GetCurrentMapName() const;
     bool IsMapLoaded() const { return m_currentMap != nullptr; }
     int GetLastSpawnId() const { return m_enteredSpawnId; }
+};
+
+// 空间网格单元
+struct GridCell {
+    std::vector<MapTile*> tiles;  // 指向实际的砖块
+    int x, y;                     // 网格坐标
+};
+
+
+
+// 空间网格管理类
+class SpatialGrid {
+private:
+    float m_cellSize;             // 单元格大小
+    float m_worldWidth, m_worldHeight;  // 世界边界
+    float m_minX, m_minY;         // 世界左下角坐标
+
+    std::vector<GridCell> m_cells;  // 所有单元格
+    int m_cellsX, m_cellsY;         // 网格维度
+
+    // 从世界坐标转换到网格坐标
+    int WorldToGridX(float worldX) const;
+    int WorldToGridY(float worldY) const;
+    int WorldToGridIndex(float worldX, float worldY) const;
+
+public:
+    SpatialGrid(float cellSize, float worldMinX, float worldMinY,
+        float worldMaxX, float worldMaxY);
+
+    // 将地图砖块添加到网格中
+    void BuildFromMap(Map& map);
+
+    // 获取指定区域内的砖块
+    void GetTilesInArea(float x, float y, float width, float height,
+        std::vector<MapTile*>& result) const;
+
+    // 重新构建网格（地图变化时调用）
+    void Rebuild(Map& map);
+
+    // 获取单元格信息
+    const GridCell& GetCell(int x, int y) const;
 };
