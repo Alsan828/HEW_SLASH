@@ -219,8 +219,8 @@ extern float g_slowMoFactor;     // 时间减慢倍率
 extern bool g_isSlowMotion;      // 是否处于时间减慢状态
 
 // for the timer counting
-extern float g_gameElapsedTime;  
-extern int g_gameMinutes;        
+extern float g_gameElapsedTime;
+extern int g_gameMinutes;
 extern int g_gameSeconds;
 
 // added november 27th for the pause 
