@@ -73,7 +73,7 @@ HRESULT CreateVertexShader(ID3D11VertexShader** ppVertexShader, ID3D11InputLayou
 HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, void** ppShaderObject, int* pShaderObjectSize);
 HRESULT CreatePixelShader(ID3D11PixelShader** ppPixelShader, const char* szFileName);
 void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelShader* pPS);
-void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV, bool enableCulling = true);
-void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex, int rows, int columns, bool enableCulling = true);
+void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV);
+void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex, int rows, int columns);
 
 void SetColor(float r, float g, float b, float a); // added november 12th
