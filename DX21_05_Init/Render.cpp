@@ -1,5 +1,6 @@
 ﻿#include "Render.h"
 #include "Game.h"
+#include "Camera.h"
 
 #define _CRT_SECURE_NO_WARNINGS
 #pragma comment (lib, "d3d11.lib")
@@ -421,8 +422,13 @@ void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelS
 	SAFE_RELEASE(pQuadBuffer);
 }
 
-void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex = 0, int rows = 1, int columns = 1)
+void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex = 0, int rows = 1, int columns = 1 , bool enableCulling )
 {
+
+	// 如果启用剔除且物体不可见，则跳过渲染
+	if (enableCulling && !g_camera.IsRectVisible(posX, posY, width, height)) {
+		return;
+	}
 	// Calculate size of each frame in sprite sheet (texture coordinates)
 	float frameWidth = 1.0f / columns;
 	float frameHeight = 1.0f / rows;
@@ -487,7 +493,12 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	SAFE_RELEASE(pDynamicBuffer);
 }
 
-void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV) {
+void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV, bool enableCulling) {
+
+	// 如果启用剔除且物体不可见，则跳过渲染
+	if (enableCulling && !g_camera.IsRectVisible(startX, startY, digitWidth, digitHeight)) {
+		return;
+	}
 	if (number < 0) return; // Only support non-negative numbers
 
 	// Calculate total number of digits (e.g., 123 has 3 digits)

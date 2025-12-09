@@ -33,6 +33,7 @@ private:
 
     int m_windowWidth, m_windowHeight; // 添加窗口尺寸记录
 
+
 public:
     Camera();
 
@@ -89,4 +90,40 @@ public:
         m_windowWidth = width;
         m_windowHeight = height;
     }
+
+
+
+    // 修复后的可视范围计算（基于窗口尺寸和缩放）
+    void GetVisibleRect(float& left, float& top, float& right, float& bottom) const {
+        // 基于窗口尺寸和缩放计算实际可视范围
+        float visibleWidth = m_windowWidth / m_zoomLevel;
+        float visibleHeight = m_windowHeight / m_zoomLevel;
+
+        float halfWidth = visibleWidth * 0.5f;
+        float halfHeight = visibleHeight * 0.5f;
+
+        // 修正坐标系：假设Y轴向上
+        left = m_posX - halfWidth;
+        right = m_posX + halfWidth;
+        top = m_posY + halfHeight;     // 上边界（较大的Y值）
+        bottom = m_posY - halfHeight;  // 下边界（较小的Y值）
+    }
+
+    // 修复后的可见性检测
+    bool IsRectVisible(float x, float y, float width, float height) const {
+        float camLeft, camTop, camRight, camBottom;
+        GetVisibleRect(camLeft, camTop, camRight, camBottom);
+
+        float objLeft = x;
+        float objRight = x + width;
+        float objTop = y + height;  // 假设物体原点在左下角
+        float objBottom = y;
+
+        // 正确的AABB相交测试[2](@ref)
+        return !(objRight < camLeft ||
+            objLeft > camRight ||
+            objBottom > camTop ||
+            objTop < camBottom);
+    }
+
 };
