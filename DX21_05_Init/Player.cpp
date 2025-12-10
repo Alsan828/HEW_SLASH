@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "Enemy.h"
 // 玩家物理更新// 玩家物理更新
+
+
 void UpdatePlayerPhysics(float deltaTime) {
     // 在硬直状态下忽略重力和移动
     if (g_player.isInDashAftermath) {
@@ -184,7 +186,7 @@ void UpdatePlayerPhysics(float deltaTime) {
 
         // === 修复：无论是否冲刺，只要速度超过阈值就使用连续碰撞检测 ===
         float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
-        float speedThreshold = 0.5f; // 速度阈值，超过这个值就使用连续碰撞检测
+        float speedThreshold = 0.1f; // 速度阈值，超过这个值就使用连续碰撞检测
 
         if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
             int steps = 4;
@@ -307,7 +309,11 @@ void UpdatePlayerPhysics(float deltaTime) {
             portalCooldown = 1.0f;
         }
     }
-
+	//如果velocityY绝对值大于0.05f,则认为玩家不在地面上
+    if (fabs(g_player.velocityY) > 0.05f) {
+        g_player.isOnGround = false;
+	}
+    
     // 边界检查
     if (g_player.posY < -2.0f) {
         ResetGame();
@@ -528,17 +534,17 @@ void ExecuteMouseChargeDash() {
     switch (chargeLevel) {
     case 1:
         speedMultiplier = 1.3f;
-        durationMultiplier = 1.2f;
+        durationMultiplier = 1.0f;
         cooldownMultiplier = 0.8f;
         break;
     case 2:
         speedMultiplier = 1.6f;
-        durationMultiplier = 1.4f;
+        durationMultiplier = 1.0f;
         cooldownMultiplier = 0.6f;
         break;
     case 3:
         speedMultiplier = 2.0f;
-        durationMultiplier = 1.8f;
+        durationMultiplier = 1.0f;
         cooldownMultiplier = 0.5f;
         break;
     default:
