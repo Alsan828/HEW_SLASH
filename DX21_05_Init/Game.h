@@ -15,6 +15,7 @@
 #include "SceneBase.h"
 #include "Pause.h"
 #include "Projectile.h"
+#include "SimpleAudio.h"
 
 class ProjectileManager;
 
@@ -278,3 +279,24 @@ public:
 
 // 全局实例
 extern MouseIndicatorSystem g_mouseIndicator;
+
+extern SimpleAudio g_audioManager;
+
+void PlayJumpSound();
+void PlayDashSound();
+void PlayChargeStartSound();
+void PlayChargeReleaseSound();
+void PlayShootSound();
+void PlayEnemyHitSound();
+void PlayEnemyDeathSound();
+void PlaySlowMotionSound(bool start);
+void PlayLevelCompleteSound();
+void PlayUIHoverSound();
+void PlayUIClickSound();
+void PlayPauseSound();
+void PlayResumeSound();
+
+void PlayStageMusic(int stage);
+void PlayBossMusic();
+void PlayVictoryMusic();
+void PlayGameOverMusic();
