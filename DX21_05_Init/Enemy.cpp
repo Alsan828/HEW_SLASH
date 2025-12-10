@@ -127,14 +127,10 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
     // 可见性检测和优化逻辑
-    bool isCurrentlyVisible = IsVisible(g_camera); // 假设有全局相机对象
+    bool isCurrentlyVisible = IsVisible(g_camera);
 
-    // 如果不可见且不需要最小更新，则跳过完整更新
     if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
-        // 只更新离开屏幕计时器
         offScreenTimer += deltaTime;
-
-        // 如果离开屏幕时间过长且状态简单，完全跳过更新
         if (offScreenTimer > MAX_OFFSCREEN_TIME &&
             currentState == PATROL &&
             !isHit &&
@@ -143,19 +139,17 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // 如果从不可见变为可见，重置计时器
     if (isCurrentlyVisible && !wasVisible) {
         ResetOffScreenTimer();
     }
     wasVisible = isCurrentlyVisible;
 
-    // 如果不可见但需要最小更新，执行简化版更新
     if (!isCurrentlyVisible && NeedsMinimalUpdate()) {
         UpdateMinimal(deltaTime);
         return;
     }
 
-    // 完整更新逻辑（原有代码）
+    // 完整更新逻辑
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -170,68 +164,34 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     float oldX = posX;
     float oldY = posY;
 
-    // 移动和碰撞检测（原有完整逻辑）
+    // 水平移动
     posX += velocityX * deltaTime * 60.0f;
-
-    // 水平碰撞检测
-    bool horizontalCollision = false;
-    if (mapManager && mapManager->GetCurrentMap()) {
-        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
-        for (const auto& tile : solidTiles) {
-            if (CheckCollisionWithTile(tile)) {
-                posX = oldX;
-                horizontalCollision = true;
-                break;
-            }
-        }
+    if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
+        posX = oldX;
+        velocityX = 0.0f;
     }
 
+    // 垂直移动
     posY += velocityY * deltaTime * 60.0f;
-
-    // 垂直碰撞检测
-    bool verticalCollision = false;
-    if (mapManager && mapManager->GetCurrentMap()) {
-        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
-        for (const auto& tile : solidTiles) {
-            if (CheckCollisionWithTile(tile)) {
-                posY = oldY;
-                verticalCollision = true;
-                velocityY = 0;
-                break;
-            }
-        }
-    }
-
-    if (horizontalCollision) {
-        velocityX = 0;
+    if (CheckVerticalCollision(mapManager, oldX, oldY)) {
+        posY = oldY;
+        velocityY = 0.0f;
     }
 
     // 边界检查
-    if (mapManager && mapManager->GetCurrentMap()) {
-        if (posY < -5.0f) {
-            isAlive = false;
-            return;
-        }
-    }
-    else {
-        if (posX < -1.0f) posX = -1.0f;
-        if (posX > 1.0f - width) posX = 1.0f - width;
-        if (posY < -2.0f) {
-            isAlive = false;
-            return;
-        }
+    if (posY < -5.0f) {
+        isAlive = false;
+        return;
     }
 
-    // 只在可见时更新AI（避免屏幕外敌人消耗计算资源）
+    // AI更新
     if (isCurrentlyVisible) {
         UpdateAI(deltaTime);
     }
     else {
-        // 屏幕外敌人简化AI更新
         UpdateAIMinimal(deltaTime);
     }
 
-    // 更新离开屏幕计时器
     if (!isCurrentlyVisible) {
         offScreenTimer += deltaTime;
     }
@@ -239,6 +199,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         offScreenTimer = 0.0f;
     }
 }
+
 
 // 简化版更新（用于屏幕外但需要更新的敌人）
 void Enemy::UpdateMinimal(float deltaTime) {
@@ -436,12 +397,71 @@ bool Enemy::CheckPlayerCollision() {
         g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT);
 }
 
-bool Enemy::CheckCollisionWithTiles(const std::vector<MapTile>& solidTiles) {
-    for (const auto& tile : solidTiles) {
-        if (CheckCollisionWithTile(tile)) {
+// 检查与特定区域的碰撞
+bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* mapManager) {
+    if (!mapManager || !mapManager->GetCurrentMap()) {
+        return false;
+    }
+
+    SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+    if (!grid) {
+        // 回退到原始方法
+        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+        for (const auto& tile : solidTiles) {
+            if (CheckCollision(checkX, checkY, GetWidth(), GetHeight(),
+                tile.posX, tile.posY, tile.width, tile.height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 使用空间网格优化
+    std::vector<MapTile*> nearbyTiles;
+    grid->GetTilesInArea(
+        checkX - 0.5f,
+        checkY - 0.5f,
+        GetWidth() + 1.0f,
+        GetHeight() + 1.0f,
+        nearbyTiles
+    );
+
+    for (const auto& tile : nearbyTiles) {
+        if (tile->tileInfo.isSolid &&
+            CheckCollision(checkX, checkY, GetWidth(), GetHeight(),
+                tile->posX, tile->posY, tile->width, tile->height)) {
             return true;
         }
     }
+
+    return false;
+}
+
+// 更新碰撞检测，使用空间网格优化
+bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
+    if (!mapManager || !mapManager->GetCurrentMap()) {
+        return false;
+    }
+
+    // 缓存空间网格指针
+    SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+    // 使用空间网格优化
+    std::vector<MapTile*> nearbyTiles;
+    float padding = 0.5f;  // 稍微扩展检测范围
+    grid->GetTilesInArea(
+        posX - padding,
+        posY - padding,
+        width + padding * 2,
+        height + padding * 2,
+        nearbyTiles
+    );
+
+    for (const auto& tile : nearbyTiles) {
+        if (tile->tileInfo.isSolid && CheckCollisionWithTile(*tile)) {
+            return true;
+        }
+    }
+
     return false;
 }
 
