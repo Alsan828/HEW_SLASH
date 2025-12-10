@@ -1,314 +1,321 @@
 #include "Game.h"
 #include "Enemy.h"
-// 玩家物理更新
+// 玩家物理更新// 玩家物理更新
 void UpdatePlayerPhysics(float deltaTime) {
     // 在硬直状态下忽略重力和移动
-if (g_player.isInDashAftermath) {
-    // 只处理垂直碰撞检测（防止掉出地图）
+    if (g_player.isInDashAftermath) {
+        // 只处理垂直碰撞检测（防止掉出地图）
+        SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
+        if (!spatialGrid) {
+            // 回退到原始方法
+            auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
+            for (const auto& tile : solidTiles) {
+                if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                    tile.posX, tile.posY, tile.width, tile.height)) {
+                    g_player.posY = tile.posY + tile.height; // 站在地面上
+                    g_player.isOnGround = true;
+                }
+            }
+        }
+        else {
+            // 使用空间网格优化
+            std::vector<MapTile*> nearbyTiles;
+            spatialGrid->GetTilesInArea(
+                g_player.posX - 1.0f,
+                g_player.posY - 1.0f,
+                PLAYER_WIDTH + 2.0f,
+                PLAYER_HEIGHT + 2.0f,
+                nearbyTiles
+            );
+
+            for (const auto& tile : nearbyTiles) {
+                if (tile->tileInfo.isSolid &&
+                    CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        tile->posX, tile->posY, tile->width, tile->height)) {
+                    g_player.posY = tile->posY + tile->height; // 站在地面上
+                    g_player.isOnGround = true;
+                }
+            }
+        }
+        return; // 硬直状态下跳过正常物理更新
+    }
+
+    // 应用重力
+    if (!g_player.isDashing) {
+        float fixedDeltaTime = std::min(deltaTime, 0.033f);
+        g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
+        if (g_player.velocityY < -0.3f) {
+            g_player.velocityY = -0.3f;
+        }
+    }
+
+    // 保存原始位置用于碰撞检测
+    float oldX = g_player.posX;
+    float oldY = g_player.posY;
+
+    // 计算要移动的距离
+    float moveX = g_player.velocityX * deltaTime * 60.0f;
+    float moveY = g_player.velocityY * deltaTime * 60.0f;
+
+    // 获取当前地图的空间网格
     SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
     if (!spatialGrid) {
-        // 回退到原始方法
+        // 如果空间网格未构建，回退到原始方法
         auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
-        for (const auto& tile : solidTiles) {
-            if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-                tile.posX, tile.posY, tile.width, tile.height)) {
-                g_player.posY = tile.posY + tile.height; // 站在地面上
-                g_player.isOnGround = true;
+
+        // === 修复：无论是否冲刺，只要速度超过阈值就使用连续碰撞检测 ===
+        float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
+        float speedThreshold = 0.5f; // 速度阈值，超过这个值就使用连续碰撞检测
+
+        if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
+            int steps = 4; // 将移动路径分成4步进行检测
+            float stepX = moveX / steps;
+            float stepY = moveY / steps;
+
+            for (int i = 0; i < steps; i++) {
+                g_player.posX += stepX;
+
+                // 水平碰撞检测
+                for (const auto& tile : solidTiles) {
+                    if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        tile.posX, tile.posY, tile.width, tile.height)) {
+                        // 回退到碰撞前的位置
+                        g_player.posX -= stepX;
+                        g_player.velocityX = 0.0f;
+
+                        // 计算碰撞法线并反弹
+                        if (moveX > 0) {
+                            // 向右移动时碰撞
+                            g_player.posX = tile.posX - PLAYER_WIDTH;
+                        }
+                        else if (moveX < 0) {
+                            // 向左移动时碰撞
+                            g_player.posX = tile.posX + tile.width;
+                        }
+                        break;
+                    }
+                }
+
+                g_player.posY += stepY;
+
+                // 垂直碰撞检测
+                for (const auto& tile : solidTiles) {
+                    if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        tile.posX, tile.posY, tile.width, tile.height)) {
+                        // 回退到碰撞前的位置
+                        g_player.posY -= stepY;
+
+                        if (moveY > 0) {
+                            // 向上移动时碰撞
+                            g_player.posY = tile.posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else if (moveY < 0) {
+                            // 向下移动时碰撞
+                            g_player.posY = tile.posY + tile.height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            // 正常移动使用分离轴碰撞处理
+            g_player.posX += moveX;
+            g_player.posY += moveY;
+
+            // 重置落地状态
+            g_player.isOnGround = false;
+
+            for (const auto& tile : solidTiles) {
+                if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                    tile.posX, tile.posY, tile.width, tile.height)) {
+
+                    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
+                    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+                    float tileCenterX = tile.posX + tile.width / 2;
+                    float tileCenterY = tile.posY + tile.height / 2;
+
+                    float overlapX = (PLAYER_WIDTH / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
+                    float overlapY = (PLAYER_HEIGHT / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
+
+                    // 分离轴处理：选择最小重叠方向
+                    if (overlapX < overlapY) {
+                        // 水平碰撞
+                        if (playerCenterX < tileCenterX) {
+                            g_player.posX = tile.posX - PLAYER_WIDTH;
+                        }
+                        else {
+                            g_player.posX = tile.posX + tile.width;
+                        }
+                        g_player.velocityX = 0.0f;
+                    }
+                    else {
+                        // 垂直碰撞
+                        if (playerCenterY < tileCenterY) {
+                            g_player.posY = tile.posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else {
+                            g_player.posY = tile.posY + tile.height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
+                    }
+                }
             }
         }
     }
     else {
-        // 使用空间网格优化
+        // 使用空间网格优化的碰撞检测
         std::vector<MapTile*> nearbyTiles;
+
+        // 获取玩家周围的砖块
+        float padding = 1.0f;  // 扩展一点范围
         spatialGrid->GetTilesInArea(
-            g_player.posX - 1.0f,
-            g_player.posY - 1.0f,
-            PLAYER_WIDTH + 2.0f,
-            PLAYER_HEIGHT + 2.0f,
+            g_player.posX - padding,
+            g_player.posY - padding,
+            PLAYER_WIDTH + padding * 2,
+            PLAYER_HEIGHT + padding * 2,
             nearbyTiles
         );
 
-        for (const auto& tile : nearbyTiles) {
-            if (tile->tileInfo.isSolid &&
-                CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-                    tile->posX, tile->posY, tile->width, tile->height)) {
-                g_player.posY = tile->posY + tile->height; // 站在地面上
-                g_player.isOnGround = true;
-            }
-        }
-    }
-    return; // 硬直状态下跳过正常物理更新
-}
+        // === 修复：无论是否冲刺，只要速度超过阈值就使用连续碰撞检测 ===
+        float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
+        float speedThreshold = 0.5f; // 速度阈值，超过这个值就使用连续碰撞检测
 
-// 应用重力
-if (!g_player.isDashing) {
-    float fixedDeltaTime = std::min(deltaTime, 0.033f);
-    g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
-    if (g_player.velocityY < -0.3f) {
-        g_player.velocityY = -0.3f;
-    }
-}
+        if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
+            int steps = 4;
+            float stepX = moveX / steps;
+            float stepY = moveY / steps;
 
-// 保存原始位置用于碰撞检测
-float oldX = g_player.posX;
-float oldY = g_player.posY;
+            for (int i = 0; i < steps; i++) {
+                g_player.posX += stepX;
 
-// 计算要移动的距离
-float moveX = g_player.velocityX * deltaTime * 60.0f;
-float moveY = g_player.velocityY * deltaTime * 60.0f;
+                // 水平碰撞检测
+                for (const auto& tile : nearbyTiles) {
+                    if (tile->tileInfo.isSolid &&
+                        CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                            tile->posX, tile->posY, tile->width, tile->height)) {
+                        // 回退到碰撞前的位置
+                        g_player.posX -= stepX;
+                        g_player.velocityX = 0.0f;
 
-// 获取当前地图的空间网格
-SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
-if (!spatialGrid) {
-    // 如果空间网格未构建，回退到原始方法
-    auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
-
-    // === 冲刺时使用连续碰撞检测（Continuous Collision Detection）===
-    if (g_player.isDashing) {
-        int steps = 4; // 将冲刺路径分成4步进行检测
-        float stepX = moveX / steps;
-        float stepY = moveY / steps;
-
-        for (int i = 0; i < steps; i++) {
-            g_player.posX += stepX;
-
-            // 水平碰撞检测
-            for (const auto& tile : solidTiles) {
-                if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-                    tile.posX, tile.posY, tile.width, tile.height)) {
-                    // 回退到碰撞前的位置
-                    g_player.posX -= stepX;
-                    g_player.velocityX = 0.0f;
-
-                    // 计算碰撞法线并反弹（可选）
-                    if (moveX > 0) {
-                        // 向右移动时碰撞
-                        g_player.posX = tile.posX - PLAYER_WIDTH;
+                        // 计算碰撞法线
+                        if (moveX > 0) {
+                            // 向右移动时碰撞
+                            g_player.posX = tile->posX - PLAYER_WIDTH;
+                        }
+                        else if (moveX < 0) {
+                            // 向左移动时碰撞
+                            g_player.posX = tile->posX + tile->width;
+                        }
+                        break;
                     }
-                    else if (moveX < 0) {
-                        // 向左移动时碰撞
-                        g_player.posX = tile.posX + tile.width;
-                    }
-                    break;
                 }
-            }
 
-            g_player.posY += stepY;
+                g_player.posY += stepY;
 
-            // 垂直碰撞检测
-            for (const auto& tile : solidTiles) {
-                if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-                    tile.posX, tile.posY, tile.width, tile.height)) {
-                    // 回退到碰撞前的位置
-                    g_player.posY -= stepY;
+                // 垂直碰撞检测
+                for (const auto& tile : nearbyTiles) {
+                    if (tile->tileInfo.isSolid &&
+                        CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                            tile->posX, tile->posY, tile->width, tile->height)) {
+                        // 回退到碰撞前的位置
+                        g_player.posY -= stepY;
 
-                    if (moveY > 0) {
-                        // 向上移动时碰撞
-                        g_player.posY = tile.posY - PLAYER_HEIGHT;
-                        g_player.velocityY = 0.0f;
-                    }
-                    else if (moveY < 0) {
-                        // 向下移动时碰撞
-                        g_player.posY = tile.posY + tile.height;
-                        g_player.velocityY = 0.0f;
-                        g_player.isOnGround = true;
-                    }
-                    break;
-                }
-            }
-        }
-    }
-    else {
-        // 正常移动使用分离轴碰撞处理
-        g_player.posX += moveX;
-        g_player.posY += moveY;
-
-        // 重置落地状态
-        g_player.isOnGround = false;
-
-        for (const auto& tile : solidTiles) {
-            if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-                tile.posX, tile.posY, tile.width, tile.height)) {
-
-                float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
-                float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
-                float tileCenterX = tile.posX + tile.width / 2;
-                float tileCenterY = tile.posY + tile.height / 2;
-
-                float overlapX = (PLAYER_WIDTH / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
-                float overlapY = (PLAYER_HEIGHT / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
-
-                // 分离轴处理：选择最小重叠方向
-                if (overlapX < overlapY) {
-                    // 水平碰撞
-                    if (playerCenterX < tileCenterX) {
-                        g_player.posX = tile.posX - PLAYER_WIDTH;
-                    }
-                    else {
-                        g_player.posX = tile.posX + tile.width;
-                    }
-                    g_player.velocityX = 0.0f;
-                }
-                else {
-                    // 垂直碰撞
-                    if (playerCenterY < tileCenterY) {
-                        g_player.posY = tile.posY - PLAYER_HEIGHT;
-                        g_player.velocityY = 0.0f;
-                    }
-                    else {
-                        g_player.posY = tile.posY + tile.height;
-                        g_player.velocityY = 0.0f;
-                        g_player.isOnGround = true;
+                        if (moveY > 0) {
+                            // 向上移动时碰撞
+                            g_player.posY = tile->posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else if (moveY < 0) {
+                            // 向下移动时碰撞
+                            g_player.posY = tile->posY + tile->height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
+                        break;
                     }
                 }
             }
         }
-    }
-}
-else {
-    // 使用空间网格优化的碰撞检测
-    std::vector<MapTile*> nearbyTiles;
+        else {
+            // 正常移动使用分离轴碰撞处理
+            g_player.posX += moveX;
+            g_player.posY += moveY;
 
-    // 获取玩家周围的砖块
-    float padding = 1.0f;  // 扩展一点范围
-    spatialGrid->GetTilesInArea(
-        g_player.posX - padding,
-        g_player.posY - padding,
-        PLAYER_WIDTH + padding * 2,
-        PLAYER_HEIGHT + padding * 2,
-        nearbyTiles
-    );
+            g_player.isOnGround = false;
 
-    // 冲刺时使用连续碰撞检测
-    if (g_player.isDashing) {
-        int steps = 4;
-        float stepX = moveX / steps;
-        float stepY = moveY / steps;
-
-        for (int i = 0; i < steps; i++) {
-            g_player.posX += stepX;
-
-            // 水平碰撞检测
             for (const auto& tile : nearbyTiles) {
                 if (tile->tileInfo.isSolid &&
                     CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                         tile->posX, tile->posY, tile->width, tile->height)) {
-                    // 回退到碰撞前的位置
-                    g_player.posX -= stepX;
-                    g_player.velocityX = 0.0f;
 
-                    // 计算碰撞法线
-                    if (moveX > 0) {
-                        // 向右移动时碰撞
-                        g_player.posX = tile->posX - PLAYER_WIDTH;
-                    }
-                    else if (moveX < 0) {
-                        // 向左移动时碰撞
-                        g_player.posX = tile->posX + tile->width;
-                    }
-                    break;
-                }
-            }
+                    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
+                    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+                    float tileCenterX = tile->posX + tile->width / 2;
+                    float tileCenterY = tile->posY + tile->height / 2;
 
-            g_player.posY += stepY;
+                    float overlapX = (PLAYER_WIDTH / 2 + tile->width / 2) - fabs(playerCenterX - tileCenterX);
+                    float overlapY = (PLAYER_HEIGHT / 2 + tile->height / 2) - fabs(playerCenterY - tileCenterY);
 
-            // 垂直碰撞检测
-            for (const auto& tile : nearbyTiles) {
-                if (tile->tileInfo.isSolid &&
-                    CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-                        tile->posX, tile->posY, tile->width, tile->height)) {
-                    // 回退到碰撞前的位置
-                    g_player.posY -= stepY;
-
-                    if (moveY > 0) {
-                        // 向上移动时碰撞
-                        g_player.posY = tile->posY - PLAYER_HEIGHT;
-                        g_player.velocityY = 0.0f;
-                    }
-                    else if (moveY < 0) {
-                        // 向下移动时碰撞
-                        g_player.posY = tile->posY + tile->height;
-                        g_player.velocityY = 0.0f;
-                        g_player.isOnGround = true;
-                    }
-                    break;
-                }
-            }
-        }
-    }
-    else {
-        // 正常移动使用分离轴碰撞处理
-        g_player.posX += moveX;
-        g_player.posY += moveY;
-
-        g_player.isOnGround = false;
-
-        for (const auto& tile : nearbyTiles) {
-            if (tile->tileInfo.isSolid &&
-                CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-                    tile->posX, tile->posY, tile->width, tile->height)) {
-
-                float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
-                float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
-                float tileCenterX = tile->posX + tile->width / 2;
-                float tileCenterY = tile->posY + tile->height / 2;
-
-                float overlapX = (PLAYER_WIDTH / 2 + tile->width / 2) - fabs(playerCenterX - tileCenterX);
-                float overlapY = (PLAYER_HEIGHT / 2 + tile->height / 2) - fabs(playerCenterY - tileCenterY);
-
-                // 分离轴处理：选择最小重叠方向
-                if (overlapX < overlapY) {
-                    // 水平碰撞
-                    if (playerCenterX < tileCenterX) {
-                        g_player.posX = tile->posX - PLAYER_WIDTH;
+                    // 分离轴处理：选择最小重叠方向
+                    if (overlapX < overlapY) {
+                        // 水平碰撞
+                        if (playerCenterX < tileCenterX) {
+                            g_player.posX = tile->posX - PLAYER_WIDTH;
+                        }
+                        else {
+                            g_player.posX = tile->posX + tile->width;
+                        }
+                        g_player.velocityX = 0.0f;
                     }
                     else {
-                        g_player.posX = tile->posX + tile->width;
-                    }
-                    g_player.velocityX = 0.0f;
-                }
-                else {
-                    // 垂直碰撞
-                    if (playerCenterY < tileCenterY) {
-                        g_player.posY = tile->posY - PLAYER_HEIGHT;
-                        g_player.velocityY = 0.0f;
-                    }
-                    else {
-                        g_player.posY = tile->posY + tile->height;
-                        g_player.velocityY = 0.0f;
-                        g_player.isOnGround = true;
+                        // 垂直碰撞
+                        if (playerCenterY < tileCenterY) {
+                            g_player.posY = tile->posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else {
+                            g_player.posY = tile->posY + tile->height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
                     }
                 }
             }
         }
     }
-}
 
-// 传送门检测
-static float portalCooldown = 0.0f;
-if (portalCooldown > 0.0f) {
-    portalCooldown -= deltaTime;
-}
-
-if (portalCooldown <= 0.0f) {
-    std::string targetMap;
-    int portalId, linkedSpawnId;
-    if (g_mapManager.GetCurrentMap()->CheckPortalCollision(
-        g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-        targetMap, portalId, linkedSpawnId)) {
-
-        g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
-        portalCooldown = 1.0f;
+    // 传送门检测
+    static float portalCooldown = 0.0f;
+    if (portalCooldown > 0.0f) {
+        portalCooldown -= deltaTime;
     }
+
+    if (portalCooldown <= 0.0f) {
+        std::string targetMap;
+        int portalId, linkedSpawnId;
+        if (g_mapManager.GetCurrentMap()->CheckPortalCollision(
+            g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+            targetMap, portalId, linkedSpawnId)) {
+
+            g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
+            portalCooldown = 1.0f;
+        }
+    }
+
+    // 边界检查
+    if (g_player.posY < -2.0f) {
+        ResetGame();
+    }
+
+    CheckDashAttack();
 }
 
-// 边界检查
-if (g_player.posY < -2.0f) {
-    ResetGame();
-}
-
-CheckDashAttack();
-}
 // 修改UpdateDash函数，添加蓄力衰减更新
 void UpdateDash(float deltaTime) {
     // 优先更新冲刺状态
