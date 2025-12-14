@@ -1,8 +1,7 @@
 #include "Game.h"
 #include "Enemy.h"
-// 玩家物理更新// 玩家物理更新
 
-
+// 玩家物理更新
 void UpdatePlayerPhysics(float deltaTime) {
     // 在硬直状态下忽略重力和移动
     if (g_player.isInDashAftermath) {
@@ -570,7 +569,7 @@ void ExecuteMouseChargeDash() {
 
     // === 关键修改：在冲刺结束时保存当前蓄力层数 ===
     // 只有当蓄力时间达到最小阈值时才保存（避免保存无效的短按）
-    if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
+    if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME ) {
         g_player.SaveCharge(); // 保存当前蓄力时间
     }
 
@@ -588,6 +587,7 @@ void EnterDashAftermath() {
 
     // 如果没有点数则不进入硬直状态
     if (g_player.dashPoints <= 0) {
+        g_player.ClearSavedCharge();
         return;
     }
 

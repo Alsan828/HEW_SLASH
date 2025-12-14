@@ -3,9 +3,6 @@
 #include <vector>
 #include <algorithm>
 
-// 全局音频管理器实例
-SimpleAudio g_audioManager;
-
 SimpleAudio::SimpleAudio()
     : nextSoundId(1)
     , masterVolume(1.0f)

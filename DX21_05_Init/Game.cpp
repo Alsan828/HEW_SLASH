@@ -1,6 +1,7 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
 #include "SimpleAudio.h"
+
 // 在Game.cpp的全局变量定义部分添加
 float g_slowMoTimer = 0.0f;
 float g_slowMoFactor = 1.0f;
@@ -70,7 +71,7 @@ void InitGameWorld() {
 
     // 初始化音频系统
     g_audioManager.Initialize();
-    PlayStageMusic(1);
+    //PlayStageMusic(1);
     
     g_projectileManager.LoadTextures(g_pDevice);
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);
@@ -606,41 +607,6 @@ void MouseIndicatorSystem::Cleanup() {
 }
 
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {
-}
-
-
-// Game.cpp
-#include "SimpleAudio.h"  // 替换原来的AudioManager.h
-
-// 在全局变量部分
-extern SimpleAudio g_audioManager;  // 声明外部变量
-
-// 音效文件常量
-namespace SoundEffect {
-    const std::string JUMP = "asset/Sounds/jump.wav";
-    const std::string DASH = "asset/Sounds/dash.wav";
-    const std::string CHARGE_START = "asset/Sounds/charge_start.wav";
-    const std::string CHARGE_RELEASE = "asset/Sounds/charge_release.wav";
-    const std::string SHOOT = "asset/Sounds/shoot.wav";
-    const std::string ENEMY_HIT = "asset/Sounds/enemy_hit.wav";
-    const std::string ENEMY_DEATH = "asset/Sounds/enemy_death.wav";
-    const std::string SLOWMO_START = "asset/Sounds/slowmo_start.wav";
-    const std::string SLOWMO_END = "asset/Sounds/slowmo_end.wav";
-    const std::string LEVEL_COMPLETE = "asset/Sounds/level_complete.wav";
-    const std::string UI_HOVER = "asset/Sounds/ui_hover.wav";
-    const std::string UI_CLICK = "asset/Sounds/ui_click.wav";
-    const std::string PAUSE = "asset/Sounds/pause.wav";
-    const std::string RESUME = "asset/Sounds/resume.wav";
-}
-
-namespace BackgroundMusic {
-    const std::string MAIN_MENU = "asset/Music/main_menu.wav";
-    const std::string LEVEL1 = "asset/Music/level1.wav";
-    const std::string LEVEL2 = "asset/Music/level2.wav";
-    const std::string LEVEL3 = "asset/Music/level3.wav";
-    const std::string BOSS_BATTLE = "asset/Music/boss_battle.wav";
-    const std::string GAME_OVER = "asset/Music/game_over.wav";
-    const std::string VICTORY = "asset/Music/victory.wav";
 }
 
 // 音效函数
