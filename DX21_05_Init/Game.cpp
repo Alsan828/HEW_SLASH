@@ -444,24 +444,6 @@ void DrawGame() {
 
 }
 
-            // Gradually shrink
-            float scale = 1.0f - animProgress * 0.5f;
-            float width = PLAYER_WIDTH * scale;
-            float height = PLAYER_HEIGHT * scale;
-
-            // Center position adjustment
-            playerPos.first += (PLAYER_WIDTH - width) * 0.5f;
-            playerPos.second += (PLAYER_HEIGHT - height) * 0.5f;
-
-            RenderImage(playerPos.first, playerPos.second, PLAYER_WIDTH, PLAYER_HEIGHT,
-                g_playerTexture, 0, 1, 10);
-
-            g_projectileManager.Render(g_camera);
-
-            float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
-        }
-    }
-}
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {
         ResetGame();
