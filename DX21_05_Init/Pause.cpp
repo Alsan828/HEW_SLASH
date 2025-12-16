@@ -32,15 +32,20 @@ bool PauseScene::Init()
 
 
     uiButtons.emplace_back(0.3f, -0.3f, 1.0f, 1.5f, pausedSceneType, continueTexture, continueHoverTexture);
-    uiButtons.emplace_back(0.34f, -0.53f, 1.0f, 1.5f, HOWTOPLAY, controlTexture, controlHoverTexture);
-    uiButtons.emplace_back(0.50f, -0.65f, 1.0f, 1.5f, STAGESELECT, selectTexture, selectHoverTexture);
-    uiButtons.emplace_back(0.375f, -0.88f, 1.0f, 1.5f, QUIT_GAME, quitTexture, quitHoverTexture);
+    uiButtons.back().SetHitboxScale(0.27f, 0.1f);
+    uiButtons.back().SetHitboxOffset(-0.03f);
 
-    for (auto& btn : uiButtons)
-    {
-        btn.SetHitboxScale(0.27f, 0.1f);
-        btn.SetHitboxOffset(-0.03f);
-    }
+    uiButtons.emplace_back(0.34f, -0.53f, 1.0f, 1.5f, HOWTOPLAY, controlTexture, controlHoverTexture);
+    uiButtons.back().SetHitboxScale(0.35f, 0.1f);
+    uiButtons.back().SetHitboxOffset(-0.03f);
+
+    uiButtons.emplace_back(0.50f, -0.65f, 1.0f, 1.5f, STAGESELECT, selectTexture, selectHoverTexture);
+    uiButtons.back().SetHitboxScale(0.7f, 0.1f);
+    uiButtons.back().SetHitboxOffset(-0.0f);
+
+    uiButtons.emplace_back(0.375f, -0.88f, 1.0f, 1.5f, QUIT_GAME, quitTexture, quitHoverTexture);
+    uiButtons.back().SetHitboxScale(0.38f, 0.1f);
+    uiButtons.back().SetHitboxOffset(-0.03f);
 
     //uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
