@@ -3,6 +3,11 @@
 
 // 玩家蝸E丒�
 void UpdatePlayerPhysics(float deltaTime) {
+    // 如果玩家已死亡，跳过物理更新
+    if (g_player.isDead) {
+        return;
+    }
+
     // 在硬直状态下忽略重力和移动
     if (g_player.isInDashAftermath) {
         // 只处历泄直碰撞紒E猓ǚ乐沟舫龅赝迹�
@@ -285,7 +290,7 @@ void UpdatePlayerPhysics(float deltaTime) {
             portalCooldown = 1.0f;
         }
     }
-	//如果velocityY绝对值大于0.05f,则认为玩家不在地面上
+    //如果velocityY绝对值大于0.05f,则认为玩家不在地面上
     if (fabs(g_player.velocityY) > 0.05f) {
         g_player.isOnGround = false;
     }
@@ -296,6 +301,70 @@ void UpdatePlayerPhysics(float deltaTime) {
     }
 
     CheckDashAttack();
+}
+
+// 新增：更新玩家死亡状态
+void UpdatePlayerDeath(float deltaTime) {
+    if (!g_player.isDead) {
+        return;
+    }
+
+    g_player.deathTimer -= deltaTime;
+
+    if (g_player.deathTimer <= 0.0f) {
+        ResetGame();
+    }
+}
+
+// 新增：玩家死亡处理函数
+void OnPlayerDeath() {
+    g_player.isDead = true;
+    g_player.deathTimer = g_player.DEATH_RESPAWN_TIME;
+    g_player.deathCount++;
+
+    // 停止玩家所有动作
+    g_player.isMoving = false;
+    g_player.isDashing = false;
+    g_player.isCharging = false;
+    g_player.isInDashAftermath = false;
+    g_player.velocityX = 0.0f;
+    g_player.velocityY = 0.0f;
+
+    // 可以在这里添加死亡音效
+    // g_audioManager.PlaySFX("death_sound.wav");
+
+    printf("Player died! Respawning in 3 seconds...\n");
+}
+
+
+// 新增：检查玩家是否应该死亡
+void CheckPlayerDeath() {
+    if (g_player.isDead) {
+        return;
+    }
+
+    // 检查与所有存活敌人的碰撞
+    for (auto& enemy : g_enemies) {
+        if (!enemy->IsAlive()) continue;
+
+        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
+
+            // 如果玩家正在冲刺，则不会死亡，而是攻击敌人
+            if (g_player.isDashing) {
+                // 在CheckDashAttack中处理攻击逻辑
+                continue;
+            }
+            else {
+
+                // 否则，玩家死亡
+                OnPlayerDeath();
+            }
+
+            return;
+        }
+    }
+
 }
 
 // 修改UpdateDash函数，添加蓄力衰减更新
@@ -332,6 +401,9 @@ void UpdateDash(float deltaTime) {
             ExecuteMouseChargeDash();
         }
     }
+
+
+    CheckPlayerDeath();
 }
 
 void CancelChargeDash() {
