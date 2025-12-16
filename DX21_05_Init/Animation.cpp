@@ -32,9 +32,9 @@ HRESULT Animation::Init(int splitX, int splitY, float frameTime, int startFrame)
 }
 
 // for adding animation clip
-void Animation::AddClip(const std::string& name, int startFrame, int endFrame, float frameTime, bool loop)
+void Animation::AddClip(const std::string& name, int startFrame, int endFrame, float frameTime, bool loop, ID3D11ShaderResourceView* textureSRV)
 {
-    AnimationClip clip{ startFrame, endFrame, frameTime, loop };  // it creates the clip
+    AnimationClip clip{ startFrame, endFrame, frameTime, loop , textureSRV };  // it creates the clip
     m_clips[name] = clip;                                         // it stores the clip
 }
 
@@ -131,6 +131,12 @@ bool Animation::IsFinished() const
             m_currentFrame == m_currentClip.endFrame &&
             m_paused);
     }
+}
+
+//get current clip Texture
+ID3D11ShaderResourceView* Animation::GetCurrentClipTexture() const
+{
+    return m_currentClip.textureSRV;
 }
 
 // it gets the current frame of the aniamtion

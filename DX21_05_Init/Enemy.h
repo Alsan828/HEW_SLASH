@@ -113,6 +113,8 @@ public:
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
 
+    Animation anim;
+
 protected:
 
     // 水平碰撞检测

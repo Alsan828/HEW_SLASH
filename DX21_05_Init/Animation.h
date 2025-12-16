@@ -10,6 +10,7 @@ struct AnimationClip
     int endFrame;       // last frame index in the clip
     float frameTime;    // time per frame
     bool loop;          // should this clip loop?
+	ID3D11ShaderResourceView* textureSRV; // for separate .png
 };
 
 class Animation 
@@ -40,10 +41,10 @@ public:
     HRESULT Init(int splitX, int splitY, float frameTime, int startFrame = 0);
 
     // so you can use it for idle, run, jump, dash, gameover, etc
-    void AddClip(const std::string& name, int startFrame, int endFrame, float frameTime, bool loop);
+    void AddClip(const std::string& name, int startFrame, int endFrame, float frameTime, bool loop, ID3D11ShaderResourceView* textureSRV);
     void SetClip(const std::string& name);
     std::string GetCurrentClipName() const; // gets the current clip name
-
+	ID3D11ShaderResourceView* GetCurrentClipTexture() const; // gets the current clip texture
     void Update(float deltaTime); // for updating the animation
     DirectX::XMFLOAT2 GetUVOffset(void) const; 
 

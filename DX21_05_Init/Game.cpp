@@ -124,7 +124,7 @@ void InitGameWorld() {
     g_projectileManager.LoadTextures(g_pDevice);
     LoadTexture(g_pDevice, "asset/character/karen_small48.png", &g_playerTexture);
     g_player.anim.Init(10, 1, 0.15f, 0);
-    g_player.anim.AddClip("Idle", 0, 9, 0.25f, true);
+    g_player.anim.AddClip("Idle", 0, 9, 0.25f, true, g_playerTexture);
 
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
@@ -435,7 +435,7 @@ void DrawGame() {
         frameIndex = g_player.anim.GetCurrentFrame();
 
         RenderImage(playerPos.first, playerPos.second, PLAYER_WIDTH, PLAYER_HEIGHT,
-            g_playerTexture, frameIndex, 1, 1);
+            g_player.anim.GetCurrentClipTexture(), frameIndex, 1, 1);
     }
     else {
         // Flickering disappearance animation when dead
