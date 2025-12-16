@@ -31,6 +31,7 @@ bool PauseScene::Init()
     LoadTexture(g_pDevice, "asset/UI/pause/quit_hover.png", &quitHoverTexture);
 
 
+    // because each puase button size is different so the hitbox will be different as well.
     uiButtons.emplace_back(0.3f, -0.3f, 1.0f, 1.5f, pausedSceneType, continueTexture, continueHoverTexture);
     uiButtons.back().SetHitboxScale(0.27f, 0.1f);
     uiButtons.back().SetHitboxOffset(-0.03f);
@@ -81,8 +82,9 @@ void PauseScene::Update(float deltaTime)
 void PauseScene::Draw()
 {
  
-    if (underlyingScene) {
-        underlyingScene->Draw(); // draw stage frozen
+    if (underlyingScene) 
+    {
+        underlyingScene->Draw(); // draw the stage frozen so I can see it in the background
     }
 
     // this is for the back (the stage) so when you pause it, the stage part looks transparent
@@ -90,7 +92,8 @@ void PauseScene::Draw()
     RenderImage(-1, -1, 2, 2, blackTexture, 0, 1, 1);
     SetColor(1, 1, 1, 1); // resets the blackTexture to normal
 
-    if (g_pauseTexture) {
+    if (g_pauseTexture) 
+    {
         SetColor(1, 1, 1, 1.0f);
         RenderImage(-1, -1, 2, 2, g_pauseTexture, 0, 1, 1);
     }
