@@ -260,7 +260,7 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
         return g_groundTexture;
     }
     else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT") {
-        return g_fastEnemyTexture;
+        return g_groundTexture;
     }
     else if (tileCode == "D1" || tileCode == "D2") {
         return g_backgroundTexture3;

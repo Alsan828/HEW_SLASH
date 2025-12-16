@@ -5,6 +5,23 @@
 // Initialize damage number manager
 std::vector<DamageNumber> DamageNumberManager::damageNumbers;
 
+// 定义敌人纹理
+ID3D11ShaderResourceView* g_enemyIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_enemyRunTexture = nullptr;
+ID3D11ShaderResourceView* g_enemyDeathTexture = nullptr;
+
+ID3D11ShaderResourceView* g_shieldEnemyIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_shieldEnemyDeathTexture = nullptr;
+
+ID3D11ShaderResourceView* g_mageEnemyIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_mageEnemyAttackTexture = nullptr;
+ID3D11ShaderResourceView* g_mageEnemyDeathTexture = nullptr;
+
+ID3D11ShaderResourceView* g_fastEnemyRunTexture = nullptr;
+ID3D11ShaderResourceView* g_fastEnemyDeathTexture = nullptr;
+
+ID3D11ShaderResourceView* g_bombEnemyIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_bombEnemyDeathTexture = nullptr;
 // Enemy class implementation
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
@@ -18,6 +35,9 @@ Enemy::Enemy(float x, float y, float hp)
     for (int i = 0; i < 8; i++) {
         damageMultipliers[i] = 1.0f;
     }
+
+    // 初始化动画
+    anim.Init(4, 1, 0.1f);  // 假设每个动画有4帧，每秒10帧
 
     facingRight = true;  // Default facing right
     velocityX = 0.0f;
@@ -57,6 +77,12 @@ float Enemy::GetRelativeAngle(float attackAngle) const {
     while (relativeAngle < -3.14159f) relativeAngle += 2 * 3.14159f;
 
     return relativeAngle;
+}
+
+void Enemy::PlayAnimation(const std::string& clipName) {
+    if (anim.GetCurrentClipName() != clipName) {
+        anim.SetClip(clipName);
+    }
 }
 
 // Convert angle to direction index (8 directions)
@@ -121,10 +147,22 @@ void Enemy::OnHit(int damage) {
 void Enemy::OnDeath() {
     // Base enemy death handling
     isAlive = false;
+    PlayAnimation("death");
     OnEnemyDefeated();
 }
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
+
+    // 更新死亡动画
+    if (isDying) {
+        deathAnimationTimer += deltaTime;
+        anim.Update(deltaTime);
+
+        if (deathAnimationTimer >= DEATH_ANIMATION_DURATION) {
+            isAlive = false;
+        }
+        return;  // 死亡动画期间不执行其他逻辑
+    }
 
     // Visibility detection and optimization logic
     bool isCurrentlyVisible = IsVisible(g_camera);
@@ -148,7 +186,9 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         UpdateMinimal(deltaTime);
         return;
     }
+    PlayAnimation("idle");
 
+    anim.Update(deltaTime);
     // Full update logic
     if (isHit) {
         hitTimer -= deltaTime;
@@ -346,32 +386,49 @@ void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, fl
 }
 
 void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
-    if (!isAlive) return;
+    if (!isAlive && !isDying) return;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
     // Convert world coordinates to screen coordinates
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
-    // Select different frames based on health status
-    int frameIndex = 0;
-    if (health < maxHealth * 0.3f) {
-        frameIndex = 1;
-    }
-    if (currentState == ATTACK) {
-        frameIndex = 2;
-    }
-    // Hit state: flicker or color change effect
-    if (isHit) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+    // 获取当前动画的纹理
+    ID3D11ShaderResourceView* currentTexture = anim.GetCurrentClipTexture();
+    if (currentTexture == nullptr) {
+        currentTexture = texture;  // 如果动画纹理为空，使用传入的纹理
     }
 
-    // Render enemy using screen coordinates
-    RenderImage(screenX, screenY, width, height, texture, frameIndex, 1, 3);
+    // 获取UV偏移用于精灵表动画
+    DirectX::XMFLOAT2 uvOffset = anim.GetUVOffset();
+
+    // 受击状态：闪烁或颜色变化效果
+    if (isHit) {
+        SetColor(1.0f, 0.5f, 0.5f, 1.0f);  // 红色闪烁
+    }
+
+    // 死亡动画透明度
+    if (isDying) {
+        float alpha = 1.0f - (deathAnimationTimer / DEATH_ANIMATION_DURATION);
+        SetColor(1.0f, 1.0f, 1.0f, alpha);
+    }
+
+    // 渲染敌人
+    // 注意：这里假设动画是精灵表，通过UV偏移来显示不同帧
+    int currentFrame = anim.GetCurrentFrame();
+    int splitX = anim.GetSplitX();
+    int splitY = anim.GetSplitY();
+
+    RenderImage(screenX, screenY, width, height, currentTexture,
+        currentFrame, splitX, splitY);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    // Render health bar (also needs screen coordinates)
-    RenderHealthBar(camera);
+
+    // 如果不是死亡状态，渲染血条
+    if (!isDying) {
+        RenderHealthBar(camera);
+    }
 }
 
 void Enemy::RenderHealthBar(const Camera& camera) {
@@ -480,6 +537,14 @@ ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     SetDamageMultiplier(DIR_BACK_UP, 1.5f);
     SetDamageMultiplier(DIR_BACK_DOWN, 1.5f);
 
+    // 初始化盾牌敌人动画
+    anim.Init(3, 2, 0.15f);  // 3列2行
+
+    // 添加动画剪辑
+    anim.AddClip("idle", 0, 2, 0.15f, true, g_shieldEnemyIdleTexture);
+    anim.AddClip("death", 0, 5, 0.1f, false, g_shieldEnemyDeathTexture);
+
+    anim.SetClip("idle");
     width = PLAYER_WIDTH * 1.5f;
     moveSpeed = MOVE_SPEED * 0.5f;
 }
@@ -505,6 +570,7 @@ void ShieldEnemy::OnHit(int damage) {
 void ShieldEnemy::OnDeath() {
     Enemy::OnDeath();
 }
+
 // MageEnemy implementation
 MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     // Mage enemy: vulnerable from top and bottom
@@ -515,7 +581,17 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     currentSpellCooldown = 0.0f;
     attackRange = 1.2f;
     moveSpeed = MOVE_SPEED * 0.4f;
+
+    // 初始化法师敌人动画
+    anim.Init(4, 1, 0.2f);
+
+    anim.AddClip("idle", 0, 0, 0.2f, true, g_mageEnemyIdleTexture);
+    anim.AddClip("attack", 1, 3, 0.1f, true, g_mageEnemyAttackTexture);
+    anim.AddClip("death", 0, 0, 0.2f, false, g_mageEnemyDeathTexture);
+
+    anim.SetClip("idle");
 }
+
 
 void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
     Enemy::Update(deltaTime, mapManager);
@@ -566,12 +642,22 @@ void MageEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
     }
 }
 
+
 // FastEnemy implementation
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     moveSpeed = MOVE_SPEED * 1.5f;
     dashCooldown = 2.0f;
     currentDashCooldown = 0.0f;
+
+    // 初始化快速敌人动画
+    anim.Init(4, 2, 0.1f);
+
+    anim.AddClip("run", 2, 7, 0.05f, true, g_fastEnemyRunTexture);
+    anim.AddClip("death", 0, 3, 0.1f, false, g_fastEnemyDeathTexture);
+
+    anim.SetClip("idle");
 }
+
 
 void FastEnemy::Update(float deltaTime, MapManager* mapManager) {
     Enemy::Update(deltaTime, mapManager);
@@ -594,29 +680,30 @@ void FastEnemy::DashAttack() {
 ID3D11ShaderResourceView* g_bombEnemyTexture = nullptr;
 
 // BombEnemy implementation
-// Enemy.cpp
-// BombEnemy implementation
 BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     // Bomb enemy: 10x damage from top and bottom, reduced damage from other directions
-    SetDamageMultiplier(DIR_UP, 10.0f);        // 10x damage from top
-    SetDamageMultiplier(DIR_DOWN, 10.0f);      // 10x damage from bottom
-    SetDamageMultiplier(DIR_FRONT, 0.7f);     // Reduced damage from front
-    SetDamageMultiplier(DIR_BACK, 0.7f);      // Reduced damage from back
-    SetDamageMultiplier(DIR_FRONT_UP, 1.2f);  // Medium from front-top
-    SetDamageMultiplier(DIR_FRONT_DOWN, 1.2f);// Medium from front-bottom
-    SetDamageMultiplier(DIR_BACK_UP, 1.2f);   // Medium from back-top
-    SetDamageMultiplier(DIR_BACK_DOWN, 1.2f); // Medium from back-bottom
+    SetDamageMultiplier(DIR_UP, 10.0f);
+    SetDamageMultiplier(DIR_DOWN, 10.0f);
+    SetDamageMultiplier(DIR_FRONT, 0.7f);
+    SetDamageMultiplier(DIR_BACK, 0.7f);
+    SetDamageMultiplier(DIR_FRONT_UP, 1.2f);
+    SetDamageMultiplier(DIR_FRONT_DOWN, 1.2f);
+    SetDamageMultiplier(DIR_BACK_UP, 1.2f);
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.2f);
 
-    // Bomb enemy properties
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
-    moveSpeed = 0.0f;  // Does not move
+    moveSpeed = 0.0f;
     pulseTimer = 0.0f;
     baseSize = 1.0f;
 
-    // Set patrol range to 0, since it doesn't move
-    patrolMinX = posX;
-    patrolMaxX = posX;
+    // 初始化炸弹敌人动画
+    anim.Init(3, 1, 0.2f);
+
+    anim.AddClip("idle", 0, 0, 0.3f, true, g_bombEnemyIdleTexture);
+    anim.AddClip("death", 2, 2, 0.5f, false, g_bombEnemyDeathTexture);
+
+    anim.SetClip("idle");
 }
 
 // Override TakeDamage function, add explosion detection
@@ -820,14 +907,30 @@ void BombEnemy::CreateProjectiles() {
     // CreateParticleEffect(posX, posY, "explosion");
 }
 
-// Enemy management functions
+
+// 修改InitEnemies函数，加载所有纹理
 void InitEnemies() {
     // Load enemy textures
-    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyTexture);
+    // 普通敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyRunTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyDeathTexture);
+
+    // 盾牌敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyDeathTexture);
+
+    // 法师敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyAttackTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyDeathTexture);
+
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyRunTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyDeathTexture);
+
+    // 炸弹敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyDeathTexture);
 }
 
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {
@@ -870,26 +973,29 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
         g_enemies.end()
     );
 }
-// Modify RenderEnemies function to pass camera parameter
+
+// 修改RenderEnemies函数
 void RenderEnemies(const Camera& camera) {
     for (auto& enemy : g_enemies) {
-        ID3D11ShaderResourceView* texture = g_enemyTexture;
+        ID3D11ShaderResourceView* texture = g_enemyIdleTexture;  // 默认纹理
 
         if (dynamic_cast<ShieldEnemy*>(enemy)) {
-            texture = g_shieldEnemyTexture;
+            texture = g_shieldEnemyIdleTexture;
         }
         else if (dynamic_cast<MageEnemy*>(enemy)) {
-            texture = g_mageEnemyTexture;
+            texture = g_mageEnemyIdleTexture;
         }
         else if (dynamic_cast<FastEnemy*>(enemy)) {
-            texture = g_fastEnemyTexture;
+            texture = g_fastEnemyRunTexture;
+        }
+        else if (dynamic_cast<BombEnemy*>(enemy)) {
+            texture = g_bombEnemyIdleTexture;
         }
 
         enemy->Render(texture, camera); // Pass camera parameter
     }
     DamageNumberManager::Render(camera);
 }
-
 void CleanupEnemies() {
     DamageNumberManager::Clear();
     for (auto& enemy : g_enemies) {

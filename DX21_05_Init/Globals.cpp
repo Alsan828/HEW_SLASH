@@ -29,10 +29,6 @@ ID3D11ShaderResourceView* g_pauseTexture = nullptr; // added for pause overlay
 
 // 敌人相关的全局变量
 std::vector<Enemy*> g_enemies;
-ID3D11ShaderResourceView* g_enemyTexture = nullptr;
-ID3D11ShaderResourceView* g_shieldEnemyTexture = nullptr;
-ID3D11ShaderResourceView* g_mageEnemyTexture = nullptr;
-ID3D11ShaderResourceView* g_fastEnemyTexture = nullptr;
 
 // Define global camera object
 Camera g_camera;
