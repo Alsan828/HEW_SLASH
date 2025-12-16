@@ -11,6 +11,10 @@
 struct Player;
 class MapManager;
 
+bool CheckCollision(float x1, float y1, float w1, float h1,
+    float x2, float y2, float w2, float h2);
+
+
 // 伤害数字结构 - 独立于敌人
 struct DamageNumber {
     float posX, posY;
@@ -97,8 +101,9 @@ public:
 
     // 碰撞检测
     bool CheckPlayerCollision();
-    bool CheckCollisionWithTiles(const std::vector<MapTile>& solidTiles);
+    bool CheckCollisionWithTiles(MapManager* mapManager);
 
+    bool CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* mapManager);
     // 获取属性
     float GetX() const { return posX; }
     float GetY() const { return posY; }
@@ -109,6 +114,88 @@ public:
     float GetHeight() const { return height; }
 
 protected:
+
+    // 水平碰撞检测
+    bool CheckHorizontalCollision(MapManager* mapManager, float oldX, float oldY) {
+        if (!mapManager || !mapManager->GetCurrentMap()) {
+            return false;
+        }
+
+        SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+        if (!grid) {
+            auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+            for (const auto& tile : solidTiles) {
+                if (CheckCollision(posX, posY, width, height,
+                    tile.posX, tile.posY, tile.width, tile.height)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        std::vector<MapTile*> nearbyTiles;
+        grid->GetTilesInArea(
+            posX - 1.0f,
+            posY - 0.1f,
+            width + 2.0f,
+            height + 0.2f,
+            nearbyTiles
+        );
+
+        for (const auto& tile : nearbyTiles) {
+            if (tile->tileInfo.isSolid &&
+                CheckCollision(posX, posY, width, height,
+                    tile->posX, tile->posY, tile->width, tile->height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 垂直碰撞检测
+    bool CheckVerticalCollision(MapManager* mapManager, float oldX, float oldY) {
+        if (!mapManager || !mapManager->GetCurrentMap()) {
+            return false;
+        }
+
+        SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+        if (!grid) {
+            auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+            for (const auto& tile : solidTiles) {
+                if (CheckCollision(posX, posY, width, height,
+                    tile.posX, tile.posY, tile.width, tile.height)) {
+                    // 检查是否站在地面上
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        std::vector<MapTile*> nearbyTiles;
+        grid->GetTilesInArea(
+            posX - 0.1f,
+            posY - 1.0f,
+            width + 0.2f,
+            height + 2.0f,
+            nearbyTiles
+        );
+
+        for (const auto& tile : nearbyTiles) {
+            if (tile->tileInfo.isSolid &&
+                CheckCollision(posX, posY, width, height,
+                    tile->posX, tile->posY, tile->width, tile->height)) {
+                // 检查是否站在地面上
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 改进的碰撞检测，支持分离轴定理
+    bool CheckCollisionSAT(float x1, float y1, float w1, float h1,
+        float x2, float y2, float w2, float h2) {
+        return CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2);
+    }
     // 基本属性
     float posX, posY;
     float width, height;

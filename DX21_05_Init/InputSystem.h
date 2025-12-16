@@ -81,7 +81,7 @@ private:
     int m_moveLeftAltKey = 'A';
     int m_moveRightKey = VK_RIGHT;
     int m_moveRightAltKey = 'D';
-    int m_jumpKey = VK_UP;
+    int m_jumpKey = VK_SPACE;
     int m_jumpAltKey = 'W';
     int m_dashKey = VK_SPACE;
     int m_dashAltKey = VK_SHIFT;

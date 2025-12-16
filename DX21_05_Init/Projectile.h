@@ -8,11 +8,11 @@
 class Enemy;
 // Éäµ¯ÀàĞÍÃ¶¾Ù
 enum class ProjectileType {
-    FIREBALL,       // »ğÇò - Ö±Ïß·ÉĞĞ£¬Åö×²±¬Õ¨
-    ICE_SHARD,      // ±ù¼ı - Ö±Ïß·ÉĞĞ£¬¼õËÙĞ§¹û
+    FIREBALL,       // »ğÇE- Ö±Ïß·ÉĞĞ£¬Åö×²±¬Õ¨
+    ICE_SHARD,      // ±ù¼ı - Ö±Ïß·ÉĞĞ£¬¼õËÙĞ§¹E
     MAGIC_MISSILE,  // Ä§·¨·Éµ¯ - ¸ú×ÙµĞÈË
-    LIGHTNING,      // ÉÁµç - Ë²¼äÃüÖĞ
-    POISON_DART,    // ¶¾ïÚ - ³ÖĞøÉËº¦
+    LIGHTNING,      // ÉÁµE- Ë²¼äÃEĞ
+    POISON_DART,    // ¶¾E - ³ÖĞøÉËº¦
     HOLY_BOLT       // Ê¥¹â¼ı - ¶ÔÍöÁéÌØĞ§
 };
 
@@ -20,14 +20,14 @@ enum class ProjectileType {
 struct ProjectileEffect {
     float damage = 10.0f;
     float burnDamage = 0.0f;      // È¼ÉÕ³ÖĞøÉËº¦
-    float slowEffect = 0.0f;      // ¼õËÙĞ§¹û (0-1)
-    float stunDuration = 0.0f;    // Ñ£ÔÎÊ±¼ä
+    float slowEffect = 0.0f;      // ¼õËÙĞ§¹E(0-1)
+    float stunDuration = 0.0f;    // Ñ£ÔÎÊ±¼E
     bool pierce = false;          // ÊÇ·ñ´©Í¸
-    int maxPierceCount = 0;       // ×î´ó´©Í¸ÊıÁ¿
-    float areaRadius = 0.0f;      // ·¶Î§±¬Õ¨°ë¾¶
+    int maxPierceCount = 0;       // ×ûĞó´©Í¸ÊıÁ¿
+    float areaRadius = 0.0f;      // ·¶Î§±¬Õ¨°E¶
 };
 
-// Éäµ¯Àà
+// Éäµ¯ÀE
 class Projectile {
 public:
     Projectile(ProjectileType type, float startX, float startY,
@@ -55,12 +55,12 @@ private:
     bool isActive;
     bool fromPlayer;
 
-    // ÊÓ¾õĞ§¹û
+    // ÊÓ¾õĞ§¹E
     float size;
     float rotation;
     float scaleEffect;
 
-    // Éäµ¯Ğ§¹û
+    // Éäµ¯Ğ§¹E
     ProjectileEffect effect;
 
     // ¸ú×ÙÏà¹Ø
@@ -72,6 +72,7 @@ private:
     void Move(float deltaTime);
     bool CheckMapCollision(MapManager* mapManager);
     void CheckEnemyCollision(std::vector<Enemy*>& enemies);
+    void CheckPlayerCollision();
     void ApplyEffectToEnemy(Enemy* enemy);
     void CreateImpactEffect();
 
@@ -84,7 +85,7 @@ private:
     void UpdateHolyBolt(float deltaTime);
 };
 
-// Éäµ¯¹ÜÀíÆ÷Àà
+// Éäµ¯¹ÜÀúâ÷ÀE
 class ProjectileManager {
 public:
     static ProjectileManager& GetInstance();
@@ -111,7 +112,7 @@ private:
     ProjectileManager() = default;
     std::vector<Projectile> projectiles;
 
-    // Éäµ¯ÎÆÀí
+    // Éäµ¯ÎÆÀE
     ID3D11ShaderResourceView* fireballTexture = nullptr;
     ID3D11ShaderResourceView* iceShardTexture = nullptr;
     ID3D11ShaderResourceView* magicMissileTexture = nullptr;

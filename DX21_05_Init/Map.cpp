@@ -6,7 +6,7 @@
 
 // Map class implementation
 Map::Map(const std::string& name, float gridWidth, float gridHeight)
-    : m_name(name), m_gridWidth(gridWidth), m_gridHeight(gridHeight), m_defaultSpawnId(0) {
+    : m_name(name), m_gridWidth(gridWidth), m_gridHeight(gridHeight), m_defaultSpawnId(0), m_spatialGrid(nullptr) {
     InitializeTileDictionary();
 }
 
@@ -267,17 +267,42 @@ bool Map::GetDefaultSpawnPoint(float& x, float& y) const {
     return GetSpawnPoint(m_defaultSpawnId, x, y);
 }
 
-// Check if a rectangle collides with any portal and get portal information
+
+// 同样可以优化传送门检测
 bool Map::CheckPortalCollision(float x, float y, float width, float height,
     std::string& targetMap, int& portalId, int& linkedSpawnId) const {
-    for (const auto& tile : m_midgroundTiles) {
-        if (tile.tileInfo.isPortal) {
-            if (CheckCollision(x, y, width, height,
-                tile.posX, tile.posY, tile.width, tile.height)) {
-                targetMap = tile.targetMap;
-                portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
-                linkedSpawnId = tile.linkedSpawnId;
-                return true;
+    if (m_spatialGrid) {
+        std::vector<MapTile*> nearbyTiles;
+        float padding = 1.0f;
+        m_spatialGrid->GetTilesInArea(
+            x - padding, y - padding,
+            width + padding * 2, height + padding * 2,
+            nearbyTiles
+        );
+
+        for (const auto& tile : nearbyTiles) {
+            if (tile->tileInfo.isPortal) {
+                if (CheckCollision(x, y, width, height,
+                    tile->posX, tile->posY, tile->width, tile->height)) {
+                    targetMap = tile->targetMap;
+                    portalId = tile->linkedSpawnId;
+                    linkedSpawnId = tile->linkedSpawnId;
+                    return true;
+                }
+            }
+        }
+    }
+    else {
+        // 回退到原始方法
+        for (const auto& tile : m_midgroundTiles) {
+            if (tile.tileInfo.isPortal) {
+                if (CheckCollision(x, y, width, height,
+                    tile.posX, tile.posY, tile.width, tile.height)) {
+                    targetMap = tile.targetMap;
+                    portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
+                    linkedSpawnId = tile.linkedSpawnId;
+                    return true;
+                }
             }
         }
     }
@@ -341,7 +366,7 @@ void Map::CreateIceMap() {
     std::vector<std::vector<std::string>> massiveTestGrid = {
         // 行 0-2: 天空区域，有飞行敌人和装饰
         {"00","00","00","00","D1","00","00","00","D1","00","00","00","00","00","00","00","00","D1","00","00","00","00","00","00","00","00","00","00","00","00"},
-        {"00","00","00","00","00","00","E5","00","00","00","00","00","E3","00","00","00","00","00","00","00","E3","00","00","00","00","00","00","00","00","00"},
+        {"00","00","00","00","00","00","E5","00","00","00","00","00","E3","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"},
         {"00","00","D1","00","00","00","00","00","00","00","00","00","00","00","00","D1","00","00","00","00","00","00","00","00","D1","00","00","00","00","00"},
 
         // 行 3-5: 上层平台区域，有多个平台和敌人
@@ -351,7 +376,7 @@ void Map::CreateIceMap() {
 
         // 行 6-8: 中层地形，有不同地面类型和障碍物
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","W1","W1","W1"},
-        {"00","S1","00","W2","00","E2","00","W2","00","E1","00","W2","00","E3","00","W2","00","E4","00","W2","00","E1","00","W2","00","E2","00","G1","G1","G1"},
+        {"00","S1","00","W2","00","E2","00","W2","00","00","00","W2","00","E3","00","W2","00","00","00","W2","00","00","00","W2","00","E2","00","G1","G1","G1"},
         {"00","00","00","W2","00","00","00","W2","00","00","00","W2","00","00","00","W2","00","00","00","W2","00","00","00","W2","00","00","00","G1","G1","G1"},
 
         // 行 9-11: 主要地面层，有复杂的地形变化
@@ -366,7 +391,7 @@ void Map::CreateIceMap() {
 
         // 行 15-17: 地下洞穴区域
         {"00","00","00","00","P2","P2","P2","00","00","00","00","00","P1","P1","P1","00","00","00","00","00","P2","P2","P2","00","00","00","00","00","00","00"},
-        {"00","E3","00","00","00","00","00","00","E2","00","00","00","00","00","00","00","E1","00","00","00","00","00","00","00","E3","00","00","00","00","00"},
+        {"00","00","00","00","00","00","00","00","E2","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"},
         {"W1","W1","W1","00","00","00","00","00","00","00","W2","W2","W2","00","00","00","00","00","00","00","00","00","00","00","00","00","W1","W1","W1","W1"},
 
         // 行 18-19: 最终区域，包含所有传送门和第二个生成点
@@ -376,7 +401,7 @@ void Map::CreateIceMap() {
         // 行 20-22: 额外扩展区域
         {"00","00","00","00","00","00","00","00","00","00","00","00","S2","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"},
         {"00","00","00","P1","P1","P1","00","00","00","P2","P2","P2","00","00","00","P1","P1","P1","00","00","00","P2","P2","P2","00","00","00","00","00","00"},
-        {"00","E2","00","00","00","00","00","E1","00","00","00","00","00","E4","00","00","00","00","00","E3","00","00","00","00","00","E2","00","00","00","00"},
+        {"00","E2","00","00","00","00","00","E1","00","00","00","00","00","E4","00","00","00","00","00","E3","00","00","00","00","00","00","00","00","00","00"},
 
         // 行 23-25: 终点区域，包含所有类型的门
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"},
@@ -388,4 +413,40 @@ void Map::CreateIceMap() {
 
     AddSpawnPoint(-0.5f, -0.5f, 1, "IceSpawn");
     AddTile(0.7f, -0.8f, "PT", MapLayer::MIDGROUND, "test", 1);
+}
+
+
+void Map::BuildSpatialGrid(float cellSize) {
+    // 计算地图边界
+    float minX = 0, minY = 0, maxX = 0, maxY = 0;
+    bool first = true;
+
+    for (const auto& tile : m_midgroundTiles) {
+        if (first) {
+            minX = tile.posX;
+            minY = tile.posY;
+            maxX = tile.posX + tile.width;
+            maxY = tile.posY + tile.height;
+            first = false;
+        }
+        else {
+            minX = std::min(minX, tile.posX);
+            minY = std::min(minY, tile.posY);
+            maxX = std::max(maxX, tile.posX + tile.width);
+            maxY = std::max(maxY, tile.posY + tile.height);
+        }
+    }
+
+    // 扩展一些边界
+    minX -= 5.0f;
+    minY -= 5.0f;
+    maxX += 5.0f;
+    maxY += 5.0f;
+
+    // 创建或重新构建空间网格
+    if (m_spatialGrid) {
+        delete m_spatialGrid;
+    }
+    m_spatialGrid = new SpatialGrid(cellSize, minX, minY, maxX, maxY);
+    m_spatialGrid->BuildFromMap(*this);
 }

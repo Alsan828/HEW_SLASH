@@ -11,8 +11,6 @@
 //for initializing it
 bool SceneManager::Init(SCENE startScene) 
 {
-    // Load pause overlay texture once
-    LoadTexture(g_pDevice, "asset/pause.png", &g_pauseTexture);
 
     return SwitchScene(startScene);
 }
@@ -21,11 +19,12 @@ bool SceneManager::Init(SCENE startScene)
 bool SceneManager::SwitchScene(SCENE newScene) 
 {
     SceneBase* oldScene = currentScene;  // used for the pause menu
-    SCENE caller = currentSceneType;     // save who called us BEFORE overwrite
+    SCENE caller = currentSceneType;     // save who called us (the scene type) before overwriting it
     
     if (currentScene) 
-    {
-        if (newScene != PAUSE && newScene != HOWTOPLAY)  // Only delete if not pausing the game
+    {       
+        if (!(currentSceneType == STAGE || currentSceneType == STAGE2 || currentSceneType == STAGE3) // add here mor stages depening on how many there are 
+            || newScene != PAUSE) 
         {
             currentScene->Uninit();
             delete currentScene;
@@ -45,86 +44,64 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case STAGE:
-        // Clear previous scene when coming from stage select or menu
-        if (caller == STAGESELECT) 
+        if (caller == PAUSE && previousScene) 
         {
-            if (previousScene) 
-            {
-                previousScene->Uninit();
-                delete previousScene;
-                previousScene = nullptr;
-            }
+            currentScene = previousScene;     // resume existing stage 
+            previousScene = nullptr;
+            return true;                     
         }
-        // resume if coming from pause
+
         if (previousScene) 
         {
-            currentScene = previousScene;
+            previousScene->Uninit();
+            delete previousScene;
             previousScene = nullptr;
-            return true;  // resume without restarting the game
         }
-        // default start the stage
-        else 
-        {
-            currentScene = new StageScene(this);
-            return currentScene->Init();
-        }
+        currentScene = new StageScene(this);
+        return currentScene->Init();
         break;
 
     case STAGE2:
-        // Clear previous scene when coming from stage select or menu
-        if (caller == STAGESELECT) 
+        if (caller == PAUSE && previousScene) 
         {
-            if (previousScene) 
-            {
-                previousScene->Uninit();
-                delete previousScene;
-                previousScene = nullptr;
-            }
+            currentScene = previousScene;     // resume existing stage
+            previousScene = nullptr;
+            return true;                    
         }
-        // Only resume if coming from pause
+
         if (previousScene)
         {
-            currentScene = previousScene;
+            previousScene->Uninit();
+            delete previousScene;
             previousScene = nullptr;
-            return true;  // resume without restarting the game
         }
-        // default start the stage
-        else
-        {
-            currentScene = new Stage2Scene(this);
-            return currentScene->Init();
-        }
+        currentScene = new Stage2Scene(this);
+        return currentScene->Init();
         break;
 
     case STAGE3:
-        // Clear previous scene when coming from stage select or menu
-        if (caller == STAGESELECT) 
+        if (caller == PAUSE && previousScene) 
         {
-            if (previousScene) 
-            {
-                previousScene->Uninit();
-                delete previousScene;
-                previousScene = nullptr;
-            }
-        }
-        // Only resume if coming from pause
-        if (previousScene)
-        {
-            currentScene = previousScene;
+            currentScene = previousScene;     // resume existing stage 
             previousScene = nullptr;
-            return true;  // resume without restarting the game
+            return true;                      
         }
-        // default start the stage
-        else
+
+        if (previousScene) 
         {
-            currentScene = new Stage3Scene(this);
-            return currentScene->Init();
+            previousScene->Uninit();
+            delete previousScene;
+            previousScene = nullptr;
         }
+        currentScene = new Stage3Scene(this);
+        return currentScene->Init();
         break;
 
     case MENU:
-        if (caller == PAUSE) { // if you come from pause scene, start the stage from the beginning
-            if (previousScene) {
+        if (caller == PAUSE)  // if you come from pause scene, start the stage from the beginning
+        { 
+            if (previousScene) 
+            {
                 previousScene->Uninit();
                 delete previousScene;
                 previousScene = nullptr;
@@ -145,29 +122,48 @@ bool SceneManager::SwitchScene(SCENE newScene)
         }
         else 
         {
-            currentScene = new HowToPlayScene(this, TITLE); // fallback
+            currentScene = new HowToPlayScene(this, TITLE); // for default in case there is an error
         }
         return currentScene->Init();
         break;
 
     case PAUSE:
-        if (caller == STAGE || caller == STAGE2 || caller == STAGE3)  // coming directly from stage to pause. ADD more stages depending on how many there are
-        { 
-            previousScene = oldScene; // Stage
-        }
-        if (previousScene) // reuse stage if it exists (so I can see it again)
+        if (caller == STAGE || caller == STAGE2 || caller == STAGE3)  // add here more stages depending on how many there are 
         {
+            // so you can preserve the gameplay scene for when you resume the game
+            previousScene = oldScene;                
+            originalPausedScene = caller;  
             currentScene = new PauseScene(this, previousScene, originalPausedScene);
+            return currentScene->Init();
         }
-        else // if no stage saved, fallback
-        { 
-            currentScene = new PauseScene(this, nullptr, STAGE);
+        else if (caller == HOWTOPLAY) 
+        {
+            // if coming bak from howtoplay scene,you can continue from you were in the stage
+            currentScene = new PauseScene(this, previousScene, originalPausedScene);
+            return currentScene->Init();
         }
-        return currentScene->Init();
+        else 
+        {
+            // No gameplay underneath: clear preserved scene
+            if (previousScene) 
+            {
+                previousScene->Uninit();
+                delete previousScene;
+                previousScene = nullptr;
+            }
+            currentScene = new PauseScene(this, nullptr, STAGE); // resume target unused
+            return currentScene->Init();
+        }
         break;
 
     case STAGESELECT:
-        currentScene = new StageSelect(this); // for the title
+        if (caller == PAUSE && previousScene) 
+        {
+            previousScene->Uninit();
+            delete previousScene;
+            previousScene = nullptr;
+        }
+        currentScene = new StageSelect(this);
         return currentScene->Init();
         break;
 
@@ -193,23 +189,12 @@ void SceneManager::Draw()
 
     if (currentScene) currentScene->Draw();
 
-    // If paused, draw pause overlay on top
-    if (g_gameState == STATE_PAUSED && g_pauseTexture) {
-        SetColor(1.0f, 1.0f, 1.0f, 0.5f); // a bit transparent overlay
-        RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, g_pauseTexture, 0, 1, 1);
-    }
-
     RendererDrawB();
 }
 
 //for erasing
 void SceneManager::Uninit() 
 {
-    // for the pause
-    if (g_pauseTexture) {
-        g_pauseTexture->Release();
-        g_pauseTexture = nullptr;
-    }
 
     // for the current scene
     if (currentScene) 
@@ -217,6 +202,14 @@ void SceneManager::Uninit()
         currentScene->Uninit();
         delete currentScene;
         currentScene = nullptr;
+    }
+
+    // for the previous scene
+    if (previousScene) 
+    {
+        previousScene->Uninit();
+        delete previousScene;
+        previousScene = nullptr;
     }
 }
 

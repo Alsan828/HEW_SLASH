@@ -5,88 +5,89 @@
 #include "TitleScene.h"
 #include "SceneManager.h" // for switching scenes
 
-//the construct
+// construct
 TitleScene::TitleScene(SceneManager* manager) 
 {
     sceneManager = manager;
-    backgroundTexture = nullptr;
 }
 
 //it initializes the objects in title
 bool TitleScene::Init() 
 {
-    LoadTexture(g_pDevice, "asset/title.png", &backgroundTexture);      // abckground texture
+    LoadTexture(g_pDevice, "asset/UI/title/title0.png", &tex);
+    frames.push_back(tex);
 
-    LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
-    LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut0.png", &tex);
+    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut1.png", &tex);
+    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut2.png", &tex);
+    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut3.png", &tex);
+    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut4.png", &tex);
+    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut5.png", &tex);
+    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut6.png", &tex);
+    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut/cut7.png", &tex);
+    frames.push_back(tex);
+
+
+    m_titleAnim.InitFromTextures(frames, 0.06f, false); // 0.06s per frame. lower number is faster
 
 
     uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
-
-    uiButtons.emplace_back(0.0f, -0.0f, 0.8f, 1.0f, MENU, buttonTexture, buttonHoverTexture);
-
-    uiButtons[0].SetHitboxScale(0.7f, 0.22f);  // change this values if needed depending on the size of the button
-    uiButtons[0].SetHitboxOffset(-0.07f);
-
+       
     return true;
 }
 
-//it updated the objects in ttile
+//it updates the objects in tile
 void TitleScene::Update(float deltaTime) 
 {
     g_inputSystem.Update();
 
-    // it goes to the menu scene
-    //if (g_inputSystem.IsKeyDown(VK_RETURN)) // at the end you will use mouse
-    //{
-    //    sceneManager->SwitchScene(MENU);
-    //}
-
-    // for the buttons
-    for (auto& btn : uiButtons)
+    if (!m_playing && g_inputSystem.IsMouseLeftDown()) 
     {
-        if (btn.Process() == UIButtonResult::Clicked)
-        {
-            sceneManager->SwitchScene(btn.GetTargetScene());
-            return;
-        }
+        m_playing = true;
+        m_titleAnim.Resume();
     }
+
+    m_titleAnim.UpdateTexture(deltaTime);
+
+    // switch as soon as the animation finishes
+    if (m_playing && m_titleAnim.IsFinished()) 
+    {
+        sceneManager->SwitchScene(MENU); // and then it goes to mneu scene
+        return;
+    }
+
+
+
 }
 
 //it draws the objects in title
 void TitleScene::Draw() 
 {
-    if (backgroundTexture) {
-        // Always set a color before drawing so the texture is visible
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, backgroundTexture, 0, 1, 1);
-    }
 
-    for (const auto& btn : uiButtons)
-        btn.Draw(0.65f);
+    ID3D11ShaderResourceView* tex = m_titleAnim.GetCurrentTexture();
+    if (tex) 
+    {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, tex, 0, 1, 1);
+    }
 }
 
 //it erases the objects in title
 void TitleScene::Uninit() 
 {
 
-    if (backgroundTexture) 
-    {
-        backgroundTexture->Release();
-        backgroundTexture = nullptr;
-    }
+    // clean up the texture for the animation
+    m_titleAnim.CleanupTextures();
 
-    if (buttonTexture) {
-        buttonTexture->Release();
-        buttonTexture = nullptr;
-    }
-
-    if (buttonHoverTexture) {  
-        buttonHoverTexture->Release();
-        buttonHoverTexture = nullptr;
-    }
-
+    // clean up the buttons
     uiButtons.clear();
     g_mouseIndicator.Cleanup();
 }

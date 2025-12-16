@@ -23,6 +23,7 @@ private:
     SCENE currentSceneType;
 
     SceneBase* previousScene = nullptr;
+    SCENE previousSceneType;
 
     SCENE originalPausedScene = STAGE;
 
@@ -39,6 +40,7 @@ public:
     // helper to access previous scene
     SCENE GetCurrentSceneType() const { return currentSceneType; }
     SceneBase* GetPreviousScene() const { return previousScene; }
+    SCENE GetPreviousSceneType() const { return previousSceneType; }
 
     SCENE GetOriginalPausedScene() const { return originalPausedScene; }
     void SetOriginalPausedScene(SCENE scene) { originalPausedScene = scene; }

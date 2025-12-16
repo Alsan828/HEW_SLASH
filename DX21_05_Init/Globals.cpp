@@ -13,6 +13,7 @@ ID3D11ShaderResourceView* g_chargeEffectTexture = nullptr;
 ID3D11ShaderResourceView* g_numberTexture = nullptr;
 ID3D11ShaderResourceView* g_uiNumberTexture = nullptr;
 ID3D11ShaderResourceView* g_arrowTexture = nullptr;
+ID3D11ShaderResourceView* g_cursorTexture = nullptr;
 InputSystem g_inputSystem;
 GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;
@@ -34,7 +35,7 @@ ID3D11ShaderResourceView* g_fastEnemyTexture = nullptr;
 Camera g_camera;
 
 MouseIndicatorSystem g_mouseIndicator;
-
+SimpleAudio g_audioManager;
 // 在Game.cpp开头定义全局变量
 int g_windowWidth = 0;
 int g_windowHeight = 0;

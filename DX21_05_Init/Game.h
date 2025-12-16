@@ -15,6 +15,7 @@
 #include "SceneBase.h"
 #include "Pause.h"
 #include "Projectile.h"
+#include "SimpleAudio.h"
 
 class ProjectileManager;
 
@@ -41,7 +42,7 @@ const float GRAVITY = -0.003f;
 const float JUMP_FORCE = 0.065f;
 const float MOVE_SPEED = 0.01f;
 const float DASH_SPEED = 0.1f;      // Base dash speed
-const float DASH_DURATION = 0.07f;   // Base dash duration
+const float DASH_DURATION = 0.15f;   // Base dash duration
 const float DASH_COOLDOWN = 0.1f;    // Dash cooldown time
 
 // Player structure
@@ -53,6 +54,12 @@ struct Player {
     bool isOnGround = false;
     bool isMoving = false;
     bool facingRight = true;
+    // 死亡状态相关
+    bool isDead = false;
+    float deathTimer = 0.0f;
+    const float DEATH_RESPAWN_TIME = 3.0f;  // 3秒后复活
+    int deathCount = 0;  // 死亡计数（可选）
+
 
     // 生命值系统
     float health = 100.0f;
@@ -210,6 +217,7 @@ extern ID3D11ShaderResourceView* g_chargeEffectTexture;
 extern ID3D11ShaderResourceView* g_numberTexture;
 extern ID3D11ShaderResourceView* g_uiNumberTexture;
 extern ID3D11ShaderResourceView* g_arrowTexture;
+extern ID3D11ShaderResourceView* g_cursorTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
@@ -239,6 +247,8 @@ void TriggerSlowMotion(float i, float a); // 1秒时间，减慢到20%速度
 // Reset game
 void ResetGame();
 
+void CleanUpGameWorld(void); // added  december 11th
+
 void UpdateGame(float deltaTime);
 void DashToMouse();
 void StartMouseChargeDash();
@@ -250,6 +260,9 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 
 //Player Movement Control
 void Jump();
+void CheckPlayerDeath();
+void OnPlayerDeath();
+void UpdatePlayerDeath(float deltaTime);
 void UpdateDash(float deltaTime);
 void UpdatePlayerPhysics(float deltaTime);
 void OnEnemyDefeated();
@@ -268,6 +281,7 @@ private:
     bool m_showMouseIndicator;
     ID3D11ShaderResourceView* m_mouseIndicatorTexture;
     ID3D11ShaderResourceView* m_arrowTexture;
+    ID3D11ShaderResourceView* m_cursorTexture;
 
 public:
     void Initialize();
@@ -279,3 +293,53 @@ public:
 
 // 全局实例
 extern MouseIndicatorSystem g_mouseIndicator;
+
+extern SimpleAudio g_audioManager;
+
+// 音效文件常量
+namespace SoundEffect {
+    const std::string JUMP = "asset/Sounds/jump.wav";
+    const std::string DASH = "asset/Sounds/dash.wav";
+    const std::string CHARGE_START = "asset/Sounds/charge_start.wav";
+    const std::string CHARGE_RELEASE = "asset/Sounds/charge_release.wav";
+    const std::string SHOOT = "asset/Sounds/shoot.wav";
+    const std::string ENEMY_HIT = "asset/Sounds/enemy_hit.wav";
+    const std::string ENEMY_DEATH = "asset/Sounds/enemy_death.wav";
+    const std::string SLOWMO_START = "asset/Sounds/slowmo_start.wav";
+    const std::string SLOWMO_END = "asset/Sounds/slowmo_end.wav";
+    const std::string LEVEL_COMPLETE = "asset/Sounds/level_complete.wav";
+    const std::string UI_HOVER = "asset/Sounds/ui_hover.wav";
+    const std::string UI_CLICK = "asset/Sounds/ui_click.wav";
+    const std::string PAUSE = "asset/Sounds/pause.wav";
+    const std::string RESUME = "asset/Sounds/resume.wav";
+}
+
+namespace BackgroundMusic {
+    const std::string MAIN_MENU = "asset/Music/main_menu.wav";
+    const std::string LEVEL1 = "asset/Music/level1.wav";
+    const std::string LEVEL2 = "asset/Music/level2.wav";
+    const std::string LEVEL3 = "asset/Music/level3.wav";
+    const std::string BOSS_BATTLE = "asset/Music/boss_battle.wav";
+    const std::string GAME_OVER = "asset/Music/game_over.wav";
+    const std::string VICTORY = "asset/Music/victory.wav";
+}
+
+
+void PlayJumpSound();
+void PlayDashSound();
+void PlayChargeStartSound();
+void PlayChargeReleaseSound();
+void PlayShootSound();
+void PlayEnemyHitSound();
+void PlayEnemyDeathSound();
+void PlaySlowMotionSound(bool start);
+void PlayLevelCompleteSound();
+void PlayUIHoverSound();
+void PlayUIClickSound();
+void PlayPauseSound();
+void PlayResumeSound();
+
+void PlayStageMusic(int stage);
+void PlayBossMusic();
+void PlayVictoryMusic();
+void PlayGameOverMusic();

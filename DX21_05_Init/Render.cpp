@@ -269,8 +269,10 @@ void RendererUninit()
 	SAFE_RELEASE(pTextureSRV);
 	SAFE_RELEASE(pTextureSRV2);
 	SAFE_RELEASE(g_uiNumberTexture); // for the ui number texture
-
+	SAFE_RELEASE(pTextureNum);
 	SAFE_RELEASE(g_pConstantBuffer); // added november 12th
+	SAFE_RELEASE(g_pBlendState);
+	SAFE_RELEASE(pSamplerState);
 }
 
 HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, void** ppShaderObject, int* pShaderObjectSize)
@@ -422,7 +424,7 @@ void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelS
 	SAFE_RELEASE(pQuadBuffer);
 }
 
-void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex = 0, int rows = 1, int columns = 1 , bool enableCulling )
+void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex = 0, int rows = 1, int columns = 1 , bool enableCulling, float rotation)
 {
 
 	// 如果启用剔除且物体不可见，则跳过渲染
@@ -443,13 +445,52 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	float v0 = row * frameHeight;      // Top boundary
 	float v1 = (row + 1) * frameHeight;// Bottom boundary
 
+
+
+	// Quad center for rotation
+	float centerX = posX + width * 0.5f;
+	float centerY = posY + height * 0.5f;
+
+	float cosA = cosf(rotation);
+	float sinA = sinf(rotation);
+
+	auto rotatePoint = [&](float x, float y) {
+		float dx = x - centerX;
+		float dy = y - centerY;
+		return std::pair<float, float>(
+			centerX + dx * cosA - dy * sinA,
+			centerY + dx * sinA + dy * cosA
+		);
+		};
+
+	// Original corners (unrotated)
+	float x0 = posX;         float y0 = posY;          // bottom left
+	float x1 = posX + width; float y1 = posY;          // bottom right
+	float x2 = posX;         float y2 = posY + height; // top left
+	float x3 = posX + width; float y3 = posY + height; // top right
+
+	// Apply rotation
+	auto p0 = rotatePoint(x3, y3); // top right
+	auto p1 = rotatePoint(x1, y1); // bottom right
+	auto p2 = rotatePoint(x2, y2); // top left
+	auto p3 = rotatePoint(x0, y0); // bottom left
+
+
+
+
 	// Create vertex data (with correct texture coordinates)
+	//VertexV vertices[4] = {
+	//	// Position coordinates                   // Texture coordinates
+	//	{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
+	//	{ posX + width, posY,          0.5f, u1, v1 }, // Bottom right
+	//	{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
+	//	{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
+	//};
 	VertexV vertices[4] = {
-		// Position coordinates                   // Texture coordinates
-		{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
-		{ posX + width, posY,          0.5f, u1, v1 }, // Bottom right
-		{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
-		{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
+	   { p0.first, p0.second, 0.5f, u1, v0 }, // Top right
+	   { p1.first, p1.second, 0.5f, u1, v1 }, // Bottom right
+	   { p2.first, p2.second, 0.5f, u0, v0 }, // Top left
+	   { p3.first, p3.second, 0.5f, u0, v1 }  // Bottom left
 	};
 
 	// Create temporary vertex buffer
