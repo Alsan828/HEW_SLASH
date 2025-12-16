@@ -123,11 +123,33 @@ void Enemy::OnDeath() {
     isAlive = false;
     OnEnemyDefeated();
 }
-
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
-    // Update hit state
+    // Visibility detection and optimization logic
+    bool isCurrentlyVisible = IsVisible(g_camera);
+
+    if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
+        offScreenTimer += deltaTime;
+        if (offScreenTimer > MAX_OFFSCREEN_TIME &&
+            currentState == PATROL &&
+            !isHit &&
+            health >= maxHealth) {
+            return;
+        }
+    }
+
+    if (isCurrentlyVisible && !wasVisible) {
+        ResetOffScreenTimer();
+    }
+    wasVisible = isCurrentlyVisible;
+
+    if (!isCurrentlyVisible && NeedsMinimalUpdate()) {
+        UpdateMinimal(deltaTime);
+        return;
+    }
+
+    // Full update logic
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -142,62 +164,88 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     float oldX = posX;
     float oldY = posY;
 
-    // Move
+    // Horizontal movement
     posX += velocityX * deltaTime * 60.0f;
-
-    // Horizontal collision detection - use map manager to get solid tiles
-    bool horizontalCollision = false;
-    if (mapManager && mapManager->GetCurrentMap()) {
-        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
-        for (const auto& tile : solidTiles) {
-            if (CheckCollisionWithTile(tile)) {
-                posX = oldX;
-                horizontalCollision = true;
-                break;
-            }
-        }
+    if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
+        posX = oldX;
+        velocityX = 0.0f;
     }
 
+    // Vertical movement
     posY += velocityY * deltaTime * 60.0f;
-
-    // Vertical collision detection
-    bool verticalCollision = false;
-    if (mapManager && mapManager->GetCurrentMap()) {
-        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
-        for (const auto& tile : solidTiles) {
-            if (CheckCollisionWithTile(tile)) {
-                posY = oldY;
-                verticalCollision = true;
-                velocityY = 0;
-                break;
-            }
-        }
+    if (CheckVerticalCollision(mapManager, oldX, oldY)) {
+        posY = oldY;
+        velocityY = 0.0f;
     }
 
-    // Reset horizontal velocity only on horizontal collision
-    if (horizontalCollision) {
-        velocityX = 0;
+    // Boundary check
+    if (posY < -5.0f) {
+        isAlive = false;
+        return;
     }
 
-    // Boundary check - use map boundaries
-    if (mapManager && mapManager->GetCurrentMap()) {
-        // Can add map-based boundary checks here
-        if (posY < -5.0f) { // Fall death height
-            isAlive = false;
-            return;
-        }
+    // AI update
+    if (isCurrentlyVisible) {
+        UpdateAI(deltaTime);
     }
     else {
-        // Fallback boundary check
-        if (posX < -1.0f) posX = -1.0f;
-        if (posX > 1.0f - width) posX = 1.0f - width;
-        if (posY < -2.0f) {
-            isAlive = false;
-            return;
-        }
+        UpdateAIMinimal(deltaTime);
     }
 
-    UpdateAI(deltaTime);
+    if (!isCurrentlyVisible) {
+        offScreenTimer += deltaTime;
+    }
+    else {
+        offScreenTimer = 0.0f;
+    }
+}
+
+
+// Simplified update (for off-screen enemies that need updating)
+void Enemy::UpdateMinimal(float deltaTime) {
+    // Simplified AI update (only handles state transitions, no path calculations, etc.)
+    UpdateAIMinimal(deltaTime);
+
+    // Update off-screen timer
+    offScreenTimer += deltaTime;
+}
+
+// Simplified AI update
+void Enemy::UpdateAIMinimal(float deltaTime) {
+    // Only handles basic state maintenance, no complex calculations
+    float dx = g_player.posX - posX;
+
+    // Update facing direction
+    if (dx != 0) {
+        facingRight = (dx > 0);
+    }
+
+    // Simplified state machine: only handles timeouts or critical state transitions
+    static float stateTimer = 0.0f;
+    stateTimer += deltaTime;
+
+    // Check state transitions every 5 seconds (reduce frequency)
+    if (stateTimer >= 5.0f) {
+        float distance = fabs(dx);
+
+        // Simplified state transition logic
+        switch (currentState) {
+        case PATROL:
+            if (distance < 3.0f) currentState = CHASE;
+            break;
+        case CHASE:
+            if (distance > 8.0f) currentState = PATROL;
+            break;
+        case ATTACK:
+            // Attack state remains until conditions change
+            break;
+        case FLEE:
+            if (health > maxHealth * 0.5f) currentState = CHASE;
+            break;
+        }
+
+        stateTimer = 0.0f;
+    }
 }
 
 void Enemy::UpdateAI(float deltaTime) {
@@ -349,12 +397,71 @@ bool Enemy::CheckPlayerCollision() {
         g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT);
 }
 
-bool Enemy::CheckCollisionWithTiles(const std::vector<MapTile>& solidTiles) {
-    for (const auto& tile : solidTiles) {
-        if (CheckCollisionWithTile(tile)) {
+// Check collision with specific area
+bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* mapManager) {
+    if (!mapManager || !mapManager->GetCurrentMap()) {
+        return false;
+    }
+
+    SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+    if (!grid) {
+        // Fallback to original method
+        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+        for (const auto& tile : solidTiles) {
+            if (CheckCollision(checkX, checkY, GetWidth(), GetHeight(),
+                tile.posX, tile.posY, tile.width, tile.height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Use spatial grid optimization
+    std::vector<MapTile*> nearbyTiles;
+    grid->GetTilesInArea(
+        checkX - 0.5f,
+        checkY - 0.5f,
+        GetWidth() + 1.0f,
+        GetHeight() + 1.0f,
+        nearbyTiles
+    );
+
+    for (const auto& tile : nearbyTiles) {
+        if (tile->tileInfo.isSolid &&
+            CheckCollision(checkX, checkY, GetWidth(), GetHeight(),
+                tile->posX, tile->posY, tile->width, tile->height)) {
             return true;
         }
     }
+
+    return false;
+}
+
+// Update collision detection, using spatial grid optimization
+bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
+    if (!mapManager || !mapManager->GetCurrentMap()) {
+        return false;
+    }
+
+    // Cache spatial grid pointer
+    SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+    // Use spatial grid optimization
+    std::vector<MapTile*> nearbyTiles;
+    float padding = 0.5f;  // Slightly expand detection range
+    grid->GetTilesInArea(
+        posX - padding,
+        posY - padding,
+        width + padding * 2,
+        height + padding * 2,
+        nearbyTiles
+    );
+
+    for (const auto& tile : nearbyTiles) {
+        if (tile->tileInfo.isSolid && CheckCollisionWithTile(*tile)) {
+            return true;
+        }
+    }
+
     return false;
 }
 
@@ -483,66 +590,66 @@ void FastEnemy::DashAttack() {
     velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 3.0f;
 }
 
-// 在全局纹理定义中添加
+// Add to global texture definitions
 ID3D11ShaderResourceView* g_bombEnemyTexture = nullptr;
 
-// BombEnemy实现
+// BombEnemy implementation
 // Enemy.cpp
-// BombEnemy实现
+// BombEnemy implementation
 BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
-    // 爆炸敌人：上下方向是十倍伤害，其他方向减伤
-    SetDamageMultiplier(DIR_UP, 10.0f);        // 上方十倍伤害
-    SetDamageMultiplier(DIR_DOWN, 10.0f);      // 下方十倍伤害
-    SetDamageMultiplier(DIR_FRONT, 0.7f);     // 正面减伤
-    SetDamageMultiplier(DIR_BACK, 0.7f);      // 背面减伤
-    SetDamageMultiplier(DIR_FRONT_UP, 1.2f);  // 前上中等
-    SetDamageMultiplier(DIR_FRONT_DOWN, 1.2f);// 前下中等
-    SetDamageMultiplier(DIR_BACK_UP, 1.2f);   // 后上中等
-    SetDamageMultiplier(DIR_BACK_DOWN, 1.2f); // 后下中等
+    // Bomb enemy: 10x damage from top and bottom, reduced damage from other directions
+    SetDamageMultiplier(DIR_UP, 10.0f);        // 10x damage from top
+    SetDamageMultiplier(DIR_DOWN, 10.0f);      // 10x damage from bottom
+    SetDamageMultiplier(DIR_FRONT, 0.7f);     // Reduced damage from front
+    SetDamageMultiplier(DIR_BACK, 0.7f);      // Reduced damage from back
+    SetDamageMultiplier(DIR_FRONT_UP, 1.2f);  // Medium from front-top
+    SetDamageMultiplier(DIR_FRONT_DOWN, 1.2f);// Medium from front-bottom
+    SetDamageMultiplier(DIR_BACK_UP, 1.2f);   // Medium from back-top
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.2f); // Medium from back-bottom
 
-    // 爆炸敌人属性
+    // Bomb enemy properties
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
-    moveSpeed = 0.0f;  // 不会移动
+    moveSpeed = 0.0f;  // Does not move
     pulseTimer = 0.0f;
     baseSize = 1.0f;
 
-    // 设置巡逻范围为0，因为不会移动
+    // Set patrol range to 0, since it doesn't move
     patrolMinX = posX;
     patrolMaxX = posX;
 }
 
-// 重写TakeDamage函数，添加爆炸检测
+// Override TakeDamage function, add explosion detection
 void BombEnemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
-    // 获取伤害倍率
+    // Get damage multiplier
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // 使用独立的伤害数字管理器
+    // Use independent damage number manager
     bool isCritical = (multiplier > 1.5f);
     DamageNumberManager::AddDamageNumber(
-        posX + width * 0.5f,  // 敌人中心X
-        posY + height,        // 敌人顶部
+        posX + width * 0.5f,  // Enemy center X
+        posY + height,        // Top of enemy
         actualDamage,
-        multiplier >= 10.0f  // 如果是上下方向，显示为暴击
+        multiplier >= 10.0f  // If from top/bottom direction, show as critical
     );
 
-    // 检查是否为上下方向攻击
+    // Check if attack is from top or bottom
     float relativeAngle = GetRelativeAngle(attackAngle);
     int directionIndex = AngleToDirectionIndex(relativeAngle);
     bool isVerticalAttack = (directionIndex == DIR_UP || directionIndex == DIR_DOWN);
 
-    // 如果是上下方向攻击，立即死亡并触发爆炸
+    // If attack is from top or bottom, die immediately and trigger explosion
     if (multiplier >= 10.0f) {
-        health = 0;  // 立即死亡
+        health = 0;  // Die immediately
         isAlive = false;
-        OnDeath();  // 触发爆炸
-        return;     // 直接返回，不执行后续逻辑
+        OnDeath();  // Trigger explosion
+        return;     // Return directly, skip subsequent logic
     }
 
-    // 非上下方向攻击，正常处理伤害
+    // Non-vertical attacks, handle damage normally
     health -= actualDamage;
     isHit = true;
     hitTimer = HIT_DURATION;
@@ -558,7 +665,7 @@ void BombEnemy::TakeDamage(int damage, float attackAngle) {
 void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
-    // 调用基类的受击状态更新
+    // Call base class hit state update
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -566,92 +673,92 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // 爆炸敌人不移动，所以不需要处理重力和碰撞
+    // Bomb enemy doesn't move, so no need to handle gravity and collisions
     velocityX = 0.0f;
     velocityY = 0.0f;
 
-    // 脉动效果
+    // Pulsing effect
     pulseTimer += deltaTime;
     float pulseEffect = sin(pulseTimer * 3.0f) * 0.1f;
     baseSize = 1.0f + pulseEffect;
 
-    // 简化AI：只检测玩家距离
+    // Simple AI: only detect player distance
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // 更新面向方向
+    // Update facing direction
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // 简单状态机
+    // Simple state machine
     if (distance < 2.0f) {
-        currentState = ATTACK;  // 玩家靠近时进入攻击状态
+        currentState = ATTACK;  // Enter attack state when player is close
     }
     else {
-        currentState = PATROL;  // 否则保持巡逻状态（静止）
+        currentState = PATROL;  // Otherwise maintain patrol state (stationary)
     }
 
-    // 死亡时触发爆炸
+    // Trigger explosion when dying
     if (health <= 0 && isAlive) {
         isAlive = false;
         OnDeath();
     }
 }
 
-// 重写OnDeath函数，处理爆炸效果
+// Override OnDeath function, handle explosion effect
 void BombEnemy::OnDeath() {
-    // 先调用基类的OnDeath
+    // First call base class OnDeath
     Enemy::OnDeath();
 
-    // 然后触发爆炸效果
+    // Then trigger explosion effect
     Explode();
 }
 
 void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
 
-    // 转换为屏幕坐标
+    // Convert to screen coordinates
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
-    // 根据状态和血量选择帧
+    // Select frame based on state and health
     int frameIndex = 0;
     if (health < maxHealth * 0.3f) {
-        frameIndex = 1;  // 低血量帧
+        frameIndex = 1;  // Low health frame
     }
     if (currentState == ATTACK) {
-        frameIndex = 2;  // 攻击状态帧
+        frameIndex = 2;  // Attack state frame
     }
 
-    // 应用颜色效果
+    // Apply color effects
     if (isHit) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f);  // 受击红色
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);  // Hit red
     }
     else if (currentState == ATTACK) {
-        // 攻击状态时，脉动颜色变化
+        // Pulsing color change in attack state
         float pulse = 0.5f + 0.5f * sin(pulseTimer * 5.0f);
-        SetColor(1.0f, 0.3f + pulse * 0.5f, 0.3f, 1.0f);  // 红-橙脉动
+        SetColor(1.0f, 0.3f + pulse * 0.5f, 0.3f, 1.0f);  // Red-orange pulse
     }
     else {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // 正常颜色
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Normal color
     }
 
-    // 应用脉动缩放
+    // Apply pulse scaling
     float renderWidth = width * baseSize;
     float renderHeight = height * baseSize;
     float offsetX = (width - renderWidth) * 0.5f;
     float offsetY = (height - renderHeight) * 0.5f;
 
-    // 渲染敌人
+    // Render enemy
     RenderImage(screenX + offsetX, screenY + offsetY, renderWidth, renderHeight,
         texture, frameIndex, 1, 3);
 
-    // 渲染生命条
+    // Render health bar
     RenderHealthBar(camera);
 
-    // 如果处于攻击状态，显示警告效果
+    // If in attack state, show warning effect
     if (currentState == ATTACK) {
         float warningSize = renderWidth * 1.5f;
         float warningX = screenX - (warningSize - renderWidth) * 0.5f;
@@ -667,102 +774,49 @@ void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
 }
 
 void BombEnemy::Explode() {
-    // 播放爆炸音效
+    // Play explosion sound effect
     // PlaySound("explosion.wav");
 
-    // 创建爆炸特效
+    // Create explosion effect
     // CreateExplosionEffect(posX, posY);
 
-    // 对周围敌人造成伤害
-    float explosionRadius = 1.5f;  // 爆炸半径
-
-    for (Enemy* otherEnemy : g_enemies) {
-        if (otherEnemy == this || !otherEnemy->IsAlive()) continue;
-
-        float dx = otherEnemy->GetX() - posX;
-        float dy = otherEnemy->GetY() - posY;
-        float distance = sqrt(dx * dx + dy * dy);
-
-        // 如果在爆炸半径内
-        if (distance <= explosionRadius) {
-            // 向左右发射子弹的逻辑
-            // 这里可以创建一个Projectile对象或直接造成伤害
-
-            // 简单实现：直接造成伤害
-            // 计算攻击角度（从左到右）
-            float attackAngle = (dx > 0) ? 0.0f : 3.14159f;  // 左或右
-
-            // 对敌人造成伤害
-            int explosionDamage = 30;  // 爆炸基础伤害
-            otherEnemy->TakeDamage(explosionDamage, attackAngle);
-        }
-    }
-
-    // 对玩家造成伤害
-    if (g_player.isAlive) {
-        float dx = g_player.posX - posX;
-        float dy = g_player.posY - posY;
-        float distance = sqrt(dx * dx + dy * dy);
-
-        if (distance <= explosionRadius) {
-            // 对玩家造成伤害
-            // 这里需要调用玩家的受伤函数
-            // g_player.TakeDamage(20);
-
-            // 显示伤害数字
-            DamageNumberManager::AddDamageNumber(
-                posX + width * 0.5f,
-                posY + height * 0.5f,
-                20,
-                false
-            );
-        }
-    }
-
-    // 创建向左和向右的射弹
+    // Create projectiles to left and right
     CreateProjectiles();
 }
 
 // Enemy.cpp
 void BombEnemy::CreateProjectiles() {
-    // 获取 ProjectileManager 实例
+    // Get ProjectileManager instance
     ProjectileManager& projectileManager = ProjectileManager::GetInstance();
 
-    // 创建火球效果配置
+    // Create fireball effect configuration
     ProjectileEffect fireballEffect;
-    fireballEffect.damage = 30.0f;  // 基础伤害
-    fireballEffect.burnDamage = 5.0f;  // 燃烧持续伤害
-    fireballEffect.areaRadius = 0.3f;  // 范围爆炸半径
-    fireballEffect.pierce = false;  // 不穿透
+    fireballEffect.damage = 30.0f;  // Base damage
+    fireballEffect.burnDamage = 5.0f;  // Burn over time damage
+    fireballEffect.areaRadius = 0.3f;  // Explosion radius
+    fireballEffect.pierce = false;  // No piercing
 
-    float projectileSpeed = 3.0f;  // 射弹速度
+    float projectileSpeed = 3.0f;  // Projectile speed
 
-    // 向左发射火球
+    // Shoot fireball to the left
     projectileManager.CreateFireball(
-        posX,  // 起点X
-        posY + height * 0.5f,  // 从敌人中心高度发射
-        posX - 10.0f,  // 向左很远的位置
-        posY + height * 0.5f,  // 水平方向
-        false  // 来自敌人
+        posX,  // Start X
+        posY + height * 0.5f,  // Shoot from enemy center height
+        posX - 10.0f,  // Far left position
+        posY + height * 0.5f,  // Horizontal direction
+        true  // From player
     );
 
-    // 向右发射火球
+    // Shoot fireball to the right
     projectileManager.CreateFireball(
-        posX,  // 起点X
-        posY + height * 0.5f,  // 从敌人中心高度发射
-        posX + 10.0f,  // 向右很远的位置
-        posY + height * 0.5f,  // 水平方向
-        false  // 来自敌人
+        posX,  // Start X
+        posY + height * 0.5f,  // Shoot from enemy center height
+        posX + 10.0f,  // Far right position
+        posY + height * 0.5f,  // Horizontal direction
+        true  // From player
     );
 
-    // 保留伤害数字显示作为反馈
-    DamageNumberManager::AddDamageNumber(
-        posX, posY + height + 0.5f,
-        0,  // 显示0表示爆炸特效
-        true
-    );
-
-    // 可以在这里添加粒子效果
+    // Can add particle effects here
     // CreateParticleEffect(posX, posY, "explosion");
 }
 
@@ -780,12 +834,31 @@ void InitEnemies() {
     if (!g_fastEnemyTexture) g_fastEnemyTexture = g_enemyTexture;
 }
 
-
-void UpdateEnemies(float deltaTime, MapManager* mapManager) {    // Update damage numbers
-
+void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     DamageNumberManager::Update(deltaTime);
+
+    int visibleEnemyCount = 0;
+    int totalEnemyCount = g_enemies.size();
+
     for (auto& enemy : g_enemies) {
+        // Debug info: count visible enemies
+        if (enemy->IsVisible(g_camera)) {
+            visibleEnemyCount++;
+        }
+
         enemy->Update(deltaTime, mapManager);
+    }
+
+    // Debug output (optional)
+    static float debugTimer = 0.0f;
+    debugTimer += deltaTime;
+    if (debugTimer > 2.0f) {
+        char debugMsg[256];
+        sprintf_s(debugMsg, "Enemy optimization: Total=%d, Visible=%d, Optimization rate=%.1f%%\n",
+            totalEnemyCount, visibleEnemyCount,
+            (1.0f - (float)visibleEnemyCount / totalEnemyCount) * 100.0f);
+        OutputDebugStringA(debugMsg);
+        debugTimer = 0.0f;
     }
 
     // Remove dead enemies
@@ -801,7 +874,6 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {    // Update damag
         g_enemies.end()
     );
 }
-
 // Modify RenderEnemies function to pass camera parameter
 void RenderEnemies(const Camera& camera) {
     for (auto& enemy : g_enemies) {

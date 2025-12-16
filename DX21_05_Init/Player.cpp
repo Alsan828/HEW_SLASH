@@ -1,23 +1,29 @@
 #include "Game.h"
 #include "Enemy.h"
 
-// Íæ¼ÒÎEúÔEÂ
+// ç©å®¶è¸EîŒ£ä¸’ï¿½
 void UpdatePlayerPhysics(float deltaTime) {
-    // ÔÚÓ²Ö±×´Ì¬ÏÂºöÂÔÖØÁ¦ºÍÒÆ¶¯
+    // å¦‚æœç©å®¶å·²æ­»äº¡ï¼Œè·³è¿‡ç‰©ç†æ›´æ–°
+    if (g_player.isDead) {
+        return;
+    }
+
+    // åœ¨ç¡¬ç›´çŠ¶æ€ä¸‹å¿½ç•¥é‡åŠ›å’Œç§»åŠ¨
     if (g_player.isInDashAftermath) {
-        // Ö»´¦ÀúĞ¹Ö±Åö×²¼Eâ£¨·ÀÖ¹µô³öµØÍ¼£©
+        // åªå¤„å†æ³„ç›´ç¢°æ’ç´’EçŒ“Çšä¹æ²Ÿèˆ«é¾…èµè¿¹ï¿½
         auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
         for (const auto& tile : solidTiles) {
             if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                 tile.posX, tile.posY, tile.width, tile.height)) {
-                // ¼òµ¥µÄ´¹Ö±Åö×²´¦ÀE
-                g_player.posY = tile.posY + tile.height; // Õ¾ÔÚµØÃæÉÏ
+                // ç®€å•çš„å‚ç›´ç¢°æ’å¤„çº´E
+                g_player.posY = tile.posY + tile.height; // ç«™åœ¨åœ°é¢ä¸Š
                 g_player.isOnGround = true;
             }
         }
-        return; // Ó²Ö±×´Ì¬ÏÂÌø¹ıÕı³£ÎEúÔEÂ
+        return; // ç¡¬ç›´çŠ¶æ€ä¸‹è·³è¿‡æ­£å¸¸è¸EîŒ£ä¸’ï¿½
     }
-    // Ó¦ÓÃÖØÁ¦...
+
+    // åº”ç”¨é‡åŠ›
     if (!g_player.isDashing) {
         float fixedDeltaTime = std::min(deltaTime, 0.033f);
         g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
@@ -26,61 +32,248 @@ void UpdatePlayerPhysics(float deltaTime) {
         }
     }
 
-    float originalX = g_player.posX;
-    float originalY = g_player.posY;
+    // ä¿å­˜åŸå§‹ä½ç½®ç”¨äºç¢°æ’æ£€æµ‹
+    float oldX = g_player.posX;
+    float oldY = g_player.posY;
 
-    // Ë®Æ½ÒÆ¶¯
-    g_player.posX += g_player.velocityX * deltaTime * 60.0f;
+    // è®¡ç®—è¦ç§»åŠ¨çš„è·ç¦»
+    float moveX = g_player.velocityX * deltaTime * 60.0f;
+    float moveY = g_player.velocityY * deltaTime * 60.0f;
 
-    // Ê¹ÓÃĞÂµÄµØÍ¼ÏµÍ³½øĞĞÅö×²¼EE
-    auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
-    for (const auto& tile : solidTiles) {
-        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-            tile.posX, tile.posY, tile.width, tile.height)) {
-            g_player.velocityX = 0.0f;
+    // è·å–å½“å‰åœ°å›¾çš„ç©ºé—´ç½‘æ ¼
+    SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
+    if (!spatialGrid) {
+        // å¦‚æœç©ºé—´ç½‘æ ¼æœªæ„å»ºï¼Œå›é€€åˆ°åŸå§‹æ–¹æ³•
+        auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
+
+        // === ä¿®å¤ï¼šæ— è®ºæ˜¯å¦å†²åˆºï¼Œåªè¦é€Ÿåº¦è¶…è¿‡é˜ˆå€¼å°±ä½¿ç”¨è¿ç»­ç¢°æ’æ£€æµ‹ ===
+        float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
+        float speedThreshold = 0.5f; // é€Ÿåº¦é˜ˆå€¼ï¼Œè¶…è¿‡è¿™ä¸ªå€¼å°±ä½¿ç”¨è¿ç»­ç¢°æ’æ£€æµ‹
+
+        if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
+            int steps = 4; // å°†ç§»åŠ¨è·¯å¾„åˆ†æˆ4æ­¥è¿›è¡Œæ£€æµ‹
+            float stepX = moveX / steps;
+            float stepY = moveY / steps;
+
+            for (int i = 0; i < steps; i++) {
+                g_player.posX += stepX;
+
+                // æ°´å¹³ç¢°æ’æ£€æµ‹
+                for (const auto& tile : solidTiles) {
+                    if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        tile.posX, tile.posY, tile.width, tile.height)) {
+                        // å›é€€åˆ°ç¢°æ’å‰çš„ä½ç½®
+                        g_player.posX -= stepX;
+                        g_player.velocityX = 0.0f;
+
+                        // è®¡ç®—ç¢°æ’æ³•çº¿å¹¶åå¼¹
+                        if (moveX > 0) {
+                            // å‘å³ç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posX = tile.posX - PLAYER_WIDTH;
+                        }
+                        else if (moveX < 0) {
+                            // å‘å·¦ç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posX = tile.posX + tile.width;
+                        }
+                        break;
+                    }
+                }
+
+                g_player.posY += stepY;
+
+                // å‚ç›´ç¢°æ’æ£€æµ‹
+                for (const auto& tile : solidTiles) {
+                    if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        tile.posX, tile.posY, tile.width, tile.height)) {
+                        // å›é€€åˆ°ç¢°æ’å‰çš„ä½ç½®
+                        g_player.posY -= stepY;
+
+                        if (moveY > 0) {
+                            // å‘ä¸Šç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posY = tile.posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else if (moveY < 0) {
+                            // å‘ä¸‹ç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posY = tile.posY + tile.height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            // æ­£å¸¸ç§»åŠ¨ä½¿ç”¨åˆ†ç¦»è½´ç¢°æ’å¤„ç†
+            g_player.posX += moveX;
+            g_player.posY += moveY;
+
+            // é‡ç½®è½åœ°çŠ¶æ€
+            g_player.isOnGround = false;
+
+            for (const auto& tile : solidTiles) {
+                if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                    tile.posX, tile.posY, tile.width, tile.height)) {
+
+                    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
+                    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+                    float tileCenterX = tile.posX + tile.width / 2;
+                    float tileCenterY = tile.posY + tile.height / 2;
+
+                    float overlapX = (PLAYER_WIDTH / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
+                    float overlapY = (PLAYER_HEIGHT / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
+
+                    // åˆ†ç¦»è½´å¤„ç†ï¼šé€‰æ‹©æœ€å°é‡å æ–¹å‘
+                    if (overlapX < overlapY) {
+                        // æ°´å¹³ç¢°æ’
+                        if (playerCenterX < tileCenterX) {
+                            g_player.posX = tile.posX - PLAYER_WIDTH;
+                        }
+                        else {
+                            g_player.posX = tile.posX + tile.width;
+                        }
+                        g_player.velocityX = 0.0f;
+                    }
+                    else {
+                        // å‚ç›´ç¢°æ’
+                        if (playerCenterY < tileCenterY) {
+                            g_player.posY = tile.posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else {
+                            g_player.posY = tile.posY + tile.height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    else {
+        // ä½¿ç”¨ç©ºé—´ç½‘æ ¼ä¼˜åŒ–çš„ç¢°æ’æ£€æµ‹
+        std::vector<MapTile*> nearbyTiles;
+
+        // è·å–ç©å®¶å‘¨å›´çš„ç –å—
+        float padding = 1.0f;  // æ‰©å±•ä¸€ç‚¹èŒƒå›´
+        spatialGrid->GetTilesInArea(
+            g_player.posX - padding,
+            g_player.posY - padding,
+            PLAYER_WIDTH + padding * 2,
+            PLAYER_HEIGHT + padding * 2,
+            nearbyTiles
+        );
+
+        // === ä¿®å¤ï¼šæ— è®ºæ˜¯å¦å†²åˆºï¼Œåªè¦é€Ÿåº¦è¶…è¿‡é˜ˆå€¼å°±ä½¿ç”¨è¿ç»­ç¢°æ’æ£€æµ‹ ===
+        float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
+        float speedThreshold = 0.1f; // é€Ÿåº¦é˜ˆå€¼ï¼Œè¶…è¿‡è¿™ä¸ªå€¼å°±ä½¿ç”¨è¿ç»­ç¢°æ’æ£€æµ‹
+
+        if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
+            int steps = 4;
+            float stepX = moveX / steps;
+            float stepY = moveY / steps;
+
+            for (int i = 0; i < steps; i++) {
+                g_player.posX += stepX;
+
+                // æ°´å¹³ç¢°æ’æ£€æµ‹
+                for (const auto& tile : nearbyTiles) {
+                    if (tile->tileInfo.isSolid &&
+                        CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                            tile->posX, tile->posY, tile->width, tile->height)) {
+                        // å›é€€åˆ°ç¢°æ’å‰çš„ä½ç½®
+                        g_player.posX -= stepX;
+                        g_player.velocityX = 0.0f;
+
+                        // è®¡ç®—ç¢°æ’æ³•çº¿
+                        if (moveX > 0) {
+                            // å‘å³ç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posX = tile->posX - PLAYER_WIDTH;
+                        }
+                        else if (moveX < 0) {
+                            // å‘å·¦ç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posX = tile->posX + tile->width;
+                        }
+                        break;
+                    }
+                }
+
+                g_player.posY += stepY;
+
+                // å‚ç›´ç¢°æ’æ£€æµ‹
+                for (const auto& tile : nearbyTiles) {
+                    if (tile->tileInfo.isSolid &&
+                        CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                            tile->posX, tile->posY, tile->width, tile->height)) {
+                        // å›é€€åˆ°ç¢°æ’å‰çš„ä½ç½®
+                        g_player.posY -= stepY;
+
+                        if (moveY > 0) {
+                            // å‘ä¸Šç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posY = tile->posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else if (moveY < 0) {
+                            // å‘ä¸‹ç§»åŠ¨æ—¶ç¢°æ’
+                            g_player.posY = tile->posY + tile->height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            // æ­£å¸¸ç§»åŠ¨ä½¿ç”¨åˆ†ç¦»è½´ç¢°æ’å¤„ç†
+            g_player.posX += moveX;
+            g_player.posY += moveY;
+
+            g_player.isOnGround = false;
+
+            for (const auto& tile : nearbyTiles) {
+                if (tile->tileInfo.isSolid &&
+                    CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        tile->posX, tile->posY, tile->width, tile->height)) {
+
+                    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
+                    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+                    float tileCenterX = tile->posX + tile->width / 2;
+                    float tileCenterY = tile->posY + tile->height / 2;
+
+                    float overlapX = (PLAYER_WIDTH / 2 + tile->width / 2) - fabs(playerCenterX - tileCenterX);
+                    float overlapY = (PLAYER_HEIGHT / 2 + tile->height / 2) - fabs(playerCenterY - tileCenterY);
+
+                    // åˆ†ç¦»è½´å¤„ç†ï¼šé€‰æ‹©æœ€å°é‡å æ–¹å‘
+                    if (overlapX < overlapY) {
+                        // æ°´å¹³ç¢°æ’
+                        if (playerCenterX < tileCenterX) {
+                            g_player.posX = tile->posX - PLAYER_WIDTH;
+                        }
+                        else {
+                            g_player.posX = tile->posX + tile->width;
+                        }
+                        g_player.velocityX = 0.0f;
+                    }
+                    else {
+                        // å‚ç›´ç¢°æ’
+                        if (playerCenterY < tileCenterY) {
+                            g_player.posY = tile->posY - PLAYER_HEIGHT;
+                            g_player.velocityY = 0.0f;
+                        }
+                        else {
+                            g_player.posY = tile->posY + tile->height;
+                            g_player.velocityY = 0.0f;
+                            g_player.isOnGround = true;
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // ´¹Ö±ÒÆ¶¯
-    g_player.posY += g_player.velocityY * deltaTime * 60.0f;
-    g_player.isOnGround = false;
-
-    for (const auto& tile : solidTiles) {
-        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-            tile.posX, tile.posY, tile.width, tile.height)) {
-
-            float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
-            float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
-            float tileCenterX = tile.posX + tile.width / 2;
-            float tileCenterY = tile.posY + tile.height / 2;
-
-            float overlapX = (PLAYER_WIDTH / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
-            float overlapY = (PLAYER_HEIGHT / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
-
-            if (overlapX < overlapY) {
-                if (playerCenterX < tileCenterX) {
-                    g_player.posX = tile.posX - PLAYER_WIDTH;
-                }
-                else {
-                    g_player.posX = tile.posX + tile.width;
-                }
-                g_player.velocityX = 0.0f;
-            }
-            else {
-                if (playerCenterY < tileCenterY) {
-                    g_player.posY = tile.posY - PLAYER_HEIGHT;
-                    g_player.velocityY = 0.0f;
-                }
-                else {
-                    g_player.posY = tile.posY + tile.height;
-                    g_player.velocityY = 0.0f;
-                    g_player.isOnGround = true;
-                }
-            }
-        }
-    }
-
-    // ´«ËÍÃÅ¼EE
+    // ä¼ é€é—¨ç´’Eä¸’
     static float portalCooldown = 0.0f;
     if (portalCooldown > 0.0f) {
         portalCooldown -= deltaTime;
@@ -97,8 +290,12 @@ void UpdatePlayerPhysics(float deltaTime) {
             portalCooldown = 1.0f;
         }
     }
+    //å¦‚æœvelocityYç»å¯¹å€¼å¤§äº0.05f,åˆ™è®¤ä¸ºç©å®¶ä¸åœ¨åœ°é¢ä¸Š
+    if (fabs(g_player.velocityY) > 0.05f) {
+        g_player.isOnGround = false;
+    }
 
-    // ±ß½ç¼EE
+    // è¾¹ç•Œç´’Eä¸’
     if (g_player.posY < -2.0f) {
         ResetGame();
     }
@@ -106,40 +303,107 @@ void UpdatePlayerPhysics(float deltaTime) {
     CheckDashAttack();
 }
 
-// ĞŞ¸ÄUpdateDashº¯Êı£¬ÌúØÓĞûİ¦Ë¥¼õ¸EÂ
+// æ–°å¢ï¼šæ›´æ–°ç©å®¶æ­»äº¡çŠ¶æ€
+void UpdatePlayerDeath(float deltaTime) {
+    if (!g_player.isDead) {
+        return;
+    }
+
+    g_player.deathTimer -= deltaTime;
+
+    if (g_player.deathTimer <= 0.0f) {
+        ResetGame();
+    }
+}
+
+// æ–°å¢ï¼šç©å®¶æ­»äº¡å¤„ç†å‡½æ•°
+void OnPlayerDeath() {
+    g_player.isDead = true;
+    g_player.deathTimer = g_player.DEATH_RESPAWN_TIME;
+    g_player.deathCount++;
+
+    // åœæ­¢ç©å®¶æ‰€æœ‰åŠ¨ä½œ
+    g_player.isMoving = false;
+    g_player.isDashing = false;
+    g_player.isCharging = false;
+    g_player.isInDashAftermath = false;
+    g_player.velocityX = 0.0f;
+    g_player.velocityY = 0.0f;
+
+    // å¯ä»¥åœ¨è¿™é‡Œæ·»åŠ æ­»äº¡éŸ³æ•ˆ
+    // g_audioManager.PlaySFX("death_sound.wav");
+
+    printf("Player died! Respawning in 3 seconds...\n");
+}
+
+
+// æ–°å¢ï¼šæ£€æŸ¥ç©å®¶æ˜¯å¦åº”è¯¥æ­»äº¡
+void CheckPlayerDeath() {
+    if (g_player.isDead) {
+        return;
+    }
+
+    // æ£€æŸ¥ä¸æ‰€æœ‰å­˜æ´»æ•Œäººçš„ç¢°æ’
+    for (auto& enemy : g_enemies) {
+        if (!enemy->IsAlive()) continue;
+
+        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
+
+            // å¦‚æœç©å®¶æ­£åœ¨å†²åˆºï¼Œåˆ™ä¸ä¼šæ­»äº¡ï¼Œè€Œæ˜¯æ”»å‡»æ•Œäºº
+            if (g_player.isDashing) {
+                // åœ¨CheckDashAttackä¸­å¤„ç†æ”»å‡»é€»è¾‘
+                continue;
+            }
+            else {
+
+                // å¦åˆ™ï¼Œç©å®¶æ­»äº¡
+                OnPlayerDeath();
+            }
+
+            return;
+        }
+    }
+
+}
+
+// ä¿®æ”¹UpdateDashå‡½æ•°ï¼Œæ·»åŠ è“„åŠ›è¡°å‡æ›´æ–°
 void UpdateDash(float deltaTime) {
-    // ÓÅÏÈ¸EÂ³å´Ì×´Ì¬
+    // ä¼˜å…ˆç«µEé²å®•å¥—åˆºï¿½
     if (g_player.isDashing) {
         g_player.dashTimer -= deltaTime;
 
         if (g_player.dashTimer <= 0.0f) {
             g_player.isDashing = false;
             g_player.hasMouseTarget = false;
-            EnterDashAftermath(); // ³å´Ì½áÊø½øÈE²Ö±
+            EnterDashAftermath(); // å†²åˆºç»“æŸè¿›è‘‹Eä»“ï¿½
         }
     }
 
-    // È»ºó¸EÂÓ²Ö±×´Ì¬
+    // ç„¶åç«µEæ ä»“å¼Šåˆºï¿½
     UpdateDashAftermath(deltaTime);
-    // ×ûÖó¸EÂµãÊı»Ö¸´ÏµÍ³
+    // î ‘ç…®ç«µEç¢Œé—¶î¤æŒ‡èªä½ï¿½
     UpdateDashPoints(deltaTime);
 
-    // ¸EÂĞûİ¦Ë¥¼õ¼ÆÊ±ÆE
+    // ç«µEæ»¦îŠÎ»ã‚¼è·«å‰–é€¼ä¸’
     g_player.UpdateChargeDecay(deltaTime);
 
-    // Ğûİ¦Âß¼­Ó¦¸Ã¶ÀÁ¢ÓÚÓ²Ö±×´Ì¬
+    // å®£è­é€»è¾‘åº”è¯¥ç‹¬ç«‹äºç¡¬ç›´çŠ¶æ€
     if (g_player.isCharging) {
         g_player.chargeTime += deltaTime;
 
-        // Ó²Ö±×´Ì¬ÏÂÔÊĞúìûİ¦£¬µ«Ğûİ¦ÍEÉÊ±¼EéÌõ¼ş
+        // ç¡¬ç›´çŠ¶æ€ä¸‹å…å–§ç¦§è­ï¼Œä½†å®£è­è› Eå¢’å¥”ä¸’æ¨˜è·«ï¿½
         if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-            // Ğûİ¦ÍEÉÊ±£¬Èç¹û´¦ÓÚÓ²Ö±×´Ì¬£¬ÏÈÇå³ıÓ²Ö±
+            // å®£è­è› Eå¢’ä¿îƒ£ç»»î¡Ï„è°Ÿä»“å¼Šåˆºî‚¾îƒªæƒ¹å®„î¼ä»“ï¿½
             if (g_player.isInDashAftermath) {
                 g_player.isInDashAftermath = false;
             }
             ExecuteMouseChargeDash();
         }
     }
+
+
+    CheckPlayerDeath();
 }
 
 void CancelChargeDash() {
@@ -150,12 +414,12 @@ void CancelChargeDash() {
 }
 
 void MovePlayerLeft() {
-    // ¼EéÊÇ·ñ´¦ÓÚĞûİ¦×´Ì¬ÇÒ²»ÔÊĞúîÆ¶¯
+    // ç´’Eæ§­æ¬ ç¿ŠÏ„è°›îŠÏˆåˆºîƒ¢ä¹Ÿè¾‰å¸‚îŒ½è´«ï¿½
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
-        return;  // Ğûİ¦ÖĞ²»ÔÊĞúîÆ¶¯£¬Ö±½Ó·µ»Ø
+        return;  // å®£è­ä¸­ä¸å…å–§é’‡åŠ¨ï¼Œç›´æ¥è¿”å›
     }
 
-    // Èç¹û´¦ÓÚÓ²Ö±×´Ì¬£¬ÒÆ¶¯»á´ò¶ÏÓ²Ö±
+    // å¦‚æœå¤„äºç¡¬ç›´çŠ¶æ€ï¼Œç§»åŠ¨ä¼šæ‰“æ–­ç¡¬ç›´
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -166,12 +430,12 @@ void MovePlayerLeft() {
 }
 
 void MovePlayerRight() {
-    // ¼EéÊÇ·ñ´¦ÓÚĞûİ¦×´Ì¬ÇÒ²»ÔÊĞúîÆ¶¯
+    // ç´’Eæ§­æ¬ ç¿ŠÏ„è°›îŠÏˆåˆºîƒ¢ä¹Ÿè¾‰å¸‚îŒ½è´«ï¿½
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
         return;
     }
 
-    // Èç¹û´¦ÓÚÓ²Ö±×´Ì¬£¬ÒÆ¶¯»á´ò¶ÏÓ²Ö±
+    // å¦‚æœå¤„äºç¡¬ç›´çŠ¶æ€ï¼Œç§»åŠ¨ä¼šæ‰“æ–­ç¡¬ç›´
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -196,30 +460,30 @@ void Jump() {
     }
 }
 
-// ·½·¨3: Êó±E½Ïò³å´Ì
+// æ–¹æ³•3: é¼ çœ®Eè¾ƒè™ºå®•ï¿½
 void DashToMouse() {
-    // ¼EéµãÊıÊÇ·ñ×ã¹»
+    // ç´’Eæ¦ˆé—¶î³æ¬ è¤¡æ„ï¿½
     if (g_player.dashPoints <= 0) {
         return;
     }
 
-    // ÏûºÄ³å´ÌµãÊı
+    // æ¶ˆè€—å†²åˆºç‚¹æ•°
     if (!ConsumeDashPoint()) {
         return;
     }
 
-    // »ñÈ¡Êó±EÀ½ç×ø±E
+    // è·å–é¼ çœ®Eæ¾œç¼±î‰„ä¸’
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
-    // ¼ÆËã´ÓÍæ¼ÒÖ¸ÏòÊó±EÄ·½ÏòÏòÁ¿
+    // è®¡ç®—ä»ç©å®¶æŒ‡å‘é¼ çœ®Eå§†è¾ƒè›³è›„ï¿½
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
     float dirX = mouseX - playerCenterX;
     float dirY = mouseY - playerCenterY;
 
-    // ¹éÒ»»¯·½ÏòÏòÁ¿
+    // å½’ä¸€åŒ–æ–¹å‘å‘é‡
     float length = sqrt(dirX * dirX + dirY * dirY);
     if (length > 0.0f) {
         dirX /= length;
@@ -230,53 +494,53 @@ void DashToMouse() {
         dirY = 0.0f;
     }
 
-    // ÉèÖÃ³å´Ì×´Ì¬
+    // è®¾ç½®å†²åˆºçŠ¶æ€
     g_player.isDashing = true;
     g_player.dashTimer = DASH_DURATION;
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 
-    // ÉèÖÃ³å´ÌËÙ¶È
+    // è®¾ç½®å†²åˆºé€Ÿåº¦
     g_player.velocityX = dirX * DASH_SPEED;
     g_player.velocityY = dirY * DASH_SPEED;
 
-    // ´æ´¢Êó±E¿±E»ÖÃ
+    // å­˜å‚¨é¼ çœ®Eå‹˜ä¸’æ¢ï¿½
     g_player.mouseTargetX = mouseX;
     g_player.mouseTargetY = mouseY;
     g_player.hasMouseTarget = true;
 }
 
-// ĞŞ¸ÄStartMouseChargeDashº¯Êı£¬ÌúØÓĞûİ¦¼Ì³ĞÂß¼­
+// ä¿®æ”¹StartMouseChargeDashå‡½æ•°ï¼Œé“èµœå®£è­ç»§æ‰¿é€»è¾‘
 void StartMouseChargeDash() {
-    // ¼EéÌõ¼ş£ºÊÇ·ñÕıÔÚ³å´Ì¡¢ÊÇ·ñÕıÔÚĞûİ¦¡¢µãÊıÊÇ·ñ×ã¹»¡¢ÊÇ·ñ´¦ÓÚ¿ÉĞĞ¶¯×´Ì¬
+    // ç´’Eæ¨˜è·«î‘ªèæ¬ è£¾î½è¯”å®•ç­â‘¹æ¬ è£¾î½è°›îŠÎ‘â’Œé—¶î³æ¬ è¤¡æ„å¼§â‘¹æ¬ ç¿ŠÏ„è¯³å°šå¸îˆŒåˆºï¿½
     if (g_player.isDashing || g_player.isCharging || g_player.dashPoints <= 0) {
         return;
     }
 
     g_player.isCharging = true;
 
-    // ¼EéÊÇ·ñÓĞ±£´æµÄĞûİ¦£¬Èç¹ûÓĞÔò¼Ì³Ğ
+    // ç´’Eæ§­æ¬ è£¼æ–œï¼”å¨´ç”·îŠÎ“îƒ£ç»»î€æ€§èš£å›ï¿½
     if (g_player.hasSavedCharge) {
-        g_player.LoadSavedCharge(); // ¼ÓÔØ±£´æµÄĞûİ¦Ê±¼E
-        // ²»Çå³ı±£´æµÄĞûİ¦£¬ÔÊĞúİ¬Ğø¼Ì³Ğ£¨Ö±µ½Ë¥¼õÊ±¼ä½áÊø£©
+        g_player.LoadSavedCharge(); // åŠ è½½ä¿å­˜çš„å®£è­æ—¶ç´’E
+        // ä¸æ¸…é™¤ä¿å­˜çš„å®£è­ï¼Œå…å–§è ç»­ç»§æ‰¿ï¼ˆç›´åˆ°è¡°å‡æ—¶é—´ç»“æŸï¼‰
     }
     else {
-        g_player.chargeTime = 0.0f; // Ã»ÓĞ±£´æµÄĞûİ¦£¬´ÓÍ·¿ªÊ¼
+        g_player.chargeTime = 0.0f; // æ²¡æœ‰ä¿å­˜çš„å®£è­ï¼Œä»å¤´å¼€å§‹
     }
 
-    // ¼ÇÂ¼³õÊ¼Êó±E»ÖÃ
+    // è®°å½•åˆå§‹é¼ çœ®Eæ¢ï¿½
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
 }
 
-// ĞŞ¸ÄExecuteMouseChargeDashº¯Êı£¬ÔÚ³å´Ì½áÊøÊ±±£´æĞûİ¦
+// ä¿®æ”¹ExecuteMouseChargeDashå‡½æ•°ï¼Œåœ¨å†²åˆºç»“æŸæ—¶ä¿å­˜å®£è­
 void ExecuteMouseChargeDash() {
     if (!g_player.isCharging) return;
 
-    // ÔÊĞúğÚÓ²Ö±×´Ì¬ÏÂ½øĞĞĞûİ¦³å´Ì
+    // å…å–§ç–’ç¡¬ç›´çŠ¶æ€ä¸‹è¿›è¡Œå®£è­å†²åˆº
     if (g_player.dashPoints <= 0) return;
 
-    // Çå³ıÓ²Ö±×´Ì¬£¬ÔÊĞúìÂµÄ³å´Ì
+    // æ¸…é™¤ç¡¬ç›´çŠ¶æ€ï¼Œå…å–§ç‚»çš„å†²åˆº
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -284,18 +548,18 @@ void ExecuteMouseChargeDash() {
     g_player.hitEnemies.clear();
     if (!ConsumeDashPoint()) return;
 
-    // »ñÈ¡µ±Ç°Êó±E»ÖÃ
+    // è·å–å½“å‰é¼ çœ®Eæ¢ï¿½
     float currentMouseX, currentMouseY;
     g_inputSystem.GetMousePosition(currentMouseX, currentMouseY);
 
-    // ¼ÆËã´ÓÍæ¼ÒÖ¸ÏòÊó±EÄ·½ÏE
+    // è®¡ç®—ä»ç©å®¶æŒ‡å‘é¼ çœ®Eå§†è¾ƒä¸’
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
     float dirX = currentMouseX - playerCenterX;
     float dirY = currentMouseY - playerCenterY;
 
-    // ¹éÒ»»¯
+    // å½’ä¸€åŒ–
     float length = sqrt(dirX * dirX + dirY * dirY);
     if (length > 0.0f) {
         dirX /= length;
@@ -306,29 +570,29 @@ void ExecuteMouseChargeDash() {
         dirY = 0.0f;
     }
 
-    // »ñÈ¡µ±Ç°Ğûİ¦µÈ¼¶
+    // è·å–å½“å‰å®£è­ç­‰çº§
     int chargeLevel = g_player.GetChargeLevel();
 
-    // Èı¶ÎĞûİ¦ÅĞ¶¨
+    // ä¸‰æ®µå®£è­åˆ¤å®š
     float speedMultiplier = 1.0f;
     float durationMultiplier = 1.0f;
     float cooldownMultiplier = 1.0f;
 
-    // ¸ù¾İĞûİ¦µÈ¼¶ÉèÖÃÊôĞÔ±¶ÂÊ
+    // æ ¹æ®å®£è­ç­‰çº§è®¾ç½®å±æ€§å€ç‡
     switch (chargeLevel) {
     case 1:
         speedMultiplier = 1.3f;
-        durationMultiplier = 1.2f;
+        durationMultiplier = 1.0f;
         cooldownMultiplier = 0.8f;
         break;
     case 2:
         speedMultiplier = 1.6f;
-        durationMultiplier = 1.4f;
+        durationMultiplier = 1.0f;
         cooldownMultiplier = 0.6f;
         break;
     case 3:
         speedMultiplier = 2.0f;
-        durationMultiplier = 1.8f;
+        durationMultiplier = 1.0f;
         cooldownMultiplier = 0.5f;
         break;
     default:
@@ -338,40 +602,41 @@ void ExecuteMouseChargeDash() {
         break;
     }
 
-    // ÉèÖÃ³å´Ì×´Ì¬
+    // è®¾ç½®å†²åˆºçŠ¶æ€
     g_player.isDashing = true;
     g_player.dashTimer = DASH_DURATION * durationMultiplier;
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 
-    // Ó¦ÓÃ³å´ÌËÙ¶È
+    // åº”ç”¨å†²åˆºé€Ÿåº¦
     g_player.velocityX = dirX * DASH_SPEED * speedMultiplier;
     g_player.velocityY = dirY * DASH_SPEED * speedMultiplier;
 
-    // ´æ´¢×ûòÕÊó±E»ÖÃ
+    // å­˜å‚¨î ‘è›˜é¼ çœ®Eæ¢ï¿½
     g_player.mouseTargetX = currentMouseX;
     g_player.mouseTargetY = currentMouseY;
 
-    // === ¹Ø¼EŞ¸Ä£ºÔÚ³å´Ì½áÊøÊ±±£´æµ±Ç°Ğûİ¦²ãÊı ===
-    // Ö»ÓĞµ±Ğûİ¦Ê±¼ä´E½×ûì¡ãĞÖµÊ±²Å±£´æ£¨±ÜÃâ±£´æÎŞĞ§µÄ¶Ì°´£©
+    // === å…³ç´’Eè–·æ¨¡æ¶¸è¯”å®•æ¢å´¾î‰åŒ—ï¼”å¨´é¼»é¶îŠÎ£é—¶ï¿½ ===
+    // åªæœ‰å½“å®£è­æ—¶é—´ç£¥Eé˜¶î™Â°å…„å‡³è¾ˆç–Ÿï¼”å¦«Å«è‹Šç—ï¼”å«–æ‰ŒĞ£äº©è´ªçŸ—ï¿½
     if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
-        g_player.SaveCharge(); // ±£´æµ±Ç°Ğûİ¦Ê±¼E
+        g_player.SaveCharge(); // ä¿å­˜å½“å‰å®£è­æ—¶ç´’E
     }
 
-    // ½áÊøĞûİ¦×´Ì¬
+    // ç»“æŸå®£è­çŠ¶æ€
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
 }
 
 
-// ½øÈEå´ÌºóÓ²Ö±×´Ì¬
+// è¿›è‘‹Eå®•æ¯¯ç¬¥ä»“å¼Šåˆºï¿½
 void EnterDashAftermath() {
-    // Çå³ıËùÓĞËÙ¶È£¬Ê¹Íæ¼ÒÍE«Í£Ö¹
+    // æ¸…é™¤æ‰€æœ‰é€Ÿåº¦ï¼Œä½¿ç©å®¶è› Eî‚Šï¼¶ï¿½
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;
 
-    // Èç¹ûÃ»ÓĞµãÊıÔò²»½øÈE²Ö±×´Ì¬
+    // å¦‚æœæ²¡æœ‰ç‚¹æ•°åˆ™ä¸è¿›è‘‹Eä»“å¼Šåˆºï¿½
     if (g_player.dashPoints <= 0) {
+        g_player.ClearSavedCharge();
         return;
     }
 
@@ -379,29 +644,29 @@ void EnterDashAftermath() {
     g_player.dashAftermathTimer = g_player.DASH_AFTERMATH_DURATION;
 }
 
-// ¸EÂÓ²Ö±×´Ì¬
+// ç«µEæ ä»“å¼Šåˆºï¿½
 void UpdateDashAftermath(float deltaTime) {
     if (!g_player.isInDashAftermath) return;
 
     g_player.dashAftermathTimer -= deltaTime;
 
-    // ¼EéÒÆ¶¯ÊäÈEò¶Ï
+    // ç´’Eæ©è´«î‡¿æ·™ä¸’èš¨ï¿½
     if (g_inputSystem.IsMovingLeft() || g_inputSystem.IsMovingRight()) {
         g_player.isInDashAftermath = false;
         g_player.velocityY = 0.0f;
         return;
     }
 
-    // Ó²Ö±×´Ì¬½áÊE
+    // ç¡¬ç›´çŠ¶æ€ç»“è•˜E
     if (g_player.dashAftermathTimer <= 0.0f) {
         g_player.isInDashAftermath = false;
         g_player.velocityY = 0.0f;
     }
 }
 
-// ¸EÂ³å´ÌµãÊı»Ö¸´
+// ç«µEé²å®•ç—°é—¶î¤æŒ‡ï¿½
 void UpdateDashPoints(float deltaTime) {
-    // µØÃæ»Ö¸´µãÊı
+    // åœ°é¢æ¢å¤ç‚¹æ•°
     if (g_player.isOnGround && g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPointRecoverTimer += deltaTime;
 
@@ -415,7 +680,7 @@ void UpdateDashPoints(float deltaTime) {
     }
 }
 
-// ÏûºÄ³å´ÌµãÊı
+// æ¶ˆè€—å†²åˆºç‚¹æ•°
 bool ConsumeDashPoint() {
     if (g_player.dashPoints > 0) {
         g_player.dashPoints--;
@@ -424,7 +689,7 @@ bool ConsumeDashPoint() {
     return false;
 }
 
-// »÷°ÜµĞÈËÊ±»Ö¸´µãÊı£¨Ô¤Áô½Ó¿Ú£©
+// å‡»è´¥æ•Œäººæ—¶æ¢å¤ç‚¹æ•°ï¼ˆé¢„ç•™æ¥å£ï¼‰
 void OnEnemyDefeated() {
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
@@ -438,28 +703,28 @@ void CheckDashAttack() {
         return;
     }
 
-    // ¼ÆËãÍæ¼Ò³å´Ì½Ç¶È
+    // è®¡ç®—ç©å®¶å†²åˆºè§’åº¦
     float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
 
     for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive()) continue;
 
-        // ¼EéÊÇ·ñÒÑ¾­»÷ÖĞ¹ıÕâ¸öµĞÈË
+        // ç´’Eæ§­æ¬ è¤šä¸«î„´é«¦æ³„î¾é£§é¾…è…¥ï¿½
         if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
             continue;
         }
 
-        // ¼EâÅö×²
+        // ç´’Eé¦€é²ï¿½
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
-            // Ö±½Ó´«ÈEæ¼Ò³å´Ì½Ç¶È£¬µĞÈË×Ô¼º¼ÆËãÏà¶Ô·½ÏE
+            // ç›´æ¥ä¼ è‘‹Eå©•é¡µå®•æ¢åµŒé¾‹îƒè…¥ä¿—çº¦æ­æ‰‘é˜†å–½è‹‘è¾ƒä¸’
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
 
-            // ¶ÔµĞÈËÔEÉÉËº¦
+            // å¯¹æ•Œäººè© Eç¼®æ’•ï¿½
             enemy->TakeDamage(actualDamage, dashAngle);
 
-            // ±EÇÎªÒÑ»÷ÖĞ
+            // çœ®Eä¿î€±é¸¦é«¦ï¿½
             g_player.hitEnemies.push_back(enemy);
         }
     }
