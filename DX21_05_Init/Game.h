@@ -67,7 +67,7 @@ struct Player {
     bool isAlive = true;
 
     // 攻击系统
-    float attackDamage = 30.0f;  // 基础攻击力
+    float attackDamage = 30000.0f;  // 基础攻击力
     bool isAttacking = false;    // 攻击状态
     float attackTimer = 0.0f;
     const float ATTACK_DURATION = 0.2f;
@@ -211,9 +211,12 @@ extern int g_windowHeight;
 extern Player g_player;
 extern ID3D11ShaderResourceView* g_playerTexture;
 extern ID3D11ShaderResourceView* g_groundTexture;
-extern ID3D11ShaderResourceView* g_backgroundTexture;
+extern ID3D11ShaderResourceView* g_backgroundTexture1;
+extern ID3D11ShaderResourceView* g_backgroundTexture2;
+extern ID3D11ShaderResourceView* g_backgroundTexture3;
 extern ID3D11ShaderResourceView* g_dashEffectTexture;
 extern ID3D11ShaderResourceView* g_chargeEffectTexture;
+extern ID3D11ShaderResourceView* g_hitEffectTexture;
 extern ID3D11ShaderResourceView* g_numberTexture;
 extern ID3D11ShaderResourceView* g_uiNumberTexture;
 extern ID3D11ShaderResourceView* g_arrowTexture;
