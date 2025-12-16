@@ -116,10 +116,6 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 // Game initialization
 void InitGameWorld() {
 
-    // Initialize audio system
-    g_audioManager.Initialize();
-    //PlayStageMusic(1);
-
     g_projectileManager.LoadTextures(g_pDevice);
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);
     //LoadTexture(g_pDevice, "asset/character/karen_small48.png", &g_playerTexture);
@@ -144,11 +140,6 @@ void InitGameWorld() {
     g_camera.SetSmoothness(camera_Smoothness);
     g_camera.SetLookAhead(camera_LookAhead);
     g_camera.SetDeadZone(camera_DeadZone);
-
-    // Preload common sound effects
-    //g_audioManager.PreloadSFX(SoundEffect::JUMP);
-    //g_audioManager.PreloadSFX(SoundEffect::DASH);
-    //g_audioManager.PreloadSFX(SoundEffect::SHOOT);
 
     g_audioManager.Initialize();
     g_audioManager.PlayBGM("asset/Music/level1.wav");
