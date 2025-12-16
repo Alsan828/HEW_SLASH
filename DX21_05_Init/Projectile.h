@@ -11,7 +11,7 @@ enum class ProjectileType {
     FIREBALL,       // »ğÇE- Ö±Ïß·ÉĞĞ£¬Åö×²±¬Õ¨
     ICE_SHARD,      // ±ù¼ı - Ö±Ïß·ÉĞĞ£¬¼õËÙĞ§¹E
     MAGIC_MISSILE,  // Ä§·¨·Éµ¯ - ¸ú×ÙµĞÈË
-    LIGHTNING,      // ÉÁµE- Ë²¼äÃEĞ
+    LIGHTNING,      // ÉÁµE- Ë²¼äÃE?
     POISON_DART,    // ¶¾E - ³ÖĞøÉËº¦
     HOLY_BOLT       // Ê¥¹â¼ı - ¶ÔÍöÁéÌØĞ§
 };
@@ -24,7 +24,7 @@ struct ProjectileEffect {
     float stunDuration = 0.0f;    // Ñ£ÔÎÊ±¼E
     bool pierce = false;          // ÊÇ·ñ´©Í¸
     int maxPierceCount = 0;       // ×ûĞó´©Í¸ÊıÁ¿
-    float areaRadius = 0.0f;      // ·¶Î§±¬Õ¨°E¶
+    float areaRadius = 0.0f;      // ·¶Î§±¬Õ¨°E?
 };
 
 // Éäµ¯ÀE
