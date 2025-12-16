@@ -27,17 +27,20 @@ Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
     currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), attackRange(0.08f) {
 
+
     width = PLAYER_WIDTH * 1.2f;
     height = PLAYER_HEIGHT * 1.2f;
     moveSpeed = MOVE_SPEED * 0.65f;
 
-    // Initialize damage multipliers
-    for (int i = 0; i < 8; i++) {
-        damageMultipliers[i] = 1.0f;
-    }
-
     // 初始化动画
     anim.Init(4, 1, 0.1f);  // 假设每个动画有4帧，每秒10帧
+
+    // 为基类敌人添加默认动画剪辑
+    anim.AddClip("idle", 0, 3, 0.1f, true, g_enemyIdleTexture);
+    anim.AddClip("run", 0, 3, 0.1f, true, g_enemyRunTexture);
+   anim.AddClip("death", 0, 3, 0.2f, false, g_enemyDeathTexture);
+
+    anim.SetClip("idle");
 
     facingRight = true;  // Default facing right
     velocityX = 0.0f;
