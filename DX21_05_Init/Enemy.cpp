@@ -813,7 +813,7 @@ void BombEnemy::CreateProjectiles() {
         posY + height * 0.5f,  // Shoot from enemy center height
         posX + 10.0f,  // Far right position
         posY + height * 0.5f,  // Horizontal direction
-        true  // From player
+        false  // From player
     );
 
     // Can add particle effects here

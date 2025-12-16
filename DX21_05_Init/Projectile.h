@@ -72,6 +72,7 @@ private:
     void Move(float deltaTime);
     bool CheckMapCollision(MapManager* mapManager);
     void CheckEnemyCollision(std::vector<Enemy*>& enemies);
+    void CheckPlayerCollision();
     void ApplyEffectToEnemy(Enemy* enemy);
     void CreateImpactEffect();
 
