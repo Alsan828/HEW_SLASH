@@ -10,25 +10,40 @@ PauseScene::PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE)
 
 bool PauseScene::Init()
 {
-    // Load the pause background texture
-    LoadTexture(g_pDevice, "asset/pause.png", &backgroundTexture);
+    LoadTexture(g_pDevice, "asset/UI/pause/background.png", &g_pauseTexture); // Load the pause background texture
 
-    LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
-    LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
+    LoadTexture(g_pDevice, "asset/UI/pause/pause_black.png", &blackTexture); // so when in pause, I see the stage part transparent
+    
+    // for continue button
+    LoadTexture(g_pDevice, "asset/UI/pause/continue_normal.png", &continueTexture);
+    LoadTexture(g_pDevice, "asset/UI/pause/continue_hover.png", &continueHoverTexture);
 
-    uiButtons.clear();
-    g_mouseIndicator.ShowMouseIndicator(false);
+    // for control button
+    LoadTexture(g_pDevice, "asset/UI/pause/control_normal.png", &controlTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/pause/control_hover.png", &controlHoverTexture);
 
-    uiButtons.emplace_back(-0.7f, -0.3f, 0.5f, 0.8f, pausedSceneType, buttonTexture, buttonHoverTexture);
-    uiButtons.emplace_back(-0.25f, -0.3f, 0.5f, 0.8f, HOWTOPLAY, buttonTexture, buttonHoverTexture);
-    uiButtons.emplace_back(+0.25f, -0.3f, 0.5f, 0.8f, STAGESELECT, buttonTexture, buttonHoverTexture);
-    uiButtons.emplace_back(+0.7f, -0.3f, 0.5f, 0.8f, QUIT_GAME, buttonTexture, buttonHoverTexture);
+    // for select stage button
+    LoadTexture(g_pDevice, "asset/UI/pause/select_normal.png", &selectTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/pause/select_hover.png", &selectHoverTexture);
+
+    // for quit button
+    LoadTexture(g_pDevice, "asset/UI/pause/quit_normal.png", &quitTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/pause/quit_hover.png", &quitHoverTexture);
+
+
+    uiButtons.emplace_back(0.3f, -0.3f, 1.0f, 1.5f, pausedSceneType, continueTexture, continueHoverTexture);
+    uiButtons.emplace_back(0.34f, -0.53f, 1.0f, 1.5f, HOWTOPLAY, controlTexture, controlHoverTexture);
+    uiButtons.emplace_back(0.50f, -0.65f, 1.0f, 1.5f, STAGESELECT, selectTexture, selectHoverTexture);
+    uiButtons.emplace_back(0.375f, -0.88f, 1.0f, 1.5f, QUIT_GAME, quitTexture, quitHoverTexture);
 
     for (auto& btn : uiButtons)
     {
-        btn.SetHitboxScale(0.7f, 0.2f);
-        btn.SetHitboxOffset(-0.05f);
+        btn.SetHitboxScale(0.27f, 0.1f);
+        btn.SetHitboxOffset(-0.03f);
     }
+
+    //uiButtons.clear();
+    g_mouseIndicator.ShowMouseIndicator(false);
 
     return true;
 }   
@@ -64,10 +79,17 @@ void PauseScene::Draw()
     if (underlyingScene) {
         underlyingScene->Draw(); // draw stage frozen
     }
-    if (backgroundTexture) {
-        SetColor(1, 1, 1, 0.5f);
-        RenderImage(-1, -1, 2, 2, backgroundTexture, 0, 1, 1);
+
+    // this is for the back (the stage) so when you pause it, the stage part looks transparent
+    SetColor(0.0f, 0.0f, 0.0f, 0.4f); // makes the blackTexture transparent
+    RenderImage(-1, -1, 2, 2, blackTexture, 0, 1, 1);
+    SetColor(1, 1, 1, 1); // resets the blackTexture to normal
+
+    if (g_pauseTexture) {
+        SetColor(1, 1, 1, 1.0f);
+        RenderImage(-1, -1, 2, 2, g_pauseTexture, 0, 1, 1);
     }
+
 
     // for the buttons
     for (const auto& btn : uiButtons)
@@ -77,22 +99,69 @@ void PauseScene::Draw()
 
 void PauseScene::Uninit()
 {
-    if (backgroundTexture)
+
+    if (g_pauseTexture) {
+        g_pauseTexture->Release();
+        g_pauseTexture = nullptr;
+    }
+
+    // for the black texture
+    if (blackTexture) {
+        blackTexture->Release();
+        blackTexture = nullptr;
+    }
+
+    // for continue button
+    if (continueTexture)
     {
-        backgroundTexture->Release();
-        backgroundTexture = nullptr;
+        continueTexture->Release();
+        continueTexture = nullptr;
     }
-
-    if (buttonTexture) {
-        buttonTexture->Release();
-        buttonTexture = nullptr;
-    }
-
-    if (buttonHoverTexture)
+    if (continueHoverTexture)
     {
-        buttonHoverTexture->Release();
-        buttonHoverTexture = nullptr;
+        continueHoverTexture->Release();
+        continueHoverTexture = nullptr;
     }
 
+    // for control button
+    if (controlTexture)
+    {
+        controlTexture->Release();
+        controlTexture = nullptr;
+    }
+    if (controlHoverTexture)
+    {
+        controlHoverTexture->Release();
+        controlHoverTexture = nullptr;
+    }
+
+    // for select stage button
+    if (selectTexture)
+    {
+        selectTexture->Release();
+        selectTexture = nullptr;
+    }
+    if (selectHoverTexture)
+    {
+        selectHoverTexture->Release();
+        selectHoverTexture = nullptr;
+    }
+
+    // for quit button
+    if (quitTexture)
+    {
+        quitTexture->Release();
+        quitTexture = nullptr;
+    }
+    if (quitHoverTexture)
+    {
+        quitHoverTexture->Release();
+        quitHoverTexture = nullptr;
+    }
+
+
+    uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(true);
+
+    underlyingScene = nullptr;
 }

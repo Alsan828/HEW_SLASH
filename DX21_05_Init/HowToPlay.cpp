@@ -1,5 +1,6 @@
 #include "HowToPlay.h"
 
+
 HowToPlayScene::HowToPlayScene(SceneManager* manager, SCENE returnTo)
 {
 	sceneManager = manager;
@@ -13,13 +14,16 @@ bool HowToPlayScene::Init()
 	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
 	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
 
-	uiButtons.clear();
-	g_mouseIndicator.ShowMouseIndicator(false);
+	
 
 	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, buttonTexture, buttonHoverTexture);
 
 	uiButtons[0].SetHitboxScale(0.7f, 0.22f);  // change this values if needed depending on the size of the button
 	uiButtons[0].SetHitboxOffset(-0.04f);
+
+
+	//uiButtons.clear();
+	g_mouseIndicator.ShowMouseIndicator(false);
 
 	return true;
 }
@@ -63,17 +67,20 @@ void HowToPlayScene::Uninit()
 	{
 		backgroundTexture->Release();
 		backgroundTexture = nullptr;
+		OutputDebugStringA("Released backgroundTexture\n");
 	}
 
 	if (buttonTexture) {
 		buttonTexture->Release();
 		buttonTexture = nullptr;
+		OutputDebugStringA("Released buttonTexture\n");
 	}
 
 	if (buttonHoverTexture)
 	{
 		buttonHoverTexture->Release();
 		buttonHoverTexture = nullptr;
+		OutputDebugStringA("Released buttonTexture\n");
 	}
 
 	uiButtons.clear();

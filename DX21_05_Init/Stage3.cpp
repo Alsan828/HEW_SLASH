@@ -15,6 +15,10 @@ bool Stage3Scene::Init()
 
     g_gameState = STATE_PLAYING;
 
+    g_gameElapsedTime = 0.0f;
+    g_gameMinutes = 0;
+    g_gameSeconds = 0;
+
     return true;
 }
 
@@ -34,5 +38,7 @@ void Stage3Scene::Draw()
 // Cleanup
 void Stage3Scene::Uninit()
 {
-    ResetGame();  // Reset game state
+    //ResetGame();  // Reset game state
+
+    CleanUpGameWorld();  // Release all textures and cleanup
 }

@@ -1,21 +1,21 @@
 #include "Game.h"
 #include "Enemy.h"
 
-// Íæ¼ÒÎïÀí¸üĞÂ
+// Íæ¼ÒÎEúÔEÂ
 void UpdatePlayerPhysics(float deltaTime) {
     // ÔÚÓ²Ö±×´Ì¬ÏÂºöÂÔÖØÁ¦ºÍÒÆ¶¯
     if (g_player.isInDashAftermath) {
-        // Ö»´¦Àí´¹Ö±Åö×²¼ì²â£¨·ÀÖ¹µô³öµØÍ¼£©
+        // Ö»´¦ÀúĞ¹Ö±Åö×²¼Eâ£¨·ÀÖ¹µô³öµØÍ¼£©
         auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
         for (const auto& tile : solidTiles) {
             if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                 tile.posX, tile.posY, tile.width, tile.height)) {
-                // ¼òµ¥µÄ´¹Ö±Åö×²´¦Àí
+                // ¼òµ¥µÄ´¹Ö±Åö×²´¦ÀE
                 g_player.posY = tile.posY + tile.height; // Õ¾ÔÚµØÃæÉÏ
                 g_player.isOnGround = true;
             }
         }
-        return; // Ó²Ö±×´Ì¬ÏÂÌø¹ıÕı³£ÎïÀí¸üĞÂ
+        return; // Ó²Ö±×´Ì¬ÏÂÌø¹ıÕı³£ÎEúÔEÂ
     }
     // Ó¦ÓÃÖØÁ¦...
     if (!g_player.isDashing) {
@@ -32,7 +32,7 @@ void UpdatePlayerPhysics(float deltaTime) {
     // Ë®Æ½ÒÆ¶¯
     g_player.posX += g_player.velocityX * deltaTime * 60.0f;
 
-    // Ê¹ÓÃĞÂµÄµØÍ¼ÏµÍ³½øĞĞÅö×²¼ì²â
+    // Ê¹ÓÃĞÂµÄµØÍ¼ÏµÍ³½øĞĞÅö×²¼EE
     auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
     for (const auto& tile : solidTiles) {
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
@@ -80,7 +80,7 @@ void UpdatePlayerPhysics(float deltaTime) {
         }
     }
 
-    // ´«ËÍÃÅ¼ì²â
+    // ´«ËÍÃÅ¼EE
     static float portalCooldown = 0.0f;
     if (portalCooldown > 0.0f) {
         portalCooldown -= deltaTime;
@@ -98,7 +98,7 @@ void UpdatePlayerPhysics(float deltaTime) {
         }
     }
 
-    // ±ß½ç¼ì²é
+    // ±ß½ç¼EE
     if (g_player.posY < -2.0f) {
         ResetGame();
     }
@@ -106,34 +106,34 @@ void UpdatePlayerPhysics(float deltaTime) {
     CheckDashAttack();
 }
 
-// ĞŞ¸ÄUpdateDashº¯Êı£¬Ìí¼ÓĞîÁ¦Ë¥¼õ¸üĞÂ
+// ĞŞ¸ÄUpdateDashº¯Êı£¬ÌúØÓĞûİ¦Ë¥¼õ¸EÂ
 void UpdateDash(float deltaTime) {
-    // ÓÅÏÈ¸üĞÂ³å´Ì×´Ì¬
+    // ÓÅÏÈ¸EÂ³å´Ì×´Ì¬
     if (g_player.isDashing) {
         g_player.dashTimer -= deltaTime;
 
         if (g_player.dashTimer <= 0.0f) {
             g_player.isDashing = false;
             g_player.hasMouseTarget = false;
-            EnterDashAftermath(); // ³å´Ì½áÊø½øÈëÓ²Ö±
+            EnterDashAftermath(); // ³å´Ì½áÊø½øÈE²Ö±
         }
     }
 
-    // È»ºó¸üĞÂÓ²Ö±×´Ì¬
+    // È»ºó¸EÂÓ²Ö±×´Ì¬
     UpdateDashAftermath(deltaTime);
-    // ×îºó¸üĞÂµãÊı»Ö¸´ÏµÍ³
+    // ×ûÖó¸EÂµãÊı»Ö¸´ÏµÍ³
     UpdateDashPoints(deltaTime);
 
-    // ¸üĞÂĞîÁ¦Ë¥¼õ¼ÆÊ±Æ÷
+    // ¸EÂĞûİ¦Ë¥¼õ¼ÆÊ±ÆE
     g_player.UpdateChargeDecay(deltaTime);
 
-    // ĞîÁ¦Âß¼­Ó¦¸Ã¶ÀÁ¢ÓÚÓ²Ö±×´Ì¬
+    // Ğûİ¦Âß¼­Ó¦¸Ã¶ÀÁ¢ÓÚÓ²Ö±×´Ì¬
     if (g_player.isCharging) {
         g_player.chargeTime += deltaTime;
 
-        // Ó²Ö±×´Ì¬ÏÂÔÊĞíĞîÁ¦£¬µ«ĞîÁ¦Íê³ÉÊ±¼ì²éÌõ¼ş
+        // Ó²Ö±×´Ì¬ÏÂÔÊĞúìûİ¦£¬µ«Ğûİ¦ÍEÉÊ±¼EéÌõ¼ş
         if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-            // ĞîÁ¦Íê³ÉÊ±£¬Èç¹û´¦ÓÚÓ²Ö±×´Ì¬£¬ÏÈÇå³ıÓ²Ö±
+            // Ğûİ¦ÍEÉÊ±£¬Èç¹û´¦ÓÚÓ²Ö±×´Ì¬£¬ÏÈÇå³ıÓ²Ö±
             if (g_player.isInDashAftermath) {
                 g_player.isInDashAftermath = false;
             }
@@ -150,9 +150,9 @@ void CancelChargeDash() {
 }
 
 void MovePlayerLeft() {
-    // ¼ì²éÊÇ·ñ´¦ÓÚĞîÁ¦×´Ì¬ÇÒ²»ÔÊĞíÒÆ¶¯
+    // ¼EéÊÇ·ñ´¦ÓÚĞûİ¦×´Ì¬ÇÒ²»ÔÊĞúîÆ¶¯
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
-        return;  // ĞîÁ¦ÖĞ²»ÔÊĞíÒÆ¶¯£¬Ö±½Ó·µ»Ø
+        return;  // Ğûİ¦ÖĞ²»ÔÊĞúîÆ¶¯£¬Ö±½Ó·µ»Ø
     }
 
     // Èç¹û´¦ÓÚÓ²Ö±×´Ì¬£¬ÒÆ¶¯»á´ò¶ÏÓ²Ö±
@@ -166,7 +166,7 @@ void MovePlayerLeft() {
 }
 
 void MovePlayerRight() {
-    // ¼ì²éÊÇ·ñ´¦ÓÚĞîÁ¦×´Ì¬ÇÒ²»ÔÊĞíÒÆ¶¯
+    // ¼EéÊÇ·ñ´¦ÓÚĞûİ¦×´Ì¬ÇÒ²»ÔÊĞúîÆ¶¯
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
         return;
     }
@@ -196,9 +196,9 @@ void Jump() {
     }
 }
 
-// ·½·¨3: Êó±ê·½Ïò³å´Ì
+// ·½·¨3: Êó±E½Ïò³å´Ì
 void DashToMouse() {
-    // ¼ì²éµãÊıÊÇ·ñ×ã¹»
+    // ¼EéµãÊıÊÇ·ñ×ã¹»
     if (g_player.dashPoints <= 0) {
         return;
     }
@@ -208,11 +208,11 @@ void DashToMouse() {
         return;
     }
 
-    // »ñÈ¡Êó±êÊÀ½ç×ø±ê
+    // »ñÈ¡Êó±EÀ½ç×ø±E
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
-    // ¼ÆËã´ÓÍæ¼ÒÖ¸ÏòÊó±êµÄ·½ÏòÏòÁ¿
+    // ¼ÆËã´ÓÍæ¼ÒÖ¸ÏòÊó±EÄ·½ÏòÏòÁ¿
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
@@ -240,43 +240,43 @@ void DashToMouse() {
     g_player.velocityX = dirX * DASH_SPEED;
     g_player.velocityY = dirY * DASH_SPEED;
 
-    // ´æ´¢Êó±êÄ¿±êÎ»ÖÃ
+    // ´æ´¢Êó±E¿±E»ÖÃ
     g_player.mouseTargetX = mouseX;
     g_player.mouseTargetY = mouseY;
     g_player.hasMouseTarget = true;
 }
 
-// ĞŞ¸ÄStartMouseChargeDashº¯Êı£¬Ìí¼ÓĞîÁ¦¼Ì³ĞÂß¼­
+// ĞŞ¸ÄStartMouseChargeDashº¯Êı£¬ÌúØÓĞûİ¦¼Ì³ĞÂß¼­
 void StartMouseChargeDash() {
-    // ¼ì²éÌõ¼ş£ºÊÇ·ñÕıÔÚ³å´Ì¡¢ÊÇ·ñÕıÔÚĞîÁ¦¡¢µãÊıÊÇ·ñ×ã¹»¡¢ÊÇ·ñ´¦ÓÚ¿ÉĞĞ¶¯×´Ì¬
+    // ¼EéÌõ¼ş£ºÊÇ·ñÕıÔÚ³å´Ì¡¢ÊÇ·ñÕıÔÚĞûİ¦¡¢µãÊıÊÇ·ñ×ã¹»¡¢ÊÇ·ñ´¦ÓÚ¿ÉĞĞ¶¯×´Ì¬
     if (g_player.isDashing || g_player.isCharging || g_player.dashPoints <= 0) {
         return;
     }
 
     g_player.isCharging = true;
 
-    // ¼ì²éÊÇ·ñÓĞ±£´æµÄĞîÁ¦£¬Èç¹ûÓĞÔò¼Ì³Ğ
+    // ¼EéÊÇ·ñÓĞ±£´æµÄĞûİ¦£¬Èç¹ûÓĞÔò¼Ì³Ğ
     if (g_player.hasSavedCharge) {
-        g_player.LoadSavedCharge(); // ¼ÓÔØ±£´æµÄĞîÁ¦Ê±¼ä
-        // ²»Çå³ı±£´æµÄĞîÁ¦£¬ÔÊĞíÁ¬Ğø¼Ì³Ğ£¨Ö±µ½Ë¥¼õÊ±¼ä½áÊø£©
+        g_player.LoadSavedCharge(); // ¼ÓÔØ±£´æµÄĞûİ¦Ê±¼E
+        // ²»Çå³ı±£´æµÄĞûİ¦£¬ÔÊĞúİ¬Ğø¼Ì³Ğ£¨Ö±µ½Ë¥¼õÊ±¼ä½áÊø£©
     }
     else {
-        g_player.chargeTime = 0.0f; // Ã»ÓĞ±£´æµÄĞîÁ¦£¬´ÓÍ·¿ªÊ¼
+        g_player.chargeTime = 0.0f; // Ã»ÓĞ±£´æµÄĞûİ¦£¬´ÓÍ·¿ªÊ¼
     }
 
-    // ¼ÇÂ¼³õÊ¼Êó±êÎ»ÖÃ
+    // ¼ÇÂ¼³õÊ¼Êó±E»ÖÃ
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
 }
 
-// ĞŞ¸ÄExecuteMouseChargeDashº¯Êı£¬ÔÚ³å´Ì½áÊøÊ±±£´æĞîÁ¦
+// ĞŞ¸ÄExecuteMouseChargeDashº¯Êı£¬ÔÚ³å´Ì½áÊøÊ±±£´æĞûİ¦
 void ExecuteMouseChargeDash() {
     if (!g_player.isCharging) return;
 
-    // ÔÊĞíÔÚÓ²Ö±×´Ì¬ÏÂ½øĞĞĞîÁ¦³å´Ì
+    // ÔÊĞúğÚÓ²Ö±×´Ì¬ÏÂ½øĞĞĞûİ¦³å´Ì
     if (g_player.dashPoints <= 0) return;
 
-    // Çå³ıÓ²Ö±×´Ì¬£¬ÔÊĞíĞÂµÄ³å´Ì
+    // Çå³ıÓ²Ö±×´Ì¬£¬ÔÊĞúìÂµÄ³å´Ì
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -284,11 +284,11 @@ void ExecuteMouseChargeDash() {
     g_player.hitEnemies.clear();
     if (!ConsumeDashPoint()) return;
 
-    // »ñÈ¡µ±Ç°Êó±êÎ»ÖÃ
+    // »ñÈ¡µ±Ç°Êó±E»ÖÃ
     float currentMouseX, currentMouseY;
     g_inputSystem.GetMousePosition(currentMouseX, currentMouseY);
 
-    // ¼ÆËã´ÓÍæ¼ÒÖ¸ÏòÊó±êµÄ·½Ïò
+    // ¼ÆËã´ÓÍæ¼ÒÖ¸ÏòÊó±EÄ·½ÏE
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
@@ -306,15 +306,15 @@ void ExecuteMouseChargeDash() {
         dirY = 0.0f;
     }
 
-    // »ñÈ¡µ±Ç°ĞîÁ¦µÈ¼¶
+    // »ñÈ¡µ±Ç°Ğûİ¦µÈ¼¶
     int chargeLevel = g_player.GetChargeLevel();
 
-    // Èı¶ÎĞîÁ¦ÅĞ¶¨
+    // Èı¶ÎĞûİ¦ÅĞ¶¨
     float speedMultiplier = 1.0f;
     float durationMultiplier = 1.0f;
     float cooldownMultiplier = 1.0f;
 
-    // ¸ù¾İĞîÁ¦µÈ¼¶ÉèÖÃÊôĞÔ±¶ÂÊ
+    // ¸ù¾İĞûİ¦µÈ¼¶ÉèÖÃÊôĞÔ±¶ÂÊ
     switch (chargeLevel) {
     case 1:
         speedMultiplier = 1.3f;
@@ -348,29 +348,29 @@ void ExecuteMouseChargeDash() {
     g_player.velocityX = dirX * DASH_SPEED * speedMultiplier;
     g_player.velocityY = dirY * DASH_SPEED * speedMultiplier;
 
-    // ´æ´¢×îÖÕÊó±êÎ»ÖÃ
+    // ´æ´¢×ûòÕÊó±E»ÖÃ
     g_player.mouseTargetX = currentMouseX;
     g_player.mouseTargetY = currentMouseY;
 
-    // === ¹Ø¼üĞŞ¸Ä£ºÔÚ³å´Ì½áÊøÊ±±£´æµ±Ç°ĞîÁ¦²ãÊı ===
-    // Ö»ÓĞµ±ĞîÁ¦Ê±¼ä´ïµ½×îĞ¡ãĞÖµÊ±²Å±£´æ£¨±ÜÃâ±£´æÎŞĞ§µÄ¶Ì°´£©
+    // === ¹Ø¼EŞ¸Ä£ºÔÚ³å´Ì½áÊøÊ±±£´æµ±Ç°Ğûİ¦²ãÊı ===
+    // Ö»ÓĞµ±Ğûİ¦Ê±¼ä´E½×ûì¡ãĞÖµÊ±²Å±£´æ£¨±ÜÃâ±£´æÎŞĞ§µÄ¶Ì°´£©
     if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
-        g_player.SaveCharge(); // ±£´æµ±Ç°ĞîÁ¦Ê±¼ä
+        g_player.SaveCharge(); // ±£´æµ±Ç°Ğûİ¦Ê±¼E
     }
 
-    // ½áÊøĞîÁ¦×´Ì¬
+    // ½áÊøĞûİ¦×´Ì¬
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
 }
 
 
-// ½øÈë³å´ÌºóÓ²Ö±×´Ì¬
+// ½øÈEå´ÌºóÓ²Ö±×´Ì¬
 void EnterDashAftermath() {
-    // Çå³ıËùÓĞËÙ¶È£¬Ê¹Íæ¼ÒÍêÈ«Í£Ö¹
+    // Çå³ıËùÓĞËÙ¶È£¬Ê¹Íæ¼ÒÍE«Í£Ö¹
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;
 
-    // Èç¹ûÃ»ÓĞµãÊıÔò²»½øÈëÓ²Ö±×´Ì¬
+    // Èç¹ûÃ»ÓĞµãÊıÔò²»½øÈE²Ö±×´Ì¬
     if (g_player.dashPoints <= 0) {
         return;
     }
@@ -379,27 +379,27 @@ void EnterDashAftermath() {
     g_player.dashAftermathTimer = g_player.DASH_AFTERMATH_DURATION;
 }
 
-// ¸üĞÂÓ²Ö±×´Ì¬
+// ¸EÂÓ²Ö±×´Ì¬
 void UpdateDashAftermath(float deltaTime) {
     if (!g_player.isInDashAftermath) return;
 
     g_player.dashAftermathTimer -= deltaTime;
 
-    // ¼ì²éÒÆ¶¯ÊäÈë´ò¶Ï
+    // ¼EéÒÆ¶¯ÊäÈEò¶Ï
     if (g_inputSystem.IsMovingLeft() || g_inputSystem.IsMovingRight()) {
         g_player.isInDashAftermath = false;
         g_player.velocityY = 0.0f;
         return;
     }
 
-    // Ó²Ö±×´Ì¬½áÊø
+    // Ó²Ö±×´Ì¬½áÊE
     if (g_player.dashAftermathTimer <= 0.0f) {
         g_player.isInDashAftermath = false;
         g_player.velocityY = 0.0f;
     }
 }
 
-// ¸üĞÂ³å´ÌµãÊı»Ö¸´
+// ¸EÂ³å´ÌµãÊı»Ö¸´
 void UpdateDashPoints(float deltaTime) {
     // µØÃæ»Ö¸´µãÊı
     if (g_player.isOnGround && g_player.dashPoints < g_player.MAX_DASH_POINTS) {
@@ -444,22 +444,22 @@ void CheckDashAttack() {
     for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive()) continue;
 
-        // ¼ì²éÊÇ·ñÒÑ¾­»÷ÖĞ¹ıÕâ¸öµĞÈË
+        // ¼EéÊÇ·ñÒÑ¾­»÷ÖĞ¹ıÕâ¸öµĞÈË
         if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
             continue;
         }
 
-        // ¼ì²âÅö×²
+        // ¼EâÅö×²
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
-            // Ö±½Ó´«ÈëÍæ¼Ò³å´Ì½Ç¶È£¬µĞÈË×Ô¼º¼ÆËãÏà¶Ô·½Ïò
+            // Ö±½Ó´«ÈEæ¼Ò³å´Ì½Ç¶È£¬µĞÈË×Ô¼º¼ÆËãÏà¶Ô·½ÏE
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
 
-            // ¶ÔµĞÈËÔì³ÉÉËº¦
+            // ¶ÔµĞÈËÔEÉÉËº¦
             enemy->TakeDamage(actualDamage, dashAngle);
 
-            // ±ê¼ÇÎªÒÑ»÷ÖĞ
+            // ±EÇÎªÒÑ»÷ÖĞ
             g_player.hitEnemies.push_back(enemy);
         }
     }

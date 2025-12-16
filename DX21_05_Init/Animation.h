@@ -29,6 +29,11 @@ private:
 
     bool m_paused;  // if the game is paused or not
 
+
+    // this is used for separate .png in order to have animation
+    std::vector<ID3D11ShaderResourceView*> m_textures;
+    bool m_useTextures = false;
+
 public:
     Animation(void);  //construct
 
@@ -49,4 +54,17 @@ public:
     void Pause();    // when the game is paused
     void Resume();   // when you resume the game
     bool IsPaused() const; // check if paused 
+
+    int GetSplitX() const { return m_splitX; }
+    int GetSplitY() const { return m_splitY; }
+
+
+
+    // used for .png
+    std::vector<float> m_frameTimes; // for duration per frame
+    void InitFromTextures(const std::vector<ID3D11ShaderResourceView*>& textures,float frameTime, bool loop = false);
+    ID3D11ShaderResourceView* GetCurrentTexture() const;
+    void UpdateTexture(float deltaTime);
+    void CleanupTextures();
+
 };

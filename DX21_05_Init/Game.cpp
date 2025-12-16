@@ -50,6 +50,53 @@ void ResetGame() {
 
 }
 
+// added december 11th
+void CleanUpGameWorld() 
+{
+    g_projectileManager.ClearAll();
+    CleanupEnemies();
+    g_mouseIndicator.Cleanup();
+
+    // Release all textures
+    if (g_playerTexture) {
+        g_playerTexture->Release();
+        g_playerTexture = nullptr;
+    }
+    if (g_groundTexture) {
+        g_groundTexture->Release();
+        g_groundTexture = nullptr;
+    }
+    if (g_backgroundTexture) {
+        g_backgroundTexture->Release();
+        g_backgroundTexture = nullptr;
+    }
+    if (g_dashEffectTexture) {
+        g_dashEffectTexture->Release();
+        g_dashEffectTexture = nullptr;
+    }
+    if (g_chargeEffectTexture) {
+        g_chargeEffectTexture->Release();
+        g_chargeEffectTexture = nullptr;
+    }
+    if (g_numberTexture) {
+        g_numberTexture->Release();
+        g_numberTexture = nullptr;
+    }
+    if (g_uiNumberTexture) {
+        g_uiNumberTexture->Release();
+        g_uiNumberTexture = nullptr;
+    }
+    if (g_arrowTexture) {
+        g_arrowTexture->Release();
+        g_arrowTexture = nullptr;
+    }
+    if (g_cursorTexture) {
+        g_cursorTexture->Release();
+        g_cursorTexture = nullptr;
+    }
+
+}
+
 // Improved collision detection function
 bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2) {
@@ -60,6 +107,7 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 void InitGameWorld() {
     g_projectileManager.LoadTextures(g_pDevice);
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);
+    //LoadTexture(g_pDevice, "asset/character/karen_small48.png", &g_playerTexture);
     g_player.anim.Init(10, 1, 0.15f, 0);
     g_player.anim.AddClip("Idle", 0, 9, 0.25f, true);
 
@@ -72,6 +120,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/time.png", &g_uiNumberTexture);
 
     LoadTexture(g_pDevice, "asset/UI/arrow.png", &g_arrowTexture);
+    LoadTexture(g_pDevice, "asset/UI/cursor.png", &g_cursorTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -80,6 +129,10 @@ void InitGameWorld() {
     g_camera.SetSmoothness(camera_Smoothness);
     g_camera.SetLookAhead(camera_LookAhead);
     g_camera.SetDeadZone(camera_DeadZone);
+
+    g_projectileManager.ClearAll();
+    g_gameState = STATE_PLAYING;
+    g_gameElapsedTime = 0.0f;
 
     ResetGame();
 }
@@ -363,7 +416,7 @@ void DrawGame() {
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
 
     RenderImage(playerPos.first, playerPos.second, PLAYER_WIDTH, PLAYER_HEIGHT,
-        g_playerTexture, frameIndex, 1, 10);
+        g_playerTexture, frameIndex, 1, 10); 
 
     g_projectileManager.Render(g_camera);
 
@@ -376,25 +429,23 @@ void HandleInput() {
         ResetGame();
     }
 
-  /*  if (g_inputSystem.IsTogglePressed(VK_P)) {
-        if (sceneManager.GetCurrentSceneType() == STAGE) {
-            sceneManager.SwitchScene(PAUSE);
-        }
-        else if (sceneManager.GetCurrentSceneType() == PAUSE) {
-            sceneManager.SwitchScene(STAGE);
-        }
-    }*/
-    if (g_inputSystem.IsTogglePressed(VK_P)) {
+    // for pausing the game press P or Esc key
+    if (g_inputSystem.IsTogglePressed(VK_P) || g_inputSystem.IsTogglePressed(VK_ESCAPE)) 
+    {
         SCENE currentScene = sceneManager.GetCurrentSceneType();
 
-        if (currentScene == STAGE || currentScene == STAGE2 || currentScene == STAGE3) {
-            sceneManager.SwitchScene(PAUSE);  // Pause any stage
+        if (currentScene == STAGE || currentScene == STAGE2 || currentScene == STAGE3) // add more stages here depending on how many stages there are 
+        {
+            sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
         }
-        else if (currentScene == PAUSE) {
-            // Return to whichever stage was paused
-            if (sceneManager.GetPreviousScene()) {
-                // This will resume the previous stage
-                sceneManager.SwitchScene(sceneManager.GetCurrentSceneType());
+
+        // if you press P or Esc key again you can go back to the stage (you can use the mouse and click the continue button
+        else if (currentScene == PAUSE) 
+        {
+            SCENE previousScene = sceneManager.GetOriginalPausedScene();
+            if (previousScene == STAGE || previousScene == STAGE2 || previousScene == STAGE3) // add more stages here depending on how many stages there are 
+            {
+                sceneManager.SwitchScene(previousScene);
             }
         }
     }
@@ -460,6 +511,7 @@ void HandleInput() {
 void MouseIndicatorSystem::Initialize() {
     m_mouseIndicatorTexture = g_chargeEffectTexture;
     m_arrowTexture = g_arrowTexture;
+    m_cursorTexture = g_cursorTexture;
     m_showMouseIndicator = true;
     m_arrowAngle = 0.0f;
 }
@@ -495,11 +547,13 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     // 绘制鼠标位置指示器（原有代码）
     float indicatorSize = 0.1f;
+    float cursorWidth = 0.1f;
+    float cursorHeight = 0.15f;
     auto mousePos = worldToScreen(m_mouseWorldX - indicatorSize / 2, m_mouseWorldY - indicatorSize / 2);
 
     SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-    RenderImage(mousePos.first, mousePos.second, indicatorSize, indicatorSize,
-        m_mouseIndicatorTexture, 0, 1, 1);
+    RenderImage(mousePos.first, mousePos.second, cursorWidth, cursorHeight,
+        m_cursorTexture, 0, 1, 1, false, 0);
 
     // 在屏幕右上角固定显示冲刺点数
     float dashPointsX = 0.9f; // 屏幕右侧
@@ -573,7 +627,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     }
 
     RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
-        m_arrowTexture, 0, 1, 1);
+        m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }

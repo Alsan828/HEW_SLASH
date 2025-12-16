@@ -11,14 +11,19 @@
 class MenuScene : public SceneBase
 {
 private:
-    SceneManager* sceneManager;   // pointer to the scene manager
+    SceneManager* sceneManager;  // pointer to the scene manager
 
-    ID3D11ShaderResourceView* backgroundTexture;
+    ID3D11ShaderResourceView* backgroundTexture = nullptr;
 
-    // added december 1st
     std::vector<UIButton> uiButtons;
-    ID3D11ShaderResourceView* buttonTexture = nullptr;
-    ID3D11ShaderResourceView* buttonHoverTexture = nullptr;
+    ID3D11ShaderResourceView* startTexture = nullptr;
+    ID3D11ShaderResourceView* startHoverTexture = nullptr;
+    
+    ID3D11ShaderResourceView* controlTexture = nullptr;
+    ID3D11ShaderResourceView* controlHoverTexture = nullptr;
+
+    ID3D11ShaderResourceView* quitTexture = nullptr;
+    ID3D11ShaderResourceView* quitHoverTexture = nullptr;
 
 public:
     MenuScene(SceneManager* manager); // constructor

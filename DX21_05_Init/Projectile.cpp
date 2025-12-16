@@ -1,7 +1,7 @@
 // Projectile.cpp
 #include "Projectile.h"
 
-// È«¾ÖÉäµ¯¹ÜÀíÆ÷ÊµÀı
+// È«¾ÖÉäµ¯¹ÜÀúâ÷ÊµÀı
 ProjectileManager& ProjectileManager::GetInstance() {
     static ProjectileManager instance;
     return instance;
@@ -71,14 +71,14 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
 
     lifeTime += deltaTime;
 
-    // ¼ì²éÉúÃüÖÜÆÚ
+    // ¼EéÉúÃEÜÆÚ
     if (lifeTime >= maxLifeTime) {
         isActive = false;
         CreateImpactEffect();
         return;
     }
 
-    // ÀàĞÍÌØ¶¨µÄ¸üĞÂÂß¼­
+    // ÀàĞÍÌØ¶¨µÄ¸EÂÂß¼­
     switch (type) {
     case ProjectileType::FIREBALL:
         UpdateFireball(deltaTime);
@@ -100,17 +100,17 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
         break;
     }
 
-    // ÒÆ¶¯ºÍÅö×²¼ì²â
+    // ÒÆ¶¯ºÍÅö×²¼EE
     Move(deltaTime);
 
-    // ¼ì²éµØÍ¼Åö×²
+    // ¼EéµØÍ¼Åö×²
     if (CheckMapCollision(mapManager)) {
         isActive = false;
         CreateImpactEffect();
         return;
     }
 
-    // ¼ì²éµĞÈËÅö×²
+    // ¼EéµĞÈËÅö×²
     CheckEnemyCollision(enemies);
 }
 
@@ -122,24 +122,24 @@ void Projectile::UpdateFireball(float deltaTime) {
 }
 
 void Projectile::UpdateIceShard(float deltaTime) {
-    // ±ù¼ı£ºĞı×ªĞ§¹û
+    // ±ù¼ı£ºĞı×ªĞ§¹E
     rotation += deltaTime * 15.0f;
 
-    // ±ù¾§ÍÏÎ²Ğ§¹û
+    // ±ù¾§ÍÏÎ²Ğ§¹E
     if (fmod(lifeTime, 0.1f) < 0.05f) {
-        // ¿ÉÒÔÔÚÕâÀïÌí¼Ó±ù¾§Á£×ÓĞ§¹û
+        // ¿ÉÒÔÔÚÕâÀEúØÓ±ù¾§Á£×ÓĞ§¹E
     }
 }
 
 
 void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemies) {
-    // Ä§·¨·Éµ¯£º¸ú×Ù×î½üµÄµĞÈË
+    // Ä§·¨·Éµ¯£º¸ú×Ù×ûÙEÄµĞÈË
     if (homingTarget && !homingTarget->IsAlive()) {
         homingTarget = nullptr;
     }
 
     if (!homingTarget) {
-        // Ñ°ÕÒ×î½üµÄµĞÈË
+        // Ñ°ÕÒ×ûÙEÄµĞÈË
         float closestDistance = 1000.0f;
         for (auto& enemy : enemies) {
             if (enemy->IsAlive()) {
@@ -158,21 +158,21 @@ void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemie
             }
         }
     }
-    // ¸ú×ÙÄ¿±ê
+    // ¸ú×ÙÄ¿±E
     if (homingTarget && homingStrength > 0) {
         float dx = homingTarget->GetX() - posX;
         float dy = homingTarget->GetY() - posY;
         float distance = sqrt(dx * dx + dy * dy);
 
         if (distance > 0) {
-            // Öğ²½µ÷Õû·½Ïò
+            // Öğ²½µ÷Õû·½ÏE
             float targetVX = (dx / distance) * speed;
             float targetVY = (dy / distance) * speed;
 
             velocityX += (targetVX - velocityX) * homingStrength * deltaTime;
             velocityY += (targetVY - velocityY) * homingStrength * deltaTime;
 
-            // ±ê×¼»¯ËÙ¶È
+            // ±E¼»¯ËÙ¶È
             float currentSpeed = sqrt(velocityX * velocityX + velocityY * velocityY);
             velocityX = (velocityX / currentSpeed) * speed;
             velocityY = (velocityY / currentSpeed) * speed;
@@ -183,12 +183,12 @@ void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemie
 }
 
 void Projectile::UpdateLightning(float deltaTime) {
-    // ÉÁµç£º¿ìËÙÉÁË¸Ğ§¹û
+    // ÉÁµç£º¿EÙÉÁË¸Ğ§¹E
     scaleEffect = 0.8f + 0.4f * sin(lifeTime * 30.0f);
 }
 
 void Projectile::UpdatePoisonDart(float deltaTime) {
-    // ¶¾ïÚ£ºÇáÎ¢ÕıÏÒ²¨ÒÆ¶¯
+    // ¶¾E£ºÇáÎ¢ÕıÏÒ²¨ÒÆ¶¯
     float waveOffset = sin(lifeTime * 10.0f) * 0.02f;
     posX += waveOffset * deltaTime * 10.0f;
     rotation += deltaTime * 20.0f;
@@ -210,7 +210,7 @@ bool Projectile::CheckMapCollision(MapManager* mapManager) {
 
     auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
     for (const auto& tile : solidTiles) {
-        // ¼òµ¥¾ØĞÎÅö×²¼ì²â
+        // ¼òµ¥¾ØĞÎÅö×²¼EE
         if (posX < tile.posX + tile.width &&
             posX + size > tile.posX &&
             posY < tile.posY + tile.height &&
@@ -230,7 +230,7 @@ void Projectile::CheckEnemyCollision(std::vector<Enemy*>& enemies) {
         float enemyWidth = enemy->GetWidth();
         float enemyHeight = enemy->GetHeight();
 
-        // Åö×²¼ì²â£¨Ê¹ÓÃGetº¯Êı»ñÈ¡µÄÖµ£©
+        // Åö×²¼Eâ£¨Ê¹ÓÃGetº¯Êı»ñÈ¡µÄÖµ£©
         if (posX < enemyX + enemyWidth &&
             posX + size > enemyX &&
             posY < enemyY + enemyHeight &&
@@ -259,17 +259,17 @@ void Projectile::ApplyEffectToEnemy(Enemy* enemy) {
     float dy = enemy->GetY() - posY;
     float attackAngle = atan2(dy, dx);
 
-    // Ôì³ÉÉËº¦
+    // ÔEÉÉËº¦
     enemy->TakeDamage((int)effect.damage, attackAngle);
 
-    // Ó¦ÓÃÌØÊâĞ§¹û
-    // TODO: ÕâÀï¿ÉÒÔÌí¼ÓÈ¼ÉÕ¡¢¼õËÙ¡¢Ñ£ÔÎµÈ×´Ì¬Ğ§¹û
-    // ĞèÒªÎªEnemyÀàÌí¼Ó×´Ì¬Ğ§¹ûÏµÍ³
+    // Ó¦ÓÃÌØÊâĞ§¹E
+    // TODO: ÕâÀEÉÒÔÌúØÓÈ¼ÉÕ¡¢¼õËÙ¡¢Ñ£ÔÎµÈ×´Ì¬Ğ§¹E
+    // ĞèÒªÎªEnemyÀàÌúØÓ×´Ì¬Ğ§¹ûÏµÍ³
 }
 
 void Projectile::CreateImpactEffect() {
     // TODO: ´´½¨Åö×²ÌØĞ§
-    // ¿ÉÒÔÔÚÕâÀïÌí¼ÓÁ£×ÓĞ§¹û¡¢ÉùÒôĞ§¹ûµÈ
+    // ¿ÉÒÔÔÚÕâÀEúØÓÁ£×ÓĞ§¹û¡¢ÉùÒôĞ§¹ûµÈ
 }
 
 
@@ -289,11 +289,11 @@ ID3D11ShaderResourceView* ProjectileManager::GetTextureForType(ProjectileType ty
 void Projectile::Render(const Camera& camera) {
     if (!isActive) return;
 
-    // »ñÈ¡¶ÔÓ¦ÎÆÀí
+    // »ñÈ¡¶ÔÓ¦ÎÆÀE
     ID3D11ShaderResourceView* texture = ProjectileManager::GetInstance().GetTextureForType(type);
     if (!texture) return;
 
-    // ×ª»»ÎªÆÁÄ»×ø±ê
+    // ×ª»»ÎªÆÁÄ»×ø±E
     float screenX, screenY;
     float cameraX = camera.GetX();
     float cameraY = camera.GetY();
@@ -360,7 +360,7 @@ void ProjectileManager::ClearAll() {
 }
 
 void ProjectileManager::LoadTextures(ID3D11Device* device) {
-    // ¼ÓÔØ¸÷ÖÖÉäµ¯ÎÆÀí
+    // ¼ÓÔØ¸÷ÖÖÉäµ¯ÎÆÀE
     LoadTexture(device, "asset/Projectile_Fireball.png", &fireballTexture);
     LoadTexture(device, "asset/Projectile_IceShard.png", &iceShardTexture);
     LoadTexture(device, "asset/Projectile_MagicMissile.png", &magicMissileTexture);
@@ -368,7 +368,7 @@ void ProjectileManager::LoadTextures(ID3D11Device* device) {
     LoadTexture(device, "asset/Projectile_PoisonDart.png", &poisonDartTexture);
     LoadTexture(device, "asset/Projectile_HolyBolt.png", &holyBoltTexture);
 
-    // ÉèÖÃÄ¬ÈÏÎÆÀí£¨Èç¹û¼ÓÔØÊ§°Ü£©
+    // ÉèÖÃÄ¬ÈÏÎÆÀú¿¨Èç¹û¼ÓÔØÊ§°Ü£©
     if (!fireballTexture) fireballTexture = g_enemyTexture;
     if (!iceShardTexture) iceShardTexture = g_enemyTexture;
     if (!magicMissileTexture) magicMissileTexture = fireballTexture;
@@ -419,7 +419,7 @@ void ProjectileManager::CreateLightningStrike(float startX, float startY, float 
 void ProjectileManager::CreatePoisonDart(float startX, float startY, float targetX, float targetY, bool fromPlayer) {
     ProjectileEffect effect;
     effect.damage = 8.0f;
-    effect.burnDamage = 3.0f; // ÕâÀï×÷ÎªÖĞ¶¾³ÖĞøÉËº¦
+    effect.burnDamage = 3.0f; // ÕâÀE÷ÎªÖĞ¶¾³ÖĞøÉËº¦
 
     AddProjectile(ProjectileType::POISON_DART, startX, startY, targetX, targetY, 12.0f, effect, fromPlayer);
 }

@@ -12,7 +12,7 @@ class HowToPlayScene : public SceneBase
 private:
     SceneManager* sceneManager;   // pointer to the scene manager
 
-    ID3D11ShaderResourceView* backgroundTexture;
+    ID3D11ShaderResourceView* backgroundTexture = nullptr;
 
     SCENE returnScene; // for going to back to then scene I want to
 
