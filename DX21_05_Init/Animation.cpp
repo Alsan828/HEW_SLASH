@@ -147,11 +147,6 @@ bool Animation::IsPaused() const
     return m_paused;
 }
 
-
-
-
-
-
 //=======================================
 // THIS IS HOW YOU WOULD USE IT IN OTHER .CPP
 // =======================================
