@@ -54,12 +54,6 @@ struct Player {
     bool isOnGround = false;
     bool isMoving = false;
     bool facingRight = true;
-    // 死亡状态相关
-    bool isDead = false;
-    float deathTimer = 0.0f;
-    const float DEATH_RESPAWN_TIME = 3.0f;  // 3秒后复活
-    int deathCount = 0;  // 死亡计数（可选）
-
 
     // 生命值系统
     float health = 100.0f;
@@ -256,9 +250,6 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 
 //Player Movement Control
 void Jump();
-void CheckPlayerDeath();
-void OnPlayerDeath();
-void UpdatePlayerDeath(float deltaTime);
 void UpdateDash(float deltaTime);
 void UpdatePlayerPhysics(float deltaTime);
 void OnEnemyDefeated();

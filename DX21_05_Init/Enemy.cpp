@@ -126,7 +126,7 @@ void Enemy::OnDeath() {
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
-    // Visibility detection and optimization logic
+    // 可见性检测和优化逻辑
     bool isCurrentlyVisible = IsVisible(g_camera);
 
     if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
@@ -149,7 +149,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         return;
     }
 
-    // Full update logic
+    // 完整更新逻辑
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -157,34 +157,34 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Apply gravity
+    // 应用重力
     velocityY += GRAVITY * deltaTime * 60.0f;
 
-    // Save old position for collision detection
+    // 保存旧位置用于碰撞检测
     float oldX = posX;
     float oldY = posY;
 
-    // Horizontal movement
+    // 水平移动
     posX += velocityX * deltaTime * 60.0f;
     if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
         posX = oldX;
         velocityX = 0.0f;
     }
 
-    // Vertical movement
+    // 垂直移动
     posY += velocityY * deltaTime * 60.0f;
     if (CheckVerticalCollision(mapManager, oldX, oldY)) {
         posY = oldY;
         velocityY = 0.0f;
     }
 
-    // Boundary check
+    // 边界检查
     if (posY < -5.0f) {
         isAlive = false;
         return;
     }
 
-    // AI update
+    // AI更新
     if (isCurrentlyVisible) {
         UpdateAI(deltaTime);
     }
@@ -201,34 +201,34 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
 }
 
 
-// Simplified update (for off-screen enemies that need updating)
+// 简化版更新（用于屏幕外但需要更新的敌人）
 void Enemy::UpdateMinimal(float deltaTime) {
-    // Simplified AI update (only handles state transitions, no path calculations, etc.)
+    // 简化版AI更新（只处理状态转换，不计算路径等）
     UpdateAIMinimal(deltaTime);
 
-    // Update off-screen timer
+    // 更新离开屏幕计时器
     offScreenTimer += deltaTime;
 }
 
-// Simplified AI update
+// 简化版AI更新
 void Enemy::UpdateAIMinimal(float deltaTime) {
-    // Only handles basic state maintenance, no complex calculations
+    // 只处理最基本的状态维护，不进行复杂计算
     float dx = g_player.posX - posX;
 
-    // Update facing direction
+    // 更新面向方向
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // Simplified state machine: only handles timeouts or critical state transitions
+    // 简化状态机：只处理超时或关键状态转换
     static float stateTimer = 0.0f;
     stateTimer += deltaTime;
 
-    // Check state transitions every 5 seconds (reduce frequency)
+    // 每5秒检查一次状态转换（降低频率）
     if (stateTimer >= 5.0f) {
         float distance = fabs(dx);
 
-        // Simplified state transition logic
+        // 简化版状态转换逻辑
         switch (currentState) {
         case PATROL:
             if (distance < 3.0f) currentState = CHASE;
@@ -237,7 +237,7 @@ void Enemy::UpdateAIMinimal(float deltaTime) {
             if (distance > 8.0f) currentState = PATROL;
             break;
         case ATTACK:
-            // Attack state remains until conditions change
+            // 攻击状态保持，直到条件改变
             break;
         case FLEE:
             if (health > maxHealth * 0.5f) currentState = CHASE;
@@ -397,7 +397,7 @@ bool Enemy::CheckPlayerCollision() {
         g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT);
 }
 
-// Check collision with specific area
+// 检查与特定区域的碰撞
 bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) {
         return false;
@@ -405,7 +405,7 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
 
     SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
     if (!grid) {
-        // Fallback to original method
+        // 回退到原始方法
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
         for (const auto& tile : solidTiles) {
             if (CheckCollision(checkX, checkY, GetWidth(), GetHeight(),
@@ -416,7 +416,7 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
         return false;
     }
 
-    // Use spatial grid optimization
+    // 使用空间网格优化
     std::vector<MapTile*> nearbyTiles;
     grid->GetTilesInArea(
         checkX - 0.5f,
@@ -437,17 +437,17 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
     return false;
 }
 
-// Update collision detection, using spatial grid optimization
+// 更新碰撞检测，使用空间网格优化
 bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) {
         return false;
     }
 
-    // Cache spatial grid pointer
+    // 缓存空间网格指针
     SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
-    // Use spatial grid optimization
+    // 使用空间网格优化
     std::vector<MapTile*> nearbyTiles;
-    float padding = 0.5f;  // Slightly expand detection range
+    float padding = 0.5f;  // 稍微扩展检测范围
     grid->GetTilesInArea(
         posX - padding,
         posY - padding,
@@ -590,66 +590,66 @@ void FastEnemy::DashAttack() {
     velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 3.0f;
 }
 
-// Add to global texture definitions
+// 在全局纹理定义中添加
 ID3D11ShaderResourceView* g_bombEnemyTexture = nullptr;
 
-// BombEnemy implementation
+// BombEnemy实现
 // Enemy.cpp
-// BombEnemy implementation
+// BombEnemy实现
 BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
-    // Bomb enemy: 10x damage from top and bottom, reduced damage from other directions
-    SetDamageMultiplier(DIR_UP, 10.0f);        // 10x damage from top
-    SetDamageMultiplier(DIR_DOWN, 10.0f);      // 10x damage from bottom
-    SetDamageMultiplier(DIR_FRONT, 0.7f);     // Reduced damage from front
-    SetDamageMultiplier(DIR_BACK, 0.7f);      // Reduced damage from back
-    SetDamageMultiplier(DIR_FRONT_UP, 1.2f);  // Medium from front-top
-    SetDamageMultiplier(DIR_FRONT_DOWN, 1.2f);// Medium from front-bottom
-    SetDamageMultiplier(DIR_BACK_UP, 1.2f);   // Medium from back-top
-    SetDamageMultiplier(DIR_BACK_DOWN, 1.2f); // Medium from back-bottom
+    // 爆炸敌人：上下方向是十倍伤害，其他方向减伤
+    SetDamageMultiplier(DIR_UP, 10.0f);        // 上方十倍伤害
+    SetDamageMultiplier(DIR_DOWN, 10.0f);      // 下方十倍伤害
+    SetDamageMultiplier(DIR_FRONT, 0.7f);     // 正面减伤
+    SetDamageMultiplier(DIR_BACK, 0.7f);      // 背面减伤
+    SetDamageMultiplier(DIR_FRONT_UP, 1.2f);  // 前上中等
+    SetDamageMultiplier(DIR_FRONT_DOWN, 1.2f);// 前下中等
+    SetDamageMultiplier(DIR_BACK_UP, 1.2f);   // 后上中等
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.2f); // 后下中等
 
-    // Bomb enemy properties
+    // 爆炸敌人属性
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
-    moveSpeed = 0.0f;  // Does not move
+    moveSpeed = 0.0f;  // 不会移动
     pulseTimer = 0.0f;
     baseSize = 1.0f;
 
-    // Set patrol range to 0, since it doesn't move
+    // 设置巡逻范围为0，因为不会移动
     patrolMinX = posX;
     patrolMaxX = posX;
 }
 
-// Override TakeDamage function, add explosion detection
+// 重写TakeDamage函数，添加爆炸检测
 void BombEnemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
-    // Get damage multiplier
+    // 获取伤害倍率
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // Use independent damage number manager
+    // 使用独立的伤害数字管理器
     bool isCritical = (multiplier > 1.5f);
     DamageNumberManager::AddDamageNumber(
-        posX + width * 0.5f,  // Enemy center X
-        posY + height,        // Top of enemy
+        posX + width * 0.5f,  // 敌人中心X
+        posY + height,        // 敌人顶部
         actualDamage,
-        multiplier >= 10.0f  // If from top/bottom direction, show as critical
+        multiplier >= 10.0f  // 如果是上下方向，显示为暴击
     );
 
-    // Check if attack is from top or bottom
+    // 检查是否为上下方向攻击
     float relativeAngle = GetRelativeAngle(attackAngle);
     int directionIndex = AngleToDirectionIndex(relativeAngle);
     bool isVerticalAttack = (directionIndex == DIR_UP || directionIndex == DIR_DOWN);
 
-    // If attack is from top or bottom, die immediately and trigger explosion
+    // 如果是上下方向攻击，立即死亡并触发爆炸
     if (multiplier >= 10.0f) {
-        health = 0;  // Die immediately
+        health = 0;  // 立即死亡
         isAlive = false;
-        OnDeath();  // Trigger explosion
-        return;     // Return directly, skip subsequent logic
+        OnDeath();  // 触发爆炸
+        return;     // 直接返回，不执行后续逻辑
     }
 
-    // Non-vertical attacks, handle damage normally
+    // 非上下方向攻击，正常处理伤害
     health -= actualDamage;
     isHit = true;
     hitTimer = HIT_DURATION;
@@ -665,7 +665,7 @@ void BombEnemy::TakeDamage(int damage, float attackAngle) {
 void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
-    // Call base class hit state update
+    // 调用基类的受击状态更新
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -673,92 +673,92 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Bomb enemy doesn't move, so no need to handle gravity and collisions
+    // 爆炸敌人不移动，所以不需要处理重力和碰撞
     velocityX = 0.0f;
     velocityY = 0.0f;
 
-    // Pulsing effect
+    // 脉动效果
     pulseTimer += deltaTime;
     float pulseEffect = sin(pulseTimer * 3.0f) * 0.1f;
     baseSize = 1.0f + pulseEffect;
 
-    // Simple AI: only detect player distance
+    // 简化AI：只检测玩家距离
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // Update facing direction
+    // 更新面向方向
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // Simple state machine
+    // 简单状态机
     if (distance < 2.0f) {
-        currentState = ATTACK;  // Enter attack state when player is close
+        currentState = ATTACK;  // 玩家靠近时进入攻击状态
     }
     else {
-        currentState = PATROL;  // Otherwise maintain patrol state (stationary)
+        currentState = PATROL;  // 否则保持巡逻状态（静止）
     }
 
-    // Trigger explosion when dying
+    // 死亡时触发爆炸
     if (health <= 0 && isAlive) {
         isAlive = false;
         OnDeath();
     }
 }
 
-// Override OnDeath function, handle explosion effect
+// 重写OnDeath函数，处理爆炸效果
 void BombEnemy::OnDeath() {
-    // First call base class OnDeath
+    // 先调用基类的OnDeath
     Enemy::OnDeath();
 
-    // Then trigger explosion effect
+    // 然后触发爆炸效果
     Explode();
 }
 
 void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive) return;
 
-    // Convert to screen coordinates
+    // 转换为屏幕坐标
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
-    // Select frame based on state and health
+    // 根据状态和血量选择帧
     int frameIndex = 0;
     if (health < maxHealth * 0.3f) {
-        frameIndex = 1;  // Low health frame
+        frameIndex = 1;  // 低血量帧
     }
     if (currentState == ATTACK) {
-        frameIndex = 2;  // Attack state frame
+        frameIndex = 2;  // 攻击状态帧
     }
 
-    // Apply color effects
+    // 应用颜色效果
     if (isHit) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f);  // Hit red
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f);  // 受击红色
     }
     else if (currentState == ATTACK) {
-        // Pulsing color change in attack state
+        // 攻击状态时，脉动颜色变化
         float pulse = 0.5f + 0.5f * sin(pulseTimer * 5.0f);
-        SetColor(1.0f, 0.3f + pulse * 0.5f, 0.3f, 1.0f);  // Red-orange pulse
+        SetColor(1.0f, 0.3f + pulse * 0.5f, 0.3f, 1.0f);  // 红-橙脉动
     }
     else {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Normal color
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // 正常颜色
     }
 
-    // Apply pulse scaling
+    // 应用脉动缩放
     float renderWidth = width * baseSize;
     float renderHeight = height * baseSize;
     float offsetX = (width - renderWidth) * 0.5f;
     float offsetY = (height - renderHeight) * 0.5f;
 
-    // Render enemy
+    // 渲染敌人
     RenderImage(screenX + offsetX, screenY + offsetY, renderWidth, renderHeight,
         texture, frameIndex, 1, 3);
 
-    // Render health bar
+    // 渲染生命条
     RenderHealthBar(camera);
 
-    // If in attack state, show warning effect
+    // 如果处于攻击状态，显示警告效果
     if (currentState == ATTACK) {
         float warningSize = renderWidth * 1.5f;
         float warningX = screenX - (warningSize - renderWidth) * 0.5f;
@@ -774,49 +774,102 @@ void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
 }
 
 void BombEnemy::Explode() {
-    // Play explosion sound effect
+    // 播放爆炸音效
     // PlaySound("explosion.wav");
 
-    // Create explosion effect
+    // 创建爆炸特效
     // CreateExplosionEffect(posX, posY);
 
-    // Create projectiles to left and right
+    // 对周围敌人造成伤害
+    float explosionRadius = 1.5f;  // 爆炸半径
+
+    for (Enemy* otherEnemy : g_enemies) {
+        if (otherEnemy == this || !otherEnemy->IsAlive()) continue;
+
+        float dx = otherEnemy->GetX() - posX;
+        float dy = otherEnemy->GetY() - posY;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        // 如果在爆炸半径内
+        if (distance <= explosionRadius) {
+            // 向左右发射子弹的逻辑
+            // 这里可以创建一个Projectile对象或直接造成伤害
+
+            // 简单实现：直接造成伤害
+            // 计算攻击角度（从左到右）
+            float attackAngle = (dx > 0) ? 0.0f : 3.14159f;  // 左或右
+
+            // 对敌人造成伤害
+            int explosionDamage = 30;  // 爆炸基础伤害
+            otherEnemy->TakeDamage(explosionDamage, attackAngle);
+        }
+    }
+
+    // 对玩家造成伤害
+    if (g_player.isAlive) {
+        float dx = g_player.posX - posX;
+        float dy = g_player.posY - posY;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        if (distance <= explosionRadius) {
+            // 对玩家造成伤害
+            // 这里需要调用玩家的受伤函数
+            // g_player.TakeDamage(20);
+
+            // 显示伤害数字
+            DamageNumberManager::AddDamageNumber(
+                posX + width * 0.5f,
+                posY + height * 0.5f,
+                20,
+                false
+            );
+        }
+    }
+
+    // 创建向左和向右的射弹
     CreateProjectiles();
 }
 
 // Enemy.cpp
 void BombEnemy::CreateProjectiles() {
-    // Get ProjectileManager instance
+    // 获取 ProjectileManager 实例
     ProjectileManager& projectileManager = ProjectileManager::GetInstance();
 
-    // Create fireball effect configuration
+    // 创建火球效果配置
     ProjectileEffect fireballEffect;
-    fireballEffect.damage = 30.0f;  // Base damage
-    fireballEffect.burnDamage = 5.0f;  // Burn over time damage
-    fireballEffect.areaRadius = 0.3f;  // Explosion radius
-    fireballEffect.pierce = false;  // No piercing
+    fireballEffect.damage = 30.0f;  // 基础伤害
+    fireballEffect.burnDamage = 5.0f;  // 燃烧持续伤害
+    fireballEffect.areaRadius = 0.3f;  // 范围爆炸半径
+    fireballEffect.pierce = false;  // 不穿透
 
-    float projectileSpeed = 3.0f;  // Projectile speed
+    float projectileSpeed = 3.0f;  // 射弹速度
 
-    // Shoot fireball to the left
+    // 向左发射火球
     projectileManager.CreateFireball(
-        posX,  // Start X
-        posY + height * 0.5f,  // Shoot from enemy center height
-        posX - 10.0f,  // Far left position
-        posY + height * 0.5f,  // Horizontal direction
-        true  // From player
+        posX,  // 起点X
+        posY + height * 0.5f,  // 从敌人中心高度发射
+        posX - 10.0f,  // 向左很远的位置
+        posY + height * 0.5f,  // 水平方向
+        false  // 来自敌人
     );
 
-    // Shoot fireball to the right
+    // 向右发射火球
     projectileManager.CreateFireball(
-        posX,  // Start X
-        posY + height * 0.5f,  // Shoot from enemy center height
-        posX + 10.0f,  // Far right position
-        posY + height * 0.5f,  // Horizontal direction
-        true  // From player
+        posX,  // 起点X
+        posY + height * 0.5f,  // 从敌人中心高度发射
+        posX + 10.0f,  // 向右很远的位置
+        posY + height * 0.5f,  // 水平方向
+        false  // 来自敌人
     );
 
-    // Can add particle effects here
+    // 保留伤害数字显示作为反馈
+    DamageNumberManager::AddDamageNumber(
+        posX, posY + height + 0.5f,
+        0,  // 显示0表示爆炸特效
+        true
+    );
+
+    // 可以在这里添加粒子效果
     // CreateParticleEffect(posX, posY, "explosion");
 }
 
@@ -841,7 +894,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     int totalEnemyCount = g_enemies.size();
 
     for (auto& enemy : g_enemies) {
-        // Debug info: count visible enemies
+        // 调试信息：统计可见敌人数量
         if (enemy->IsVisible(g_camera)) {
             visibleEnemyCount++;
         }
@@ -849,19 +902,19 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
         enemy->Update(deltaTime, mapManager);
     }
 
-    // Debug output (optional)
+    // 调试输出（可选）
     static float debugTimer = 0.0f;
     debugTimer += deltaTime;
     if (debugTimer > 2.0f) {
         char debugMsg[256];
-        sprintf_s(debugMsg, "Enemy optimization: Total=%d, Visible=%d, Optimization rate=%.1f%%\n",
+        sprintf_s(debugMsg, "敌人优化: 总数=%d, 可见=%d, 优化率=%.1f%%\n",
             totalEnemyCount, visibleEnemyCount,
             (1.0f - (float)visibleEnemyCount / totalEnemyCount) * 100.0f);
         OutputDebugStringA(debugMsg);
         debugTimer = 0.0f;
     }
 
-    // Remove dead enemies
+    // 移除死亡敌人
     g_enemies.erase(
         std::remove_if(g_enemies.begin(), g_enemies.end(),
             [](Enemy* e) {
