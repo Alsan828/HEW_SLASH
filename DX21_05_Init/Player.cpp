@@ -1,29 +1,29 @@
 #include "Game.h"
 #include "Enemy.h"
 
-// 玩家蝸E丒�
+// Update player physics
 void UpdatePlayerPhysics(float deltaTime) {
-    // 如果玩家已死亡，跳过物理更新
+    // Skip physics update if player is dead
     if (g_player.isDead) {
         return;
     }
 
-    // 在硬直状态下忽略重力和移动
+    // Ignore gravity and movement during stun state
     if (g_player.isInDashAftermath) {
-        // 只处历泄直碰撞紒E猓ǚ乐沟舫龅赝迹�
+        // Only handle basic collision to prevent falling through the ground
         auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
         for (const auto& tile : solidTiles) {
             if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                 tile.posX, tile.posY, tile.width, tile.height)) {
-                // 简单的垂直碰撞处纴E
-                g_player.posY = tile.posY + tile.height; // 站在地面上
+                // Simple vertical collision handling
+                g_player.posY = tile.posY + tile.height; // Stand on ground
                 g_player.isOnGround = true;
             }
         }
-        return; // 硬直状态下跳过正常蝸E丒�
+        return; // Skip normal physics update during stun state
     }
 
-    // 应用重力
+    // Apply gravity
     if (!g_player.isDashing) {
         float fixedDeltaTime = std::min(deltaTime, 0.033f);
         g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
@@ -32,47 +32,47 @@ void UpdatePlayerPhysics(float deltaTime) {
         }
     }
 
-    // 保存原始位置用于碰撞检测
+    // Save original position for collision detection
     float oldX = g_player.posX;
     float oldY = g_player.posY;
 
-    // 计算要移动的距离
+    // Calculate movement distance
     float moveX = g_player.velocityX * deltaTime * 60.0f;
     float moveY = g_player.velocityY * deltaTime * 60.0f;
 
-    // 获取当前地图的空间网格
+    // Get current map's spatial grid
     SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
     if (!spatialGrid) {
-        // 如果空间网格未构建，回退到原始方法
+        // Fallback to original method if spatial grid not built
         auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
 
-        // === 修复：无论是否冲刺，只要速度超过阈值就使用连续碰撞检测 ===
+        // === FIX: Use continuous collision detection when speed exceeds threshold, regardless of dashing ===
         float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
-        float speedThreshold = 0.5f; // 速度阈值，超过这个值就使用连续碰撞检测
+        float speedThreshold = 0.5f; // Speed threshold for continuous collision detection
 
         if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
-            int steps = 4; // 将移动路径分成4步进行检测
+            int steps = 4; // Divide movement into 4 steps for detection
             float stepX = moveX / steps;
             float stepY = moveY / steps;
 
             for (int i = 0; i < steps; i++) {
                 g_player.posX += stepX;
 
-                // 水平碰撞检测
+                // Horizontal collision detection
                 for (const auto& tile : solidTiles) {
                     if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                         tile.posX, tile.posY, tile.width, tile.height)) {
-                        // 回退到碰撞前的位置
+                        // Revert to pre-collision position
                         g_player.posX -= stepX;
                         g_player.velocityX = 0.0f;
 
-                        // 计算碰撞法线并反弹
+                        // Calculate collision normal and bounce
                         if (moveX > 0) {
-                            // 向右移动时碰撞
+                            // Collision when moving right
                             g_player.posX = tile.posX - PLAYER_WIDTH;
                         }
                         else if (moveX < 0) {
-                            // 向左移动时碰撞
+                            // Collision when moving left
                             g_player.posX = tile.posX + tile.width;
                         }
                         break;
@@ -81,20 +81,20 @@ void UpdatePlayerPhysics(float deltaTime) {
 
                 g_player.posY += stepY;
 
-                // 垂直碰撞检测
+                // Vertical collision detection
                 for (const auto& tile : solidTiles) {
                     if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                         tile.posX, tile.posY, tile.width, tile.height)) {
-                        // 回退到碰撞前的位置
+                        // Revert to pre-collision position
                         g_player.posY -= stepY;
 
                         if (moveY > 0) {
-                            // 向上移动时碰撞
+                            // Collision when moving upward
                             g_player.posY = tile.posY - PLAYER_HEIGHT;
                             g_player.velocityY = 0.0f;
                         }
                         else if (moveY < 0) {
-                            // 向下移动时碰撞
+                            // Collision when moving downward
                             g_player.posY = tile.posY + tile.height;
                             g_player.velocityY = 0.0f;
                             g_player.isOnGround = true;
@@ -105,11 +105,11 @@ void UpdatePlayerPhysics(float deltaTime) {
             }
         }
         else {
-            // 正常移动使用分离轴碰撞处理
+            // Normal movement uses separate axis collision handling
             g_player.posX += moveX;
             g_player.posY += moveY;
 
-            // 重置落地状态
+            // Reset ground state
             g_player.isOnGround = false;
 
             for (const auto& tile : solidTiles) {
@@ -124,9 +124,9 @@ void UpdatePlayerPhysics(float deltaTime) {
                     float overlapX = (PLAYER_WIDTH / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
                     float overlapY = (PLAYER_HEIGHT / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
 
-                    // 分离轴处理：选择最小重叠方向
+                    // Separate axis handling: choose direction of minimum overlap
                     if (overlapX < overlapY) {
-                        // 水平碰撞
+                        // Horizontal collision
                         if (playerCenterX < tileCenterX) {
                             g_player.posX = tile.posX - PLAYER_WIDTH;
                         }
@@ -136,7 +136,7 @@ void UpdatePlayerPhysics(float deltaTime) {
                         g_player.velocityX = 0.0f;
                     }
                     else {
-                        // 垂直碰撞
+                        // Vertical collision
                         if (playerCenterY < tileCenterY) {
                             g_player.posY = tile.posY - PLAYER_HEIGHT;
                             g_player.velocityY = 0.0f;
@@ -152,11 +152,11 @@ void UpdatePlayerPhysics(float deltaTime) {
         }
     }
     else {
-        // 使用空间网格优化的碰撞检测
+        // Use spatial grid optimized collision detection
         std::vector<MapTile*> nearbyTiles;
 
-        // 获取玩家周围的砖块
-        float padding = 1.0f;  // 扩展一点范围
+        // Get tiles around player
+        float padding = 1.0f;  // Extend range slightly
         spatialGrid->GetTilesInArea(
             g_player.posX - padding,
             g_player.posY - padding,
@@ -165,9 +165,9 @@ void UpdatePlayerPhysics(float deltaTime) {
             nearbyTiles
         );
 
-        // === 修复：无论是否冲刺，只要速度超过阈值就使用连续碰撞检测 ===
+        // === FIX: Use continuous collision detection when speed exceeds threshold, regardless of dashing ===
         float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
-        float speedThreshold = 0.1f; // 速度阈值，超过这个值就使用连续碰撞检测
+        float speedThreshold = 0.1f; // Speed threshold for continuous collision detection
 
         if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
             int steps = 4;
@@ -177,22 +177,22 @@ void UpdatePlayerPhysics(float deltaTime) {
             for (int i = 0; i < steps; i++) {
                 g_player.posX += stepX;
 
-                // 水平碰撞检测
+                // Horizontal collision detection
                 for (const auto& tile : nearbyTiles) {
                     if (tile->tileInfo.isSolid &&
                         CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                             tile->posX, tile->posY, tile->width, tile->height)) {
-                        // 回退到碰撞前的位置
+                        // Revert to pre-collision position
                         g_player.posX -= stepX;
                         g_player.velocityX = 0.0f;
 
-                        // 计算碰撞法线
+                        // Calculate collision normal
                         if (moveX > 0) {
-                            // 向右移动时碰撞
+                            // Collision when moving right
                             g_player.posX = tile->posX - PLAYER_WIDTH;
                         }
                         else if (moveX < 0) {
-                            // 向左移动时碰撞
+                            // Collision when moving left
                             g_player.posX = tile->posX + tile->width;
                         }
                         break;
@@ -201,21 +201,21 @@ void UpdatePlayerPhysics(float deltaTime) {
 
                 g_player.posY += stepY;
 
-                // 垂直碰撞检测
+                // Vertical collision detection
                 for (const auto& tile : nearbyTiles) {
                     if (tile->tileInfo.isSolid &&
                         CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
                             tile->posX, tile->posY, tile->width, tile->height)) {
-                        // 回退到碰撞前的位置
+                        // Revert to pre-collision position
                         g_player.posY -= stepY;
 
                         if (moveY > 0) {
-                            // 向上移动时碰撞
+                            // Collision when moving upward
                             g_player.posY = tile->posY - PLAYER_HEIGHT;
                             g_player.velocityY = 0.0f;
                         }
                         else if (moveY < 0) {
-                            // 向下移动时碰撞
+                            // Collision when moving downward
                             g_player.posY = tile->posY + tile->height;
                             g_player.velocityY = 0.0f;
                             g_player.isOnGround = true;
@@ -226,7 +226,7 @@ void UpdatePlayerPhysics(float deltaTime) {
             }
         }
         else {
-            // 正常移动使用分离轴碰撞处理
+            // Normal movement uses separate axis collision handling
             g_player.posX += moveX;
             g_player.posY += moveY;
 
@@ -245,9 +245,9 @@ void UpdatePlayerPhysics(float deltaTime) {
                     float overlapX = (PLAYER_WIDTH / 2 + tile->width / 2) - fabs(playerCenterX - tileCenterX);
                     float overlapY = (PLAYER_HEIGHT / 2 + tile->height / 2) - fabs(playerCenterY - tileCenterY);
 
-                    // 分离轴处理：选择最小重叠方向
+                    // Separate axis handling: choose direction of minimum overlap
                     if (overlapX < overlapY) {
-                        // 水平碰撞
+                        // Horizontal collision
                         if (playerCenterX < tileCenterX) {
                             g_player.posX = tile->posX - PLAYER_WIDTH;
                         }
@@ -257,7 +257,7 @@ void UpdatePlayerPhysics(float deltaTime) {
                         g_player.velocityX = 0.0f;
                     }
                     else {
-                        // 垂直碰撞
+                        // Vertical collision
                         if (playerCenterY < tileCenterY) {
                             g_player.posY = tile->posY - PLAYER_HEIGHT;
                             g_player.velocityY = 0.0f;
@@ -273,7 +273,7 @@ void UpdatePlayerPhysics(float deltaTime) {
         }
     }
 
-    // 传送门紒E丒
+    // Portal handling
     static float portalCooldown = 0.0f;
     if (portalCooldown > 0.0f) {
         portalCooldown -= deltaTime;
@@ -290,12 +290,12 @@ void UpdatePlayerPhysics(float deltaTime) {
             portalCooldown = 1.0f;
         }
     }
-    //如果velocityY绝对值大于0.05f,则认为玩家不在地面上
+    // If velocityY absolute value > 0.05f, consider player not on ground
     if (fabs(g_player.velocityY) > 0.05f) {
         g_player.isOnGround = false;
     }
 
-    // 边界紒E丒
+    // Boundary check
     if (g_player.posY < -2.0f) {
         ResetGame();
     }
@@ -303,7 +303,7 @@ void UpdatePlayerPhysics(float deltaTime) {
     CheckDashAttack();
 }
 
-// 新增：更新玩家死亡状态
+// New: Update player death state
 void UpdatePlayerDeath(float deltaTime) {
     if (!g_player.isDead) {
         return;
@@ -316,13 +316,13 @@ void UpdatePlayerDeath(float deltaTime) {
     }
 }
 
-// 新增：玩家死亡处理函数
+// New: Player death handler
 void OnPlayerDeath() {
     g_player.isDead = true;
     g_player.deathTimer = g_player.DEATH_RESPAWN_TIME;
     g_player.deathCount++;
 
-    // 停止玩家所有动作
+    // Stop all player actions
     g_player.isMoving = false;
     g_player.isDashing = false;
     g_player.isCharging = false;
@@ -330,34 +330,33 @@ void OnPlayerDeath() {
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;
 
-    // 可以在这里添加死亡音效
+    // Death sound can be added here
     // g_audioManager.PlaySFX("death_sound.wav");
 
     printf("Player died! Respawning in 3 seconds...\n");
 }
 
 
-// 新增：检查玩家是否应该死亡
+// New: Check if player should die
 void CheckPlayerDeath() {
     if (g_player.isDead) {
         return;
     }
 
-    // 检查与所有存活敌人的碰撞
+    // Check collision with all alive enemies
     for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive()) continue;
 
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
-            // 如果玩家正在冲刺，则不会死亡，而是攻击敌人
+            // If player is dashing, they won't die but will attack the enemy instead
             if (g_player.isDashing) {
-                // 在CheckDashAttack中处理攻击逻辑
+                // Attack logic handled in CheckDashAttack
                 continue;
             }
             else {
-
-                // 否则，玩家死亡
+                // Otherwise, player dies
                 OnPlayerDeath();
             }
 
@@ -367,34 +366,34 @@ void CheckPlayerDeath() {
 
 }
 
-// 修改UpdateDash函数，添加蓄力衰减更新
+// Modified UpdateDash function: add charge decay update
 void UpdateDash(float deltaTime) {
-    // 优先竵E鲁宕套刺�
+    // Prioritize dashing state update
     if (g_player.isDashing) {
         g_player.dashTimer -= deltaTime;
 
         if (g_player.dashTimer <= 0.0f) {
             g_player.isDashing = false;
             g_player.hasMouseTarget = false;
-            EnterDashAftermath(); // 冲刺结束进葋E仓�
+            EnterDashAftermath(); // Enter aftermath when dash ends
         }
     }
 
-    // 然后竵E掠仓弊刺�
+    // Then update aftermath state
     UpdateDashAftermath(deltaTime);
-    // 煮竵E碌闶指聪低�
+    // Update dash point recovery system
     UpdateDashPoints(deltaTime);
 
-    // 竵E滦λゼ跫剖逼丒
+    // Update charge decay timer
     g_player.UpdateChargeDecay(deltaTime);
 
-    // 宣荭逻辑应该独立于硬直状态
+    // Charge logic should be independent of aftermath state
     if (g_player.isCharging) {
         g_player.chargeTime += deltaTime;
 
-        // 硬直状态下允喧禧荭，但宣荭蛠E墒奔丒樘跫�
+        // Allow charging during stun, but charge time cannot be too long
         if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-            // 宣荭蛠E墒保绻τ谟仓弊刺惹宄仓�
+            // When charge time is max, clear aftermath first if in aftermath
             if (g_player.isInDashAftermath) {
                 g_player.isInDashAftermath = false;
             }
@@ -414,12 +413,12 @@ void CancelChargeDash() {
 }
 
 void MovePlayerLeft() {
-    // 紒E槭欠翊τ谛ψ刺也辉市贫�
+    // Check if charging and movement is not allowed during charge
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
-        return;  // 宣荭中不允喧钇动，直接返回
+        return;  // Do not allow movement during charge
     }
 
-    // 如果处于硬直状态，移动会打断硬直
+    // If in aftermath, movement will interrupt it
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -430,12 +429,12 @@ void MovePlayerLeft() {
 }
 
 void MovePlayerRight() {
-    // 紒E槭欠翊τ谛ψ刺也辉市贫�
+    // Check if charging and movement is not allowed during charge
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
         return;
     }
 
-    // 如果处于硬直状态，移动会打断硬直
+    // If in aftermath, movement will interrupt it
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -460,30 +459,30 @@ void Jump() {
     }
 }
 
-// 方法3: 鼠眮E较虺宕�
+// Method 3: Mouse direction dash
 void DashToMouse() {
-    // 紒E榈闶欠褡愎�
+    // Check if points are sufficient
     if (g_player.dashPoints <= 0) {
         return;
     }
 
-    // 消耗冲刺点数
+    // Consume dash point
     if (!ConsumeDashPoint()) {
         return;
     }
 
-    // 获取鼠眮E澜缱丒
+    // Get mouse world coordinates
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
-    // 计算从玩家指向鼠眮E姆较蛳蛄�
+    // Calculate direction vector from player to mouse
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
     float dirX = mouseX - playerCenterX;
     float dirY = mouseY - playerCenterY;
 
-    // 归一化方向向量
+    // Normalize direction vector
     float length = sqrt(dirX * dirX + dirY * dirY);
     if (length > 0.0f) {
         dirX /= length;
@@ -494,53 +493,53 @@ void DashToMouse() {
         dirY = 0.0f;
     }
 
-    // 设置冲刺状态
+    // Set dash state
     g_player.isDashing = true;
     g_player.dashTimer = DASH_DURATION;
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 
-    // 设置冲刺速度
+    // Set dash speed
     g_player.velocityX = dirX * DASH_SPEED;
     g_player.velocityY = dirY * DASH_SPEED;
 
-    // 存储鼠眮E勘丒恢�
+    // Store mouse target position
     g_player.mouseTargetX = mouseX;
     g_player.mouseTargetY = mouseY;
     g_player.hasMouseTarget = true;
 }
 
-// 修改StartMouseChargeDash函数，铁赜宣荭继承逻辑
+// Modified StartMouseChargeDash function: adds charge inheritance logic
 void StartMouseChargeDash() {
-    // 紒E樘跫菏欠裾诔宕獭⑹欠裾谛Α⒌闶欠褡愎弧⑹欠翊τ诳尚卸刺�
+    // Conditions: not dashing, not charging, points sufficient, in actionable state
     if (g_player.isDashing || g_player.isCharging || g_player.dashPoints <= 0) {
         return;
     }
 
     g_player.isCharging = true;
 
-    // 紒E槭欠裼斜４娴男Γ绻性蚣坛�
+    // Check for saved charge; if exists, inherit it
     if (g_player.hasSavedCharge) {
-        g_player.LoadSavedCharge(); // 加载保存的宣荭时紒E
-        // 不清除保存的宣荭，允喧莠续继承（直到衰减时间结束）
+        g_player.LoadSavedCharge(); // Load saved charge time
+        // Do not clear saved charge, allowing continued inheritance (until decay time ends)
     }
     else {
-        g_player.chargeTime = 0.0f; // 没有保存的宣荭，从头开始
+        g_player.chargeTime = 0.0f; // No saved charge, start from beginning
     }
 
-    // 记录初始鼠眮E恢�
+    // Record initial mouse position
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
 }
 
-// 修改ExecuteMouseChargeDash函数，在冲刺结束时保存宣荭
+// Modified ExecuteMouseChargeDash function: save charge when dash ends
 void ExecuteMouseChargeDash() {
     if (!g_player.isCharging) return;
 
-    // 允喧疒硬直状态下进行宣荭冲刺
+    // Allow charged dash even in aftermath state
     if (g_player.dashPoints <= 0) return;
 
-    // 清除硬直状态，允喧炻的冲刺
+    // Clear aftermath state to allow new dash
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -548,18 +547,18 @@ void ExecuteMouseChargeDash() {
     g_player.hitEnemies.clear();
     if (!ConsumeDashPoint()) return;
 
-    // 获取当前鼠眮E恢�
+    // Get current mouse position
     float currentMouseX, currentMouseY;
     g_inputSystem.GetMousePosition(currentMouseX, currentMouseY);
 
-    // 计算从玩家指向鼠眮E姆较丒
+    // Calculate direction from player to mouse
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
     float dirX = currentMouseX - playerCenterX;
     float dirY = currentMouseY - playerCenterY;
 
-    // 归一化
+    // Normalize
     float length = sqrt(dirX * dirX + dirY * dirY);
     if (length > 0.0f) {
         dirX /= length;
@@ -570,15 +569,15 @@ void ExecuteMouseChargeDash() {
         dirY = 0.0f;
     }
 
-    // 获取当前宣荭等级
+    // Get current charge level
     int chargeLevel = g_player.GetChargeLevel();
 
-    // 三段宣荭判定
+    // Three-stage charge determination
     float speedMultiplier = 1.0f;
     float durationMultiplier = 1.0f;
     float cooldownMultiplier = 1.0f;
 
-    // 根据宣荭等级设置属性倍率
+    // Set attribute multipliers based on charge level
     switch (chargeLevel) {
     case 1:
         speedMultiplier = 1.3f;
@@ -602,39 +601,39 @@ void ExecuteMouseChargeDash() {
         break;
     }
 
-    // 设置冲刺状态
+    // Set dash state
     g_player.isDashing = true;
     g_player.dashTimer = DASH_DURATION * durationMultiplier;
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 
-    // 应用冲刺速度
+    // Apply dash speed
     g_player.velocityX = dirX * DASH_SPEED * speedMultiplier;
     g_player.velocityY = dirY * DASH_SPEED * speedMultiplier;
 
-    // 存储蛘鼠眮E恢�
+    // Store new mouse target position
     g_player.mouseTargetX = currentMouseX;
     g_player.mouseTargetY = currentMouseY;
 
-    // === 关紒E薷模涸诔宕探崾北４娴鼻靶Σ闶� ===
-    // 只有当宣荭时间磥E阶°兄凳辈疟４妫ū苊獗４嫖扌У亩贪矗�
+    // === Key modification: Save current charge time when dash ends ===
+    // Only save if charge time is at a valid value (to avoid saving invalid charges)
     if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
-        g_player.SaveCharge(); // 保存当前宣荭时紒E
+        g_player.SaveCharge(); // Save current charge time
     }
 
-    // 结束宣荭状态
+    // End charging state
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
 }
 
 
-// 进葋E宕毯笥仓弊刺�
+// Enter dash aftermath state
 void EnterDashAftermath() {
-    // 清除所有速度，使玩家蛠EＶ�
+    // Clear all velocity to keep player stationary
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;
 
-    // 如果没有点数则不进葋E仓弊刺�
+    // Do not enter aftermath if no points left
     if (g_player.dashPoints <= 0) {
         g_player.ClearSavedCharge();
         return;
@@ -644,29 +643,29 @@ void EnterDashAftermath() {
     g_player.dashAftermathTimer = g_player.DASH_AFTERMATH_DURATION;
 }
 
-// 竵E掠仓弊刺�
+// Update aftermath state
 void UpdateDashAftermath(float deltaTime) {
     if (!g_player.isInDashAftermath) return;
 
     g_player.dashAftermathTimer -= deltaTime;
 
-    // 紒E橐贫淙丒蚨�
+    // Check for movement input to interrupt
     if (g_inputSystem.IsMovingLeft() || g_inputSystem.IsMovingRight()) {
         g_player.isInDashAftermath = false;
         g_player.velocityY = 0.0f;
         return;
     }
 
-    // 硬直状态结蕘E
+    // Aftermath state ends
     if (g_player.dashAftermathTimer <= 0.0f) {
         g_player.isInDashAftermath = false;
         g_player.velocityY = 0.0f;
     }
 }
 
-// 竵E鲁宕痰闶指�
+// Update dash point recovery
 void UpdateDashPoints(float deltaTime) {
-    // 地面恢复点数
+    // Ground recovery of points
     if (g_player.isOnGround && g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPointRecoverTimer += deltaTime;
 
@@ -680,7 +679,7 @@ void UpdateDashPoints(float deltaTime) {
     }
 }
 
-// 消耗冲刺点数
+// Consume dash point
 bool ConsumeDashPoint() {
     if (g_player.dashPoints > 0) {
         g_player.dashPoints--;
@@ -689,7 +688,7 @@ bool ConsumeDashPoint() {
     return false;
 }
 
-// 击败敌人时恢复点数（预留接口）
+// Restore point on enemy defeat (reserved interface)
 void OnEnemyDefeated() {
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
@@ -703,28 +702,28 @@ void CheckDashAttack() {
         return;
     }
 
-    // 计算玩家冲刺角度
+    // Calculate player dash angle
     float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
 
     for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive()) continue;
 
-        // 紒E槭欠褚丫髦泄飧龅腥�
+        // Check if already hit this enemy
         if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
             continue;
         }
 
-        // 紒E馀鲎�
+        // Check collision
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
-            // 直接传葋E婕页宕探嵌龋腥俗约杭扑阆喽苑较丒
+            // Directly pass player dash angle, enemy calculates relative direction
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
 
-            // 对敌人詠E缮撕�
+            // Deal damage to enemy
             enemy->TakeDamage(actualDamage, dashAngle);
 
-            // 眮E俏鸦髦�
+            // Mark as hit
             g_player.hitEnemies.push_back(enemy);
         }
     }

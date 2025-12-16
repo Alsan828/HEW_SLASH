@@ -76,9 +76,9 @@ void CleanUpGameWorld()
         g_groundTexture->Release();
         g_groundTexture = nullptr;
     }
-    if (g_backgroundTexture) {
-        g_backgroundTexture->Release();
-        g_backgroundTexture = nullptr;
+    if (g_backgroundTexture1) {
+        g_backgroundTexture1->Release();
+        g_backgroundTexture1 = nullptr;
     }
     if (g_dashEffectTexture) {
         g_dashEffectTexture->Release();
@@ -88,6 +88,11 @@ void CleanUpGameWorld()
         g_chargeEffectTexture->Release();
         g_chargeEffectTexture = nullptr;
     }
+	//解放击中特效纹理
+    if (g_hitEffectTexture) {
+        g_hitEffectTexture->Release();
+        g_hitEffectTexture = nullptr;
+	}
     if (g_numberTexture) {
         g_numberTexture->Release();
         g_numberTexture = nullptr;
@@ -122,10 +127,11 @@ void InitGameWorld() {
     g_player.anim.Init(10, 1, 0.15f, 0);
     g_player.anim.AddClip("Idle", 0, 9, 0.25f, true);
 
-    LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture);
-    LoadTexture(g_pDevice, "asset/Space.png", &g_backgroundTexture);
-    LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);
-    LoadTexture(g_pDevice, "asset/completed.png", &g_chargeEffectTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
+    LoadTexture(g_pDevice, "asset/effect/dash.png", &g_dashEffectTexture);
+    LoadTexture(g_pDevice, "asset/effect/hit.png", &g_chargeEffectTexture);
+    LoadTexture(g_pDevice, "asset/effect/hit.png", &g_hitEffectTexture);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
     LoadTexture(g_pDevice, "asset/UI/time.png", &g_uiNumberTexture);
@@ -258,7 +264,7 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
         return g_fastEnemyTexture;
     }
     else if (tileCode == "D1" || tileCode == "D2") {
-        return g_backgroundTexture;
+        return g_backgroundTexture3;
     }
     else {
         return g_groundTexture;
@@ -323,7 +329,7 @@ void DrawGame() {
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     float bgOffsetX = cameraX * 0.3f;
     float bgOffsetY = cameraY * 0.3f;
-    RenderImage(-1.0f + bgOffsetX, -1.0f + bgOffsetY, 2.0f, 2.0f, g_backgroundTexture, 0, 1, 1);
+    RenderImage(-1.0f + bgOffsetX, -1.0f + bgOffsetY, 2.0f, 2.0f, g_backgroundTexture1, 0, 1, 1);
 
     // Use new map system to draw tiles
     if (g_mapManager.IsMapLoaded()) {
