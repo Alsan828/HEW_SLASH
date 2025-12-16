@@ -3,6 +3,7 @@
 
 HRESULT LoadTexture(ID3D11Device* device, const char* filename, ID3D11ShaderResourceView** srv)
 {
+
     bool sts = true;
     unsigned char* pixels;
 
@@ -51,8 +52,16 @@ HRESULT LoadTexture(ID3D11Device* device, const char* filename, ID3D11ShaderReso
         return hr;
     }
 
+  /*  hr = device->CreateShaderResourceView(pTexture, nullptr, srv);
+    if (SUCCEEDED(hr)) {
+        OutputDebugStringA(("Loaded texture: " + std::string(filename) + "\n").c_str());
+    }*/
+
+    pTexture->Release();
+
     // Free the loaded pixel data (texture is now in GPU memory)
     stbi_image_free(pixels);
 
     return S_OK;
 }
+

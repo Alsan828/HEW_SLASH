@@ -15,8 +15,7 @@ bool StageSelect::Init()
 	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
 	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
 
-	uiButtons.clear();
-	g_mouseIndicator.ShowMouseIndicator(false);
+	
 
 	uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, STAGE, buttonTexture, buttonHoverTexture); // go to 1-1
 	uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, STAGE2, buttonTexture, buttonHoverTexture); // go to 1-2
@@ -31,6 +30,8 @@ bool StageSelect::Init()
 		btn.SetHitboxOffset(-0.05f);
 	}
 
+	//uiButtons.clear();
+	g_mouseIndicator.ShowMouseIndicator(false);
 
 	return true;
 }

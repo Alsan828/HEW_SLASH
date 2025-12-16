@@ -9,23 +9,30 @@ MenuScene::MenuScene(SceneManager* manager)
 bool MenuScene::Init()
 {
 
-	LoadTexture(g_pDevice, "asset/menu.png", &backgroundTexture);      // abckground texture
+	LoadTexture(g_pDevice, "asset/UI/menu/background.png", &backgroundTexture);
+	
+	LoadTexture(g_pDevice, "asset/UI/menu/start_normal.png", &startTexture);
+	LoadTexture(g_pDevice, "asset/UI/menu/start_hover.png", &startHoverTexture);
 
-	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
-	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
+	LoadTexture(g_pDevice, "asset/UI/menu/control_normal.png", &controlTexture);
+	LoadTexture(g_pDevice, "asset/UI/menu/control_hover.png", &controlHoverTexture);
+	
+	LoadTexture(g_pDevice, "asset/UI/menu/quit_normal.png", &quitTexture);
+	LoadTexture(g_pDevice, "asset/UI/menu/quit_hover.png", &quitHoverTexture);
 
-	uiButtons.clear();
-	g_mouseIndicator.ShowMouseIndicator(false);
-
-	uiButtons.emplace_back(-0.60f, -0.3f, 0.6f, 0.8f, STAGESELECT, buttonTexture, buttonHoverTexture);
-	uiButtons.emplace_back(0.0f, -0.3f, 0.6f, 0.8f, HOWTOPLAY, buttonTexture, buttonHoverTexture);
-	uiButtons.emplace_back(+0.6f, -0.3f, 0.6f, 0.8f, QUIT_GAME, buttonTexture, buttonHoverTexture);
+	uiButtons.emplace_back(-0.70f, -0.3f, 0.5f, 0.9f, STAGESELECT, startTexture, startHoverTexture);
+	uiButtons.emplace_back(-0.70f, -0.55f, 0.5f, 0.9f, HOWTOPLAY, controlTexture, controlHoverTexture);
+	uiButtons.emplace_back(-0.70f, -0.8f, 0.5f, 0.9f, QUIT_GAME, quitTexture, quitHoverTexture);
 
 	for (auto& btn : uiButtons)
 	{
-		btn.SetHitboxScale(0.7f, 0.2f);
-		btn.SetHitboxOffset(-0.05f);
+		btn.SetHitboxScale(0.7f, 0.21f);
+		btn.SetHitboxOffset(-0.02f);
 	}
+
+
+	//uiButtons.clear();
+	g_mouseIndicator.ShowMouseIndicator(false);
 
 	return true;
 }
@@ -73,15 +80,36 @@ void MenuScene::Uninit()
 		backgroundTexture = nullptr;
 	}
 
-	if (buttonTexture) { 
-		buttonTexture->Release();      
-		buttonTexture = nullptr; 
+	if (startTexture) { 
+		startTexture->Release();      
+		startTexture = nullptr; 
+	}
+	if (startHoverTexture)
+	{
+		startHoverTexture->Release();
+		startHoverTexture = nullptr;
 	}
 
-	if (buttonHoverTexture)
+	if (controlTexture)
 	{
-		buttonHoverTexture->Release();
-		buttonHoverTexture = nullptr;
+		controlTexture->Release();
+		controlTexture = nullptr;
+	}
+	if (controlHoverTexture)
+	{
+		controlHoverTexture->Release();
+		controlHoverTexture = nullptr;
+	}
+
+	if (quitTexture)
+	{	
+		quitTexture->Release();
+		quitTexture = nullptr;
+	}
+	if (quitHoverTexture)
+	{
+		quitHoverTexture->Release();
+		quitHoverTexture = nullptr;
 	}
 
 	uiButtons.clear();

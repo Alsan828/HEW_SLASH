@@ -66,9 +66,8 @@ std::string Animation::GetCurrentClipName() const
             return kv.first;
         }
     }
-    // when not found it gives this error.
-    OutputDebugStringA("Animation::GetCurrentClipName - Clip not found!\n");
-    return "UNKNOWN_CLIP";
+
+    return "";
 }
 
 // it update animation based on elapsed time
@@ -120,7 +119,18 @@ void Animation::Reset()
 // Check if non-looping animation has finished
 bool Animation::IsFinished() const
 {
-    return (!m_currentClip.loop && m_currentFrame == m_currentClip.endFrame);
+    //return (!m_currentClip.loop && m_currentFrame == m_currentClip.endFrame);
+
+    if (m_useTextures) {
+        // flipbook mode: finished when we reached the last texture
+        return (m_currentFrame == m_frameCount - 1 && m_paused);
+    }
+    else {
+        // sprite sheet mode: keep your original logic
+        return (!m_currentClip.loop &&
+            m_currentFrame == m_currentClip.endFrame &&
+            m_paused);
+    }
 }
 
 // it gets the current frame of the aniamtion
@@ -146,6 +156,74 @@ bool Animation::IsPaused() const
 {
     return m_paused;
 }
+
+
+
+// used for the animation with .png
+void Animation::InitFromTextures(const std::vector<ID3D11ShaderResourceView*>& textures, float frameTime, bool loop)
+{
+    m_textures = textures;
+    m_frameCount = (int)textures.size();
+    m_currentFrame = 0;
+    m_frameTime = frameTime;
+    m_elapsedTime = 0.0f;
+    m_useTextures = true;
+    m_paused = true;
+
+}
+
+
+ID3D11ShaderResourceView* Animation::GetCurrentTexture() const
+{
+    if (m_useTextures && !m_textures.empty()) {
+        return m_textures[m_currentFrame];
+    }
+    return nullptr;
+}
+
+void Animation::UpdateTexture(float deltaTime)
+{
+    if (m_paused) return;
+
+    m_elapsedTime += deltaTime;
+    if (m_elapsedTime >= m_frameTime)
+    {
+        m_elapsedTime = 0.0f;
+        m_currentFrame++;
+
+        if (m_currentFrame >= m_frameCount)
+        {
+            if (m_useTextures)
+            {
+                m_currentFrame = m_frameCount - 1; // stay on last frame
+                m_paused = true; // stop animation
+            }
+            else if (m_currentClip.loop) {
+                m_currentFrame = m_currentClip.startFrame;
+            }
+            else {
+                m_currentFrame = m_currentClip.endFrame;
+                m_paused = true;
+            }
+        }
+    }
+}
+
+void Animation::CleanupTextures()
+ {
+     for (auto tex : m_textures) {
+         if (tex) {
+             tex->Release();
+         }
+     }
+     m_textures.clear();
+ }
+
+
+
+
+
+
 
 //=======================================
 // THIS IS HOW YOU WOULD USE IT IN OTHER .CPP

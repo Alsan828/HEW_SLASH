@@ -210,6 +210,8 @@ extern ID3D11ShaderResourceView* g_dashEffectTexture;
 extern ID3D11ShaderResourceView* g_chargeEffectTexture;
 extern ID3D11ShaderResourceView* g_numberTexture;
 extern ID3D11ShaderResourceView* g_uiNumberTexture;
+extern ID3D11ShaderResourceView* g_arrowTexture;
+extern ID3D11ShaderResourceView* g_cursorTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
@@ -238,6 +240,8 @@ void HandleInput();
 void TriggerSlowMotion(float i, float a); // 1秒时间，减慢到20%速度
 // Reset game
 void ResetGame();
+
+void CleanUpGameWorld(void); // added  december 11th
 
 void UpdateGame(float deltaTime);
 void DashToMouse();
@@ -268,6 +272,7 @@ private:
     bool m_showMouseIndicator;
     ID3D11ShaderResourceView* m_mouseIndicatorTexture;
     ID3D11ShaderResourceView* m_arrowTexture;
+    ID3D11ShaderResourceView* m_cursorTexture;
 
 public:
     void Initialize();

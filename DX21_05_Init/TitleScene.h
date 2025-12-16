@@ -5,6 +5,7 @@
 #include <vector>
 #include "Render.h"
 #include "UIButton.h"
+//#include "Animation.h"
 
 // title background structure
 struct Background 
@@ -18,11 +19,17 @@ class TitleScene : public SceneBase
 private:
     SceneManager* sceneManager;   // pointer to the scene manager
 
-    ID3D11ShaderResourceView* backgroundTexture;
-    
+    //ID3D11ShaderResourceView* backgroundTexture;
+
+    // for the title intro animation
+    std::vector<ID3D11ShaderResourceView*> frames;
+    ID3D11ShaderResourceView* tex = nullptr;
+
+    Animation m_titleAnim;
+    bool m_playing = false;
+
+
     std::vector<UIButton> uiButtons;
-    ID3D11ShaderResourceView* buttonTexture = nullptr;
-    ID3D11ShaderResourceView* buttonHoverTexture = nullptr;
 
 public:
     TitleScene(SceneManager* manager); // constructor

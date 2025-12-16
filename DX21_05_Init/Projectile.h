@@ -8,11 +8,11 @@
 class Enemy;
 // 射弹类型枚举
 enum class ProjectileType {
-    FIREBALL,       // 火球 - 直线飞行，碰撞爆炸
-    ICE_SHARD,      // 冰箭 - 直线飞行，减速效果
+    FIREBALL,       // 火莵E- 直线飞行，碰撞爆炸
+    ICE_SHARD,      // 冰箭 - 直线飞行，减速效箒E
     MAGIC_MISSILE,  // 魔法飞弹 - 跟踪敌人
-    LIGHTNING,      // 闪电 - 瞬间命中
-    POISON_DART,    // 毒镖 - 持续伤害
+    LIGHTNING,      // 闪祦E- 瞬间脕E?
+    POISON_DART,    // 毒丒 - 持续伤害
     HOLY_BOLT       // 圣光箭 - 对亡灵特效
 };
 
@@ -20,14 +20,14 @@ enum class ProjectileType {
 struct ProjectileEffect {
     float damage = 10.0f;
     float burnDamage = 0.0f;      // 燃烧持续伤害
-    float slowEffect = 0.0f;      // 减速效果 (0-1)
-    float stunDuration = 0.0f;    // 眩晕时间
+    float slowEffect = 0.0f;      // 减速效箒E(0-1)
+    float stunDuration = 0.0f;    // 眩晕时紒E
     bool pierce = false;          // 是否穿透
-    int maxPierceCount = 0;       // 最大穿透数量
-    float areaRadius = 0.0f;      // 范围爆炸半径
+    int maxPierceCount = 0;       // 畜穿透数量
+    float areaRadius = 0.0f;      // 范围爆炸皝E?
 };
 
-// 射弹类
+// 射弹纴E
 class Projectile {
 public:
     Projectile(ProjectileType type, float startX, float startY,
@@ -55,12 +55,12 @@ private:
     bool isActive;
     bool fromPlayer;
 
-    // 视觉效果
+    // 视觉效箒E
     float size;
     float rotation;
     float scaleEffect;
 
-    // 射弹效果
+    // 射弹效箒E
     ProjectileEffect effect;
 
     // 跟踪相关
@@ -84,7 +84,7 @@ private:
     void UpdateHolyBolt(float deltaTime);
 };
 
-// 射弹管理器类
+// 射弹管历怊纴E
 class ProjectileManager {
 public:
     static ProjectileManager& GetInstance();
@@ -111,7 +111,7 @@ private:
     ProjectileManager() = default;
     std::vector<Projectile> projectiles;
 
-    // 射弹纹理
+    // 射弹纹纴E
     ID3D11ShaderResourceView* fireballTexture = nullptr;
     ID3D11ShaderResourceView* iceShardTexture = nullptr;
     ID3D11ShaderResourceView* magicMissileTexture = nullptr;
