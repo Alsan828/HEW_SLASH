@@ -2,7 +2,7 @@
 #include "Enemy.h"
 #include "SimpleAudio.h"
 
-// 在Game.cpp的全局变量定义部分添加
+// Add to global variable definition section in Game.cpp
 float g_slowMoTimer = 0.0f;
 float g_slowMoFactor = 1.0f;
 bool g_isSlowMotion = false;
@@ -14,7 +14,7 @@ int g_gameMinutes = 0;
 int g_gameSeconds = 0;
 
 
-// 音效实例ID存储
+// Sound effect instance ID storage
 int g_jumpSoundId = -1;
 int g_dashSoundId = -1;
 int g_chargeSoundId = -1;
@@ -43,7 +43,7 @@ float GameTimer::GetDeltaTime() const {
     return m_deltaTime;
 }
 
-// 触发时间减慢效果
+// Trigger slow motion effect
 void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
     g_isSlowMotion = true;
     g_slowMoTimer = duration;
@@ -51,7 +51,7 @@ void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
 }
 
 void ResetGame() {
-    g_projectileManager.ClearAll();  // 新增：清除所有射弹
+    g_projectileManager.ClearAll();  // New: clear all projectiles
     CleanupEnemies();
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
@@ -69,16 +69,16 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 // Game initialization
 void InitGameWorld() {
 
-    // 初始化音频系统
+    // Initialize audio system
     g_audioManager.Initialize();
     //PlayStageMusic(1);
-    
+
     g_projectileManager.LoadTextures(g_pDevice);
     LoadTexture(g_pDevice, "asset/Enemy.png", &g_playerTexture);
     g_player.anim.Init(10, 1, 0.15f, 0);
     g_player.anim.AddClip("Idle", 0, 9, 0.25f, true);
 
-    LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture); 
+    LoadTexture(g_pDevice, "asset/blockB.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/Space.png", &g_backgroundTexture);
     LoadTexture(g_pDevice, "asset/block.png", &g_dashEffectTexture);
     LoadTexture(g_pDevice, "asset/completed.png", &g_chargeEffectTexture);
@@ -95,7 +95,7 @@ void InitGameWorld() {
     g_camera.SetLookAhead(camera_LookAhead);
     g_camera.SetDeadZone(camera_DeadZone);
 
-    // 预加载常用音效
+    // Preload common sound effects
     //g_audioManager.PreloadSFX(SoundEffect::JUMP);
     //g_audioManager.PreloadSFX(SoundEffect::DASH);
     //g_audioManager.PreloadSFX(SoundEffect::SHOOT);
@@ -111,7 +111,7 @@ void UpdateGame(float deltaTime) {
         return;
     }
 
-    // 更新音频管理器
+    // Update audio manager
     g_audioManager.Update(deltaTime);
     g_gameTimer.Tick(); // added december 3rd
 
@@ -123,28 +123,28 @@ void UpdateGame(float deltaTime) {
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
-    // 从玩家位置向鼠标位置发射火球
+    // Shoot fireball from player position towards mouse position
     /*g_projectileManager.CreateFireball(
-        g_player.posX + PLAYER_WIDTH / 2,  // 从玩家中心发射
+        g_player.posX + PLAYER_WIDTH / 2,  // Shoot from player center
         g_player.posY + PLAYER_HEIGHT / 2,
         mouseX,
         mouseY,
-        true  // 来自玩家
+        true  // From player
     );*/
 
-    // 更新时间减慢效果
+    // Update slow motion effect
     if (g_isSlowMotion) {
         g_slowMoTimer -= deltaTime;
         if (g_slowMoTimer <= 0.0f) {
             g_isSlowMotion = false;
-            g_slowMoFactor = 1.0f; // 恢复正常时间
+            g_slowMoFactor = 1.0f; // Restore normal time
         }
     }
 
-    // 应用时间减缓效果（优先级：时间减慢 > 蓄力效果）
+    // Apply time scaling effect (priority: slow motion > charge effect)
     float timeScale = 1.0f;
     if (g_isSlowMotion) {
-        timeScale = g_slowMoFactor; // 使用时间减慢倍率
+        timeScale = g_slowMoFactor; // Use slow motion factor
 
     }
     else if (g_player.isCharging) {
@@ -155,14 +155,14 @@ void UpdateGame(float deltaTime) {
 
     float scaledDeltaTime = deltaTime * timeScale;
 
-    // 使用调整后的时间更新游戏逻辑
+    // Update game logic using adjusted time
     UpdateDash(deltaTime);
     g_camera.Update(scaledDeltaTime);
     UpdatePlayerPhysics(scaledDeltaTime);
     UpdateEnemies(scaledDeltaTime, &g_mapManager);
-    // 更新所有射弹
+    // Update all projectiles
     g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
-    // 动画状态更新
+    // Animation state update
     if (g_player.isCharging) {
         if (g_player.anim.GetCurrentClipName() != "Charge") {
             g_player.anim.SetClip("Charge");
@@ -198,9 +198,11 @@ void UpdateGame(float deltaTime) {
 
     g_mouseIndicator.Update(scaledDeltaTime);
     g_player.anim.Update(scaledDeltaTime);
+
+    UpdatePlayerDeath(scaledDeltaTime);
 }
 
-// 辅助函数：根据瓦片代码获取纹理
+// Helper function: Get texture based on tile code
 ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     if (tileCode == "G1" || tileCode == "G2" || tileCode == "G3") {
         return g_groundTexture;
@@ -222,7 +224,7 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     }
 }
 
-// 辅助函数：根据瓦片代码设置颜色
+// Helper function: Set color based on tile code
 void SetTileColor(const std::string& tileCode) {
     if (tileCode == "G1") {
         SetColor(0.4f, 0.8f, 0.3f, 1.0f);
@@ -264,7 +266,6 @@ void SetTileColor(const std::string& tileCode) {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
-
 void DrawGame() {
     int currentWidth = g_camera.GetWidth();
     int currentHeight = g_camera.GetHeight();
@@ -277,17 +278,17 @@ void DrawGame() {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    // 绘制背景（使用视差效果）
+    // Draw background (with parallax effect)
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     float bgOffsetX = cameraX * 0.3f;
     float bgOffsetY = cameraY * 0.3f;
     RenderImage(-1.0f + bgOffsetX, -1.0f + bgOffsetY, 2.0f, 2.0f, g_backgroundTexture, 0, 1, 1);
 
-    // 使用新的地图系统绘制瓦片
+    // Use new map system to draw tiles
     if (g_mapManager.IsMapLoaded()) {
         Map* currentMap = g_mapManager.GetCurrentMap();
 
-        // 绘制背景层瓦片
+        // Draw background layer tiles
         auto& bgTiles = currentMap->GetTiles(MapLayer::BACKGROUND);
         for (const auto& tile : bgTiles) {
             if (tile.tileInfo.code == "00") continue;
@@ -297,7 +298,7 @@ void DrawGame() {
             RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
         }
 
-        // 绘制中间层瓦片（玩家活动层）
+        // Draw midground layer tiles (player activity layer)
         auto& mgTiles = currentMap->GetTiles(MapLayer::MIDGROUND);
         for (const auto& tile : mgTiles) {
             if (tile.tileInfo.code == "00") continue;
@@ -307,7 +308,7 @@ void DrawGame() {
             RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
         }
 
-        // 绘制前景层瓦片
+        // Draw foreground layer tiles
         auto& fgTiles = currentMap->GetTiles(MapLayer::FOREGROUND);
         for (const auto& tile : fgTiles) {
             if (tile.tileInfo.code == "00") continue;
@@ -318,8 +319,8 @@ void DrawGame() {
         }
     }
 
-    // 绘制充能效果
-    if (g_player.isCharging) {
+    // Draw charge effect
+    if (g_player.isCharging && !g_player.isDead) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
         float effectSize = PLAYER_WIDTH * (1.0f + chargeRatio * 1.0f);
         float alpha = 0.3f + chargeRatio * 0.7f;
@@ -336,8 +337,8 @@ void DrawGame() {
         RenderImage(effectPos.first, effectPos.second, effectSize, effectSize, g_chargeEffectTexture, 0, 1, 1);
     }
 
-    // 绘制冲刺效果
-    if (g_player.isDashing) {
+    // Draw dash effect
+    if (g_player.isDashing && !g_player.isDead) {
         float dashProgress = 1.0f - (g_player.dashTimer / DASH_DURATION);
         float effectSize = PLAYER_WIDTH * (1.2f + dashProgress * 0.3f);
         float alpha = 0.7f + dashProgress * 0.3f;
@@ -352,61 +353,111 @@ void DrawGame() {
     }
 
     RenderEnemies(g_camera);
-    // 绘制玩家
-    std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
-    ID3D11ShaderResourceView* playerTexture = g_playerTexture;
-
-    int frameIndex = 0;
-    if (g_player.isCharging) {
-        SetColor(0.0f, 1.0f, 0.0f, 1.0f);
-        frameIndex = 4;
-    }
-    else if (g_player.isDashing) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-        frameIndex = 3;
-    }
-    else if (!g_player.isOnGround) {
-        SetColor(1.0f, 0.5f, 0.0f, 1.0f);
-        frameIndex = 2;
-    }
-    else if (g_player.isMoving) {
-        frameIndex = 1;
-        if (g_player.facingRight) {
-            SetColor(0.0f, 0.0f, 1.0f, 1.0f);
-        }
-        else {
-            SetColor(1.0f, 0.0f, 1.0f, 1.0f);
-        }
-    }
-    else {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    }
-
-    frameIndex = g_player.anim.GetCurrentFrame();
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
 
-    RenderImage(playerPos.first, playerPos.second, PLAYER_WIDTH, PLAYER_HEIGHT,
-        g_playerTexture, frameIndex, 1, 10);
+    // Draw player
+    if (!g_player.isDead) {
+        // Normal drawing when alive
+        std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
+        int frameIndex = 0;
+
+        if (g_player.isCharging) {
+            SetColor(0.0f, 1.0f, 0.0f, 1.0f);
+            frameIndex = 4;
+        }
+        else if (g_player.isDashing) {
+            SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+            frameIndex = 3;
+        }
+        else if (!g_player.isOnGround) {
+            SetColor(1.0f, 0.5f, 0.0f, 1.0f);
+            frameIndex = 2;
+        }
+        else if (g_player.isMoving) {
+            frameIndex = 1;
+            if (g_player.facingRight) {
+                SetColor(0.0f, 0.0f, 1.0f, 1.0f);
+            }
+            else {
+                SetColor(1.0f, 0.0f, 1.0f, 1.0f);
+            }
+        }
+        else {
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+
+        frameIndex = g_player.anim.GetCurrentFrame();
+
+        RenderImage(playerPos.first, playerPos.second, PLAYER_WIDTH, PLAYER_HEIGHT,
+            g_playerTexture, frameIndex, 1, 10);
+    }
+    else {
+        // Flickering disappearance animation when dead
+        std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
+
+        // Death animation duration
+        const float DEATH_ANIM_DURATION = 1.0f;
+
+        if (g_player.deathTimer < DEATH_ANIM_DURATION) {
+            float animProgress = g_player.deathTimer / DEATH_ANIM_DURATION;
+
+            // Flicker frequency gradually slows down
+            float flickerFreq = 20.0f * (1.0f - animProgress);
+
+            // Control flicker effect, gradually disappear in latter half of animation
+            if (animProgress < 0.7f) {
+                // First half: rapid flickering
+                float sinValue = sin(g_player.deathTimer * flickerFreq);
+                float alpha = 0.5f + 0.5f * sinValue;
+
+                if (animProgress > 0.3f) {
+                    // Middle segment: add red flickering
+                    float redIntensity = 0.5f + 0.5f * sin(g_player.deathTimer * 10.0f);
+                    SetColor(1.0f, 1.0f - redIntensity, 1.0f - redIntensity, alpha);
+                }
+                else {
+                    // Initial segment: white flickering
+                    SetColor(1.0f, 1.0f, 1.0f, alpha);
+                }
+            }
+            else {
+                // Latter half: gradually disappear
+                float fadeOut = 1.0f - ((animProgress - 0.7f) / 0.3f);
+                float alpha = fadeOut * 0.5f;
+                SetColor(1.0f, 0.3f, 0.3f, alpha);
+            }
+
+            // Gradually shrink
+            float scale = 1.0f - animProgress * 0.5f;
+            float width = PLAYER_WIDTH * scale;
+            float height = PLAYER_HEIGHT * scale;
+
+            // Center position adjustment
+            playerPos.first += (PLAYER_WIDTH - width) * 0.5f;
+            playerPos.second += (PLAYER_HEIGHT - height) * 0.5f;
+
+            RenderImage(playerPos.first, playerPos.second, width, height,
+                g_playerTexture, 0, 1, 10);
+        }
+    }
 
     g_projectileManager.Render(g_camera);
 
     float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
-
 }
-
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {
         ResetGame();
     }
 
-  /*  if (g_inputSystem.IsTogglePressed(VK_P)) {
-        if (sceneManager.GetCurrentSceneType() == STAGE) {
-            sceneManager.SwitchScene(PAUSE);
-        }
-        else if (sceneManager.GetCurrentSceneType() == PAUSE) {
-            sceneManager.SwitchScene(STAGE);
-        }
-    }*/
+    /*  if (g_inputSystem.IsTogglePressed(VK_P)) {
+          if (sceneManager.GetCurrentSceneType() == STAGE) {
+              sceneManager.SwitchScene(PAUSE);
+          }
+          else if (sceneManager.GetCurrentSceneType() == PAUSE) {
+              sceneManager.SwitchScene(STAGE);
+          }
+      }*/
     if (g_inputSystem.IsTogglePressed(VK_P)) {
         SCENE currentScene = sceneManager.GetCurrentSceneType();
 
@@ -422,31 +473,31 @@ void HandleInput() {
         }
     }
 
-    // 获取鼠标输入状态
+    // Get mouse input state
     bool isMouseLeftPressed = g_inputSystem.IsMouseLeftPressed();
     bool isMouseLeftDown = g_inputSystem.IsMouseLeftDown();
     bool isMouseLeftReleased = g_inputSystem.IsMouseLeftReleased();
 
     static bool wasMouseLeftDown = false;
 
-    // 纯鼠标控制：按下开始蓄力
+    // Pure mouse control: press to start charging
     if (isMouseLeftPressed) {
         StartMouseChargeDash();
     }
 
-    // 纯鼠标控制：释放执行冲刺
+    // Pure mouse control: release to execute dash
     if (isMouseLeftReleased && wasMouseLeftDown && g_player.isCharging) {
         ExecuteMouseChargeDash();
     }
 
-    // 取消蓄力
+    // Cancel charging
     if (!isMouseLeftDown && g_player.isCharging) {
         CancelChargeDash();
     }
 
     wasMouseLeftDown = isMouseLeftDown;
 
-    // 移动控制
+    // Movement control
     bool moving = false;
     if (g_inputSystem.IsMovingLeft()) {
         if (!g_player.isDashing) {
@@ -470,7 +521,7 @@ void HandleInput() {
         g_player.isMoving = false;
     }
 
-    // 跳跃控制
+    // Jump control
     static bool wasJumpKeyPressed = false;
     bool isJumpKeyPressed = g_inputSystem.IsJumping();
     if (isJumpKeyPressed && !wasJumpKeyPressed) {
@@ -479,7 +530,7 @@ void HandleInput() {
     wasJumpKeyPressed = isJumpKeyPressed;
 }
 
-// MouseIndicatorSystem 实现
+// MouseIndicatorSystem implementation
 void MouseIndicatorSystem::Initialize() {
     m_mouseIndicatorTexture = g_chargeEffectTexture;
     m_arrowTexture = g_dashEffectTexture;
@@ -511,12 +562,13 @@ void MouseIndicatorSystem::Update(float deltaTime) {
 
 void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     if (!m_showMouseIndicator) return;
-
+    // Do not show mouse indicator if protagonist is dead
+    if (g_player.isDead) return;
     auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    // 绘制鼠标位置指示器（原有代码）
+    // Draw mouse position indicator (original code)
     float indicatorSize = 0.1f;
     auto mousePos = worldToScreen(m_mouseWorldX - indicatorSize / 2, m_mouseWorldY - indicatorSize / 2);
 
@@ -524,31 +576,31 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     RenderImage(mousePos.first, mousePos.second, indicatorSize, indicatorSize,
         m_mouseIndicatorTexture, 0, 1, 1);
 
-    // 在屏幕右上角固定显示冲刺点数
-    float dashPointsX = 0.9f; // 屏幕右侧
-    float dashPointsY = 0.1f; // 屏幕顶部
+    // Fixed display of dash points in top right corner of screen
+    float dashPointsX = 0.9f; // Right side of screen
+    float dashPointsY = 0.1f; // Top of screen
     float digitWidth = 0.08f;
     float digitHeight = 0.12f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // 渲染冲刺点数
+    // Render dash points
     RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
 
 
-    float uiX = -1.1f; 
-    float uiY = 0.3f;   
-    float uiWidth = 0.78f;  
-    float uiHeight = 1.0f; 
+    float uiX = -1.1f;
+    float uiY = 0.3f;
+    float uiWidth = 0.78f;
+    float uiHeight = 1.0f;
     RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
-    
+
     // for the timer counting
     float timerX = -0.83f;  // position x axis
     float timerY = 0.75f;   // position y axis
     float timerDigitWidth = 0.05f;  // width
     float timerDigitHeight = 0.08f; // height
 
-    // for the minues
+    // for the minutes
     int minuteTens = g_gameMinutes / 10;
     int minuteOnes = g_gameMinutes % 10;
     RenderNumber(minuteTens, timerX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
@@ -564,7 +616,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
 
 
-    // 绘制方向箭头
+    // Draw direction arrow
     float arrowDistance = 0.08f;
     float arrowSize = 0.15f;
 
@@ -584,15 +636,15 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     if (g_player.hasSavedCharge) {
         chargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
     }
-    // 根据蓄力等级显示不同颜色
+    // Display different colors based on charge level
     if (chargeLevel >= 1) {
-        SetColor(0.0f, 1.0f, 1.0f, 1.0f); // 蓝色
+        SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
     }
     if (chargeLevel >= 2) {
-        SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 深蓝色
+        SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
     }
     if (chargeLevel >= 3) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 红色
+        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
     }
 
     RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
@@ -609,7 +661,7 @@ void MouseIndicatorSystem::Cleanup() {
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {
 }
 
-// 音效函数
+// Sound effect functions
 void PlayJumpSound() {
     g_audioManager.PlaySFX(SoundEffect::JUMP, 0.5f);
 }
@@ -647,7 +699,7 @@ void PlaySlowMotionSound(bool start) {
     }
 }
 
-// 背景音乐函数
+// Background music functions
 void PlayStageMusic(int stage) {
     switch (stage) {
     case 1:
@@ -677,4 +729,3 @@ void PlayGameOverMusic() {
     g_audioManager.StopBGM();
     g_audioManager.PlayBGM(BackgroundMusic::GAME_OVER, 0.8f, false);
 }
-

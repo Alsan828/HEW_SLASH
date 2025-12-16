@@ -113,6 +113,9 @@ void MapManager::RespawnPlayer(int spawnId) {
     }
 
     // Reset player state for fresh start
+    g_player.isDead = false;
+    g_player.deathTimer = 0.0f;
+    g_player.health = g_player.maxHealth;
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;
     g_player.isOnGround = false;
