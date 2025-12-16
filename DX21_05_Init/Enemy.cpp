@@ -823,15 +823,11 @@ void BombEnemy::CreateProjectiles() {
 // Enemy management functions
 void InitEnemies() {
     // Load enemy textures
-    LoadTexture(g_pDevice, "asset/Enemy.png", &g_enemyTexture);
-    LoadTexture(g_pDevice, "asset/Enemy.png", &g_shieldEnemyTexture);
-    LoadTexture(g_pDevice, "asset/Enemy.png", &g_mageEnemyTexture);
-    LoadTexture(g_pDevice, "asset/Enemy_Shield.png", &g_fastEnemyTexture);
-
-    if (!g_enemyTexture) g_enemyTexture = g_playerTexture;
-    if (!g_shieldEnemyTexture) g_shieldEnemyTexture = g_enemyTexture;
-    if (!g_mageEnemyTexture) g_mageEnemyTexture = g_enemyTexture;
-    if (!g_fastEnemyTexture) g_fastEnemyTexture = g_enemyTexture;
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyTexture);
 }
 
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {
