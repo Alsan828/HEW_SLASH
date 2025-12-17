@@ -267,7 +267,6 @@ class MageEnemy : public Enemy {
 public:
     MageEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
-    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera);
 
 private:
     float spellCooldown;

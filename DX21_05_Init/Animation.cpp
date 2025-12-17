@@ -22,7 +22,6 @@ void Animation::AddClip(const std::string& name, int startFrame, int endFrame,
     clip.Init(name, startFrame, endFrame, splitX, splitY, frameTime, loop, textureSRV);
     m_clips[name] = clip;
 
-    // 如果没有当前动画，设置为第一个添加的动画
     if (m_currentClip == nullptr)
     {
         m_currentClip = &m_clips[name];

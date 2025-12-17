@@ -22,6 +22,33 @@ ID3D11ShaderResourceView* g_fastEnemyDeathTexture = nullptr;
 
 ID3D11ShaderResourceView* g_bombEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_bombEnemyDeathTexture = nullptr;
+
+
+// 修改InitEnemies函数，加载所有纹理
+void InitEnemies() {
+    // Load enemy textures
+    // 普通敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_idle.png", &g_enemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_idle.png", &g_enemyRunTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_death.png", &g_enemyDeathTexture);
+
+    // 盾牌敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyDeathTexture);
+
+    // 法师敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyAttackTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyDeathTexture);
+
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyRunTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyDeathTexture);
+
+    // 炸弹敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyDeathTexture);
+}
+
 // Enemy class implementation
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
@@ -32,13 +59,10 @@ Enemy::Enemy(float x, float y, float hp)
     height = PLAYER_HEIGHT * 1.2f;
     moveSpeed = MOVE_SPEED * 0.65f;
 
-    // 初始化动画
-    anim.Init(4, 1, 0.1f);  // 假设每个动画有4帧，每秒10帧
-
     // 为基类敌人添加默认动画剪辑
-    anim.AddClip("idle", 0, 3, 0.1f, true, g_enemyIdleTexture);
-    anim.AddClip("run", 0, 3, 0.1f, true, g_enemyRunTexture);
-    anim.AddClip("death", 0, 3, 0.2f, false, g_enemyDeathTexture);
+    anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_enemyIdleTexture);
+    anim.AddClip("run", 0, 1, 1, 1, 0.1f, true, g_enemyRunTexture);
+    anim.AddClip("death", 0, 4, 1, 5, 0.2f, false, g_enemyDeathTexture);
 
     anim.SetClip("idle");
 
@@ -547,12 +571,9 @@ ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     SetDamageMultiplier(DIR_BACK_UP, 1.5f);
     SetDamageMultiplier(DIR_BACK_DOWN, 1.5f);
 
-    // 初始化盾牌敌人动画
-    anim.Init(3, 2, 0.15f);  // 3列2行
-
     // 添加动画剪辑
-    anim.AddClip("idle", 0, 2, 0.15f, true, g_shieldEnemyIdleTexture);
-    anim.AddClip("death", 0, 5, 0.1f, false, g_shieldEnemyDeathTexture);
+    //anim.AddClip("idle", 0, 2, 0.15f, true, g_shieldEnemyIdleTexture);
+   // anim.AddClip("death", 0, 5, 0.1f, false, g_shieldEnemyDeathTexture);
 
     anim.SetClip("idle");
     width = PLAYER_WIDTH * 1.5f;
@@ -592,12 +613,9 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     attackRange = 1.2f;
     moveSpeed = MOVE_SPEED * 0.4f;
 
-    // 初始化法师敌人动画
-    anim.Init(4, 1, 0.2f);
-
-    anim.AddClip("idle", 0, 0, 0.2f, true, g_mageEnemyIdleTexture);
-    anim.AddClip("attack", 1, 3, 0.1f, true, g_mageEnemyAttackTexture);
-    anim.AddClip("death", 0, 0, 0.2f, false, g_mageEnemyDeathTexture);
+    //anim.AddClip("idle", 0, 0, 0.2f, true, g_mageEnemyIdleTexture);
+    //anim.AddClip("attack", 1, 3, 0.1f, true, g_mageEnemyAttackTexture);
+    //anim.AddClip("death", 0, 0, 0.2f, false, g_mageEnemyDeathTexture);
 
     anim.SetClip("idle");
 }
@@ -627,11 +645,9 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     dashCooldown = 2.0f;
     currentDashCooldown = 0.0f;
 
-    // 初始化快速敌人动画
-    anim.Init(4, 2, 0.1f);
 
-    anim.AddClip("run", 2, 7, 0.05f, true, g_fastEnemyRunTexture);
-    anim.AddClip("death", 0, 3, 0.1f, false, g_fastEnemyDeathTexture);
+    //anim.AddClip("run", 2, 7, 0.05f, true, g_fastEnemyRunTexture);
+    //anim.AddClip("death", 0, 3, 0.1f, false, g_fastEnemyDeathTexture);
 
     anim.SetClip("idle");
 }
@@ -675,11 +691,9 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     pulseTimer = 0.0f;
     baseSize = 1.0f;
 
-    // 初始化炸弹敌人动画
-    anim.Init(3, 1, 0.2f);
 
-    anim.AddClip("idle", 0, 0, 0.3f, true, g_bombEnemyIdleTexture);
-    anim.AddClip("death", 2, 2, 0.5f, false, g_bombEnemyDeathTexture);
+    //anim.AddClip("idle", 0, 0, 0.3f, true, g_bombEnemyIdleTexture);
+    //anim.AddClip("death", 2, 2, 0.5f, false, g_bombEnemyDeathTexture);
 
     anim.SetClip("idle");
 }
@@ -885,31 +899,6 @@ void BombEnemy::CreateProjectiles() {
     // CreateParticleEffect(posX, posY, "explosion");
 }
 
-
-// 修改InitEnemies函数，加载所有纹理
-void InitEnemies() {
-    // Load enemy textures
-    // 普通敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyRunTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye.png", &g_enemyDeathTexture);
-
-    // 盾牌敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyDeathTexture);
-
-    // 法师敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyAttackTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyDeathTexture);
-
-    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyRunTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyDeathTexture);
-
-    // 炸弹敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyDeathTexture);
-}
 
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     DamageNumberManager::Update(deltaTime);

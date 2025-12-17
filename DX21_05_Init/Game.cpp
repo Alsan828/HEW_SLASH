@@ -183,13 +183,6 @@ void InitGameWorld() {
 
     g_projectileManager.LoadTextures(g_pDevice);
 
-    // test for character animation 
-   /* LoadTexture(g_pDevice, "asset/oldcharacter/karen_small48.png", &g_playerTexture);
-    g_player.anim.Init(10, 1, 0.15f, 0);
-    g_player.anim.AddClip("Idle", 0, 9, 0.25f, true, g_playerTexture);*/
-
-    //todo: finish the idle animation for character
-    // for the character
     LoadTexture(g_pDevice, "asset/character/idle_left.png", &g_playerIdleLeftTexture);    // when looking left
     LoadTexture(g_pDevice, "asset/character/idle_right.png", &g_playerIdleRightTexture);  // when looking right
     LoadTexture(g_pDevice, "asset/character/jump_left.png", &g_playerJumpLeftTexture);  // when jumping left
@@ -204,21 +197,20 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character/slash_right3.png", &g_playerSlashRight3Texture);  // when slash3 right
     LoadTexture(g_pDevice, "asset/character/slash_left4.png", &g_playerSlashLeft4Texture);  // when slash4 left
     LoadTexture(g_pDevice, "asset/character/slash_right4.png", &g_playerSlashRight4Texture);  // when slash4 right
-    g_player.anim.Init(4, 1, 0.15f, 0);
-    g_player.anim.AddClip("IdleLeft", 0, 3, 0.25f, true, g_playerIdleLeftTexture);
-    g_player.anim.AddClip("IdleRight", 0, 3, 0.25f, true, g_playerIdleRightTexture);
-    g_player.anim.AddClip("JumpLeft", 0, 3, 0.25f, true, g_playerJumpLeftTexture);
-    g_player.anim.AddClip("JumpRight", 0, 3, 0.25f, true, g_playerJumpRightTexture);
-    g_player.anim.AddClip("RunLeft", 0, 3, 0.25f, true, g_playerRunLeftTexture);
-    g_player.anim.AddClip("RunRight", 0, 3, 0.25f, true, g_playerRunRightTexture);
-    g_player.anim.AddClip("SlashLeft1", 0, 3, 0.25f, true, g_playerSlashLeft1Texture);
-    g_player.anim.AddClip("SlashRight1", 0, 3, 0.25f, true, g_playerSlashRight1Texture);
-    g_player.anim.AddClip("SlashLeft2", 0, 3, 0.25f, true, g_playerSlashLeft2Texture);
-    g_player.anim.AddClip("SlashRight2", 0, 3, 0.25f, true, g_playerSlashRight2Texture);
-    g_player.anim.AddClip("SlashLeft3", 0, 3, 0.25f, true, g_playerSlashLeft3Texture);
-    g_player.anim.AddClip("SlashRight3", 0, 3, 0.25f, true, g_playerSlashRight3Texture);
-    g_player.anim.AddClip("SlashLeft4", 0, 3, 0.25f, true, g_playerSlashLeft4Texture);
-    g_player.anim.AddClip("SlashRight4", 0, 3, 0.25f, true, g_playerSlashRight4Texture);
+    g_player.anim.AddClip("IdleLeft", 0, 3,1, 4, 0.25f, true, g_playerIdleLeftTexture);
+    g_player.anim.AddClip("IdleRight", 0, 3, 1, 4, 0.25f, true, g_playerIdleRightTexture);
+    g_player.anim.AddClip("JumpLeft", 0, 3, 1, 4, 0.25f, true, g_playerJumpLeftTexture);
+    g_player.anim.AddClip("JumpRight", 0, 3, 1, 4, 0.25f, true, g_playerJumpRightTexture);
+    g_player.anim.AddClip("RunLeft", 0, 3, 1, 4, 0.25f, true, g_playerRunLeftTexture);
+    g_player.anim.AddClip("RunRight", 0, 3, 1, 4, 0.25f, true, g_playerRunRightTexture);
+    g_player.anim.AddClip("SlashLeft1", 0, 3, 1, 4, 0.25f, true, g_playerSlashLeft1Texture);
+    g_player.anim.AddClip("SlashRight1", 0, 3, 1, 4, 0.25f, true, g_playerSlashRight1Texture);
+    g_player.anim.AddClip("SlashLeft2", 0, 3, 1, 4, 0.25f, true, g_playerSlashLeft2Texture);
+    g_player.anim.AddClip("SlashRight2", 0, 3, 1, 4, 0.25f, true, g_playerSlashRight2Texture);
+    g_player.anim.AddClip("SlashLeft3", 0, 3, 1, 4, 0.25f, true, g_playerSlashLeft3Texture);
+    g_player.anim.AddClip("SlashRight3", 0, 3, 1, 4, 0.25f, true, g_playerSlashRight3Texture);
+    g_player.anim.AddClip("SlashLeft4", 0, 3, 1, 4, 0.25f, true, g_playerSlashLeft4Texture);
+    g_player.anim.AddClip("SlashRight4", 0, 3, 1, 4, 0.25f, true, g_playerSlashRight4Texture);
 
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);

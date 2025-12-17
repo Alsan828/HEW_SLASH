@@ -14,30 +14,11 @@ TitleScene::TitleScene(SceneManager* manager)
 //it initializes the objects in title
 bool TitleScene::Init() 
 {
-    LoadTexture(g_pDevice, "asset/UI/title/title0.png", &tex);
-    frames.push_back(tex);
+    LoadTexture(g_pDevice, "asset/UI/title/cut_sheet.png", &tex);
 
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut0.png", &tex);
-    frames.push_back(tex);
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut1.png", &tex);
-    frames.push_back(tex);
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut2.png", &tex);
-    frames.push_back(tex);
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut3.png", &tex);
-    frames.push_back(tex);
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut4.png", &tex);
-    frames.push_back(tex);
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut5.png", &tex);
-    frames.push_back(tex);
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut6.png", &tex);
-    frames.push_back(tex);
-    LoadTexture(g_pDevice, "asset/UI/title/cut/cut7.png", &tex);
-    frames.push_back(tex);
-
-
-    m_titleAnim.InitFromTextures(frames, 0.06f, false); // 0.06s per frame. lower number is faster
-
-
+    m_titleAnim.AddClip("titleScene",0,8,1,9, 0.06f, false, tex); // 0.06s per frame. lower number is faster
+	m_titleAnim.SetClip("titleScene");
+	m_titleAnim.Pause(); // start paused, will play when mouse is clicked
     uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
        
@@ -48,14 +29,13 @@ bool TitleScene::Init()
 void TitleScene::Update(float deltaTime) 
 {
     g_inputSystem.Update();
-
     if (!m_playing && g_inputSystem.IsMouseLeftDown()) 
     {
         m_playing = true;
         m_titleAnim.Resume();
     }
 
-    m_titleAnim.UpdateTexture(deltaTime);
+    m_titleAnim.Update(deltaTime);
 
     // switch as soon as the animation finishes
     if (m_playing && m_titleAnim.IsFinished()) 
@@ -72,11 +52,11 @@ void TitleScene::Update(float deltaTime)
 void TitleScene::Draw() 
 {
 
-    ID3D11ShaderResourceView* tex = m_titleAnim.GetCurrentTexture();
+    ID3D11ShaderResourceView* tex = m_titleAnim.GetCurrentClipTexture();
     if (tex) 
     {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, tex, 0, 1, 1);
+        RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, tex, m_titleAnim.GetCurrentFrame(), m_titleAnim.GetSplitX(), m_titleAnim.GetSplitY());
     }
 }
 
@@ -85,7 +65,7 @@ void TitleScene::Uninit()
 {
 
     // clean up the texture for the animation
-    m_titleAnim.CleanupTextures();
+    m_titleAnim.ClearClips();
 
     // clean up the buttons
     uiButtons.clear();

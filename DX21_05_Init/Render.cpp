@@ -547,6 +547,7 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	// Release temporary resources
 	SAFE_RELEASE(pDynamicBuffer);
 }
+
 void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV, bool enableCulling) {
 
 	// 如果启用剔除且物体不可见，则跳过渲染
