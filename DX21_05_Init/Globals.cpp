@@ -5,7 +5,24 @@
 MapManager g_mapManager;
 ProjectileManager& g_projectileManager = ProjectileManager::GetInstance();
 Player g_player;
-ID3D11ShaderResourceView* g_playerTexture = nullptr;
+ID3D11ShaderResourceView* g_playerTexture = nullptr; // maybe we wont use this
+
+// for the character
+ID3D11ShaderResourceView* g_playerIdleLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_playerIdleRightTexture = nullptr;
+ID3D11ShaderResourceView* g_playerJumpLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_playerJumpRightTexture = nullptr;
+ID3D11ShaderResourceView* g_playerRunLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_playerRunRightTexture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashLeft1Texture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashRight1Texture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashLeft2Texture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashRight2Texture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashLeft3Texture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashRight3Texture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashLeft4Texture = nullptr;
+ID3D11ShaderResourceView* g_playerSlashRight4Texture = nullptr;
+
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture2 = nullptr;

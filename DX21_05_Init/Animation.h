@@ -9,7 +9,7 @@ struct AnimationClip
     int startFrame;     // first frame index in the clip
     int endFrame;       // last frame index in the clip
     float frameTime;    // time per frame
-    bool loop;          // should this clip loop?
+    bool loop;          
 	ID3D11ShaderResourceView* textureSRV; // for separate .png
 };
 

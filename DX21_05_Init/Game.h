@@ -210,6 +210,23 @@ extern int g_windowHeight;
 
 extern Player g_player;
 extern ID3D11ShaderResourceView* g_playerTexture;
+
+// for the characteer
+extern ID3D11ShaderResourceView* g_playerIdleLeftTexture;
+extern ID3D11ShaderResourceView* g_playerIdleRightTexture;
+extern ID3D11ShaderResourceView* g_playerJumpLeftTexture;
+extern ID3D11ShaderResourceView* g_playerJumpRightTexture;
+extern ID3D11ShaderResourceView* g_playerRunLeftTexture;
+extern ID3D11ShaderResourceView* g_playerRunRightTexture;
+extern ID3D11ShaderResourceView* g_playerSlashLeft1Texture;
+extern ID3D11ShaderResourceView* g_playerSlashRight1Texture;
+extern ID3D11ShaderResourceView* g_playerSlashLeft2Texture;
+extern ID3D11ShaderResourceView* g_playerSlashRight2Texture;
+extern ID3D11ShaderResourceView* g_playerSlashLeft3Texture;
+extern ID3D11ShaderResourceView* g_playerSlashRight3Texture;
+extern ID3D11ShaderResourceView* g_playerSlashLeft4Texture;
+extern ID3D11ShaderResourceView* g_playerSlashRight4Texture;
+
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
 extern ID3D11ShaderResourceView* g_backgroundTexture2;
