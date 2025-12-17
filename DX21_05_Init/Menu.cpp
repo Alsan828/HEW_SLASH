@@ -20,15 +20,21 @@ bool MenuScene::Init()
 	LoadTexture(g_pDevice, "asset/UI/menu/quit_normal.png", &quitTexture);
 	LoadTexture(g_pDevice, "asset/UI/menu/quit_hover.png", &quitHoverTexture);
 
-	uiButtons.emplace_back(-0.70f, -0.3f, 0.5f, 0.9f, STAGESELECT, startTexture, startHoverTexture);
-	uiButtons.emplace_back(-0.70f, -0.55f, 0.5f, 0.9f, HOWTOPLAY, controlTexture, controlHoverTexture);
-	uiButtons.emplace_back(-0.70f, -0.8f, 0.5f, 0.9f, QUIT_GAME, quitTexture, quitHoverTexture);
 
-	for (auto& btn : uiButtons)
-	{
-		btn.SetHitboxScale(0.7f, 0.21f);
-		btn.SetHitboxOffset(-0.02f);
-	}
+	// to do: make the stageselect part and move it to the left a bit
+	// because each puase button size is different so the hitbox will be different as well.
+	uiButtons.emplace_back(-0.7f, -0.3f, 0.5f, 0.9f, STAGESELECT, startTexture, startHoverTexture);
+	uiButtons.back().SetHitboxScale(0.4f, 0.13f);
+	uiButtons.back().SetHitboxOffset(-0.06f);
+
+	uiButtons.emplace_back(-0.7f, -0.55f, 0.5f, 0.9f, HOWTOPLAY, controlTexture, controlHoverTexture);
+	uiButtons.back().SetHitboxScale(0.48f, 0.13f);
+	uiButtons.back().SetHitboxOffset(-0.06f);
+
+	uiButtons.emplace_back(-0.7f, -0.8f, 0.5f, 0.9f, QUIT_GAME, quitTexture, quitHoverTexture);
+	uiButtons.back().SetHitboxScale(0.47f, 0.13f);
+	uiButtons.back().SetHitboxOffset(-0.06f);
+
 
 
 	//uiButtons.clear();

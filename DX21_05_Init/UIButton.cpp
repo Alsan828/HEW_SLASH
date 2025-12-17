@@ -98,6 +98,7 @@ void UIButton::SetHitboxScale(float scaleWidth, float scaleHeight)
     hitboxScaleHeight = scaleHeight;
 }
 
+// so I can adjust the vertical position in case I need
 void UIButton::SetHitboxOffset(float offsetY)
 {
     hitboxOffsetY = offsetY;

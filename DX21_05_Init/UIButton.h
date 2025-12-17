@@ -39,9 +39,9 @@ public:
 
     // constructor 
     UIButton(float centerX, float centerY, float w, float h,
-        SCENE scene,
-        ID3D11ShaderResourceView* tex,
-        ID3D11ShaderResourceView* hoverTex = nullptr);
+            SCENE scene,
+            ID3D11ShaderResourceView* tex,
+            ID3D11ShaderResourceView* hoverTex = nullptr);
 
     UIButtonResult Process();        // call every frame
     void Draw(float baseAlpha = 0.65f) const;
