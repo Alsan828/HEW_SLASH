@@ -290,7 +290,6 @@ class BombEnemy : public Enemy {
 public:
     BombEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
-    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
 
 private:
 

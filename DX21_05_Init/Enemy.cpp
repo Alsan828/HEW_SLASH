@@ -7,7 +7,6 @@ std::vector<DamageNumber> DamageNumberManager::damageNumbers;
 
 // 定义敌人纹理
 ID3D11ShaderResourceView* g_enemyIdleTexture = nullptr;
-ID3D11ShaderResourceView* g_enemyRunTexture = nullptr;
 ID3D11ShaderResourceView* g_enemyDeathTexture = nullptr;
 
 ID3D11ShaderResourceView* g_shieldEnemyIdleTexture = nullptr;
@@ -18,7 +17,6 @@ ID3D11ShaderResourceView* g_mageEnemyAttackTexture = nullptr;
 ID3D11ShaderResourceView* g_mageEnemyDeathTexture = nullptr;
 
 ID3D11ShaderResourceView* g_fastEnemyRunTexture = nullptr;
-ID3D11ShaderResourceView* g_fastEnemyDeathTexture = nullptr;
 
 ID3D11ShaderResourceView* g_bombEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_bombEnemyDeathTexture = nullptr;
@@ -29,24 +27,20 @@ void InitEnemies() {
     // Load enemy textures
     // 普通敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_idle.png", &g_enemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_idle.png", &g_enemyRunTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_death.png", &g_enemyDeathTexture);
 
-    // 盾牌敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant.png", &g_shieldEnemyDeathTexture);
-
+    // 盾牌敌人(改成飞行敌人）
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_right.png", &g_shieldEnemyIdleTexture);
     // 法师敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyAttackTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort.png", &g_mageEnemyDeathTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_idle.png", &g_mageEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_attack.png", &g_mageEnemyAttackTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_death.png", &g_mageEnemyDeathTexture);
 
-    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyRunTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing.png", &g_fastEnemyDeathTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant/enemy_002_ant.png", &g_fastEnemyRunTexture);
 
     // 炸弹敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyIdleTexture);
-    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn.png", &g_bombEnemyDeathTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_idle.png", &g_bombEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_death.png", &g_bombEnemyDeathTexture);
 }
 
 // Enemy class implementation
@@ -61,7 +55,6 @@ Enemy::Enemy(float x, float y, float hp)
 
     // 为基类敌人添加默认动画剪辑
     anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_enemyIdleTexture);
-    anim.AddClip("run", 0, 1, 1, 1, 0.1f, true, g_enemyRunTexture);
     anim.AddClip("death", 0, 4, 1, 5, 0.2f, false, g_enemyDeathTexture);
 
     anim.SetClip("idle");
@@ -213,7 +206,6 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         UpdateMinimal(deltaTime);
         return;
     }
-    PlayAnimation("idle");
 
     anim.Update(deltaTime);
     // Full update logic
@@ -378,10 +370,7 @@ void Enemy::ChaseBehavior(float deltaTime) {
         velocityX = -moveSpeed;
     }
 
-    // Simple jump attempt
-    if (abs(g_player.posX - posX) < 0.3f && g_player.posY > posY + 0.2f) {
-        velocityY = JUMP_FORCE * 0.8f;
-    }
+    
 }
 
 void Enemy::AttackBehavior(float deltaTime) {
@@ -454,7 +443,7 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
         anim.GetSplitY(),  // 替换为动画的Y分割数
         false,             // enableCulling
         0.0f,              // rotation
-        facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
+        -facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
     );
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -572,7 +561,7 @@ ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     SetDamageMultiplier(DIR_BACK_DOWN, 1.5f);
 
     // 添加动画剪辑
-    //anim.AddClip("idle", 0, 2, 0.15f, true, g_shieldEnemyIdleTexture);
+    anim.AddClip("idle", 0, 3,1,4, 0.15f, true, g_shieldEnemyIdleTexture);
    // anim.AddClip("death", 0, 5, 0.1f, false, g_shieldEnemyDeathTexture);
 
     anim.SetClip("idle");
@@ -613,7 +602,7 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     attackRange = 1.2f;
     moveSpeed = MOVE_SPEED * 0.4f;
 
-    //anim.AddClip("idle", 0, 0, 0.2f, true, g_mageEnemyIdleTexture);
+    anim.AddClip("idle", 0, 1,1,2, 0.2f, true, g_mageEnemyIdleTexture);
     //anim.AddClip("attack", 1, 3, 0.1f, true, g_mageEnemyAttackTexture);
     //anim.AddClip("death", 0, 0, 0.2f, false, g_mageEnemyDeathTexture);
 
@@ -646,10 +635,9 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     currentDashCooldown = 0.0f;
 
 
-    //anim.AddClip("run", 2, 7, 0.05f, true, g_fastEnemyRunTexture);
+    anim.AddClip("Idle", 0, 3,1,4 ,0.05f, true, g_fastEnemyRunTexture);
     //anim.AddClip("death", 0, 3, 0.1f, false, g_fastEnemyDeathTexture);
-
-    anim.SetClip("idle");
+    anim.SetClip("Idle");
 }
 
 
@@ -692,8 +680,8 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     baseSize = 1.0f;
 
 
-    //anim.AddClip("idle", 0, 0, 0.3f, true, g_bombEnemyIdleTexture);
-    //anim.AddClip("death", 2, 2, 0.5f, false, g_bombEnemyDeathTexture);
+    anim.AddClip("idle", 0, 0, 1, 1, 0.3f, true, g_bombEnemyIdleTexture);
+    anim.AddClip("death", 0, 3, 1,4,0.5f, false, g_bombEnemyDeathTexture);
 
     anim.SetClip("idle");
 }
@@ -793,63 +781,6 @@ void BombEnemy::OnDeath() {
     Enemy::OnDeath();
 
     // Then trigger explosion effect
-}
-
-void BombEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
-    if (!isAlive) return;
-
-    // Convert to screen coordinates
-    float screenX, screenY;
-    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
-
-    // Select frame based on state and health
-    int frameIndex = 0;
-    if (health < maxHealth * 0.3f) {
-        frameIndex = 1;  // Low health frame
-    }
-    if (currentState == ATTACK) {
-        frameIndex = 2;  // Attack state frame
-    }
-
-    // Apply color effects
-    if (isHit) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f);  // Hit red
-    }
-    else if (currentState == ATTACK) {
-        // Pulsing color change in attack state
-        float pulse = 0.5f + 0.5f * sin(pulseTimer * 5.0f);
-        SetColor(1.0f, 0.3f + pulse * 0.5f, 0.3f, 1.0f);  // Red-orange pulse
-    }
-    else {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Normal color
-    }
-
-    // Apply pulse scaling
-    float renderWidth = width * baseSize;
-    float renderHeight = height * baseSize;
-    float offsetX = (width - renderWidth) * 0.5f;
-    float offsetY = (height - renderHeight) * 0.5f;
-
-    // Render enemy
-    RenderImage(screenX + offsetX, screenY + offsetY, renderWidth, renderHeight,
-        texture, frameIndex, 1, 3);
-
-    // Render health bar
-    RenderHealthBar(camera);
-
-    // If in attack state, show warning effect
-    if (currentState == ATTACK) {
-        float warningSize = renderWidth * 1.5f;
-        float warningX = screenX - (warningSize - renderWidth) * 0.5f;
-        float warningY = screenY - (warningSize - renderHeight) * 0.5f;
-
-        float alpha = 0.3f + 0.3f * sin(pulseTimer * 4.0f);
-        SetColor(1.0f, 0.3f, 0.1f, alpha);
-        RenderImage(warningX, warningY, warningSize, warningSize,
-            g_groundTexture, 0, 1, 1);
-    }
-
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void BombEnemy::Explode() {
