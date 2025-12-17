@@ -17,8 +17,8 @@ private:
     SCENE returnScene; // for going to back to then scene I want to
 
     std::vector<UIButton> uiButtons;
-    ID3D11ShaderResourceView* buttonTexture = nullptr;
-    ID3D11ShaderResourceView* buttonHoverTexture = nullptr;
+    ID3D11ShaderResourceView* backTexture = nullptr;
+    ID3D11ShaderResourceView* backHoverTexture = nullptr;
 
 public:
     HowToPlayScene(SceneManager* manager, SCENE returnTo); // constructor

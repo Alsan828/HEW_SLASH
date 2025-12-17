@@ -12,23 +12,28 @@ bool StageSelect::Init()
 
 	LoadTexture(g_pDevice, "asset/stageselect.png", &backgroundTexture);      // abckground texture
 
+	// for test now
 	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
 	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
 
 	
-
 	uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, STAGE, buttonTexture, buttonHoverTexture); // go to 1-1
 	uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, STAGE2, buttonTexture, buttonHoverTexture); // go to 1-2
 	uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, STAGE3, buttonTexture, buttonHoverTexture); // go to 1-3
-
-	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, buttonTexture, buttonHoverTexture); // go back to menu
-
-
 	for (auto& btn : uiButtons)
 	{
 		btn.SetHitboxScale(0.7f, 0.2f);
 		btn.SetHitboxOffset(-0.05f);
 	}
+
+
+
+	LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // for the button
+	LoadTexture(g_pDevice, "asset/UI/back/back_hover.png", &backHoverTexture);
+
+	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, backTexture, backHoverTexture);
+	uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // change this values if needed depending on the size of the button
+	uiButtons.back().SetHitboxOffset(-0.06f);
 
 	//uiButtons.clear();
 	g_mouseIndicator.ShowMouseIndicator(false);
@@ -76,15 +81,26 @@ void StageSelect::Uninit()
 		backgroundTexture = nullptr;
 	}
 
-	if (buttonTexture) {
+	if (buttonTexture) 
+	{
 		buttonTexture->Release();
 		buttonTexture = nullptr;
 	}
-
 	if (buttonHoverTexture)
 	{
 		buttonHoverTexture->Release();
 		buttonHoverTexture = nullptr;
+	}
+
+	if (backTexture)
+	{
+		backTexture->Release();
+		backTexture = nullptr;
+	}
+	if (backHoverTexture)
+	{
+		backHoverTexture->Release();
+		backHoverTexture = nullptr;
 	}
 
 	uiButtons.clear();

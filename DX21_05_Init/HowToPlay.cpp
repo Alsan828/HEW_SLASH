@@ -11,15 +11,12 @@ bool HowToPlayScene::Init()
 {
 	LoadTexture(g_pDevice, "asset/UI/control/control.png", &backgroundTexture);      // abckground texture
 
-	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
-	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
+	LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // for the button
+	LoadTexture(g_pDevice, "asset/UI/back/back_hover.png", &backHoverTexture);
 
-	
-
-	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, buttonTexture, buttonHoverTexture);
-
-	uiButtons[0].SetHitboxScale(0.7f, 0.22f);  // change this values if needed depending on the size of the button
-	uiButtons[0].SetHitboxOffset(-0.04f);
+	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, backTexture, backHoverTexture);
+	uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // change this values if needed depending on the size of the button
+	uiButtons.back().SetHitboxOffset(-0.06f);
 
 
 	//uiButtons.clear();
@@ -67,20 +64,17 @@ void HowToPlayScene::Uninit()
 	{
 		backgroundTexture->Release();
 		backgroundTexture = nullptr;
-		OutputDebugStringA("Released backgroundTexture\n");
 	}
 
-	if (buttonTexture) {
-		buttonTexture->Release();
-		buttonTexture = nullptr;
-		OutputDebugStringA("Released buttonTexture\n");
-	}
-
-	if (buttonHoverTexture)
+	if (backTexture) 
 	{
-		buttonHoverTexture->Release();
-		buttonHoverTexture = nullptr;
-		OutputDebugStringA("Released buttonTexture\n");
+		backTexture->Release();
+		backTexture = nullptr;
+	}
+	if (backHoverTexture)
+	{
+		backHoverTexture->Release();
+		backHoverTexture = nullptr;
 	}
 
 	uiButtons.clear();
