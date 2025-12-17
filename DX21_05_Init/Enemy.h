@@ -113,7 +113,8 @@ public:
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
 
-    Animation anim;
+    Animation anim;  // 动画系统
+    void PlayAnimation(const std::string& clipName);  // 播放动画剪辑
 
 protected:
 
@@ -198,6 +199,7 @@ protected:
         float x2, float y2, float w2, float h2) {
         return CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2);
     }
+
     // 基本属性
     float posX, posY;
     float width, height;
@@ -208,7 +210,9 @@ protected:
     bool wasVisible = false;  // 上次更新时是否可见
     float offScreenTimer = 0.0f;  // 离开屏幕的时间计时器
     static constexpr float MAX_OFFSCREEN_TIME = 5.0f;  // 最大离开屏幕时间
-
+    bool isDying = false;  // 新增：是否正在播放死亡动画
+    float deathAnimationTimer = 0.0f;  // 死亡动画计时器
+    const float DEATH_ANIMATION_DURATION = 0.5f;  // 死亡动画持续时间
 
     // 移动相关
     float velocityX;
@@ -247,8 +251,6 @@ protected:
     bool isHit = false;
     float hitTimer = 0.0f;
     const float HIT_DURATION = 0.01f;
-
-    // 删除原有的伤害数字相关静态成员
 };
 // 衍生敌人类
 class ShieldEnemy : public Enemy {
@@ -312,9 +314,3 @@ void CleanupEnemies();
 
 // 全局敌人列表和纹理
 extern std::vector<Enemy*> g_enemies;
-// 在全局纹理声明中添加爆炸敌人纹理
-extern ID3D11ShaderResourceView* g_bombEnemyTexture;
-extern ID3D11ShaderResourceView* g_enemyTexture;
-extern ID3D11ShaderResourceView* g_shieldEnemyTexture;
-extern ID3D11ShaderResourceView* g_mageEnemyTexture;
-extern ID3D11ShaderResourceView* g_fastEnemyTexture;

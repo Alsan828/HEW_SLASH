@@ -403,13 +403,6 @@ void ProjectileManager::LoadTextures(ID3D11Device* device) {
     LoadTexture(device, "asset/Projectile_PoisonDart.png", &poisonDartTexture);
     LoadTexture(device, "asset/Projectile_HolyBolt.png", &holyBoltTexture);
 
-    // Set default texture (if loading fails)
-    if (!fireballTexture) fireballTexture = g_enemyTexture;
-    if (!iceShardTexture) iceShardTexture = g_enemyTexture;
-    if (!magicMissileTexture) magicMissileTexture = fireballTexture;
-    if (!lightningTexture) lightningTexture = fireballTexture;
-    if (!poisonDartTexture) poisonDartTexture = fireballTexture;
-    if (!holyBoltTexture) holyBoltTexture = fireballTexture;
 }
 
 // Predefined projectile creation functions
