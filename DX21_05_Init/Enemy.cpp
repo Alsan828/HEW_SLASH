@@ -38,7 +38,7 @@ Enemy::Enemy(float x, float y, float hp)
     // 为基类敌人添加默认动画剪辑
     anim.AddClip("idle", 0, 3, 0.1f, true, g_enemyIdleTexture);
     anim.AddClip("run", 0, 3, 0.1f, true, g_enemyRunTexture);
-   anim.AddClip("death", 0, 3, 0.2f, false, g_enemyDeathTexture);
+    anim.AddClip("death", 0, 3, 0.2f, false, g_enemyDeathTexture);
 
     anim.SetClip("idle");
 
@@ -417,14 +417,21 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
         SetColor(1.0f, 1.0f, 1.0f, alpha);
     }
 
-    // 渲染敌人
-    // 注意：这里假设动画是精灵表，通过UV偏移来显示不同帧
-    int currentFrame = anim.GetCurrentFrame();
-    int splitX = anim.GetSplitX();
-    int splitY = anim.GetSplitY();
 
-    RenderImage(screenX, screenY, width, height, currentTexture,
-        currentFrame, splitX, splitY);
+    // 渲染敌人精灵
+    RenderImage(
+        screenX,
+        screenY,
+        width,
+        height,
+        texture,
+        anim.GetCurrentFrame(),
+        anim.GetSplitX(),  // 替换为动画的X分割数
+        anim.GetSplitY(),  // 替换为动画的Y分割数
+        false,             // enableCulling
+        0.0f,              // rotation
+        facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
+    );
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -613,38 +620,6 @@ void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
 void MageEnemy::CastSpell() {
     // Implement spell casting logic here
 }
-
-void MageEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
-    if (!isAlive) return;
-
-    // Convert world coordinates to screen coordinates
-    float screenX, screenY;
-    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
-
-    int frameIndex = 0;
-    if (health < maxHealth * 0.3f) {
-        frameIndex = 1;
-    }
-    if (currentState == ATTACK) {
-        frameIndex = 2;
-    }
-
-    // Render mage enemy
-    RenderImage(screenX, screenY, width, height, texture, frameIndex, 1, 3);
-
-    // Render health bar
-    RenderHealthBar(camera);
-
-    // Mage enemy has magic effects (also needs screen coordinates)
-    if (currentState == ATTACK) {
-        float effectSize = width * 1.3f;
-        float effectX = screenX - (effectSize - width) * 0.5f;
-        float effectY = screenY - (effectSize - height) * 0.5f;
-
-        RenderImage(effectX, effectY, effectSize, effectSize, g_chargeEffectTexture, 0, 1, 3);
-    }
-}
-
 
 // FastEnemy implementation
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {

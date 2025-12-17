@@ -27,8 +27,8 @@ void UpdatePlayerPhysics(float deltaTime) {
     if (!g_player.isDashing) {
         float fixedDeltaTime = std::min(deltaTime, 0.033f);
         g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
-        if (g_player.velocityY < -0.3f) {
-            g_player.velocityY = -0.3f;
+        if (g_player.velocityY < -0.2f) {
+            g_player.velocityY = -0.2f;
         }
     }
 

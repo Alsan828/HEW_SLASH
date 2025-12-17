@@ -1,248 +1,162 @@
 #include "Animation.h"
 
-//this is for the inialize of the animationc consctruct
 Animation::Animation()
 {
-    m_splitX = 1;
-    m_splitY = 1;
-    m_frameCount = 1;
-    m_currentFrame = 0;
-    m_frameTime = 0.1f;
-    m_elapsedTime = 0.0f;
-    m_uvOffset = { 0.0f, 0.0f };
-
-    // Default clip: single frame, loops
-    m_currentClip = { 0, 0, 0.1f, true };
-    m_clips = {}; 
-
-    m_paused = false; // start with false when you start the game
+    m_currentClip = nullptr;
+    m_paused = false;
+    m_uvOffset = DirectX::XMFLOAT2(0.0f, 0.0f);
 }
 
-
-HRESULT Animation::Init(int splitX, int splitY, float frameTime, int startFrame) 
+Animation::~Animation()
 {
-    m_splitX = splitX;               // colums in the sprite sheet
-    m_splitY = splitY;               // rows in the sprite sheet
-    m_frameCount = splitX * splitY;  // total frames 
-    m_currentFrame = 0;              // start frame default to 0
-    m_elapsedTime = 0.0f;            // it resets it to 0
-    m_uvOffset = { 0.0f, 0.0f };     // deault to 0
-
-    return S_OK;
+    ClearClips();
+    m_currentClip = nullptr;
 }
 
-// for adding animation clip
-void Animation::AddClip(const std::string& name, int startFrame, int endFrame, float frameTime, bool loop, ID3D11ShaderResourceView* textureSRV)
+// 添加动画片段
+void Animation::AddClip(const std::string& name, int startFrame, int endFrame,
+    int splitX, int splitY, float frameTime, bool loop,
+    ID3D11ShaderResourceView* textureSRV)
 {
-    AnimationClip clip{ startFrame, endFrame, frameTime, loop , textureSRV };  // it creates the clip
-    m_clips[name] = clip;                                         // it stores the clip
+    AnimationClip clip;
+    clip.Init(name, startFrame, endFrame, splitX, splitY, frameTime, loop, textureSRV);
+    m_clips[name] = clip;
+
+    // 如果没有当前动画，设置为第一个添加的动画
+    if (m_currentClip == nullptr)
+    {
+        m_currentClip = &m_clips[name];
+    }
 }
 
-// it switches the clip to the one we want
+// 设置当前动画片段
 void Animation::SetClip(const std::string& name)
 {
-    auto it = m_clips.find(name); // looks for the clip
-    // if it founds the clip
-    if (it != m_clips.end())      
+    auto it = m_clips.find(name);
+    if (it != m_clips.end())
     {
-        m_currentClip = it->second; // it sets the clip as the current
-        m_currentFrame = m_currentClip.startFrame; // resets it to the start frame
-        m_elapsedTime = 0.0f;  // it resets the timer
-
-        // it calculates the uv offset for the frame
-        m_uvOffset.x = (float)(m_currentFrame % m_splitX) / m_splitX;
-        m_uvOffset.y = (float)(m_currentFrame / m_splitX) / m_splitY;
+        m_currentClip = &(it->second);
+        m_currentClip->Reset();
     }
 }
 
-// it gets the current clip name and it return the name of it
+// 获取当前动画片段名称
 std::string Animation::GetCurrentClipName() const
 {
-    for (const auto& kv : m_clips)
+    if (m_currentClip)
     {
-        if (kv.second.startFrame == m_currentClip.startFrame &&
-            kv.second.endFrame == m_currentClip.endFrame)
-        {
-            return kv.first;
-        }
+        return m_currentClip->name;
     }
-
     return "";
 }
 
-// it update animation based on elapsed time
-void Animation::Update(float deltaTime) 
-{
-    if (m_paused)
-    {
-        return; // do nothing if the games is paused
-    }
-
-    m_elapsedTime += deltaTime;
-    if (m_elapsedTime >= m_currentClip.frameTime)
-    {
-        m_elapsedTime = 0.0f;  // reset timer
-
-        if (m_currentFrame < m_currentClip.endFrame)
-        {
-            m_currentFrame++; // go to next frame
-        }
-        else
-        {
-            if (m_currentClip.loop)
-            {
-                m_currentFrame = m_currentClip.startFrame;
-            }
-        }
-
-        // it updates UV offset for new frame
-        m_uvOffset.x = (float)(m_currentFrame % m_splitX) / m_splitX;
-        m_uvOffset.y = (float)(m_currentFrame / m_splitX) / m_splitY;
-    }
-}
-
-
-DirectX::XMFLOAT2 Animation::GetUVOffset() const 
-{
-    return m_uvOffset; // it returns UV offset for current frame
-}
-
-// it resets current clip back to start frame
-void Animation::Reset()
-{
-    m_currentFrame = m_currentClip.startFrame;
-    m_elapsedTime = 0.0f;
-    m_uvOffset.x = (float)(m_currentFrame % m_splitX) / m_splitX;
-    m_uvOffset.y = (float)(m_currentFrame / m_splitX) / m_splitY;
-}
-
-// Check if non-looping animation has finished
-bool Animation::IsFinished() const
-{
-    //return (!m_currentClip.loop && m_currentFrame == m_currentClip.endFrame);
-
-    if (m_useTextures) {
-        // flipbook mode: finished when we reached the last texture
-        return (m_currentFrame == m_frameCount - 1 && m_paused);
-    }
-    else {
-        // sprite sheet mode: keep your original logic
-        return (!m_currentClip.loop &&
-            m_currentFrame == m_currentClip.endFrame &&
-            m_paused);
-    }
-}
-
-//get current clip Texture
+// 获取当前动画片段纹理
 ID3D11ShaderResourceView* Animation::GetCurrentClipTexture() const
 {
-    return m_currentClip.textureSRV;
+    if (m_currentClip)
+    {
+        return m_currentClip->textureSRV;
+    }
+    return nullptr;
 }
 
-// it gets the current frame of the aniamtion
+// 更新动画
+void Animation::Update(float deltaTime)
+{
+    if (m_paused || !m_currentClip)
+    {
+        return;
+    }
+
+    m_currentClip->Update(deltaTime);
+    m_uvOffset = m_currentClip->GetUVOffset();
+}
+
+// 获取UV偏移
+DirectX::XMFLOAT2 Animation::GetUVOffset() const
+{
+    return m_uvOffset;
+}
+
+// 重置当前动画
+void Animation::Reset()
+{
+    if (m_currentClip)
+    {
+        m_currentClip->Reset();
+    }
+}
+
+// 检查是否结束
+bool Animation::IsFinished() const
+{
+    if (m_currentClip)
+    {
+        return m_currentClip->IsFinished();
+    }
+    return true;
+}
+
+// 获取当前帧
 int Animation::GetCurrentFrame() const
 {
-    return m_currentFrame;
+    if (m_currentClip)
+    {
+        return m_currentClip->currentFrame;
+    }
+    return 0;
 }
 
-// for pausing the game
+// 暂停/恢复
 void Animation::Pause()
 {
     m_paused = true;
 }
 
-// for resuming the game
 void Animation::Resume()
 {
     m_paused = false;
 }
 
-// check if its paused or not
 bool Animation::IsPaused() const
 {
     return m_paused;
 }
 
-
-
-// used for the animation with .png
-void Animation::InitFromTextures(const std::vector<ID3D11ShaderResourceView*>& textures, float frameTime, bool loop)
+// 获取分割信息
+int Animation::GetSplitX() const
 {
-    m_textures = textures;
-    m_frameCount = (int)textures.size();
-    m_currentFrame = 0;
-    m_frameTime = frameTime;
-    m_elapsedTime = 0.0f;
-    m_useTextures = true;
-    m_paused = true;
-
-}
-
-
-ID3D11ShaderResourceView* Animation::GetCurrentTexture() const
-{
-    if (m_useTextures && !m_textures.empty()) {
-        return m_textures[m_currentFrame];
-    }
-    return nullptr;
-}
-
-void Animation::UpdateTexture(float deltaTime)
-{
-    if (m_paused) return;
-
-    m_elapsedTime += deltaTime;
-    if (m_elapsedTime >= m_frameTime)
+    if (m_currentClip)
     {
-        m_elapsedTime = 0.0f;
-        m_currentFrame++;
-
-        if (m_currentFrame >= m_frameCount)
-        {
-            if (m_useTextures)
-            {
-                m_currentFrame = m_frameCount - 1; // stay on last frame
-                m_paused = true; // stop animation
-            }
-            else if (m_currentClip.loop) {
-                m_currentFrame = m_currentClip.startFrame;
-            }
-            else {
-                m_currentFrame = m_currentClip.endFrame;
-                m_paused = true;
-            }
-        }
+        return m_currentClip->splitX;
     }
+    return 1;
 }
 
-void Animation::CleanupTextures()
- {
-     for (auto tex : m_textures) {
-         if (tex) {
-             tex->Release();
-         }
-     }
-     m_textures.clear();
- }
+int Animation::GetSplitY() const
+{
+    if (m_currentClip)
+    {
+        return m_currentClip->splitY;
+    }
+    return 1;
+}
 
+// 检查动画是否存在
+bool Animation::HasClip(const std::string& name) const
+{
+    return m_clips.find(name) != m_clips.end();
+}
 
+// 获取动画片段数量
+size_t Animation::GetClipCount() const
+{
+    return m_clips.size();
+}
 
-
-
-
-
-//=======================================
-// THIS IS HOW YOU WOULD USE IT IN OTHER .CPP
-// =======================================
-//Animation anim;
-//anim.Init(4, 4); // 4x4 sprite sheet
-//
-//// Add clips
-//anim.AddClip("Idle", 0, 5, 0.2f, true);
-//anim.AddClip("Run", 6, 12, 0.1f, true);
-//anim.AddClip("Jump", 13, 16, 0.15f, false);
-//
-//// Switch based on state
-//anim.SetClip("Run");
-//anim.Update(deltaTime);
-//DirectX::XMFLOAT2 uv = anim.GetUVOffset();
+// 清空所有动画
+void Animation::ClearClips()
+{
+    m_clips.clear();
+    m_currentClip = nullptr;
+}

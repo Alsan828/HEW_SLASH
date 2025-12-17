@@ -129,6 +129,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="DamageNumber.cpp" />
     <ClCompile Include="SimpleAudio.cpp" />
     <ClCompile Include="SimpleAudio.h" />
     <ClCompile Include="Camera.cpp" />

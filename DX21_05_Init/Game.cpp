@@ -123,9 +123,7 @@ void InitGameWorld() {
 
     g_projectileManager.LoadTextures(g_pDevice);
     LoadTexture(g_pDevice, "asset/character/karen_small48.png", &g_playerTexture);
-    g_player.anim.Init(10, 1, 0.15f, 0);
-    g_player.anim.AddClip("Idle", 0, 9, 0.25f, true, g_playerTexture);
-
+    g_player.anim.AddClip("idle", 0, 3, 2, 2, 0.2f, true, g_playerTexture);
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
     LoadTexture(g_pDevice, "asset/effect/dash.png", &g_dashEffectTexture);
