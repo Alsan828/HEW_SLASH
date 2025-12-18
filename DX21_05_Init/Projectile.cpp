@@ -140,7 +140,6 @@ void  Projectile::CheckPlayerCollision() {
             CreateImpactEffect();
         }
 
-
     }
 }
 

@@ -620,6 +620,7 @@ void DrawGame() {
     RenderEnemies(g_camera);
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
 
+    g_projectileManager.Render(g_camera);
     // Draw player
     if (!g_player.isDead) {
         // Normal drawing when alive
@@ -721,11 +722,11 @@ void DrawGame() {
             RenderImage(playerPos.first, playerPos.second, width, height,
                 g_player.anim.GetCurrentClipTexture(), frameIndex, 1, 4);
 
-            g_projectileManager.Render(g_camera);
 
             float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
         }
     }
+
 }
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {

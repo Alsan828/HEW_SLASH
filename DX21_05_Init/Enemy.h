@@ -218,7 +218,7 @@ protected:
     float velocityX;
     float velocityY;
     bool facingRight;  // true=右, false=左
-
+    bool weakSpotDeath;
     // 伤害系统
     float damageMultipliers[8];
 

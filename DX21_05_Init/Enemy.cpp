@@ -46,7 +46,7 @@ void InitEnemies() {
 // Enemy class implementation
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
-    currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), attackRange(0.08f) {
+    currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), attackRange(0.08f), weakSpotDeath(false) {
 
 
     width = PLAYER_WIDTH * 1.2f;
@@ -443,7 +443,7 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
         anim.GetSplitY(),  // 替换为动画的Y分割数
         false,             // enableCulling
         0.0f,              // rotation
-        -facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
+        !facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
     );
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -823,7 +823,7 @@ void BombEnemy::CreateProjectiles() {
         posY + height * 0.5f,  // Shoot from enemy center height
         posX + 10.0f,  // Far right position
         posY + height * 0.5f,  // Horizontal direction
-        false  // From player
+        true  // From player
     );
 
     // Can add particle effects here
