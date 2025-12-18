@@ -14,7 +14,6 @@ class MapManager;
 bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2);
 
-
 // 伤害数字结构 - 独立于敌人
 struct DamageNumber {
     float posX, posY;
@@ -54,6 +53,9 @@ enum Direction {
     DIR_FRONT_DOWN      // 前下
 };
 
+// AI状态枚举 - 只保留巡逻和追逐
+enum AIState { PATROL, CHASE };
+
 // 敌人类声明
 class Enemy {
 public:
@@ -79,7 +81,7 @@ public:
     void UpdateAIMinimal(float deltaTime);
     bool NeedsMinimalUpdate() const {
         return offScreenTimer < MAX_OFFSCREEN_TIME ||
-            currentState == ATTACK || isHit || health < maxHealth;
+            currentState == CHASE || isHit || health < maxHealth;
     }
     // 伤害处理
     float GetDamageMultiplier(float attackAngle);
@@ -117,6 +119,15 @@ public:
     void PlayAnimation(const std::string& clipName);  // 播放动画剪辑
 
 protected:
+    // AI行为方法
+    virtual void PatrolBehavior(float deltaTime);
+    virtual void ChaseBehavior(float deltaTime);
+
+    // 工具函数
+    float NormalizeAngle(float angle);
+    int AngleToDirectionIndex(float angle);
+    void UpdateAI(float deltaTime);
+    void WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera);
 
     // 水平碰撞检测
     bool CheckHorizontalCollision(MapManager* mapManager, float oldX, float oldY) {
@@ -194,12 +205,12 @@ protected:
         return false;
     }
 
-    // 改进的碰撞检测，支持分离轴定理
-    bool CheckCollisionSAT(float x1, float y1, float w1, float h1,
-        float x2, float y2, float w2, float h2) {
-        return CheckCollision(x1, y1, w1, h1, x2, y2, w2, h2);
-    }
+    // 虚函数
+    virtual void OnDeath();
+    virtual void OnHit(int damage);
 
+    // 碰撞检测辅助函数
+    bool CheckCollisionWithTile(const MapTile& tile);
     // 基本属性
     float posX, posY;
     float width, height;
@@ -219,94 +230,112 @@ protected:
     float velocityY;
     bool facingRight;  // true=右, false=左
     bool weakSpotDeath;
+
     // 伤害系统
     float damageMultipliers[8];
 
+    float attackRange = 0.0f;  // 攻击范围，0表示近战
     // AI行为状态
-    enum AIState { PATROL, CHASE, ATTACK, FLEE };
     AIState currentState;
     float patrolMinX, patrolMaxX;
-    float attackRange;
 
-    // 工具函数
-    float NormalizeAngle(float angle);
-    int AngleToDirectionIndex(float angle);
-    void UpdateAI(float deltaTime);
-    void WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera);
+    // 巡逻相关参数
+    float patrolDirection = 1.0f;
+    float patrolTimer = 0.0f;
 
-    // AI行为方法
-    void PatrolBehavior(float deltaTime);
-    void ChaseBehavior(float deltaTime);
-    void AttackBehavior(float deltaTime);
-    void FleeBehavior(float deltaTime);
-
-    // 虚函数
-    virtual void OnDeath();
-    virtual void OnHit(int damage);
-
-    // 碰撞检测辅助函数
-    bool CheckCollisionWithTile(const MapTile& tile);
+    // 检测范围
+    float detectionRange = 3.0f;
+    float loseSightRange = 5.0f;
 
     // 受击状态
     bool isHit = false;
     float hitTimer = 0.0f;
     const float HIT_DURATION = 0.01f;
 };
-// 衍生敌人类
-class ShieldEnemy : public Enemy {
+
+// 飞行敌人类
+class FlyEnemy : public Enemy {
 public:
-    ShieldEnemy(float x, float y);
+    FlyEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
 
 protected:
+    virtual void PatrolBehavior(float deltaTime) override;
+    virtual void ChaseBehavior(float deltaTime) override;
     virtual void OnHit(int damage) override;
     virtual void OnDeath() override;
+
+private:
+    float patrolAltitude;  // 巡逻高度
+    float targetAltitude;  // 目标高度
+    float altitudeChangeTimer = 0.0f;  // 高度变化计时器
+    float altitudeChangeRate = 0.05f;  // 高度变化速度
 };
 
+// 法师敌人类
 class MageEnemy : public Enemy {
 public:
     MageEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
 
+protected:
+    virtual void ChaseBehavior(float deltaTime) override;
+
 private:
-    float spellCooldown;
-    float currentSpellCooldown;
-    void CastSpell();
+    void CastProjectile();  // 发射射弹
+
+    // 射弹相关参数
+    float spellCooldown = 3.0f;
+    float currentSpellCooldown = 0.0f;
+    float lastAttackTime = 0.0f;
+    float attackCooldown = 1.5f;  // 攻击冷却时间
+    float projectileSpeed = 2.0f;  // 射弹速度
+    float projectileDamage = 20.0f;  // 射弹伤害
 };
 
+// 快速敌人类
 class FastEnemy : public Enemy {
 public:
     FastEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
 
+protected:
+    virtual void ChaseBehavior(float deltaTime) override;
+
 private:
-    float dashCooldown;
-    float currentDashCooldown;
-    void DashAttack();
+    void DashAttack();  // 冲刺攻击
+
+    float dashCooldown = 2.0f;
+    float currentDashCooldown = 0.0f;
+    float attackRange = 0.5f;  // 近战攻击范围
 };
 
-// 在MageEnemy类声明后添加BombEnemy类
+// 炸弹敌人类
 class BombEnemy : public Enemy {
 public:
     BombEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+    virtual void TakeDamage(int damage, float attackAngle) override;
+
+protected:
+    virtual void ChaseBehavior(float deltaTime) override;
+    virtual void OnDeath() override;
 
 private:
+    void Explode();  // 爆炸
+    void CreateProjectiles();  // 创建射弹
 
-    void Explode(); // 死亡时爆炸的空函数
-    virtual void TakeDamage(int damage, float attackAngle) override;
-    void CreateProjectiles();
-    virtual void OnDeath() override;
-    // 视觉特效相关
-    float pulseTimer;
-    float baseSize;
+    // 爆炸相关参数
+    float pulseTimer = 0.0f;
+    float baseSize = 1.0f;
+    float explosionRadius = 1.5f;  // 爆炸半径
+    float explosionDamage = 50.0f;  // 爆炸伤害
 };
 
 
 // 敌人管理函数声明
 void InitEnemies();
 void UpdateEnemies(float deltaTime, MapManager* mapManager = nullptr);
-
 void RenderEnemies(const Camera& camera);
 void CleanupEnemies();
 

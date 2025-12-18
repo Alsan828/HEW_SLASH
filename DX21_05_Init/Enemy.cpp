@@ -1,16 +1,17 @@
-﻿#include "Enemy.h"
+﻿// Enemy.cpp
+#include "Enemy.h"
 #include "Map.h"
 #include "Projectile.h"
 
-// Initialize damage number manager
+// 初始化伤害数字管理器
 std::vector<DamageNumber> DamageNumberManager::damageNumbers;
 
 // 定义敌人纹理
 ID3D11ShaderResourceView* g_enemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_enemyDeathTexture = nullptr;
 
-ID3D11ShaderResourceView* g_shieldEnemyIdleTexture = nullptr;
-ID3D11ShaderResourceView* g_shieldEnemyDeathTexture = nullptr;
+ID3D11ShaderResourceView* g_flyEnemyIdleTexture = nullptr;  // 改为飞行敌人纹理
+ID3D11ShaderResourceView* g_flyEnemyDeathTexture = nullptr;  // 改为飞行敌人死亡纹理
 
 ID3D11ShaderResourceView* g_mageEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_mageEnemyAttackTexture = nullptr;
@@ -21,21 +22,22 @@ ID3D11ShaderResourceView* g_fastEnemyRunTexture = nullptr;
 ID3D11ShaderResourceView* g_bombEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_bombEnemyDeathTexture = nullptr;
 
-
 // 修改InitEnemies函数，加载所有纹理
 void InitEnemies() {
-    // Load enemy textures
+    // 加载敌人纹理
     // 普通敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_idle.png", &g_enemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_death.png", &g_enemyDeathTexture);
 
-    // 盾牌敌人(改成飞行敌人）
-    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_right.png", &g_shieldEnemyIdleTexture);
+    // 飞行敌人
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_right.png", &g_flyEnemyIdleTexture);
+
     // 法师敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_idle.png", &g_mageEnemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_attack.png", &g_mageEnemyAttackTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_death.png", &g_mageEnemyDeathTexture);
 
+    // 快速敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant/enemy_002_ant.png", &g_fastEnemyRunTexture);
 
     // 炸弹敌人
@@ -43,11 +45,10 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_death.png", &g_bombEnemyDeathTexture);
 }
 
-// Enemy class implementation
+// Enemy类实现
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
-    currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), attackRange(0.08f), weakSpotDeath(false) {
-
+    currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), weakSpotDeath(false), attackRange(0.0f) {
 
     width = PLAYER_WIDTH * 1.2f;
     height = PLAYER_HEIGHT * 1.2f;
@@ -59,11 +60,11 @@ Enemy::Enemy(float x, float y, float hp)
 
     anim.SetClip("idle");
 
-    facingRight = true;  // Default facing right
+    facingRight = true;  // 默认面向右边
     velocityX = 0.0f;
     velocityY = 0.0f;
 
-    // Set base 8-direction damage multipliers
+    // 设置基础的8方向伤害倍率
     SetDamageMultiplier(DIR_FRONT, 1.0f);
     SetDamageMultiplier(DIR_FRONT_UP, 1.0f);
     SetDamageMultiplier(DIR_UP, 1.0f);
@@ -72,6 +73,12 @@ Enemy::Enemy(float x, float y, float hp)
     SetDamageMultiplier(DIR_BACK_DOWN, 1.0f);
     SetDamageMultiplier(DIR_DOWN, 1.0f);
     SetDamageMultiplier(DIR_FRONT_DOWN, 1.0f);
+
+    // 初始化AI参数
+    patrolDirection = 1.0f;
+    patrolTimer = 0.0f;
+    detectionRange = 3.0f;  // 检测范围
+    loseSightRange = 8.0f;  // 丢失视野范围
 }
 
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
@@ -86,13 +93,13 @@ float Enemy::GetDamageMultiplier(float attackAngle) {
     return damageMultipliers[directionIndex];
 }
 
-// Calculate relative angle (based on enemy facing direction)
+// 计算相对角度（基于敌人面向方向）
 float Enemy::GetRelativeAngle(float attackAngle) const {
-    // When facing right, 0 degrees is front; when facing left, 180 degrees is front
+    // 面向右时，0度为正面；面向左时，180度为正面
     float enemyFrontAngle = facingRight ? 0.0f : 3.14159f;
     float relativeAngle = attackAngle - enemyFrontAngle;
 
-    // Normalize to [-π, π]
+    // 标准化到[-π, π]
     while (relativeAngle > 3.14159f) relativeAngle -= 2 * 3.14159f;
     while (relativeAngle < -3.14159f) relativeAngle += 2 * 3.14159f;
 
@@ -105,16 +112,16 @@ void Enemy::PlayAnimation(const std::string& clipName) {
     }
 }
 
-// Convert angle to direction index (8 directions)
+// 转换角度到方向索引（8方向）
 int Enemy::AngleToDirectionIndex(float relativeAngle) {
-    // Normalize relative angle to [0, 2π]
+    // 标准化相对角度到[0, 2π]
     float angle = relativeAngle;
     if (angle < 0) angle += 2 * 3.14159f;
 
-    // 8 directions, each 45 degrees
+    // 8个方向，每个45度
     float sector = 3.14159f / 4.0f;
 
-    // Calculate direction index
+    // 计算方向索引
     int index = static_cast<int>((angle + sector / 2) / sector) % 8;
     return index;
 }
@@ -125,24 +132,24 @@ float Enemy::NormalizeAngle(float angle) {
     return angle;
 }
 
-// Calculate damage based on attack angle
+// 根据攻击角度计算伤害
 int Enemy::CalculateDamageFromPlayer(int baseDamage, float playerDashAngle) {
     float multiplier = GetDamageMultiplier(playerDashAngle);
     return (int)(baseDamage * multiplier);
 }
 
-// Use DamageNumberManager in TakeDamage method
+// 在TakeDamage方法中使用DamageNumberManager
 void Enemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // Use independent damage number manager
+    // 使用独立的伤害数字管理器
     bool isCritical = (multiplier > 1.5f);
     DamageNumberManager::AddDamageNumber(
-        posX + width * 0.5f,  // Enemy center X
-        posY + height,        // Top of enemy
+        posX + width * 0.5f,  // 敌人中心X
+        posY + height,        // 敌人顶部
         actualDamage,
         isCritical
     );
@@ -159,17 +166,17 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
     }
 }
 
-
 void Enemy::OnHit(int damage) {
-    // Base enemy has no special behavior when hit
+    // 基础敌人被击中时没有特殊行为
 }
 
 void Enemy::OnDeath() {
-    // Base enemy death handling
+    // 基础敌人死亡处理
     isAlive = false;
     PlayAnimation("death");
     OnEnemyDefeated();
 }
+
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
@@ -184,7 +191,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         return;  // 死亡动画期间不执行其他逻辑
     }
 
-    // Visibility detection and optimization logic
+    // 可见性检测和优化逻辑
     bool isCurrentlyVisible = IsVisible(g_camera);
 
     if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
@@ -208,7 +215,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     }
 
     anim.Update(deltaTime);
-    // Full update logic
+    // 完整更新逻辑
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -216,40 +223,35 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Apply gravity
+    // 应用重力
     velocityY += GRAVITY * deltaTime * 60.0f;
 
-    // Save old position for collision detection
+    // 保存旧位置用于碰撞检测
     float oldX = posX;
     float oldY = posY;
 
-    // Horizontal movement
+    // 水平移动
     posX += velocityX * deltaTime * 60.0f;
     if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
         posX = oldX;
         velocityX = 0.0f;
     }
 
-    // Vertical movement
+    // 垂直移动
     posY += velocityY * deltaTime * 60.0f;
     if (CheckVerticalCollision(mapManager, oldX, oldY)) {
         posY = oldY;
         velocityY = 0.0f;
     }
 
-    // Boundary check
+    // 边界检查
     if (posY < -5.0f) {
         isAlive = false;
         return;
     }
 
-    // AI update
-    if (isCurrentlyVisible) {
-        UpdateAI(deltaTime);
-    }
-    else {
-        UpdateAIMinimal(deltaTime);
-    }
+    // AI更新
+    UpdateAI(deltaTime);
 
     if (!isCurrentlyVisible) {
         offScreenTimer += deltaTime;
@@ -259,47 +261,40 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     }
 }
 
-
-// Simplified update (for off-screen enemies that need updating)
+// 简化更新（对需要更新的屏幕外敌人）
 void Enemy::UpdateMinimal(float deltaTime) {
-    // Simplified AI update (only handles state transitions, no path calculations, etc.)
+    // 简化的AI更新（只处理状态转换，不进行路径计算等）
     UpdateAIMinimal(deltaTime);
 
-    // Update off-screen timer
+    // 更新离屏计时器
     offScreenTimer += deltaTime;
 }
 
-// Simplified AI update
+// 简化的AI更新
 void Enemy::UpdateAIMinimal(float deltaTime) {
-    // Only handles basic state maintenance, no complex calculations
+    // 只处理基本状态维护，不进行复杂计算
     float dx = g_player.posX - posX;
 
-    // Update facing direction
+    // 更新面向方向
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // Simplified state machine: only handles timeouts or critical state transitions
+    // 简化状态机：只处理超时或关键状态转换
     static float stateTimer = 0.0f;
     stateTimer += deltaTime;
 
-    // Check state transitions every 5 seconds (reduce frequency)
+    // 每5秒检查一次状态转换（减少频率）
     if (stateTimer >= 5.0f) {
         float distance = fabs(dx);
 
-        // Simplified state transition logic
+        // 简化状态转换逻辑
         switch (currentState) {
         case PATROL:
-            if (distance < 3.0f) currentState = CHASE;
+            if (distance < detectionRange) currentState = CHASE;
             break;
         case CHASE:
-            if (distance > 8.0f) currentState = PATROL;
-            break;
-        case ATTACK:
-            // Attack state remains until conditions change
-            break;
-        case FLEE:
-            if (health > maxHealth * 0.5f) currentState = CHASE;
+            if (distance > loseSightRange) currentState = PATROL;
             break;
         }
 
@@ -312,91 +307,83 @@ void Enemy::UpdateAI(float deltaTime) {
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // Update facing direction
+    // 更新面向方向
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // State machine logic
+    // 状态机逻辑
     switch (currentState) {
     case PATROL:
         PatrolBehavior(deltaTime);
-        if (distance < 3.0f) currentState = CHASE;
+        if (distance < detectionRange) {
+            currentState = CHASE;
+        }
         break;
     case CHASE:
         ChaseBehavior(deltaTime);
-        if (distance > 8.0f) currentState = PATROL;
-        if (distance < attackRange) currentState = ATTACK;
-        break;
-    case ATTACK:
-        AttackBehavior(deltaTime);
-        if (distance > attackRange + 0.2f) currentState = CHASE;
-        if (health < maxHealth * 0.3f) currentState = FLEE;
-        break;
-    case FLEE:
-        FleeBehavior(deltaTime);
-        if (health > maxHealth * 0.5f) currentState = CHASE;
+        if (distance > loseSightRange) {
+            currentState = PATROL;
+        }
         break;
     }
 }
 
 void Enemy::PatrolBehavior(float deltaTime) {
-    static float patrolDirection = 1.0f;
-    static float patrolTimer = 0.0f;
-
     patrolTimer += deltaTime;
 
-    // Check if need to change direction every 2 seconds
+    // 每2秒检查是否需要改变方向
     if (patrolTimer >= 2.0f) {
-        if (posX <= patrolMinX || posX >= patrolMaxX) {
-            patrolDirection *= -1.0f;
+        if (posX <= patrolMinX) {
+            patrolDirection = 1.0f;  // 向右走
+        }
+        else if (posX >= patrolMaxX) {
+            patrolDirection = -1.0f;  // 向左走
         }
         patrolTimer = 0.0f;
     }
 
     velocityX = patrolDirection * moveSpeed * 0.5f;
 
-    // Add small vertical velocity variation to avoid complete stillness
+    // 添加小的垂直速度变化避免完全静止
     if (velocityY == 0) {
         velocityY = 0.01f;
     }
 }
 
 void Enemy::ChaseBehavior(float deltaTime) {
-    if (g_player.posX > posX) {
-        velocityX = moveSpeed;
+    float dx = g_player.posX - posX;
+    float dy = g_player.posY - posY;  // 添加垂直方向计算
+    float distance = sqrt(dx * dx + dy * dy);  // 使用实际距离
+
+    // 更新面向方向
+    if (dx != 0) {
+        facingRight = (dx > 0);
+    }
+
+    // 只有远程敌人才在攻击范围内停止移动
+    if (attackRange > 0 && distance <= attackRange) {
+        // 远程敌人在攻击范围内停止移动
+        velocityX = 0;
     }
     else {
-        velocityX = -moveSpeed;
-    }
-
-    
-}
-
-void Enemy::AttackBehavior(float deltaTime) {
-    // Stop moving to attack
-    velocityX = 0;
-    velocityY = 0;
-}
-
-void Enemy::FleeBehavior(float deltaTime) {
-    // Move away from player
-    if (g_player.posX > posX) {
-        velocityX = -moveSpeed;
-    }
-    else {
-        velocityX = moveSpeed;
+        // 近战敌人一直向玩家移动
+        if (dx > 0) {
+            velocityX = moveSpeed;
+        }
+        else {
+            velocityX = -moveSpeed;
+        }
     }
 }
-
 
 void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera) {
-    // Get camera position (camera center coordinates)
+    // 获取相机位置（相机中心坐标）
     float cameraX = camera.GetX();
     float cameraY = camera.GetY();
 
-    // Convert world coordinates to screen coordinates (relative coordinates)
-    // Assume rendering system uses screen center as origin (0,0)
+    // 将世界坐标转换为屏幕坐标（相对坐标）
+    // 假设渲染系统使用屏幕中心作为原点(0,0)
     screenX = worldX - cameraX;
     screenY = worldY - cameraY;
 }
@@ -406,7 +393,7 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Convert world coordinates to screen coordinates
+    // 将世界坐标转换为屏幕坐标
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
@@ -429,7 +416,6 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
         float alpha = 1.0f - (deathAnimationTimer / DEATH_ANIMATION_DURATION);
         SetColor(1.0f, 1.0f, 1.0f, alpha);
     }
-
 
     // 渲染敌人精灵
     RenderImage(
@@ -455,7 +441,7 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
 }
 
 void Enemy::RenderHealthBar(const Camera& camera) {
-    // Convert world coordinates to screen coordinates
+    // 将世界坐标转换为屏幕坐标
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
@@ -464,10 +450,10 @@ void Enemy::RenderHealthBar(const Camera& camera) {
     float barX = screenX;
     float barY = screenY + height + 0.02f;
 
-    // Background bar (red)
+    // 背景条（红色）
     RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
 
-    // Health bar (green)
+    // 血条（绿色）
     float healthRatio = health / maxHealth;
     RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_groundTexture, 1, 1, 1);
 }
@@ -477,7 +463,7 @@ bool Enemy::CheckPlayerCollision() {
         g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT);
 }
 
-// Check collision with specific area
+// 检查与特定区域的碰撞
 bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) {
         return false;
@@ -485,7 +471,7 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
 
     SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
     if (!grid) {
-        // Fallback to original method
+        // 回退到原始方法
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
         for (const auto& tile : solidTiles) {
             if (CheckCollision(checkX, checkY, GetWidth(), GetHeight(),
@@ -496,7 +482,7 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
         return false;
     }
 
-    // Use spatial grid optimization
+    // 使用空间网格优化
     std::vector<MapTile*> nearbyTiles;
     grid->GetTilesInArea(
         checkX - 0.5f,
@@ -517,17 +503,17 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
     return false;
 }
 
-// Update collision detection, using spatial grid optimization
+// 更新碰撞检测，使用空间网格优化
 bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) {
         return false;
     }
 
-    // Cache spatial grid pointer
+    // 缓存空间网格指针
     SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
-    // Use spatial grid optimization
+    // 使用空间网格优化
     std::vector<MapTile*> nearbyTiles;
-    float padding = 0.5f;  // Slightly expand detection range
+    float padding = 0.5f;  // 稍微扩展检测范围
     grid->GetTilesInArea(
         posX - padding,
         posY - padding,
@@ -550,97 +536,213 @@ bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
         tile.posX, tile.posY, tile.width, tile.height);
 }
 
-// ShieldEnemy implementation - modify damage multiplier settings
-ShieldEnemy::ShieldEnemy(float x, float y) : Enemy(x, y, 150.0f) {
-    // Shield enemy: reduced damage from front, increased damage from back
-    SetDamageMultiplier(DIR_FRONT, 0.1f);
-    SetDamageMultiplier(DIR_FRONT_UP, 0.3f);
-    SetDamageMultiplier(DIR_FRONT_DOWN, 0.3f);
-    SetDamageMultiplier(DIR_BACK, 2.0f);
+// FlyEnemy实现 - 飞行敌人，不受重力影响
+FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
+    // 飞行敌人：空中单位
+    attackRange = 0.0f;  // 近战敌人
+    SetDamageMultiplier(DIR_FRONT, 0.8f);
+    SetDamageMultiplier(DIR_FRONT_UP, 0.8f);
+    SetDamageMultiplier(DIR_FRONT_DOWN, 0.8f);
+    SetDamageMultiplier(DIR_BACK, 1.5f);
     SetDamageMultiplier(DIR_BACK_UP, 1.5f);
     SetDamageMultiplier(DIR_BACK_DOWN, 1.5f);
+    SetDamageMultiplier(DIR_UP, 1.2f);
+    SetDamageMultiplier(DIR_DOWN, 1.2f);
 
     // 添加动画剪辑
-    anim.AddClip("idle", 0, 3,1,4, 0.15f, true, g_shieldEnemyIdleTexture);
-   // anim.AddClip("death", 0, 5, 0.1f, false, g_shieldEnemyDeathTexture);
+    anim.AddClip("idle", 0, 3, 1, 4, 0.15f, true, g_flyEnemyIdleTexture);
+    // anim.AddClip("death", 0, 5, 0.1f, false, g_flyEnemyDeathTexture);
 
     anim.SetClip("idle");
     width = PLAYER_WIDTH * 1.5f;
-    moveSpeed = MOVE_SPEED * 0.5f;
+    moveSpeed = MOVE_SPEED * 0.8f;
+
+    // 飞行敌人特定参数
+    patrolMinX = x - 2.0f;  // 扩大巡逻范围
+    patrolMaxX = x + 2.0f;
+    detectionRange = 5.0f;  // 更远的探测距离
+    patrolAltitude = y;  // 巡逻高度
+    altitudeChangeTimer = 0.0f;
+    altitudeChangeRate = 0.05f;  // 高度变化速度
 }
 
 
-void ShieldEnemy::Update(float deltaTime, MapManager* mapManager) {
-    Enemy::Update(deltaTime, mapManager);
+void FlyEnemy::PatrolBehavior(float deltaTime) {
+    patrolTimer += deltaTime;
+    altitudeChangeTimer += deltaTime;
 
-    // Shield enemy special AI logic
-    if (currentState == PATROL) {
-        // Shield enemy patrols slower but more stable
-        velocityX *= 0.8f;
+    // 每2秒检查是否需要改变水平方向
+    if (patrolTimer >= 2.0f) {
+        if (posX <= patrolMinX) {
+            patrolDirection = 1.0f;  // 向右走
+        }
+        else if (posX >= patrolMaxX) {
+            patrolDirection = -1.0f;  // 向左走
+        }
+        patrolTimer = 0.0f;
+    }
+
+    // 垂直漂浮效果
+    float altitudeVariation = sin(altitudeChangeTimer * 2.0f) * 0.1f;
+    targetAltitude = patrolAltitude + altitudeVariation;
+
+    // 平滑移动到目标高度
+    if (fabs(posY - targetAltitude) > 0.01f) {
+        if (posY < targetAltitude) {
+            velocityY = altitudeChangeRate;
+        }
+        else {
+            velocityY = -altitudeChangeRate;
+        }
+    }
+    else {
+        velocityY = 0.0f;
+    }
+
+    velocityX = patrolDirection * moveSpeed * 0.3f;  // 巡逻时较慢
+}
+
+
+void FlyEnemy::ChaseBehavior(float deltaTime) {
+    float dx = g_player.posX - posX;
+    float dy = g_player.posY - posY;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    // 如果玩家在检测范围内，直接向玩家移动
+    if (distance > 0.1f) {
+        // 归一化方向向量
+        dx /= distance;
+        dy /= distance;
+
+        // 飞行敌人直接向玩家移动，无视地形
+        velocityX = dx * moveSpeed;
+        velocityY = dy * moveSpeed;
+    }
+    else {
+        // 接近时稍微减速
+        velocityX *= 0.5f;
+        velocityY *= 0.5f;
     }
 }
 
-void ShieldEnemy::OnHit(int damage) {
-    // Shield enemy may block when hit
-    if (damage < 5) {
-        health += damage; // Rollback damage
-    }
+void FlyEnemy::OnHit(int damage) {
+    // 飞行敌人被击中时会有短暂硬直
+    velocityX *= 0.5f;
+    velocityY = 0.0f;
 }
 
-void ShieldEnemy::OnDeath() {
+void FlyEnemy::OnDeath() {
     Enemy::OnDeath();
+    // 飞行敌人死亡时可能会有特殊效果
 }
 
-// MageEnemy implementation
+// MageEnemy实现
 MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
-    // Mage enemy: vulnerable from top and bottom
+    // 法师敌人：从顶部和底部易受伤害
     SetDamageMultiplier(DIR_UP, 2.0f);
     SetDamageMultiplier(DIR_DOWN, 2.0f);
+    SetDamageMultiplier(DIR_FRONT, 0.7f);
+    SetDamageMultiplier(DIR_BACK, 0.7f);
 
     spellCooldown = 3.0f;
     currentSpellCooldown = 0.0f;
-    attackRange = 1.2f;
+    detectionRange = 4.0f;  // 更远的探测距离
+    attackRange = 2.5f;  // 射弹攻击范围
     moveSpeed = MOVE_SPEED * 0.4f;
 
-    anim.AddClip("idle", 0, 1,1,2, 0.2f, true, g_mageEnemyIdleTexture);
-    //anim.AddClip("attack", 1, 3, 0.1f, true, g_mageEnemyAttackTexture);
-    //anim.AddClip("death", 0, 0, 0.2f, false, g_mageEnemyDeathTexture);
-
+    // 添加动画剪辑
+    anim.AddClip("idle", 0, 1, 1, 2, 0.2f, true, g_mageEnemyIdleTexture);
     anim.SetClip("idle");
-}
 
+    // 射弹相关参数
+    projectileSpeed = 2.0f;
+    lastAttackTime = 0.0f;
+    attackCooldown = 1.5f;  // 攻击冷却时间
+    projectileDamage = 20.0f;
+}
 
 void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
     Enemy::Update(deltaTime, mapManager);
 
-    if (currentSpellCooldown > 0) {
-        currentSpellCooldown -= deltaTime;
-    }
+    lastAttackTime += deltaTime;
 
-    // Cast spell in attack state
-    if (currentState == ATTACK && currentSpellCooldown <= 0) {
-        CastSpell();
-        currentSpellCooldown = spellCooldown;
+    // 在追逐状态下发射射弹
+    if (currentState == CHASE && lastAttackTime >= attackCooldown) {
+        CastProjectile();
+        lastAttackTime = 0.0f;
     }
 }
 
-void MageEnemy::CastSpell() {
-    // Implement spell casting logic here
+void MageEnemy::ChaseBehavior(float deltaTime) {
+    float dx = g_player.posX - posX;
+    float distance = fabs(dx);
+
+    // 法师在追逐时保持距离
+    if (distance > attackRange) {
+        if (dx > 0) {
+            velocityX = moveSpeed * 0.5f;  // 移动较慢
+        }
+        else {
+            velocityX = -moveSpeed * 0.5f;
+        }
+    }
+    else {
+        velocityX = 0;  // 在攻击距离内停止移动
+    }
 }
 
-// FastEnemy implementation
+void MageEnemy::CastProjectile() {
+    float dx = g_player.posX - posX;
+    float dy = g_player.posY - posY;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    if (distance > 0.1f) {
+        // 归一化方向向量
+        dx /= distance;
+        dy /= distance;
+
+        // 获取ProjectileManager实例
+        ProjectileManager& projectileManager = ProjectileManager::GetInstance();
+
+        // 创建魔法射弹配置
+        ProjectileEffect magicEffect;
+        magicEffect.damage = projectileDamage;
+        magicEffect.areaRadius = 0.2f;
+        magicEffect.pierce = false;
+
+        // 计算射弹目标位置
+        float targetX = g_player.posX;
+        float targetY = g_player.posY;
+
+        // 发射魔法射弹
+        projectileManager.CreateFireball(
+            posX + width * 0.5f,  // 从中心发射
+            posY + height * 0.7f,  // 从敌人高度70%处发射
+            targetX,
+            targetY,
+            false
+        );
+
+        // 播放攻击动画
+        PlayAnimation("attack");
+    }
+}
+
+// FastEnemy实现
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     moveSpeed = MOVE_SPEED * 1.5f;
     dashCooldown = 2.0f;
     currentDashCooldown = 0.0f;
+    detectionRange = 4.0f;
+    attackRange = 0.5f;
 
-
-    anim.AddClip("Idle", 0, 3,1,4 ,0.05f, true, g_fastEnemyRunTexture);
-    //anim.AddClip("death", 0, 3, 0.1f, false, g_fastEnemyDeathTexture);
-    anim.SetClip("Idle");
+    attackRange = 0.0f;  // 近战敌人
+    anim.AddClip("run", 0, 3, 1, 4, 0.05f, true, g_fastEnemyRunTexture);
+    anim.SetClip("run");
 }
 
 
+// 添加这个函数实现
 void FastEnemy::Update(float deltaTime, MapManager* mapManager) {
     Enemy::Update(deltaTime, mapManager);
 
@@ -648,22 +750,99 @@ void FastEnemy::Update(float deltaTime, MapManager* mapManager) {
         currentDashCooldown -= deltaTime;
     }
 
-    if (currentState == ATTACK && currentDashCooldown <= 0) {
+    if (currentState == CHASE && currentDashCooldown <= 0) {
+        DashAttack();
+        currentDashCooldown = dashCooldown;
+    }
+}
+
+void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {
+    if (!isAlive) return;
+
+    // 可见性检测和优化逻辑
+    bool isCurrentlyVisible = IsVisible(g_camera);
+
+    if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
+        offScreenTimer += deltaTime;
+        if (offScreenTimer > MAX_OFFSCREEN_TIME &&
+            currentState == PATROL &&
+            !isHit &&
+            health >= maxHealth) {
+            return;
+        }
+    }
+
+    if (isCurrentlyVisible && !wasVisible) {
+        ResetOffScreenTimer();
+    }
+    wasVisible = isCurrentlyVisible;
+
+    if (!isCurrentlyVisible && NeedsMinimalUpdate()) {
+        UpdateMinimal(deltaTime);
+        return;
+    }
+
+    anim.Update(deltaTime);
+
+    // 受击状态处理
+    if (isHit) {
+        hitTimer -= deltaTime;
+        if (hitTimer <= 0.0f) {
+            isHit = false;
+        }
+    }
+
+    // AI更新
+    UpdateAI(deltaTime);
+
+    // 应用水平移动
+    posX += velocityX * deltaTime * 60.0f;
+
+    // 飞行敌人的垂直移动（漂浮效果）
+    posY += velocityY * deltaTime * 60.0f;
+
+    // 边界检查（防止飞出世界）
+    if (posY < -5.0f) {
+        isAlive = false;
+        return;
+    }
+
+    if (!isCurrentlyVisible) {
+        offScreenTimer += deltaTime;
+    }
+    else {
+        offScreenTimer = 0.0f;
+    }
+}
+
+void FastEnemy::ChaseBehavior(float deltaTime) {
+    float dx = g_player.posX - posX;
+    float dy = g_player.posY - posY;
+    float distance = sqrt(dx * dx + dy * dy);  // 使用实际距离
+
+    // 快速敌人一直向玩家移动
+    if (dx > 0) {
+        velocityX = moveSpeed;
+    }
+    else {
+        velocityX = -moveSpeed;
+    }
+
+    // 冲刺攻击
+    if (currentDashCooldown <= 0 && distance < 2.0f) {  // 冲刺距离阈值
         DashAttack();
         currentDashCooldown = dashCooldown;
     }
 }
 
 void FastEnemy::DashAttack() {
-    velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 3.0f;
+    // 快速敌人向前冲刺
+    velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 2.5f;
 }
 
-// Add to global texture definitions
-ID3D11ShaderResourceView* g_bombEnemyTexture = nullptr;
-
-// BombEnemy implementation
+// BombEnemy实现
 BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
-    // Bomb enemy: 10x damage from top and bottom, reduced damage from other directions
+    // 炸弹敌人：顶部和底部10倍伤害，其他方向减少伤害
     SetDamageMultiplier(DIR_UP, 10.0f);
     SetDamageMultiplier(DIR_DOWN, 10.0f);
     SetDamageMultiplier(DIR_FRONT, 0.7f);
@@ -675,48 +854,51 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
 
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
-    moveSpeed = 0.0f;
-    pulseTimer = 0.0f;
-    baseSize = 1.0f;
-
+    moveSpeed = 0.0f;  // 不移动
+    detectionRange = 2.0f;
 
     anim.AddClip("idle", 0, 0, 1, 1, 0.3f, true, g_bombEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1,4,0.5f, false, g_bombEnemyDeathTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.5f, false, g_bombEnemyDeathTexture);
 
     anim.SetClip("idle");
+
+    pulseTimer = 0.0f;
+    baseSize = 1.0f;
+    explosionRadius = 1.5f;
+    explosionDamage = 50.0f;
 }
 
-// Override TakeDamage function, add explosion detection
+// 覆盖TakeDamage函数，添加爆炸检测
 void BombEnemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
-    // Get damage multiplier
+    // 获取伤害倍率
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // Use independent damage number manager
+    // 使用独立的伤害数字管理器
     bool isCritical = (multiplier > 1.5f);
     DamageNumberManager::AddDamageNumber(
-        posX + width * 0.5f,  // Enemy center X
-        posY + height,        // Top of enemy
+        posX + width * 0.5f,  // 敌人中心X
+        posY + height,        // 敌人顶部
         actualDamage,
-        multiplier >= 10.0f  // If from top/bottom direction, show as critical
+        multiplier >= 10.0f  // 如果从顶部/底部方向，显示为暴击
     );
 
-    // Check if attack is from top or bottom
+    // 检查是否从顶部或底部攻击
     float relativeAngle = GetRelativeAngle(attackAngle);
     int directionIndex = AngleToDirectionIndex(relativeAngle);
     bool isVerticalAttack = (directionIndex == DIR_UP || directionIndex == DIR_DOWN);
 
-    // If attack is from top or bottom, die immediately and trigger explosion
+    // 如果从顶部或底部攻击，立即死亡并触发爆炸
     if (multiplier >= 10.0f) {
-        health = 0;  // Die immediately
+        health = 0;  // 立即死亡
         isAlive = false;
-        OnDeath();  // Trigger explosion
-        return;     // Return directly, skip subsequent logic
+        OnDeath();  // 触发爆炸
+        return;     // 直接返回，跳过后续逻辑
     }
 
-    // Non-vertical attacks, handle damage normally
+    // 非垂直攻击，正常处理伤害
     health -= actualDamage;
     isHit = true;
     hitTimer = HIT_DURATION;
@@ -732,7 +914,7 @@ void BombEnemy::TakeDamage(int damage, float attackAngle) {
 void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
     if (!isAlive) return;
 
-    // Call base class hit state update
+    // 调用基类的受击状态更新
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -740,97 +922,104 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Bomb enemy doesn't move, so no need to handle gravity and collisions
+    // 炸弹敌人不移动，所以不需要处理重力和碰撞
     velocityX = 0.0f;
     velocityY = 0.0f;
 
-    // Pulsing effect
+    // 脉动效果
     pulseTimer += deltaTime;
     float pulseEffect = sin(pulseTimer * 3.0f) * 0.1f;
     baseSize = 1.0f + pulseEffect;
 
-    // Simple AI: only detect player distance
+    // 简单AI：只检测玩家距离
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // Update facing direction
+    // 更新面向方向
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // Simple state machine
-    if (distance < 2.0f) {
-        currentState = ATTACK;  // Enter attack state when player is close
+    // 简单状态机
+    if (distance < detectionRange) {
+        currentState = CHASE;  // 当玩家接近时进入追逐状态
     }
     else {
-        currentState = PATROL;  // Otherwise maintain patrol state (stationary)
+        currentState = PATROL;  // 否则保持巡逻状态（静止）
     }
 
-    // Trigger explosion when dying
+    // 死亡时触发爆炸
     if (health <= 0 && isAlive) {
         isAlive = false;
         OnDeath();
     }
 }
 
-// Override OnDeath function, handle explosion effect
+void BombEnemy::ChaseBehavior(float deltaTime) {
+    // 在追逐状态下，如果玩家在爆炸范围内，就自爆
+    float dx = g_player.posX - posX;
+    float dy = g_player.posY - posY;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    if (distance < explosionRadius) {
+        OnDeath();  // 触发爆炸
+    }
+}
+
 void BombEnemy::OnDeath() {
-    // First call base class OnDeath
+    // 先调用基类的OnDeath
     Explode();
     Enemy::OnDeath();
-
-    // Then trigger explosion effect
 }
 
 void BombEnemy::Explode() {
-    // Play explosion sound effect
+    // 播放爆炸音效
     // PlaySound("explosion.wav");
 
-    // Create explosion effect
+    // 创建爆炸效果
     // CreateExplosionEffect(posX, posY);
 
-    // Create projectiles to left and right
+    // 创建射弹向左右发射
     CreateProjectiles();
 }
 
-// Enemy.cpp
 void BombEnemy::CreateProjectiles() {
-    // Get ProjectileManager instance
+    // 获取ProjectileManager实例
     ProjectileManager& projectileManager = ProjectileManager::GetInstance();
 
-    // Create fireball effect configuration
+    // 创建火球效果配置
     ProjectileEffect fireballEffect;
-    fireballEffect.damage = 30.0f;  // Base damage
-    fireballEffect.burnDamage = 5.0f;  // Burn over time damage
-    fireballEffect.areaRadius = 0.3f;  // Explosion radius
-    fireballEffect.pierce = false;  // No piercing
+    fireballEffect.damage = 30.0f;  // 基础伤害
+    fireballEffect.burnDamage = 5.0f;  // 燃烧伤害
+    fireballEffect.areaRadius = 0.3f;  // 爆炸半径
+    fireballEffect.pierce = false;  // 不穿透
 
-    float projectileSpeed = 3.0f;  // Projectile speed
+    float projectileSpeed = 3.0f;  // 射弹速度
 
-    // Shoot fireball to the left
+    // 向左发射火球
     projectileManager.CreateFireball(
-        posX,  // Start X
-        posY + height * 0.5f,  // Shoot from enemy center height
-        posX - 10.0f,  // Far left position
-        posY + height * 0.5f,  // Horizontal direction
-        true  // From player
+        posX,  // 起始X
+        posY + height * 0.5f,  // 从敌人中心高度发射
+        posX - 10.0f,  // 左侧远处位置
+        posY + height * 0.5f,  // 水平方向
+        true  // 来自玩家
     );
 
-    // Shoot fireball to the right
+    // 向右发射火球
     projectileManager.CreateFireball(
-        posX,  // Start X
-        posY + height * 0.5f,  // Shoot from enemy center height
-        posX + 10.0f,  // Far right position
-        posY + height * 0.5f,  // Horizontal direction
-        true  // From player
+        posX,  // 起始X
+        posY + height * 0.5f,  // 从敌人中心高度发射
+        posX + 10.0f,  // 右侧远处位置
+        posY + height * 0.5f,  // 水平方向
+        true  // 来自玩家
     );
 
-    // Can add particle effects here
+    // 可以在这里添加粒子效果
     // CreateParticleEffect(posX, posY, "explosion");
 }
 
-
+// 敌人更新函数
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     DamageNumberManager::Update(deltaTime);
 
@@ -838,7 +1027,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     int totalEnemyCount = g_enemies.size();
 
     for (auto& enemy : g_enemies) {
-        // Debug info: count visible enemies
+        // 调试信息：计数可见敌人
         if (enemy->IsVisible(g_camera)) {
             visibleEnemyCount++;
         }
@@ -846,7 +1035,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
         enemy->Update(deltaTime, mapManager);
     }
 
-    // Debug output (optional)
+    // 调试输出（可选）
     static float debugTimer = 0.0f;
     debugTimer += deltaTime;
     if (debugTimer > 2.0f) {
@@ -858,7 +1047,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
         debugTimer = 0.0f;
     }
 
-    // Remove dead enemies
+    // 移除死亡的敌人
     g_enemies.erase(
         std::remove_if(g_enemies.begin(), g_enemies.end(),
             [](Enemy* e) {
@@ -877,8 +1066,8 @@ void RenderEnemies(const Camera& camera) {
     for (auto& enemy : g_enemies) {
         ID3D11ShaderResourceView* texture = g_enemyIdleTexture;  // 默认纹理
 
-        if (dynamic_cast<ShieldEnemy*>(enemy)) {
-            texture = g_shieldEnemyIdleTexture;
+        if (dynamic_cast<FlyEnemy*>(enemy)) {  // 改为FlyEnemy
+            texture = g_flyEnemyIdleTexture;
         }
         else if (dynamic_cast<MageEnemy*>(enemy)) {
             texture = g_mageEnemyIdleTexture;
@@ -890,67 +1079,15 @@ void RenderEnemies(const Camera& camera) {
             texture = g_bombEnemyIdleTexture;
         }
 
-        enemy->Render(texture, camera); // Pass camera parameter
+        enemy->Render(texture, camera); // 传递相机参数
     }
     DamageNumberManager::Render(camera);
 }
+
 void CleanupEnemies() {
     DamageNumberManager::Clear();
     for (auto& enemy : g_enemies) {
         delete enemy;
     }
     g_enemies.clear();
-}
-
-
-void DamageNumberManager::AddDamageNumber(float x, float y, int damage, bool isCritical) {
-    damageNumbers.emplace_back(x, y, damage, isCritical);
-}
-
-void DamageNumberManager::Update(float deltaTime) {
-    for (auto it = damageNumbers.begin(); it != damageNumbers.end();) {
-        it->timer += deltaTime;
-        it->posY += it->velocityY * deltaTime;
-        it->velocityY -= 2.0f * deltaTime; // Gravity effect
-
-        if (it->timer >= it->lifeTime) {
-            it = damageNumbers.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
-}
-
-void DamageNumberManager::Render(const Camera& camera) {
-    for (auto& number : damageNumbers) {
-        float screenX, screenY;
-        // Use static world-to-screen coordinate conversion function
-        float cameraX = camera.GetX();
-        float cameraY = camera.GetY();
-        screenX = number.posX - cameraX;
-        screenY = number.posY - cameraY;
-
-        // Calculate alpha (fade-out effect)
-        float alpha = 1.0f - (number.timer / number.lifeTime);
-
-        // Set color based on whether it's critical
-        if (number.isCritical) {
-            //SetColor(1.0f, 0.0f, 0.0f, alpha); // Red critical numbers
-            SetColor(1.0f, 1.0f, 1.0f, alpha); // White normal numbers
-        }
-        else {
-            SetColor(1.0f, 1.0f, 1.0f, alpha); // White normal numbers
-        }
-
-        // Use existing number rendering functionality
-        RenderNumber(number.value, screenX, screenY, 0.07f, 0.1f, pTextureNum);
-    }
-
-    // Reset color
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-}
-
-void DamageNumberManager::Clear() {
-    damageNumbers.clear();
 }

@@ -50,7 +50,7 @@ void MapManager::CreateMapEnemies() {
             g_enemies.push_back(new Enemy(x, y, 100.0f));  // Normal enemy
         }
         else if (enemyType == "E2") {
-            g_enemies.push_back(new ShieldEnemy(x, y));    // Shield enemy
+            g_enemies.push_back(new FlyEnemy(x, y));    // Shield enemy
         }
         else if (enemyType == "E3") {
             g_enemies.push_back(new MageEnemy(x, y));      // Mage enemy
