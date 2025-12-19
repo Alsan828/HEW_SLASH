@@ -939,17 +939,37 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
 
     // Draw direction arrow
-    float arrowDistance = 0.08f;
-    float arrowSize = 0.15f;
+    float originalArrowSize = 0.15f;
+    float arrowSize = originalArrowSize;
 
-    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
-    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+    // If charging, make arrow longer based on charge level
+   float arrowDistance = 0.0f;
 
-    float arrowX = playerCenterX + cosf(m_arrowAngle) * arrowDistance;
-    float arrowY = playerCenterY + sinf(m_arrowAngle) * arrowDistance;
+   // with this you can change the center position of the arrow (the start point of the arrow "tail")
+    float centerOffsetX = 0.003f;
+    float centerOffsetY = 0.0f;
 
-    auto arrowScreenPos = worldToScreen(arrowX - arrowSize / 2, arrowY - arrowSize / 2);
+    if (g_player.isCharging)  // if the player is charging 
+    {
+        // Calculate charge ratio (0.0 to 1.0)
+        float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
 
+        // depending on the charcer, the wrrow gets bigger
+        arrowSize = originalArrowSize * (1.0f + chargeRatio * 2.0f);
+    }
+
+    float playerCenterX = g_player.posX + PLAYER_WIDTH *0.5f + centerOffsetX;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT *0.5f + centerOffsetY;
+
+    float tailX = playerCenterX; 
+    float tailY = playerCenterY;
+
+    // so the tail of the arrow stays in place and the head extends forward
+    float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowSize *0.5f);
+    float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowSize *0.5f);
+
+    auto arrowScreenPos = worldToScreen(arrowCenterX - arrowSize *0.5, arrowCenterY - arrowSize *0.5);
+  
     //SetColor(0.0f, 1.0f, 0.0f, 1.0f);
     float levelX = 0.85f;
     float levelY = 0.2f;
@@ -960,13 +980,13 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     }
     // Display different colors based on charge level
     if (chargeLevel >= 1) {
-        SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+        //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
     }
     if (chargeLevel >= 2) {
-        SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+        //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
     }
     if (chargeLevel >= 3) {
-        SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+        //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
     }
 
     RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
