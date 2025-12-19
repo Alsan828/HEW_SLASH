@@ -3,69 +3,143 @@
 #include <string>
 #include <unordered_map>
 
-
 struct AnimationClip
 {
-    int startFrame;     // first frame index in the clip
-    int endFrame;       // last frame index in the clip
-    float frameTime;    // time per frame
-    bool loop;          
-	ID3D11ShaderResourceView* textureSRV; // for separate .png
+    std::string name;           // 动画名称
+    int startFrame;            // 起始帧索引
+    int endFrame;              // 结束帧索引
+    int splitX;                // 水平分割数
+    int splitY;                // 垂直分割数
+    int currentFrame;          // 当前帧
+    int frameCount;            // 总帧数
+    float frameTime;           // 每帧时间
+    float elapsedTime;         // 已过时间
+    bool loop;                 // 是否循环
+    ID3D11ShaderResourceView* textureSRV; // 纹理资源视图
+
+    // 构造函数
+    AnimationClip()
+        : startFrame(0), endFrame(0), splitX(1), splitY(1)
+        , currentFrame(0), frameCount(0), frameTime(0.1f)
+        , elapsedTime(0.0f), loop(true), textureSRV(nullptr) {
+    }
+
+    // 初始化函数
+    void Init(const std::string& clipName, int sFrame, int eFrame,
+        int sX, int sY, float fTime, bool l, ID3D11ShaderResourceView* tex)
+    {
+        name = clipName;
+        startFrame = sFrame;
+        endFrame = eFrame;
+        splitX = sX;
+        splitY = sY;
+        frameTime = fTime;
+        loop = l;
+        textureSRV = tex;
+        currentFrame = startFrame;
+        frameCount = splitX * splitY;
+        elapsedTime = 0.0f;
+    }
+
+    // 更新动画
+    void Update(float deltaTime)
+    {
+        elapsedTime += deltaTime;
+        if (elapsedTime >= frameTime)
+        {
+            elapsedTime = 0.0f;
+
+            if (currentFrame < endFrame)
+            {
+                currentFrame++;
+            }
+            else if (loop)
+            {
+                currentFrame = startFrame;
+            }
+        }
+    }
+
+    // 重置动画
+    void Reset()
+    {
+        currentFrame = startFrame;
+        elapsedTime = 0.0f;
+    }
+
+    // 获取UV偏移
+    DirectX::XMFLOAT2 GetUVOffset() const
+    {
+        return DirectX::XMFLOAT2(
+            (float)(currentFrame % splitX) / splitX,
+            (float)(currentFrame / splitX) / splitY
+        );
+    }
+
+    // 检查是否结束
+    bool IsFinished() const
+    {
+        return !loop && currentFrame == endFrame;
+    }
 };
 
-class Animation 
+class Animation
 {
 private:
-    int m_splitX;           // for the horizontal sprite sheet divisions
-    int m_splitY;           // for the vertical sprite sheet divisions
-    int m_frameCount;       // for the total frames in the animation
-    int m_currentFrame;     // for the current frame
-    float m_frameTime;      // for the time per frame in seconds
-    float m_elapsedTime;    // for the time since last the frame switched
+    AnimationClip* m_currentClip;   // 当前动画片段
+    std::unordered_map<std::string, AnimationClip> m_clips; // 所有动画片段
 
-    DirectX::XMFLOAT2 m_uvOffset; // for the uv offset for current frame
-
-    AnimationClip m_currentClip;   // for the current animation clip
-    std::unordered_map<std::string, AnimationClip> m_clips; // for all the animation clips
-
-    bool m_paused;  // if the game is paused or not
-
-
-    // this is used for separate .png in order to have animation
-    std::vector<ID3D11ShaderResourceView*> m_textures;
-    bool m_useTextures = false;
+    bool m_paused;  // 是否暂停
+    DirectX::XMFLOAT2 m_uvOffset; // 当前UV偏移
 
 public:
-    Animation(void);  //construct
+    Animation(void);  // 构造函数
+    ~Animation(void); // 析构函数
 
-    HRESULT Init(int splitX, int splitY, float frameTime, int startFrame = 0);
+    // 添加动画片段
+    void AddClip(const std::string& name, int startFrame, int endFrame,
+        int splitX, int splitY, float frameTime, bool loop,
+        ID3D11ShaderResourceView* textureSRV = nullptr);
 
-    // so you can use it for idle, run, jump, dash, gameover, etc
-    void AddClip(const std::string& name, int startFrame, int endFrame, float frameTime, bool loop, ID3D11ShaderResourceView* textureSRV);
+    // 设置当前动画片段
     void SetClip(const std::string& name);
-    std::string GetCurrentClipName() const; // gets the current clip name
-	ID3D11ShaderResourceView* GetCurrentClipTexture() const; // gets the current clip texture
-    void Update(float deltaTime); // for updating the animation
-    DirectX::XMFLOAT2 GetUVOffset(void) const; 
 
+    // 获取当前动画片段名称
+    std::string GetCurrentClipName() const;
+
+    // 获取当前动画片段纹理
+    ID3D11ShaderResourceView* GetCurrentClipTexture() const;
+
+    // 更新动画
+    void Update(float deltaTime);
+
+    // 获取UV偏移
+    DirectX::XMFLOAT2 GetUVOffset(void) const;
+
+    // 重置当前动画
     void Reset();
+
+    // 检查是否结束
     bool IsFinished() const;
+
+    // 获取当前帧
     int GetCurrentFrame() const;
 
-    void Pause();    // when the game is paused
-    void Resume();   // when you resume the game
-    bool IsPaused() const; // check if paused 
+    // 暂停/恢复
+    void Pause();
+    void Resume();
+    bool IsPaused() const;
 
-    int GetSplitX() const { return m_splitX; }
-    int GetSplitY() const { return m_splitY; }
+    // 获取分割信息
+    int GetSplitX() const;
+    int GetSplitY() const;
 
+    // 检查动画是否存在
+    bool HasClip(const std::string& name) const;
 
+    // 获取动画片段数量
+    size_t GetClipCount() const;
 
-    // used for .png
-    std::vector<float> m_frameTimes; // for duration per frame
-    void InitFromTextures(const std::vector<ID3D11ShaderResourceView*>& textures,float frameTime, bool loop = false);
-    ID3D11ShaderResourceView* GetCurrentTexture() const;
-    void UpdateTexture(float deltaTime);
-    void CleanupTextures();
-
+    // 清空所有动画
+    void ClearClips();
 };

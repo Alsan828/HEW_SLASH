@@ -102,6 +102,9 @@
     <ClCompile Include="SimpleAudio.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="DamageNumber.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl" />

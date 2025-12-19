@@ -423,14 +423,15 @@ void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelS
 	// Release temporary resources
 	SAFE_RELEASE(pQuadBuffer);
 }
-
-void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex = 0, int rows = 1, int columns = 1 , bool enableCulling, float rotation)
+void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV,
+	int frameIndex, int rows, int columns, bool enableCulling,
+	float rotation, bool flipHorizontal)
 {
-
 	// 如果启用剔除且物体不可见，则跳过渲染
 	if (enableCulling && !g_camera.IsRectVisible(posX, posY, width, height)) {
 		return;
 	}
+
 	// Calculate size of each frame in sprite sheet (texture coordinates)
 	float frameWidth = 1.0f / columns;
 	float frameHeight = 1.0f / rows;
@@ -443,68 +444,81 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	float u0 = col * frameWidth;       // Left boundary
 	float u1 = (col + 1) * frameWidth; // Right boundary
 	float v0 = row * frameHeight;      // Top boundary
-	float v1 = (row + 1) * frameHeight;// Bottom boundary
+	float v1 = (row + 1) * frameHeight; // Bottom boundary
 
-
+	// 应用水平翻转
+	if (flipHorizontal) {
+		float temp = u0;
+		u0 = u1;
+		u1 = temp;
+	}
 
 	// Quad center for rotation
 	float centerX = posX + width * 0.5f;
 	float centerY = posY + height * 0.5f;
 
-	float cosA = cosf(rotation);
-	float sinA = sinf(rotation);
-
-	auto rotatePoint = [&](float x, float y) {
-		float dx = x - centerX;
-		float dy = y - centerY;
-		return std::pair<float, float>(
-			centerX + dx * cosA - dy * sinA,
-			centerY + dx * sinA + dy * cosA
-		);
+	D3D11_SUBRESOURCE_DATA initData;
+	// 如果没有旋转，使用更简单的计算
+	if (rotation == 0.0f) {
+		// 不旋转时直接计算顶点位置
+		VertexV vertices[4] = {
+			{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
+			{ posX + width, posY,           0.5f, u1, v1 }, // Bottom right
+			{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
+			{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
 		};
 
-	// Original corners (unrotated)
-	float x0 = posX;         float y0 = posY;          // bottom left
-	float x1 = posX + width; float y1 = posY;          // bottom right
-	float x2 = posX;         float y2 = posY + height; // top left
-	float x3 = posX + width; float y3 = posY + height; // top right
+		initData.pSysMem = vertices;
+		// 创建和使用顶点缓冲区...
+	}
+	else {
+		// 有旋转时计算旋转后的顶点位置
+		float cosA = cosf(rotation);
+		float sinA = sinf(rotation);
 
-	// Apply rotation
-	auto p0 = rotatePoint(x3, y3); // top right
-	auto p1 = rotatePoint(x1, y1); // bottom right
-	auto p2 = rotatePoint(x2, y2); // top left
-	auto p3 = rotatePoint(x0, y0); // bottom left
+		auto rotatePoint = [&](float x, float y) {
+			float dx = x - centerX;
+			float dy = y - centerY;
+			return std::pair<float, float>(
+				centerX + dx * cosA - dy * sinA,
+				centerY + dx * sinA + dy * cosA
+			);
+			};
 
+		// Original corners (unrotated)
+		float x0 = posX;         float y0 = posY;          // bottom left
+		float x1 = posX + width; float y1 = posY;          // bottom right
+		float x2 = posX;         float y2 = posY + height; // top left
+		float x3 = posX + width; float y3 = posY + height; // top right
 
+		// Apply rotation
+		auto p0 = rotatePoint(x3, y3); // top right
+		auto p1 = rotatePoint(x1, y1); // bottom right
+		auto p2 = rotatePoint(x2, y2); // top left
+		auto p3 = rotatePoint(x0, y0); // bottom left
 
+		VertexV vertices[4] = {
+			{ p0.first, p0.second, 0.5f, u1, v0 }, // Top right
+			{ p1.first, p1.second, 0.5f, u1, v1 }, // Bottom right
+			{ p2.first, p2.second, 0.5f, u0, v0 }, // Top left
+			{ p3.first, p3.second, 0.5f, u0, v1 }  // Bottom left
+		};
+		initData.pSysMem = vertices;
 
-	// Create vertex data (with correct texture coordinates)
-	//VertexV vertices[4] = {
-	//	// Position coordinates                   // Texture coordinates
-	//	{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
-	//	{ posX + width, posY,          0.5f, u1, v1 }, // Bottom right
-	//	{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
-	//	{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
-	//};
-	VertexV vertices[4] = {
-	   { p0.first, p0.second, 0.5f, u1, v0 }, // Top right
-	   { p1.first, p1.second, 0.5f, u1, v1 }, // Bottom right
-	   { p2.first, p2.second, 0.5f, u0, v0 }, // Top left
-	   { p3.first, p3.second, 0.5f, u0, v1 }  // Bottom left
-	};
+		// 创建和使用顶点缓冲区...
+	}
 
+	// 后续创建缓冲区、设置资源、绘制等代码保持不变...
 	// Create temporary vertex buffer
 	ID3D11Buffer* pDynamicBuffer = nullptr;
 	D3D11_BUFFER_DESC desc;
-	desc.ByteWidth = sizeof(vertices);
+	desc.ByteWidth = sizeof(VertexV) * 4;
 	desc.Usage = D3D11_USAGE_DYNAMIC;
 	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	desc.MiscFlags = 0;
 	desc.StructureByteStride = 0;
 
-	D3D11_SUBRESOURCE_DATA initData;
-	initData.pSysMem = vertices;
 	initData.SysMemPitch = 0;
 	initData.SysMemSlicePitch = 0;
 

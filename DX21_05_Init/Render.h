@@ -74,6 +74,8 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 HRESULT CreatePixelShader(ID3D11PixelShader** ppPixelShader, const char* szFileName);
 void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelShader* pPS);
 void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV, bool enableCulling = true);
-void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, int frameIndex, int rows, int columns, bool enableCulling = true, float rotation = 0.0f); // added the rotation
+void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV,
+	int frameIndex = 0, int rows = 1, int columns = 1, bool enableCulling = false,
+	float rotation = 0.0f, bool flipHorizontal = false); // added the rotation
 
 void SetColor(float r, float g, float b, float a); // added november 12th
