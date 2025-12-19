@@ -226,6 +226,12 @@ extern ID3D11ShaderResourceView* g_playerSlashLeft3Texture;
 extern ID3D11ShaderResourceView* g_playerSlashRight3Texture;
 extern ID3D11ShaderResourceView* g_playerSlashLeft4Texture;
 extern ID3D11ShaderResourceView* g_playerSlashRight4Texture;
+extern ID3D11ShaderResourceView* g_playerAirChargeLeftTexture;
+extern ID3D11ShaderResourceView* g_playerAirChargeRightTexture;
+extern ID3D11ShaderResourceView* g_playerFallingLeftTexture;
+extern ID3D11ShaderResourceView* g_playerFallingRightTexture;
+extern ID3D11ShaderResourceView* g_playerGroundChargeLeftTexture;
+extern ID3D11ShaderResourceView* g_playerGroundChargeRightTexture;
 
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;

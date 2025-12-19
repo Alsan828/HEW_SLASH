@@ -22,6 +22,12 @@ ID3D11ShaderResourceView* g_playerSlashLeft3Texture = nullptr;
 ID3D11ShaderResourceView* g_playerSlashRight3Texture = nullptr;
 ID3D11ShaderResourceView* g_playerSlashLeft4Texture = nullptr;
 ID3D11ShaderResourceView* g_playerSlashRight4Texture = nullptr;
+ID3D11ShaderResourceView* g_playerAirChargeLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_playerAirChargeRightTexture = nullptr;
+ID3D11ShaderResourceView* g_playerFallingLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_playerFallingRightTexture = nullptr;
+ID3D11ShaderResourceView* g_playerGroundChargeLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_playerGroundChargeRightTexture = nullptr;
 
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
