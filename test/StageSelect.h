@@ -26,7 +26,7 @@ private:
     ID3D11ShaderResourceView* backHoverTexture = nullptr;
 
 public:
-    StageSelect(SceneManager* manager, SCENE returnTo); // constructor
+    StageSelect(SceneManager* manager/*, SCENE returnTo*/); // constructor
 
     bool Init() override;
     void Update(float deltaTime) override;

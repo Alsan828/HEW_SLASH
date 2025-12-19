@@ -1,14 +1,16 @@
 #include "StageSelect.h"
 
 
-StageSelect::StageSelect(SceneManager* manager)
+StageSelect::StageSelect(SceneManager* manager, SCENE returnTo)
 {
 	sceneManager = manager;
+	returnScene = returnTo;
 }
 
 
 bool StageSelect::Init()
 {
+
 
 	LoadTexture(g_pDevice, "asset/stageselect.png", &backgroundTexture);      // abckground texture
 
@@ -31,7 +33,7 @@ bool StageSelect::Init()
 	LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // for the button
 	LoadTexture(g_pDevice, "asset/UI/back/back_hover.png", &backHoverTexture);
 
-	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, backTexture, backHoverTexture);
+	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, returnScene/*MENU*/, backTexture, backHoverTexture);
 	uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // change this values if needed depending on the size of the button
 	uiButtons.back().SetHitboxOffset(-0.06f);
 
@@ -49,10 +51,21 @@ void StageSelect::Update(float deltaTime)
 	// for the buttons
 	for (auto& btn : uiButtons)
 	{
-		if (btn.Process() == UIButtonResult::Clicked)
+		/*if (btn.Process() == UIButtonResult::Clicked)
 		{
 			sceneManager->SwitchScene(btn.GetTargetScene());
 			return;
+		}*/
+		if (btn.Process() == UIButtonResult::Clicked) { // If this is the BACK button ¨ use returnScene 
+			if (btn.GetTargetScene() == MENU || btn.GetTargetScene() == PAUSE) 
+			{ 
+				sceneManager->SwitchScene(returnScene); 
+			} 
+			else 
+			{ // Stage buttons ¨ go to the stage 
+				sceneManager->SwitchScene(btn.GetTargetScene()); 
+			} 
+			return; 
 		}
 	}
 }

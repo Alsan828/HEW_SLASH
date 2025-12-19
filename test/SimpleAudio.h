@@ -29,7 +29,7 @@ public:
     SimpleAudio();
     ~SimpleAudio();
 
-    // ³õÊ¼»¯/ÇåÀE
+    // ³õÊ¼»¯/ÇåÀí
     bool Initialize();
     void Shutdown();
 
@@ -53,7 +53,7 @@ public:
     void StopAll();
     void SetMasterVolume(float volume);
 
-    // ¸EÂ
+    // ¸üĞÂ
     void Update(float deltaTime);
 
     // ×´Ì¬²éÑ¯
