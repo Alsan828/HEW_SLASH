@@ -229,18 +229,18 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeRightTexture);  // when ground charge right
     g_player.anim.AddClip("IdleLeft", 0, 3, 4, 1, 0.25f, true, g_playerIdleLeftTexture); // ※ splitX is number of columns and splitY is number of rows
     g_player.anim.AddClip("IdleRight", 0, 3, 4, 1, 0.25f, true, g_playerIdleRightTexture);
-    g_player.anim.AddClip("JumpLeft", 0, 3, 4, 1, 0.25f, true, g_playerJumpLeftTexture);
-    g_player.anim.AddClip("JumpRight", 0, 3, 4, 1, 0.25f, true, g_playerJumpRightTexture);
+    g_player.anim.AddClip("JumpLeft", 0, 3, 4, 1, 0.25f, false, g_playerJumpLeftTexture);
+    g_player.anim.AddClip("JumpRight", 0, 3, 4, 1, 0.25f, false, g_playerJumpRightTexture);
     g_player.anim.AddClip("RunLeft", 0, 3, 4, 1, 0.1f, true, g_playerRunLeftTexture);
     g_player.anim.AddClip("RunRight", 0, 3, 4, 1, 0.1f, true, g_playerRunRightTexture);
-    g_player.anim.AddClip("SlashLeft1", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft1Texture);
-    g_player.anim.AddClip("SlashRight1", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight1Texture);
-    g_player.anim.AddClip("SlashLeft2", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft2Texture);
-    g_player.anim.AddClip("SlashRight2", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight2Texture);
-    g_player.anim.AddClip("SlashLeft3", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft3Texture);
-    g_player.anim.AddClip("SlashRight3", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight3Texture);
-    g_player.anim.AddClip("SlashLeft4", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft4Texture);
-    g_player.anim.AddClip("SlashRight4", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight4Texture);
+    g_player.anim.AddClip("SlashLeft1", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft1Texture);
+    g_player.anim.AddClip("SlashRight1", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight1Texture);
+    g_player.anim.AddClip("SlashLeft2", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft2Texture);
+    g_player.anim.AddClip("SlashRight2", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight2Texture);
+    g_player.anim.AddClip("SlashLeft3", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft3Texture);
+    g_player.anim.AddClip("SlashRight3", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight3Texture);
+    g_player.anim.AddClip("SlashLeft4", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft4Texture);
+    g_player.anim.AddClip("SlashRight4", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight4Texture);
     g_player.anim.AddClip("AirChargeLeft", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeLeftTexture);
     g_player.anim.AddClip("AirChargeRight", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeRightTexture);
     g_player.anim.AddClip("FallingLeft", 0, 0, 1, 1, 0.25f, true, g_playerFallingLeftTexture);
