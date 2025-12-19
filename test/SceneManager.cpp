@@ -142,15 +142,9 @@ bool SceneManager::SwitchScene(SCENE newScene)
             currentScene = new PauseScene(this, previousScene, originalPausedScene);
             return currentScene->Init();
         }
-        else if (caller == STAGESELECT)
-        {   
-            // if coming bak from stageselect scene,you can continue from you were in the stage
-            currentScene = new PauseScene(this, previousScene, originalPausedScene); 
-            return currentScene->Init(); 
-        }
         else 
         {
-            // there is no gameplay. you still have the preserved scene
+            // No gameplay underneath: clear preserved scene
             if (previousScene) 
             {
                 previousScene->Uninit();
@@ -163,19 +157,15 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case STAGESELECT:
-        if (caller == PAUSE) // if in pause
+        if (caller == PAUSE && previousScene) 
         {
-            currentScene = new StageSelect(this, PAUSE); // go back to pause
+            previousScene->Uninit();
+            delete previousScene;
+            previousScene = nullptr;
         }
-        else if (caller == MENU) // if in menu
-        {
-            currentScene = new StageSelect(this, MENU);// go back to menu
-        }
-        else
-        {
-            currentScene = new StageSelect(this, TITLE); // for default in case there is an error
-        }
+        currentScene = new StageSelect(this);
         return currentScene->Init();
+
         break;
 
     default:

@@ -1,15 +1,34 @@
-#include "HowToPlay.h"
+#include "StageSelect.h"
 
 
-HowToPlayScene::HowToPlayScene(SceneManager* manager, SCENE returnTo)
+StageSelect::StageSelect(SceneManager* manager/*, SCENE returnTo*/)
 {
 	sceneManager = manager;
-	returnScene = returnTo;
+	//returnScene = returnTo;
 }
 
-bool HowToPlayScene::Init()
+
+bool StageSelect::Init()
 {
-	LoadTexture(g_pDevice, "asset/UI/control/control.png", &backgroundTexture);      // abckground texture
+
+
+	LoadTexture(g_pDevice, "asset/stageselect.png", &backgroundTexture);      // abckground texture
+
+	// for test now
+	LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the button
+	LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
+
+	
+	uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, STAGE, buttonTexture, buttonHoverTexture); // go to 1-1
+	uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, STAGE2, buttonTexture, buttonHoverTexture); // go to 1-2
+	uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, STAGE3, buttonTexture, buttonHoverTexture); // go to 1-3
+	for (auto& btn : uiButtons)
+	{
+		btn.SetHitboxScale(0.7f, 0.2f);
+		btn.SetHitboxOffset(-0.05f);
+	}
+
+
 
 	LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // for the button
 	LoadTexture(g_pDevice, "asset/UI/back/back_hover.png", &backHoverTexture);
@@ -18,14 +37,14 @@ bool HowToPlayScene::Init()
 	uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // change this values if needed depending on the size of the button
 	uiButtons.back().SetHitboxOffset(-0.06f);
 
-
 	//uiButtons.clear();
 	g_mouseIndicator.ShowMouseIndicator(false);
 
 	return true;
 }
 
-void HowToPlayScene::Update(float deltaTime)
+
+void StageSelect::Update(float deltaTime)
 {
 	g_inputSystem.Update();
 
@@ -34,13 +53,14 @@ void HowToPlayScene::Update(float deltaTime)
 	{
 		if (btn.Process() == UIButtonResult::Clicked)
 		{
-			sceneManager->SwitchScene(returnScene);
+			sceneManager->SwitchScene(/*returnScene*/btn.GetTargetScene());
 			return;
 		}
 	}
 }
 
-void HowToPlayScene::Draw()
+
+void StageSelect::Draw()
 {
 	if (backgroundTexture) {
 		// Always set a color before drawing so the texture is visible
@@ -48,11 +68,14 @@ void HowToPlayScene::Draw()
 		RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, backgroundTexture, 0, 1, 1);
 	}
 
+	// for the buttons
 	for (const auto& btn : uiButtons)
 		btn.Draw(0.65f);
+
 }
 
-void HowToPlayScene::Uninit()
+
+void StageSelect::Uninit()
 {
 	if (backgroundTexture)
 	{
@@ -60,7 +83,18 @@ void HowToPlayScene::Uninit()
 		backgroundTexture = nullptr;
 	}
 
-	if (backTexture) 
+	if (buttonTexture) 
+	{
+		buttonTexture->Release();
+		buttonTexture = nullptr;
+	}
+	if (buttonHoverTexture)
+	{
+		buttonHoverTexture->Release();
+		buttonHoverTexture = nullptr;
+	}
+
+	if (backTexture)
 	{
 		backTexture->Release();
 		backTexture = nullptr;
