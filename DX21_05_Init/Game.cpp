@@ -233,14 +233,14 @@ void InitGameWorld() {
     g_player.anim.AddClip("JumpRight", 0, 3, 4, 1, 0.25f, true, g_playerJumpRightTexture);
     g_player.anim.AddClip("RunLeft", 0, 3, 4, 1, 0.1f, true, g_playerRunLeftTexture);
     g_player.anim.AddClip("RunRight", 0, 3, 4, 1, 0.1f, true, g_playerRunRightTexture);
-    g_player.anim.AddClip("SlashLeft1", 0, 3, 4, 1, 0.25f, true, g_playerSlashLeft1Texture);
-    g_player.anim.AddClip("SlashRight1", 0, 3, 4, 1, 0.25f, true, g_playerSlashRight1Texture);
-    g_player.anim.AddClip("SlashLeft2", 0, 3, 4, 1, 0.25f, true, g_playerSlashLeft2Texture);
-    g_player.anim.AddClip("SlashRight2", 0, 3, 4, 1, 0.25f, true, g_playerSlashRight2Texture);
-    g_player.anim.AddClip("SlashLeft3", 0, 3, 4, 1, 0.25f, true, g_playerSlashLeft3Texture);
-    g_player.anim.AddClip("SlashRight3", 0, 3, 4, 1, 0.25f, true, g_playerSlashRight3Texture);
-    g_player.anim.AddClip("SlashLeft4", 0, 3, 4, 1, 0.25f, true, g_playerSlashLeft4Texture);
-    g_player.anim.AddClip("SlashRight4", 0, 3, 4, 1, 0.25f, true, g_playerSlashRight4Texture);
+    g_player.anim.AddClip("SlashLeft1", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft1Texture);
+    g_player.anim.AddClip("SlashRight1", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight1Texture);
+    g_player.anim.AddClip("SlashLeft2", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft2Texture);
+    g_player.anim.AddClip("SlashRight2", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight2Texture);
+    g_player.anim.AddClip("SlashLeft3", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft3Texture);
+    g_player.anim.AddClip("SlashRight3", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight3Texture);
+    g_player.anim.AddClip("SlashLeft4", 0, 3, 4, 1, 1.0f, true, g_playerSlashLeft4Texture);
+    g_player.anim.AddClip("SlashRight4", 0, 3, 4, 1, 1.0f, true, g_playerSlashRight4Texture);
     g_player.anim.AddClip("AirChargeLeft", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeLeftTexture);
     g_player.anim.AddClip("AirChargeRight", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeRightTexture);
     g_player.anim.AddClip("FallingLeft", 0, 0, 1, 1, 0.25f, true, g_playerFallingLeftTexture);
@@ -332,166 +332,180 @@ void UpdateGame(float deltaTime) {
     g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
 
     // for the character animation
-    if (g_player.isCharging) // if player is charging
+    if (g_player.animLockTimer > 0.0f) 
+    { 
+        g_player.animLockTimer -= deltaTime; 
+    }
+    if (g_player.animLockTimer <= 0.0f)
     {
-        if (!g_player.isOnGround) // if the player is not on the ground while charging
+        if (g_player.isCharging) // if player is charging
         {
-            if (g_player.facingRight) // when looking right
+            if (!g_player.isOnGround) // if the player is not on the ground while charging
             {
-                if (g_player.anim.GetCurrentClipName() != "AirChargeRight") { // if not doing the animation
-                    g_player.anim.SetClip("AirChargeRight"); // do the animation
+                if (g_player.facingRight) // when looking right
+                {
+                    if (g_player.anim.GetCurrentClipName() != "AirChargeRight") { // if not doing the animation
+                        g_player.anim.SetClip("AirChargeRight"); // do the animation
+                    }
+                }
+                else // when looking left
+                {
+                    if (g_player.anim.GetCurrentClipName() != "AirChargeLeft") { // if not doing the animation
+                        g_player.anim.SetClip("AirChargeLeft"); // do the animation
+                    }
+                }
+            }
+            else // if the player is on the ground while charging
+            {
+                if (g_player.facingRight) // when looking right
+                {
+                    if (g_player.anim.GetCurrentClipName() != "GroundChargeRight") { // if not doing the animation
+                        g_player.anim.SetClip("GroundChargeRight"); // do the animation
+                    }
+                }
+                else  // when looking left
+                {
+                    if (g_player.anim.GetCurrentClipName() != "GroundChargeLeft") { // if not doing the animation
+                        g_player.anim.SetClip("GroundChargeLeft"); // do the animation
+                    }
+                }
+            }
+        }
+        else if (g_player.isDashing) // if the character is dashing
+        {
+            // for the types of slash
+            int chargeType = g_player.GetChargeLevel();
+
+            if (g_player.facingRight) // when the character is facing right
+            {
+                if (chargeType == 0) // for the type 1 slash 
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashRight1") { // if not doing the animation
+                        g_player.anim.SetClip("SlashRight1"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (chargeType == 1) // for the type 2 slash
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashRight2") { // if not doing the animation
+                        g_player.anim.SetClip("SlashRight2"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (chargeType == 2) // for the type 3 slash
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashRight3") { // if not doing the animation
+                        g_player.anim.SetClip("SlashRight3"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else  // for the type 4 slash
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashRight4") { // if not doing the animation
+                        g_player.anim.SetClip("SlashRight4"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+            }
+            else  // when the character is looking left
+            {
+                if (chargeType == 0) // for the type 1 slash
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashLeft1") { // if not doing the animation
+                        g_player.anim.SetClip("SlashLeft1"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (chargeType == 1) // for the type 2 slash
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashLeft2") { // if not doing the animation
+                        g_player.anim.SetClip("SlashLeft2"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (chargeType == 2) // for the type 3 slash
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashLeft3") { // if not doing the animation
+                        g_player.anim.SetClip("SlashLeft3"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else  // for the type 4 slash
+                {
+                    if (g_player.anim.GetCurrentClipName() != "SlashLeft4") { // if not doing the animation
+                        g_player.anim.SetClip("SlashLeft4"); // do the animation
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+            }
+        }
+        else if (!g_player.isOnGround) // the character is not on the ground
+        {
+            // if the player is falling
+            if (g_player.velocityY < 0.0f)
+            {
+                if (g_player.facingRight)  // when looking right
+                {
+                    if (g_player.anim.GetCurrentClipName() != "FallingRight") { // if not doing the aniamtion
+                        g_player.anim.SetClip("FallingRight"); // do the animation
+                    }
+                }
+                else  // when looking left
+                {
+                    if (g_player.anim.GetCurrentClipName() != "FallingLeft") { // if not doing the animation
+                        g_player.anim.SetClip("FallingLeft"); // do the animation
+                    }
+                }
+            }
+
+            else // when player is jumping
+            {
+                if (g_player.facingRight) // when looking right
+                {
+                    if (g_player.anim.GetCurrentClipName() != "JumpRight") {
+                        g_player.anim.SetClip("JumpRight");
+                    }
+                }
+                else // when looking left
+                {
+                    if (g_player.anim.GetCurrentClipName() != "JumpLeft") {
+                        g_player.anim.SetClip("JumpLeft");
+                    }
+                }
+            }
+
+        }
+        else if (g_player.isMoving) // the character is moving
+        {
+            if (g_player.facingRight) // when looking right right
+            {
+                if (g_player.anim.GetCurrentClipName() != "RunRight") {
+                    g_player.anim.SetClip("RunRight");
                 }
             }
             else // when looking left
             {
-                if (g_player.anim.GetCurrentClipName() != "AirChargeLeft") { // if not doing the animation
-                    g_player.anim.SetClip("AirChargeLeft"); // do the animation
+                if (g_player.anim.GetCurrentClipName() != "RunLeft") {
+                    g_player.anim.SetClip("RunLeft");
                 }
             }
         }
-        else // if the player is on the ground while charging
+        else // player is not running (not moving)
         {
             if (g_player.facingRight) // when looking right
             {
-                if (g_player.anim.GetCurrentClipName() != "GroundChargeRight") { // if not doing the animation
-                    g_player.anim.SetClip("GroundChargeRight"); // do the animation
-                }
-            }
-            else  // when looking left
-            {
-                if (g_player.anim.GetCurrentClipName() != "GroundChargeLeft") { // if not doing the animation
-                    g_player.anim.SetClip("GroundChargeLeft"); // do the animation
-                }
-            }
-        }
-    }
-    else if (g_player.isDashing) // if the character is dashing
-    {
-        // for the types of slash
-        int chargeType = g_player.GetChargeLevel();
-
-        if (g_player.facingRight) // when the character is facing right
-        {
-            if (chargeType == 0) // for the type 1 slash 
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashRight1") { // if not doing the animation
-                    g_player.anim.SetClip("SlashRight1"); // do the animation
-                }
-            }
-            else if (chargeType == 1) // for the type 2 slash
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashRight2") { // if not doing the animation
-                    g_player.anim.SetClip("SlashRight2"); // do the animation
-                }
-            }
-            else if (chargeType == 2) // for the type 3 slash
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashRight3") { // if not doing the animation
-                    g_player.anim.SetClip("SlashRight3"); // do the animation
-                }
-            }
-            else  // for the type 4 slash
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashRight4") { // if not doing the animation
-                    g_player.anim.SetClip("SlashRight4"); // do the animation
-                }
-            }
-        }
-        else  // when the character is looking left
-        {
-            if (chargeType == 0) // for the type 1 slash
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashLeft1") { // if not doing the animation
-                    g_player.anim.SetClip("SlashLeft1"); // do the animation
-                }
-            }
-            else if (chargeType == 1) // for the type 2 slash
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashLeft2") { // if not doing the animation
-                    g_player.anim.SetClip("SlashLeft2"); // do the animation
-                }
-            }
-            else if (chargeType == 2) // for the type 3 slash
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashLeft3") { // if not doing the animation
-                    g_player.anim.SetClip("SlashLeft3"); // do the animation
-                }
-            }
-            else  // for the type 4 slash
-            {
-                if (g_player.anim.GetCurrentClipName() != "SlashLeft4") { // if not doing the animation
-                    g_player.anim.SetClip("SlashLeft4"); // do the animation
-                }
-            }
-        }
-    }
-    else if (!g_player.isOnGround) // the character is not on the ground
-    {
-        // if the player is falling
-        if (g_player.velocityY < 0.0f) 
-        {
-            if (g_player.facingRight)  // when looking right
-            {
-                if (g_player.anim.GetCurrentClipName() != "FallingRight") { // if not doing the aniamtion
-                    g_player.anim.SetClip("FallingRight"); // do the animation
-                }
-            }
-            else  // when looking left
-            {
-                if (g_player.anim.GetCurrentClipName() != "FallingLeft") { // if not doing the animation
-                    g_player.anim.SetClip("FallingLeft"); // do the animation
-                }
-            }
-        }
-
-        else // when player is jumping
-        {
-            if (g_player.facingRight) // when looking right
-            {
-                if (g_player.anim.GetCurrentClipName() != "JumpRight") {
-                    g_player.anim.SetClip("JumpRight");
+                if (g_player.anim.GetCurrentClipName() != "IdleRight") {
+                    g_player.anim.SetClip("IdleRight");
                 }
             }
             else // when looking left
             {
-                if (g_player.anim.GetCurrentClipName() != "JumpLeft") {
-                    g_player.anim.SetClip("JumpLeft");
+                if (g_player.anim.GetCurrentClipName() != "IdleLeft") {
+                    g_player.anim.SetClip("IdleLeft");
                 }
             }
         }
-
     }
-    else if (g_player.isMoving) // the character is moving
-    {
-        if (g_player.facingRight) // when looking right right
-        {
-            if (g_player.anim.GetCurrentClipName() != "RunRight") {
-                g_player.anim.SetClip("RunRight");
-            }
-        }
-        else // when looking left
-        {
-            if (g_player.anim.GetCurrentClipName() != "RunLeft") {
-                g_player.anim.SetClip("RunLeft");
-            }
-        }
-    }
-    else // player is not running (not moving)
-    {
-        if (g_player.facingRight) // when looking right
-        {
-            if (g_player.anim.GetCurrentClipName() != "IdleRight") {
-                g_player.anim.SetClip("IdleRight");
-            }
-        }
-        else // when looking left
-        {
-            if (g_player.anim.GetCurrentClipName() != "IdleLeft") {
-                g_player.anim.SetClip("IdleLeft");
-            }
-        }
-    }
-    
 
     g_mouseIndicator.Update(scaledDeltaTime);
     g_player.anim.Update(scaledDeltaTime);

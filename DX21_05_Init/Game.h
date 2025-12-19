@@ -77,7 +77,7 @@ struct Player {
     float dashTimer = 0.0f;
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
-    int dashLevel = 0;
+    int dashLevel = 0; 
 
     float mouseTargetX = 0.0f;
     float mouseTargetY = 0.0f;
@@ -100,6 +100,8 @@ struct Player {
     const float CHARGE_DECAY_TIME = 1.0f; // 蓄力保存时间
 
     Animation anim;
+    float animLockTimer = 0.0f; // used for when changing from one animation to another
+    float animLockDuration = 0.4f;
 
     // 冲刺点数系统
     int dashPoints = 3;
