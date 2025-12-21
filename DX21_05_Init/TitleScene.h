@@ -23,7 +23,7 @@ private:
 
     // for the title intro animation
     std::vector<ID3D11ShaderResourceView*> frames;
-    ID3D11ShaderResourceView* tex = nullptr;
+    ID3D11ShaderResourceView* tex;
 
     Animation m_titleAnim;
     bool m_playing = false;

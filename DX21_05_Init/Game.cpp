@@ -255,7 +255,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/effect/hit.png", &g_hitEffectTexture);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
-    LoadTexture(g_pDevice, "asset/UI/time.png", &g_uiNumberTexture);
+    LoadTexture(g_pDevice, "asset/UI/time1.png", &g_uiNumberTexture);
 
     LoadTexture(g_pDevice, "asset/UI/arrow.png", &g_arrowTexture);
     LoadTexture(g_pDevice, "asset/UI/cursor.png", &g_cursorTexture);
@@ -924,15 +924,15 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
 
 
-    float uiX = -1.1f;
-    float uiY = 0.3f;
-    float uiWidth = 0.78f;
-    float uiHeight = 1.0f;
+    float uiX = -1.0f;
+    float uiY = 0.4f;
+    float uiWidth = 0.6f;
+    float uiHeight = 0.8f; 
     RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
 
     // for the timer counting
     float timerX = -0.83f;  // position x axis
-    float timerY = 0.75f;   // position y axis
+    float timerY = 0.77f;   // position y axis
     float timerDigitWidth = 0.05f;  // width
     float timerDigitHeight = 0.08f; // height
 
