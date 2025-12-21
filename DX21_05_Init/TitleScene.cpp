@@ -19,6 +19,7 @@ bool TitleScene::Init()
     m_titleAnim.AddClip("titleScene",0,8,1,9, 0.06f, false, tex); // 0.06s per frame. lower number is faster
 	m_titleAnim.SetClip("titleScene");
 	m_titleAnim.Pause(); // start paused, will play when mouse is clicked
+
     uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
        
@@ -29,6 +30,7 @@ bool TitleScene::Init()
 void TitleScene::Update(float deltaTime) 
 {
     g_inputSystem.Update();
+
     if (!m_playing && g_inputSystem.IsMouseLeftDown()) 
     {
         m_playing = true;
