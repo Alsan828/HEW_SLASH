@@ -1,4 +1,4 @@
-// SimpleAudio.h
+ï»¿// SimpleAudio.h
 #pragma once
 #include <windows.h>
 #include <mmsystem.h>
@@ -29,34 +29,33 @@ public:
     SimpleAudio();
     ~SimpleAudio();
 
-    // ³õÊ¼»¯/ÇåÀE
+    // åˆå§‹
     bool Initialize();
     void Shutdown();
 
-    // ±³¾°ÒôÀÖ¿ØÖÆ
+    // èƒŒæ™¯éŸ³ä¹æ§åˆ¶
     void PlayBGM(const std::string& filename, float volume = 1.0f, bool loop = true);
     void PauseBGM();
     void ResumeBGM();
     void StopBGM();
     void SetBGMVolume(float volume);
 
-    // ÒôĞ§²¥·Å
+    // éŸ³æ•ˆæ’­æ”¾
     int PlaySFX(const std::string& filename, float volume = 1.0f, bool loop = false);
     void StopSFX(int soundId);
     void PauseSFX(int soundId);
     void ResumeSFX(int soundId);
     void SetSFXVolume(int soundId, float volume);
 
-    // ÅúÁ¿¿ØÖÆ
+    // æ‰¹é‡æ§åˆ¶
     void PauseAll();
     void ResumeAll();
     void StopAll();
     void SetMasterVolume(float volume);
 
-    // ¸EÂ
     void Update(float deltaTime);
 
-    // ×´Ì¬²éÑ¯
+    // çŠ¶æ€æŸ¥è¯¢
     bool IsBGMPlaying() const;
     float GetBGMVolume() const;
     float GetMasterVolume() const;

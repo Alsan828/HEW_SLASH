@@ -1,4 +1,4 @@
-#include "Animation.h"
+ï»¿#include "Animation.h"
 
 Animation::Animation()
 {
@@ -13,7 +13,7 @@ Animation::~Animation()
     m_currentClip = nullptr;
 }
 
-// ÌúØÓ¶¯»­Æ¬¶Î
+// é“èµœåŠ¨ç”»ç‰‡æ®µ
 void Animation::AddClip(const std::string& name, int startFrame, int endFrame,
     int splitX, int splitY, float frameTime, bool loop,
     ID3D11ShaderResourceView* textureSRV)
@@ -28,7 +28,7 @@ void Animation::AddClip(const std::string& name, int startFrame, int endFrame,
     }
 }
 
-// ÉèÖÃµ±Ç°¶¯»­Æ¬¶Î
+// è®¾ç½®å½“å‰åŠ¨ç”»ç‰‡æ®µ
 void Animation::SetClip(const std::string& name)
 {
     auto it = m_clips.find(name);
@@ -39,7 +39,7 @@ void Animation::SetClip(const std::string& name)
     }
 }
 
-// »ñÈ¡µ±Ç°¶¯»­Æ¬¶ÎÃû³Æ
+// è·å–å½“å‰åŠ¨ç”»ç‰‡æ®µåç§°
 std::string Animation::GetCurrentClipName() const
 {
     if (m_currentClip)
@@ -49,7 +49,7 @@ std::string Animation::GetCurrentClipName() const
     return "";
 }
 
-// »ñÈ¡µ±Ç°¶¯»­Æ¬¶ÎÎÆÀE
+// è·å–å½“å‰åŠ¨ç”»ç‰‡æ®µçº¹çº´E
 ID3D11ShaderResourceView* Animation::GetCurrentClipTexture() const
 {
     if (m_currentClip)
@@ -59,7 +59,7 @@ ID3D11ShaderResourceView* Animation::GetCurrentClipTexture() const
     return nullptr;
 }
 
-// ¸EÂ¶¯»­
+// ç«µEéœ²î‡°?
 void Animation::Update(float deltaTime)
 {
     if (m_paused || !m_currentClip)
@@ -71,13 +71,13 @@ void Animation::Update(float deltaTime)
     m_uvOffset = m_currentClip->GetUVOffset();
 }
 
-// »ñÈ¡UVÆ«ÒÆ
+// è·å–UVåç§»
 DirectX::XMFLOAT2 Animation::GetUVOffset() const
 {
     return m_uvOffset;
 }
 
-// ÖØÖÃµ±Ç°¶¯»­
+// é‡ç½®å½“å‰åŠ¨ç”»
 void Animation::Reset()
 {
     if (m_currentClip)
@@ -86,7 +86,7 @@ void Animation::Reset()
     }
 }
 
-// ¼EéÊÇ·ñ½áÊE
+// ç´’Eæ§­æ¬ çª å´¾ä¸’
 bool Animation::IsFinished() const
 {
     if (m_currentClip)
@@ -96,7 +96,7 @@ bool Animation::IsFinished() const
     return true;
 }
 
-// »ñÈ¡µ±Ç°Ö¡
+// è·å–å½“å‰å¸§
 int Animation::GetCurrentFrame() const
 {
     if (m_currentClip)
@@ -106,7 +106,7 @@ int Animation::GetCurrentFrame() const
     return 0;
 }
 
-// ÔİÍ£/»Ö¸´
+// æš‚åœ/æ¢å¤
 void Animation::Pause()
 {
     m_paused = true;
@@ -122,7 +122,7 @@ bool Animation::IsPaused() const
     return m_paused;
 }
 
-// »ñÈ¡·Ö¸ûìÅÏ¢
+// è·å–åˆ†è€•ç‚«æ¯
 int Animation::GetSplitX() const
 {
     if (m_currentClip)
@@ -141,19 +141,19 @@ int Animation::GetSplitY() const
     return 1;
 }
 
-// ¼Eé¶¯»­ÊÇ·ñ´æÔÚ
+// ç´’Eæ§î‡°î…ƒæ¬ ç¿Šå¬–?
 bool Animation::HasClip(const std::string& name) const
 {
     return m_clips.find(name) != m_clips.end();
 }
 
-// »ñÈ¡¶¯»­Æ¬¶ÎÊıÁ¿
+// è·å–åŠ¨ç”»ç‰‡æ®µæ•°é‡
 size_t Animation::GetClipCount() const
 {
     return m_clips.size();
 }
 
-// Çå¿ÕËùÓĞ¶¯»­
+// æ¸…ç©ºæ‰€æœ‰åŠ¨ç”»
 void Animation::ClearClips()
 {
     m_clips.clear();
