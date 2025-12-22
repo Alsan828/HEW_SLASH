@@ -18,6 +18,7 @@ bool MapManager::SwitchMap(const std::string& mapName, int enterPortalId, int sp
     Map* newMap = GetMap(mapName);
     if (!newMap) return false;
 
+    g_player.hitStopTimer = 1.05f; 
     m_previousMap = m_currentMap;
     m_currentMap = newMap;
     m_currentPortalId = enterPortalId;

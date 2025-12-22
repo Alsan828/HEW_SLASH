@@ -173,7 +173,7 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 
 // todo: finish the draw combo UI 
 // for the combo UI of the player
-void DrawComboUI(void)
+void DrawComboUI(void)//TODO
 {
     if (g_player.comboCount <= 1)
     {
@@ -253,8 +253,6 @@ void InitGameWorld() {
     g_camera.SetSmoothness(camera_Smoothness);
     g_camera.SetLookAhead(camera_LookAhead);
     g_camera.SetDeadZone(camera_DeadZone);
-
-    ResetGame();
 }
 
 // Modified game update function
@@ -641,7 +639,7 @@ void DrawGame() {
         }
     }
 
-    DrawComboUI();
+    //DrawComboUI();
 
 }
 void HandleInput() {
@@ -730,7 +728,6 @@ void HandleInput() {
 // MouseIndicatorSystem implementation
 void MouseIndicatorSystem::Initialize() {
     m_mouseIndicatorTexture = g_chargeEffectTexture;
-    m_arrowTexture = g_arrowTexture;
     m_cursorTexture = g_cursorTexture;
     m_showMouseIndicator = true;
     m_arrowAngle = 0.0f;
@@ -820,72 +817,78 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     if (g_player.isCharging || g_player.hasSavedCharge)
     {
-        float centerOffsetX = 0.003f;
-        float centerOffsetY = 0.0f;
-        float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f + centerOffsetX;
-        float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f + centerOffsetY;
-        float arrowWidth = 0.15f;
+        if (!m_arrowShow) {
 
-        // Get charge time
-        float chargeTime = 0.0f;
-        if (g_player.isCharging) {
-            chargeTime = g_player.chargeTime;
         }
-        else if (g_player.hasSavedCharge) {
-            chargeTime = g_player.savedChargeTime;
+        else {
+
+            float centerOffsetX = 0.003f;
+            float centerOffsetY = 0.0f;
+            float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f + centerOffsetX;
+            float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f + centerOffsetY;
+            float arrowWidth = 0.15f;
+
+            // Get charge time
+            float chargeTime = 0.0f;
+            if (g_player.isCharging) {
+                chargeTime = g_player.chargeTime;
+            }
+            else if (g_player.hasSavedCharge) {
+                chargeTime = g_player.savedChargeTime;
+            }
+
+            // Calculate smooth charge ratio (0.0 to 1.0)
+            float chargeRatio = chargeTime / g_player.MAX_CHARGE_TIME;
+
+            // Smoothly interpolate speed multiplier from 1.0 to 2.0 based on charge
+            float minSpeedMultiplier = 1.0f;
+            float maxSpeedMultiplier = 2.0f;
+            float speedMultiplier = minSpeedMultiplier + (maxSpeedMultiplier - minSpeedMultiplier) * chargeRatio;
+
+            float durationMultiplier = 1.0f;
+
+            // Calculate the ACTUAL world distance the player will travel
+            // Distance = velocity × time × 60.0 (from your physics calculation)
+            float dashSpeed = DASH_SPEED * speedMultiplier;
+            float dashDuration = DASH_DURATION * durationMultiplier;
+            float arrowLength = dashSpeed * dashDuration * 60.0f; // Added the 60.0f multiplier!
+
+            float tailX = playerCenterX;
+            float tailY = playerCenterY;
+
+            // Calculate the center of the arrow (midpoint between tail and head)
+            float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowLength * 0.5f);
+            float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowLength * 0.5f);
+
+            // Position calculation for screen rendering
+            auto arrowScreenPos = worldToScreen(arrowCenterX - arrowLength * 0.5f, arrowCenterY - arrowWidth * 0.5f);
+
+            // Get charge level for color display
+            int chargeLevel = g_player.GetChargeLevelFromTime(chargeTime);
+
+            // Display different colors based on charge level
+            if (chargeLevel >= 3) {
+                //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+            }
+            else if (chargeLevel >= 2) {
+                //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+            }
+            else if (chargeLevel >= 1) {
+                //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+            }
+
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+            // Render with arrowLength (horizontal stretch) and arrowWidth (vertical size)
+            RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
+                g_arrowTexture, 0, 1, 1, false, m_arrowAngle);
+
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
-
-        // Calculate smooth charge ratio (0.0 to 1.0)
-        float chargeRatio = chargeTime / g_player.MAX_CHARGE_TIME;
-
-        // Smoothly interpolate speed multiplier from 1.0 to 2.0 based on charge
-        float minSpeedMultiplier = 1.0f;
-        float maxSpeedMultiplier = 2.0f;
-        float speedMultiplier = minSpeedMultiplier + (maxSpeedMultiplier - minSpeedMultiplier) * chargeRatio;
-
-        float durationMultiplier = 1.0f;
-
-        // Calculate the ACTUAL world distance the player will travel
-        // Distance = velocity × time × 60.0 (from your physics calculation)
-        float dashSpeed = DASH_SPEED * speedMultiplier;
-        float dashDuration = DASH_DURATION * durationMultiplier;
-        float arrowLength = dashSpeed * dashDuration * 60.0f; // Added the 60.0f multiplier!
-
-        float tailX = playerCenterX;
-        float tailY = playerCenterY;
-
-        // Calculate the center of the arrow (midpoint between tail and head)
-        float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowLength * 0.5f);
-        float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowLength * 0.5f);
-
-        // Position calculation for screen rendering
-        auto arrowScreenPos = worldToScreen(arrowCenterX - arrowLength * 0.5f, arrowCenterY - arrowWidth * 0.5f);
-
-        // Get charge level for color display
-        int chargeLevel = g_player.GetChargeLevelFromTime(chargeTime);
-
-        // Display different colors based on charge level
-        if (chargeLevel >= 3) {
-            //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
-        }
-        else if (chargeLevel >= 2) {
-            //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
-        }
-        else if (chargeLevel >= 1) {
-            //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
-        }
-
-        // Render with arrowLength (horizontal stretch) and arrowWidth (vertical size)
-        RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
-            m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
-
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
 
 void MouseIndicatorSystem::Cleanup() {
     m_mouseIndicatorTexture = nullptr;
-    m_arrowTexture = nullptr;
 }
 
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {

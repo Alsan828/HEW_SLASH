@@ -1,4 +1,4 @@
-#include "Stage2.h"
+﻿#include "Stage2.h"
 
 //the construct
 Stage2Scene::Stage2Scene(SceneManager* manager)
@@ -9,9 +9,9 @@ Stage2Scene::Stage2Scene(SceneManager* manager)
 // Initialize the stage
 bool Stage2Scene::Init()
 {
-    InitGameWorld();
 
     g_mapManager.SwitchMap("forest", 0, 1);
+    
 
     g_gameState = STATE_PLAYING;
 
@@ -40,5 +40,5 @@ void Stage2Scene::Uninit()
 {
     //ResetGame();  // Reset game state
 
-    CleanUpGameWorld();  // Release all textures and cleanup
+    //CleanUpGameWorld();  // Release all textures and cleanup
 }

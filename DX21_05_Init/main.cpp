@@ -104,6 +104,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     case WM_DESTROY:
+
+        CleanUpGameWorld();
         PostQuitMessage(0);
         break;
 

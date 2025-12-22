@@ -1,4 +1,4 @@
-#include "Pause.h"
+﻿#include "Pause.h"
 
 // construct
 PauseScene::PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE)
@@ -67,6 +67,7 @@ void PauseScene::Update(float deltaTime)
 
             if (target == QUIT_GAME)
             {
+                CleanUpGameWorld();
                 PostQuitMessage(0);// it quits the game
                 return;
             }
