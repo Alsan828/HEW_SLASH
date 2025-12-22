@@ -1,4 +1,4 @@
-// SimpleAudio.cpp
+ï»¿// SimpleAudio.cpp
 #include "SimpleAudio.h"
 #include <vector>
 #include <algorithm>
@@ -27,7 +27,7 @@ void SimpleAudio::Shutdown() {
     isBGMInitialized = false;
 }
 
-// ×Ö·û´®×ª»»¸¨Öúº¯Êı
+// å­—ç¬¦ä¸²è½¬æ¢è¾…åŠ©å‡½æ•°
 std::wstring StringToWide(const std::string& str) {
     if (str.empty()) return L"";
 
@@ -37,7 +37,7 @@ std::wstring StringToWide(const std::string& str) {
     return wstrTo;
 }
 
-// ±³¾°ÒôÀÖ¿ØÖÆ
+// èƒŒæ™¯éŸ³ä¹æ§åˆ¶
 void SimpleAudio::PlayBGM(const std::string& filename, float volume, bool loop) {
     StopBGM();
 
@@ -51,7 +51,7 @@ void SimpleAudio::PlayBGM(const std::string& filename, float volume, bool loop) 
         flags |= SND_LOOP;
     }
 
-    // ²¥·Å±³¾°ÒôÀÖ
+    // æ’­æ”¾èƒŒæ™¯éŸ³ä¹
     PlaySoundW(wideFilename.c_str(), NULL, flags);
 }
 
@@ -79,10 +79,10 @@ void SimpleAudio::StopBGM() {
 
 void SimpleAudio::SetBGMVolume(float volume) {
     bgmVolume = volume;
-    // PlaySound²»Ö§³ÖÒôÁ¿¿ØÖÆ£¬ÕâÀEÇÂ¼Öµµ«²»Êµ¼ÊÓ¦ÓÃ
+    // PlaySoundä¸æ”¯æŒéŸ³é‡æ§åˆ¶
 }
 
-// ÒôĞ§²¥·Å
+// éŸ³æ•ˆæ’­æ”¾
 int SimpleAudio::PlaySFX(const std::string& filename, float volume, bool loop) {
     std::wstring wideFilename = StringToWide(filename);
     DWORD flags = SND_FILENAME | SND_ASYNC;
@@ -90,7 +90,7 @@ int SimpleAudio::PlaySFX(const std::string& filename, float volume, bool loop) {
         flags |= SND_LOOP;
     }
 
-    // ²¥·ÅÒôĞ§
+    // æ’­æ”¾éŸ³æ•ˆ
     BOOL result = PlaySoundW(wideFilename.c_str(), NULL, flags);
     if (!result) {
         return -1;
@@ -108,14 +108,13 @@ int SimpleAudio::PlaySFX(const std::string& filename, float volume, bool loop) {
 }
 
 void SimpleAudio::StopSFX(int soundId) {
-    // PlaySoundÃ»ÓĞÍ£Ö¹ÌØ¶¨ÒôĞ§µÄ·½·¨
-    // ÕâÀE»´Ó¹ÜÀúâ÷ÖĞÒÆ³ı¼ÇÂ¼
+    // PlaySoundæ²¡æœ‰åœæ­¢ç‰¹å®šéŸ³æ•ˆçš„æ–¹æ³•
     playingSounds.erase(soundId);
 
-    // Èç¹ûÃ»ÓĞÒôĞ§ÔÚ²¥·Å£¬Í£Ö¹ËùÓĞÉùÒE
+    // å¦‚æœæ²¡æœ‰éŸ³æ•ˆåœ¨æ’­æ”¾ï¼Œåœæ­¢æ‰€æœ‰å£°è¥¾E
     if (playingSounds.empty()) {
         PlaySoundW(NULL, NULL, 0);
-        // »Ö¸´±³¾°ÒôÀÖ
+        // æ¢å¤èƒŒæ™¯éŸ³ä¹
         if (isBGMPlaying && !currentBGM.empty()) {
             ResumeBGM();
         }
@@ -123,12 +122,12 @@ void SimpleAudio::StopSFX(int soundId) {
 }
 
 void SimpleAudio::PauseSFX(int soundId) {
-    // PlaySound²»Ö§³ÖÔİÍ£ÌØ¶¨ÒôĞ§
+    // PlaySoundä¸æ”¯æŒæš‚åœç‰¹å®šéŸ³æ•ˆ
     playingSounds.erase(soundId);
 }
 
 void SimpleAudio::ResumeSFX(int soundId) {
-    // PlaySound²»Ö§³Ö»Ö¸´ÌØ¶¨ÒôĞ§
+    // PlaySoundä¸æ”¯æŒæ¢å¤ç‰¹å®šéŸ³æ•ˆ
     auto it = playingSounds.find(soundId);
     if (it != playingSounds.end()) {
         PlaySFX(it->second.filePath, it->second.volume, it->second.loop);
@@ -142,7 +141,7 @@ void SimpleAudio::SetSFXVolume(int soundId, float volume) {
     }
 }
 
-// ÅúÁ¿¿ØÖÆ
+// æ‰¹é‡æ§åˆ¶
 void SimpleAudio::PauseAll() {
     PlaySoundW(NULL, NULL, 0);
     isBGMPlaying = false;
@@ -163,17 +162,15 @@ void SimpleAudio::StopAll() {
 
 void SimpleAudio::SetMasterVolume(float volume) {
     masterVolume = volume;
-    // PlaySound²»Ö§³ÖÒôÁ¿¿ØÖÆ
+    // PlaySoundä¸æ”¯æŒéŸ³é‡æ§åˆ¶
 }
 
-// ¸EÂ
+// ç«µE?
 void SimpleAudio::Update(float deltaTime) {
-    // ÇåÀúîÑÍEÉµÄÒôĞ§
-    // PlaySoundÃ»ÓĞÌá¹©²éÑ¯×´Ì¬µÄ·½·¨
-    // ËùÒÔÕâÀE»×öÇåÀE
+    // PlaySoundæ²¡æœ‰æä¾›æŸ¥è¯¢çŠ¶æ€çš„æ–¹æ³•
 }
 
-// ×´Ì¬²éÑ¯
+// çŠ¶æ€æŸ¥è¯¢
 bool SimpleAudio::IsBGMPlaying() const {
     return isBGMPlaying;
 }
