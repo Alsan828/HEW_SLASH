@@ -679,9 +679,16 @@ void HandleInput() {
     bool isMouseRightDown = g_inputSystem.IsMouseRightDown();
 
     static bool wasMouseLeftDown = false;
+    static bool wasDashingLastFrame = false; // 新增：记录上一帧是否在冲刺
 
     // Pure mouse control: press to start charging
     if (isMouseLeftPressed) {
+        StartMouseChargeDash();
+    }
+
+    // 新增：检查是否在冲刺结束的瞬间鼠标左键是按下的
+    if (wasDashingLastFrame && !g_player.isDashing && isMouseLeftDown && !g_player.isCharging) {
+        // 如果上一帧在冲刺，这一帧不在冲刺，并且鼠标左键是按下的，且没有在蓄力
         StartMouseChargeDash();
     }
 
@@ -696,6 +703,7 @@ void HandleInput() {
     }
 
     wasMouseLeftDown = isMouseLeftDown;
+    wasDashingLastFrame = g_player.isDashing; // 更新冲刺状态记录
 
     // Movement control
     bool moving = false;
