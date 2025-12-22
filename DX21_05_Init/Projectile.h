@@ -76,6 +76,8 @@ private:
     void ApplyEffectToEnemy(Enemy* enemy);
     void CreateImpactEffect();
 
+    float CalculateDirectionAngle()const;
+    float GetRotationAngle()const;
     // 类型特定行为
     void UpdateFireball(float deltaTime);
     void UpdateIceShard(float deltaTime);

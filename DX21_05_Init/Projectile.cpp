@@ -6,15 +6,12 @@ ProjectileManager& ProjectileManager::GetInstance() {
     static ProjectileManager instance;
     return instance;
 }
-
-// Projectile class implementation
 Projectile::Projectile(ProjectileType type, float startX, float startY,
     float targetX, float targetY, float speed,
     const ProjectileEffect& effect, bool fromPlayer)
     : type(type), posX(startX), posY(startY), speed(speed), effect(effect),
     fromPlayer(fromPlayer), isActive(true), homingTarget(nullptr),
     currentPierceCount(0), rotation(0.0f), scaleEffect(1.0f) {
-
 
     // Calculate direction vector
     float dx = targetX - startX;
@@ -29,6 +26,9 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
         velocityX = speed;
         velocityY = 0;
     }
+
+    // 根据速度方向计算初始旋转角度
+    rotation = CalculateDirectionAngle();
 
     // Set initial properties based on type
     switch (type) {
@@ -79,6 +79,10 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
         return;
     }
 
+    // 保存当前速度方向
+    float oldVelocityX = velocityX;
+    float oldVelocityY = velocityY;
+
     // Type-specific update logic
     switch (type) {
     case ProjectileType::FIREBALL:
@@ -101,6 +105,25 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
         break;
     }
 
+    // 如果速度方向发生变化，更新旋转角度
+    if (fabs(velocityX - oldVelocityX) > 0.001f || fabs(velocityY - oldVelocityY) > 0.001f) {
+        // 计算新的方向角度
+        float newDirectionAngle = CalculateDirectionAngle();
+        float oldDirectionAngle = atan2(oldVelocityY, oldVelocityX);
+
+        // 只对非自转子弹类型更新基础方向
+        switch (type) {
+        case ProjectileType::LIGHTNING:
+        case ProjectileType::HOLY_BOLT:
+            // 这些类型没有自转，直接更新旋转角度
+            rotation = newDirectionAngle;
+            break;
+        default:
+            // 其他类型保持原有的自转逻辑
+            break;
+        }
+    }
+
     // Movement and collision detection
     Move(deltaTime);
 
@@ -113,8 +136,6 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
     CheckPlayerCollision();
     CheckEnemyCollision(enemies);
 }
-
-
 // Check collision with player
 void  Projectile::CheckPlayerCollision() {
     // Only check player collision if projectile is not from player
@@ -140,16 +161,16 @@ void  Projectile::CheckPlayerCollision() {
         }
     }
 }
-
 void Projectile::UpdateFireball(float deltaTime) {
     // Fireball: gradually grows larger and accelerates
     scaleEffect = 1.0f + lifeTime * 0.5f;
     speed += deltaTime * 2.0f;
+    // 火球的自转效果保留
     rotation += deltaTime * 10.0f;
 }
 
 void Projectile::UpdateIceShard(float deltaTime) {
-    // Ice Shard: rotation effect
+    // Ice Shard: 基础方向 + 自转效果
     rotation += deltaTime * 15.0f;
 
     // Ice trail effect
@@ -158,7 +179,25 @@ void Projectile::UpdateIceShard(float deltaTime) {
     }
 }
 
+void Projectile::UpdateLightning(float deltaTime) {
+    // Lightning: 基础方向 + 闪烁效果，不自转
+    scaleEffect = 0.8f + 0.4f * sin(lifeTime * 30.0f);
+    // 闪电不自转，旋转角度来自基础方向
+}
 
+void Projectile::UpdatePoisonDart(float deltaTime) {
+    // Poison Dart: 基础方向 + 自转
+    // 正弦波运动
+    float waveOffset = sin(lifeTime * 10.0f) * 0.02f;
+    posX += waveOffset * deltaTime * 10.0f;
+    rotation += deltaTime * 20.0f;
+}
+
+void Projectile::UpdateHolyBolt(float deltaTime) {
+    // Holy Bolt: 基础方向 + 脉冲效果，不自转
+    scaleEffect = 1.0f + 0.2f * sin(lifeTime * 8.0f);
+    // 圣光箭不自转，旋转角度来自基础方向
+}
 void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemies) {
     // Magic Missile: homes to the nearest enemy
     if (homingTarget && !homingTarget->IsAlive()) {
@@ -185,6 +224,10 @@ void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemie
             }
         }
     }
+
+    // 保存旧的旋转角度
+    float oldDirectionAngle = CalculateDirectionAngle();
+
     // Home towards target
     if (homingTarget && homingStrength > 0) {
         float dx = homingTarget->GetX() - posX;
@@ -203,30 +246,26 @@ void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemie
             float currentSpeed = sqrt(velocityX * velocityX + velocityY * velocityY);
             velocityX = (velocityX / currentSpeed) * speed;
             velocityY = (velocityY / currentSpeed) * speed;
+
+            // 计算新的方向角度
+            float newDirectionAngle = CalculateDirectionAngle();
+
+            // 平滑过渡旋转角度
+            float angleDiff = newDirectionAngle - oldDirectionAngle;
+
+            // 将角度差标准化到[-π, π]范围内
+            while (angleDiff > 3.14159f) angleDiff -= 2 * 3.14159f;
+            while (angleDiff < -3.14159f) angleDiff += 2 * 3.14159f;
+
+            // 使用插值平滑旋转过渡
+            rotation += angleDiff * 0.5f;
         }
     }
-
-    rotation += deltaTime * 8.0f;
+    else {
+        // 如果没有跟踪目标，保持原有的自转
+        rotation += deltaTime * 8.0f;
+    }
 }
-
-void Projectile::UpdateLightning(float deltaTime) {
-    // Lightning: quick flicker effect
-    scaleEffect = 0.8f + 0.4f * sin(lifeTime * 30.0f);
-}
-
-void Projectile::UpdatePoisonDart(float deltaTime) {
-    // Poison Dart: slight sine wave movement
-    float waveOffset = sin(lifeTime * 10.0f) * 0.02f;
-    posX += waveOffset * deltaTime * 10.0f;
-    rotation += deltaTime * 20.0f;
-}
-
-void Projectile::UpdateHolyBolt(float deltaTime) {
-    // Holy Bolt: pulsing light effect
-    scaleEffect = 1.0f + 0.2f * sin(lifeTime * 8.0f);
-    rotation += deltaTime * 5.0f;
-}
-
 void Projectile::Move(float deltaTime) {
     posX += velocityX * deltaTime;
     posY += velocityY * deltaTime;
@@ -317,7 +356,6 @@ ID3D11ShaderResourceView* ProjectileManager::GetTextureForType(ProjectileType ty
     }
 }
 
-
 void Projectile::Render(const Camera& camera) {
     if (!isActive) return;
 
@@ -354,13 +392,15 @@ void Projectile::Render(const Camera& camera) {
         break;
     }
 
-    // Render projectile (with rotation and scaling)
+    // 获取总旋转角度
+    float totalRotation = GetRotationAngle();
+
+    // 渲染射弹（带旋转和缩放）
     float renderSize = size * scaleEffect;
-    RenderImage(screenX, screenY, renderSize, renderSize, texture, 0, 1, 1);
+    RenderImage(screenX, screenY, renderSize, renderSize, texture, 0, 1, 1, false, totalRotation, false);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
-
 // ProjectileManager class implementation
 void ProjectileManager::AddProjectile(ProjectileType type, float startX, float startY,
     float targetX, float targetY, float speed,
@@ -393,7 +433,7 @@ void ProjectileManager::ClearAll() {
 
 void ProjectileManager::LoadTextures(ID3D11Device* device) {
     // Load various projectile textures
-    LoadTexture(device, "asset/Projectile_Fireball.png", &fireballTexture);
+    LoadTexture(device, "asset/enemy/enemy_005_thorn/enemy_005_thorn_Pbullet_right.png", &fireballTexture);
     LoadTexture(device, "asset/Projectile_IceShard.png", &iceShardTexture);
     LoadTexture(device, "asset/Projectile_MagicMissile.png", &magicMissileTexture);
     LoadTexture(device, "asset/Projectile_Lightning.png", &lightningTexture);
@@ -409,7 +449,7 @@ void ProjectileManager::CreateFireball(float startX, float startY, float targetX
     effect.burnDamage = 5.0f;
     effect.areaRadius = 0.3f;
 
-    AddProjectile(ProjectileType::FIREBALL, startX, startY, targetX, targetY, 2.0f, effect, fromPlayer);
+    AddProjectile(ProjectileType::FIREBALL, startX, startY, targetX, targetY, 1.5f, effect, fromPlayer);
 }
 
 void ProjectileManager::CreateIceShard(float startX, float startY, float targetX, float targetY, bool fromPlayer) {
@@ -456,4 +496,42 @@ void ProjectileManager::CreateHolyBolt(float startX, float startY, float targetX
     effect.maxPierceCount = 3;
 
     AddProjectile(ProjectileType::HOLY_BOLT, startX, startY, targetX, targetY, 9.0f, effect, fromPlayer);
+}
+
+// 在Projectile.cpp中添加以下方法实现
+
+// 计算速度方向角度
+float Projectile::CalculateDirectionAngle() const {
+    // 计算速度方向的角度（弧度）
+    return atan2(velocityY, velocityX);
+}
+
+// 获取旋转角度
+float Projectile::GetRotationAngle() const {
+    // 基础的方向角度
+    float baseAngle = CalculateDirectionAngle();
+
+    // 根据子弹类型调整旋转
+    switch (type) {
+    case ProjectileType::FIREBALL:
+        // 火球：基础方向角度 + 自转角度
+        return baseAngle;
+    case ProjectileType::ICE_SHARD:
+        // 冰箭：基础方向角度 + 自转角度
+        return baseAngle ;
+    case ProjectileType::MAGIC_MISSILE:
+        // 魔法飞弹：基础方向角度 + 自转角度
+        return baseAngle + rotation;
+    case ProjectileType::LIGHTNING:
+        // 闪电：基础方向角度，加上随机的闪烁效果
+        return baseAngle;
+    case ProjectileType::POISON_DART:
+        // 毒箭：基础方向角度 + 自转角度
+        return baseAngle + rotation;
+    case ProjectileType::HOLY_BOLT:
+        // 圣光箭：基础方向角度
+        return baseAngle;
+    default:
+        return baseAngle;
+    }
 }
