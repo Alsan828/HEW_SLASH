@@ -612,11 +612,13 @@ void ExecuteMouseChargeDash() {
     g_player.mouseTargetX = currentMouseX;
     g_player.mouseTargetY = currentMouseY;
 
+    g_player.ClearSavedCharge(); // so the arrow is erased when the dash is finished
+
     // === Key modification: Save current charge time when dash ends ===
     // Only save if charge time is at a valid value (to avoid saving invalid charges)
-    if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
-        g_player.SaveCharge(); // Save current charge time
-    }
+    //if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
+    //    g_player.SaveCharge(); // Save current charge time
+    //}
 
     // End charging state
     g_player.isCharging = false;
