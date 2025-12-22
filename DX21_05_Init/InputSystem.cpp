@@ -104,6 +104,8 @@ void InputSystem::UpdateMouseState() {
     m_mouseLeftPressed = m_mouseLeftDown && !m_prevMouseLeftDown;
     m_mouseLeftReleased = !m_mouseLeftDown && m_prevMouseLeftDown;
 
+    m_mouseRightDown = (GetAsyncKeyState(VK_RBUTTON) & 0x8000) != 0;
+
     // 获取鼠标位置
     GetCursorPos(&m_mousePos);
 }

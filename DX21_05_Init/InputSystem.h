@@ -91,6 +91,7 @@ private:
 
     POINT m_mousePos;
     bool m_mouseLeftDown = false;
+    bool m_mouseRightDown = false;
     bool m_mouseLeftPressed = false;
     bool m_mouseLeftReleased = false;
     bool m_prevMouseLeftDown = false;
@@ -119,6 +120,7 @@ public:
     void UpdateMouseState();
     void GetMousePosition(float& worldX, float& worldY) const;
     bool IsMouseLeftDown() const { return m_mouseLeftDown; }
+    bool IsMouseRightDown() const { return m_mouseRightDown; }
     bool IsMouseLeftPressed() const { return m_mouseLeftPressed; }
     bool IsMouseLeftReleased() const { return m_mouseLeftReleased; }
 

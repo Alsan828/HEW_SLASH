@@ -43,7 +43,7 @@ const float JUMP_FORCE = 0.065f;
 const float MOVE_SPEED = 0.01f; 
 const float DASH_SPEED = 0.1f;      // Base dash speed
 const float DASH_DURATION = 0.11f;   // Base dash duration
-const float DASH_COOLDOWN = 0.1f;    // Dash cooldown time
+const float DASH_COOLDOWN = 0.0f;    // Dash cooldown time
 
 // Player structure
 struct Player {
@@ -59,6 +59,11 @@ struct Player {
     float deathTimer = 0.0f;
     const float DEATH_RESPAWN_TIME = 3.0f;  // 3秒后复活
     int deathCount = 0;  // 死亡计数（可选）
+
+    // for the combo UI of the player when attacking
+    int comboCount = 0;
+    float comboTimer = 0.0f;   // for the time before the combo resets
+    const float COMBO_RESET_TIME = 2.0f; // 2 seconds without killing, the combo will reset
 
 
     // 生命值系统
@@ -90,6 +95,8 @@ struct Player {
     const float CHARGE_THRESHOLD_LOW = 0.2f;
     const float CHARGE_THRESHOLD_MID = 0.4f;
     const float CHARGE_THRESHOLD_HIGH = 0.8f;
+    int hitStopTriggered = 0 ;     // 本次冲刺中已触发的顿刀次数
+    float hitStopTimer = 0.0f;       // 顿刀计时器
 
     // 新增：蓄力层数系统
     float savedChargeTime = 0.0f;        // 保存的蓄力时间
@@ -234,6 +241,8 @@ extern ID3D11ShaderResourceView* g_numberTexture;
 extern ID3D11ShaderResourceView* g_uiNumberTexture;
 extern ID3D11ShaderResourceView* g_arrowTexture;
 extern ID3D11ShaderResourceView* g_cursorTexture;
+extern ID3D11ShaderResourceView* g_comboNumberTexture;
+extern ID3D11ShaderResourceView* g_comboXTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
@@ -273,6 +282,8 @@ void CancelChargeDash();
 bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2);
 
+void DrawComboUI(void);
+
 
 //Player Movement Control
 void Jump();
@@ -298,8 +309,11 @@ private:
     ID3D11ShaderResourceView* m_mouseIndicatorTexture;
     ID3D11ShaderResourceView* m_arrowTexture;
     ID3D11ShaderResourceView* m_cursorTexture;
-
+    bool m_arrowShow;
 public:
+    void showArrow(bool show) {
+        m_arrowShow = show;
+    }
     void Initialize();
     void Update(float deltaTime);
     void Render(float cameraX, float cameraY);
