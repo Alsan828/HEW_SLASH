@@ -1,6 +1,5 @@
 ﻿// SimpleAudio.cpp
 #include "SimpleAudio.h"
-#include <algorithm>
 
 SimpleAudio::SimpleAudio()
     : nextSoundId(1)
