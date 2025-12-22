@@ -57,7 +57,6 @@ std::vector<Enemy*> g_enemies;
 Camera g_camera;
 
 MouseIndicatorSystem g_mouseIndicator;
-SimpleAudio g_audioManager;
 // 在Game.cpp开头定义全局变量
 int g_windowWidth = 0;
 int g_windowHeight = 0;

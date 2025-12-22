@@ -1,7 +1,4 @@
 ﻿#include "Game.h"
-#include "Enemy.h"
-#include "SimpleAudio.h"
-
 // Add to global variable definition section in Game.cpp
 float g_slowMoTimer = 0.0f;
 float g_slowMoFactor = 1.0f;
@@ -268,8 +265,6 @@ void InitGameWorld() {
     g_camera.SetLookAhead(camera_LookAhead);
     g_camera.SetDeadZone(camera_DeadZone);
 
-    g_audioManager.Initialize();
-    g_audioManager.PlayBGM("asset/Music/level1.wav");
     ResetGame();
 }
 
@@ -280,7 +275,6 @@ void UpdateGame(float deltaTime) {
     }
 
     // Update audio manager
-    g_audioManager.Update(deltaTime);
     g_gameTimer.Tick(); // added december 3rd
 
     // added december 4th
@@ -981,8 +975,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     // so the tail of the arrow stays in place and the head extends forward
     float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowSize *0.5f);
     float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowSize *0.5f);
-
-    auto arrowScreenPos = worldToScreen(arrowCenterX - arrowSize *0.5, arrowCenterY - arrowSize *0.5);
+    auto arrowScreenPos = worldToScreen(arrowCenterX - arrowSize * 0.5f, arrowCenterY - arrowSize * 0.5f);
   
     //SetColor(0.0f, 1.0f, 0.0f, 1.0f);
     float levelX = 0.85f;
@@ -1015,73 +1008,4 @@ void MouseIndicatorSystem::Cleanup() {
 }
 
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {
-}
-
-// Sound effect functions
-void PlayJumpSound() {
-    g_audioManager.PlaySFX(SoundEffect::JUMP, 0.5f);
-}
-
-void PlayDashSound() {
-    g_audioManager.PlaySFX(SoundEffect::DASH, 0.7f);
-}
-
-void PlayChargeStartSound() {
-    g_audioManager.PlaySFX(SoundEffect::CHARGE_START, 0.4f, true);
-}
-
-void PlayChargeReleaseSound() {
-    g_audioManager.PlaySFX(SoundEffect::CHARGE_RELEASE, 0.6f);
-}
-
-void PlayShootSound() {
-    g_audioManager.PlaySFX(SoundEffect::SHOOT, 0.6f);
-}
-
-void PlayEnemyHitSound() {
-    g_audioManager.PlaySFX(SoundEffect::ENEMY_HIT, 0.5f);
-}
-
-void PlayEnemyDeathSound() {
-    g_audioManager.PlaySFX(SoundEffect::ENEMY_DEATH, 0.7f);
-}
-
-void PlaySlowMotionSound(bool start) {
-    if (start) {
-        g_audioManager.PlaySFX(SoundEffect::SLOWMO_START, 0.8f);
-    }
-    else {
-        g_audioManager.PlaySFX(SoundEffect::SLOWMO_END, 0.8f);
-    }
-}
-
-// Background music functions
-void PlayStageMusic(int stage) {
-    switch (stage) {
-    case 1:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL1, 0.7f, true);
-        break;
-    case 2:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL2, 0.7f, true);
-        break;
-    case 3:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL3, 0.7f, true);
-        break;
-    default:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL1, 0.7f, true);
-    }
-}
-
-void PlayBossMusic() {
-    g_audioManager.PlayBGM(BackgroundMusic::BOSS_BATTLE, 0.8f, true);
-}
-
-void PlayVictoryMusic() {
-    g_audioManager.StopBGM();
-    g_audioManager.PlayBGM(BackgroundMusic::VICTORY, 0.8f, false);
-}
-
-void PlayGameOverMusic() {
-    g_audioManager.StopBGM();
-    g_audioManager.PlayBGM(BackgroundMusic::GAME_OVER, 0.8f, false);
 }

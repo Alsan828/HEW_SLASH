@@ -16,6 +16,7 @@
 #include "Pause.h"
 #include "Projectile.h"
 #include "SimpleAudio.h"
+#include "Enemy.h"
 
 class ProjectileManager;
 
@@ -320,7 +321,6 @@ public:
 // 全局实例
 extern MouseIndicatorSystem g_mouseIndicator;
 
-extern SimpleAudio g_audioManager;
 
 // 音效文件常量
 namespace SoundEffect {
@@ -349,18 +349,3 @@ namespace BackgroundMusic {
     const std::string GAME_OVER = "asset/Music/game_over.wav";
     const std::string VICTORY = "asset/Music/victory.wav";
 }
-
-
-void PlayJumpSound();
-void PlayDashSound();
-void PlayChargeStartSound();
-void PlayChargeReleaseSound();
-void PlayShootSound();
-void PlayEnemyHitSound();
-void PlayEnemyDeathSound();
-void PlaySlowMotionSound(bool start);
-
-void PlayStageMusic(int stage);
-void PlayBossMusic();
-void PlayVictoryMusic();
-void PlayGameOverMusic();

@@ -1025,7 +1025,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     DamageNumberManager::Update(deltaTime);
 
     int visibleEnemyCount = 0;
-    int totalEnemyCount = g_enemies.size();
+    int totalEnemyCount = (int)g_enemies.size();
 
     for (auto& enemy : g_enemies) {
         // 调试信息：计数可见敌人
