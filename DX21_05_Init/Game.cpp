@@ -628,6 +628,7 @@ void HandleInput() {
     bool isMouseLeftPressed = g_inputSystem.IsMouseLeftPressed();
     bool isMouseLeftDown = g_inputSystem.IsMouseLeftDown();
     bool isMouseLeftReleased = g_inputSystem.IsMouseLeftReleased();
+    bool isMouseRightDown = g_inputSystem.IsMouseRightDown();
 
     static bool wasMouseLeftDown = false;
 
@@ -642,7 +643,7 @@ void HandleInput() {
     }
 
     // Cancel charging
-    if (!isMouseLeftDown && g_player.isCharging) {
+    if (isMouseRightDown && g_player.isCharging) {
         CancelChargeDash();
     }
 
