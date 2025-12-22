@@ -1,4 +1,4 @@
-#include "Stage3.h"
+﻿#include "Stage3.h"
 
 //the construct
 Stage3Scene::Stage3Scene(SceneManager* manager)
@@ -9,7 +9,6 @@ Stage3Scene::Stage3Scene(SceneManager* manager)
 // Initialize the stage
 bool Stage3Scene::Init()
 {
-    InitGameWorld();
 
     g_mapManager.SwitchMap("ice", 0, 1);
 
@@ -40,5 +39,5 @@ void Stage3Scene::Uninit()
 {
     //ResetGame();  // Reset game state
 
-    CleanUpGameWorld();  // Release all textures and cleanup
+    //CleanUpGameWorld();  // Release all textures and cleanup
 }

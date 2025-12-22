@@ -307,7 +307,6 @@ private:
     float m_arrowAngle;
     bool m_showMouseIndicator;
     ID3D11ShaderResourceView* m_mouseIndicatorTexture;
-    ID3D11ShaderResourceView* m_arrowTexture;
     ID3D11ShaderResourceView* m_cursorTexture;
     bool m_arrowShow;
 public:

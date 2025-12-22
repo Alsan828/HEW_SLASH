@@ -1,4 +1,4 @@
-#include "Stage.h"
+﻿#include "Stage.h"
 
 //the construct
 StageScene::StageScene(SceneManager* manager)
@@ -9,16 +9,11 @@ StageScene::StageScene(SceneManager* manager)
 // Initialize the stage
 bool StageScene::Init()
 {
-    InitGameWorld();
-
-    g_mapManager.SwitchMap("stage1", 0, 1);
 
     g_gameState = STATE_PLAYING;
 
-    g_gameElapsedTime = 0.0f;
-    g_gameMinutes = 0;
-    g_gameSeconds = 0;
-
+    g_mapManager.SwitchMap("stage1", -1, -1);
+    ResetGame();
     return true;
 }
 
@@ -40,6 +35,6 @@ void StageScene::Uninit()
 {
     //ResetGame();  // Reset game state
 
-    CleanUpGameWorld();  // Release all textures and cleanup
+    //CleanUpGameWorld();  // Release all textures and cleanup
 
 }

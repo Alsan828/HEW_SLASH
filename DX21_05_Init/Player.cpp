@@ -1,15 +1,29 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
-
 // Update player physics
 void UpdatePlayerPhysics(float deltaTime) {
+    // 计算玩家当前的碰撞体大小
+    float currentWidth = PLAYER_WIDTH;
+    float currentHeight = PLAYER_HEIGHT;
+
+    // 冲刺时碰撞体缩小为1/4
+    if (g_player.isDashing) {
+        currentWidth = PLAYER_WIDTH * 0.25f;
+        currentHeight = PLAYER_HEIGHT * 0.25f;
+    }
 
     // Ignore gravity and movement during stun state
     if (g_player.isInDashAftermath) {
+        // 硬直状态也使用缩小的碰撞体
+        if (g_player.isDashing) {
+            currentWidth = PLAYER_WIDTH * 0.25f;
+            currentHeight = PLAYER_HEIGHT * 0.25f;
+        }
+
         // Only handle basic collision to prevent falling through the ground
         auto& solidTiles = g_mapManager.GetCurrentMap()->GetSolidTiles();
         for (const auto& tile : solidTiles) {
-            if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+            if (CheckCollision(g_player.posX, g_player.posY, currentWidth, currentHeight,
                 tile.posX, tile.posY, tile.width, tile.height)) {
                 // Simple vertical collision handling
                 g_player.posY = tile.posY + tile.height; // Stand on ground
@@ -56,7 +70,7 @@ void UpdatePlayerPhysics(float deltaTime) {
 
                 // Horizontal collision detection
                 for (const auto& tile : solidTiles) {
-                    if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                    if (CheckCollision(g_player.posX, g_player.posY, currentWidth, currentHeight,
                         tile.posX, tile.posY, tile.width, tile.height)) {
                         // Revert to pre-collision position
                         g_player.posX -= stepX;
@@ -65,11 +79,11 @@ void UpdatePlayerPhysics(float deltaTime) {
                         // Calculate collision normal and bounce
                         if (moveX > 0) {
                             // Collision when moving right
-                            g_player.posX = tile.posX - PLAYER_WIDTH;
+                            g_player.posX = tile.posX - currentWidth;
                         }
                         else if (moveX < 0) {
                             // Collision when moving left
-                            g_player.posX = tile.posX + tile.width;
+                            g_player.posY = tile.posX + tile.width;
                         }
                         break;
                     }
@@ -79,14 +93,14 @@ void UpdatePlayerPhysics(float deltaTime) {
 
                 // Vertical collision detection
                 for (const auto& tile : solidTiles) {
-                    if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                    if (CheckCollision(g_player.posX, g_player.posY, currentWidth, currentHeight,
                         tile.posX, tile.posY, tile.width, tile.height)) {
                         // Revert to pre-collision position
                         g_player.posY -= stepY;
 
                         if (moveY > 0) {
                             // Collision when moving upward
-                            g_player.posY = tile.posY - PLAYER_HEIGHT;
+                            g_player.posY = tile.posY - currentHeight;
                             g_player.velocityY = 0.0f;
                         }
                         else if (moveY < 0) {
@@ -109,22 +123,22 @@ void UpdatePlayerPhysics(float deltaTime) {
             g_player.isOnGround = false;
 
             for (const auto& tile : solidTiles) {
-                if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                if (CheckCollision(g_player.posX, g_player.posY, currentWidth, currentHeight,
                     tile.posX, tile.posY, tile.width, tile.height)) {
 
-                    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
-                    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+                    float playerCenterX = g_player.posX + currentWidth / 2;
+                    float playerCenterY = g_player.posY + currentHeight / 2;
                     float tileCenterX = tile.posX + tile.width / 2;
                     float tileCenterY = tile.posY + tile.height / 2;
 
-                    float overlapX = (PLAYER_WIDTH / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
-                    float overlapY = (PLAYER_HEIGHT / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
+                    float overlapX = (currentWidth / 2 + tile.width / 2) - fabs(playerCenterX - tileCenterX);
+                    float overlapY = (currentHeight / 2 + tile.height / 2) - fabs(playerCenterY - tileCenterY);
 
                     // Separate axis handling: choose direction of minimum overlap
                     if (overlapX < overlapY) {
                         // Horizontal collision
                         if (playerCenterX < tileCenterX) {
-                            g_player.posX = tile.posX - PLAYER_WIDTH;
+                            g_player.posX = tile.posX - currentWidth;
                         }
                         else {
                             g_player.posX = tile.posX + tile.width;
@@ -134,7 +148,7 @@ void UpdatePlayerPhysics(float deltaTime) {
                     else {
                         // Vertical collision
                         if (playerCenterY < tileCenterY) {
-                            g_player.posY = tile.posY - PLAYER_HEIGHT;
+                            g_player.posY = tile.posY - currentHeight;
                             g_player.velocityY = 0.0f;
                         }
                         else {
@@ -156,8 +170,8 @@ void UpdatePlayerPhysics(float deltaTime) {
         spatialGrid->GetTilesInArea(
             g_player.posX - padding,
             g_player.posY - padding,
-            PLAYER_WIDTH + padding * 2,
-            PLAYER_HEIGHT + padding * 2,
+            currentWidth + padding * 2,
+            currentHeight + padding * 2,
             nearbyTiles
         );
 
@@ -176,7 +190,7 @@ void UpdatePlayerPhysics(float deltaTime) {
                 // Horizontal collision detection
                 for (const auto& tile : nearbyTiles) {
                     if (tile->tileInfo.isSolid &&
-                        CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        CheckCollision(g_player.posX, g_player.posY, currentWidth, currentHeight,
                             tile->posX, tile->posY, tile->width, tile->height)) {
                         // Revert to pre-collision position
                         g_player.posX -= stepX;
@@ -185,7 +199,7 @@ void UpdatePlayerPhysics(float deltaTime) {
                         // Calculate collision normal
                         if (moveX > 0) {
                             // Collision when moving right
-                            g_player.posX = tile->posX - PLAYER_WIDTH;
+                            g_player.posX = tile->posX - currentWidth;
                         }
                         else if (moveX < 0) {
                             // Collision when moving left
@@ -200,14 +214,14 @@ void UpdatePlayerPhysics(float deltaTime) {
                 // Vertical collision detection
                 for (const auto& tile : nearbyTiles) {
                     if (tile->tileInfo.isSolid &&
-                        CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                        CheckCollision(g_player.posX, g_player.posY, currentWidth, currentHeight,
                             tile->posX, tile->posY, tile->width, tile->height)) {
                         // Revert to pre-collision position
                         g_player.posY -= stepY;
 
                         if (moveY > 0) {
                             // Collision when moving upward
-                            g_player.posY = tile->posY - PLAYER_HEIGHT;
+                            g_player.posY = tile->posY - currentHeight;
                             g_player.velocityY = 0.0f;
                         }
                         else if (moveY < 0) {
@@ -230,22 +244,22 @@ void UpdatePlayerPhysics(float deltaTime) {
 
             for (const auto& tile : nearbyTiles) {
                 if (tile->tileInfo.isSolid &&
-                    CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
+                    CheckCollision(g_player.posX, g_player.posY, currentWidth, currentHeight,
                         tile->posX, tile->posY, tile->width, tile->height)) {
 
-                    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
-                    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+                    float playerCenterX = g_player.posX + currentWidth / 2;
+                    float playerCenterY = g_player.posY + currentHeight / 2;
                     float tileCenterX = tile->posX + tile->width / 2;
                     float tileCenterY = tile->posY + tile->height / 2;
 
-                    float overlapX = (PLAYER_WIDTH / 2 + tile->width / 2) - fabs(playerCenterX - tileCenterX);
-                    float overlapY = (PLAYER_HEIGHT / 2 + tile->height / 2) - fabs(playerCenterY - tileCenterY);
+                    float overlapX = (currentWidth / 2 + tile->width / 2) - fabs(playerCenterX - tileCenterX);
+                    float overlapY = (currentHeight / 2 + tile->height / 2) - fabs(playerCenterY - tileCenterY);
 
                     // Separate axis handling: choose direction of minimum overlap
                     if (overlapX < overlapY) {
                         // Horizontal collision
                         if (playerCenterX < tileCenterX) {
-                            g_player.posX = tile->posX - PLAYER_WIDTH;
+                            g_player.posX = tile->posX - currentWidth;
                         }
                         else {
                             g_player.posX = tile->posX + tile->width;
@@ -255,7 +269,7 @@ void UpdatePlayerPhysics(float deltaTime) {
                     else {
                         // Vertical collision
                         if (playerCenterY < tileCenterY) {
-                            g_player.posY = tile->posY - PLAYER_HEIGHT;
+                            g_player.posY = tile->posY - currentHeight;
                             g_player.velocityY = 0.0f;
                         }
                         else {
@@ -299,6 +313,59 @@ void UpdatePlayerPhysics(float deltaTime) {
     CheckDashAttack();
 }
 
+void CheckDashAttack() {
+    if (!g_player.isDashing) {
+        g_player.hitEnemies.clear();
+        g_player.hitStopTriggered = 0; // 重置顿刀触发计数
+        g_player.hitStopTimer = 0.0f;  // 重置顿刀计时器
+        return;
+    }
+
+    // 冲刺时使用缩小的碰撞体
+    float playerWidth = PLAYER_WIDTH;
+    float playerHeight = PLAYER_HEIGHT;
+
+    if (g_player.isDashing) {
+        playerWidth = PLAYER_WIDTH * 0.25f;
+        playerHeight = PLAYER_HEIGHT * 0.25f;
+    }
+
+    // 计算玩家冲刺角度
+    float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
+
+    for (auto& enemy : g_enemies) {
+        if (!enemy->IsAlive()) continue;
+
+        // 检查是否已经击中过这个敌人
+        if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
+            continue;
+        }
+
+        // 检查碰撞，使用缩小的碰撞体
+        if (CheckCollision(g_player.posX, g_player.posY, playerWidth, playerHeight,
+            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
+
+            // === 新增：触发顿刀效果 ===
+            if (g_player.hitStopTriggered < 3) {
+                g_camera.Shake(0.02f, 0.05f);
+                g_player.hitStopTimer = 0.05f; // 0.05秒的顿刀
+                g_player.hitStopTriggered++;   // 增加触发计数
+
+                // 触发全局慢动作效果（可选，可注释掉）
+                // TriggerSlowMotion(0.05f, 0.3f);
+            }
+
+            // 直接传递玩家冲刺角度，敌人计算相对方向
+            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
+
+            // 对敌人造成伤害
+            enemy->TakeDamage(actualDamage, dashAngle);
+
+            // 标记为已击中
+            g_player.hitEnemies.push_back(enemy);
+        }
+    }
+}
 // New: Update player death state
 void UpdatePlayerDeath(float deltaTime) {
     if (!g_player.isDead) {
@@ -722,50 +789,5 @@ bool ConsumeDashPoint() {
 void OnEnemyDefeated() {
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
-    }
-}
-
-void CheckDashAttack() {
-    if (!g_player.isDashing) {
-        g_player.hitEnemies.clear();
-        g_player.hitStopTriggered = 0; // 重置顿刀触发计数
-        g_player.hitStopTimer = 0.0f;  // 重置顿刀计时器
-        return;
-    }
-
-    // 计算玩家冲刺角度
-    float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
-
-    for (auto& enemy : g_enemies) {
-        if (!enemy->IsAlive()) continue;
-
-        // 检查是否已经击中过这个敌人
-        if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
-            continue;
-        }
-
-        // 检查碰撞
-        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
-
-            // === 新增：触发顿刀效果 ===
-            if (g_player.hitStopTriggered < 3) {
-                g_camera.Shake(0.02f, 0.05f);
-                g_player.hitStopTimer = 0.05f; // 0.05秒的顿刀
-                g_player.hitStopTriggered++;   // 增加触发计数
-
-                // 触发全局慢动作效果（可选，可注释掉）
-                // TriggerSlowMotion(0.05f, 0.3f);
-            }
-
-            // 直接传递玩家冲刺角度，敌人计算相对方向
-            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
-
-            // 对敌人造成伤害
-            enemy->TakeDamage(actualDamage, dashAngle);
-
-            // 标记为已击中
-            g_player.hitEnemies.push_back(enemy);
-        }
     }
 }

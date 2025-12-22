@@ -17,6 +17,7 @@ bool TitleScene::Init()
 {
     LoadTexture(g_pDevice, "asset/UI/title/cut_sheet.png", &tex);
 
+    InitGameWorld();
     m_titleAnim.AddClip("titleScene",0,8,1,9, 0.06f, false, tex); // 0.06s per frame. lower number is faster
 	m_titleAnim.SetClip("titleScene");
 	m_titleAnim.Pause(); // start paused, will play when mouse is clicked
@@ -69,7 +70,6 @@ void TitleScene::Uninit()
 
     // clean up the texture for the animation
     m_titleAnim.ClearClips();
-
     // clean up the buttons
     uiButtons.clear();
     g_mouseIndicator.Cleanup();
