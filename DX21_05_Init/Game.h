@@ -309,8 +309,11 @@ private:
     ID3D11ShaderResourceView* m_mouseIndicatorTexture;
     ID3D11ShaderResourceView* m_arrowTexture;
     ID3D11ShaderResourceView* m_cursorTexture;
-
+    bool m_arrowShow;
 public:
+    void showArrow(bool show) {
+        m_arrowShow = show;
+    }
     void Initialize();
     void Update(float deltaTime);
     void Render(float cameraX, float cameraY);

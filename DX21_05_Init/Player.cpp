@@ -465,6 +465,7 @@ void DashToMouse() {
         return;
     }
 
+    g_mouseIndicator.showArrow(false);
     // Get mouse world coordinates
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);
@@ -509,6 +510,7 @@ void StartMouseChargeDash() {
         return;
     }
 
+    g_mouseIndicator.showArrow(true);
     g_player.isCharging = true;
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
@@ -524,6 +526,7 @@ void ExecuteMouseChargeDash() {
 
     if (g_player.dashPoints <= 0) return;
 
+    g_mouseIndicator.showArrow(false);
     // 清除硬直状态以允许新的冲刺
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
@@ -635,7 +638,7 @@ void ExecuteMouseChargeDash() {
             g_player.ClearSavedCharge(); // 时间太短，清除保存的蓄力
         }
     }
-
+    
     // 设置冲刺状态
     g_player.isDashing = true;
     g_player.dashTimer = DASH_DURATION * durationMultiplier;
