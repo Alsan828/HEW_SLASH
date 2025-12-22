@@ -152,6 +152,16 @@ void CleanUpGameWorld()
         g_cursorTexture = nullptr;
     }
 
+    // for the combo texture
+    if (g_comboNumberTexture) {
+        g_comboNumberTexture->Release();
+        g_comboNumberTexture = nullptr;
+    }
+    if (g_comboXTexture) {
+        g_comboXTexture->Release();
+        g_comboXTexture = nullptr;
+    }
+
 }
 
 // Improved collision detection function
@@ -160,6 +170,39 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
     return (x1 < x2 + w2 && x1 + w1 > x2 &&
         y1 < y2 + h2 && y1 + h1 > y2);
 }
+
+// todo: finish the draw combo UI 
+// for the combo UI of the player
+void DrawComboUI(void)
+{
+    if (g_player.comboCount <= 1)
+    {
+        return;
+    }
+
+    float pixelX = (SCREEN_WIDTH * 0.5f) - 120.0f;
+    float pixelY = (SCREEN_HEIGHT * 0.5f) - 40.0f;
+
+    // Convert to normalized (-1 to 1) coordinates
+    float normalizedX = (pixelX / SCREEN_WIDTH) * 2.0f - 1.0f;
+    float normalizedY = 1.0f - (pixelY / SCREEN_HEIGHT) * 2.0f;
+
+    // Size in normalized coordinates
+    float normalizedWidth = (100.0f / SCREEN_WIDTH) * 2.0f;
+    float normalizedHeight = (100.0f / SCREEN_HEIGHT) * 2.0f;
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    // Draw "X" symbol
+    RenderImage(normalizedX, normalizedY, normalizedWidth, normalizedHeight,
+        g_comboXTexture, 0, 1, 1);
+
+    // Draw combo number
+    RenderImage(normalizedX + normalizedWidth + 0.02f, normalizedY,
+        normalizedWidth, normalizedHeight,
+        g_comboNumberTexture, g_player.comboCount - 1, 1, 10);
+}
+
 // Game initialization
 void InitGameWorld() {
     g_projectileManager.LoadTextures(g_pDevice);
@@ -199,6 +242,9 @@ void InitGameWorld() {
 
     LoadTexture(g_pDevice, "asset/UI/arrow.png", &g_arrowTexture);
     LoadTexture(g_pDevice, "asset/UI/cursor.png", &g_cursorTexture);
+
+    LoadTexture(g_pDevice, "asset/UI/combo/combo_number.png", &g_comboNumberTexture);
+    LoadTexture(g_pDevice, "asset/UI/combo/combo_X.png", &g_comboXTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -595,6 +641,8 @@ void DrawGame() {
         }
     }
 
+    DrawComboUI();
+
 }
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {
@@ -769,59 +817,156 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
 
     // Draw direction arrow
-    float originalArrowSize = 0.15f;
-    float arrowSize = originalArrowSize;
 
-    // If charging, make arrow longer based on charge level
-   float arrowDistance = 0.0f;
-
-   // with this you can change the center position of the arrow (the start point of the arrow "tail")
-    float centerOffsetX = 0.003f;
-    float centerOffsetY = 0.0f;
-
-    if (g_player.isCharging)  // if the player is charging 
+    if (g_player.isCharging || g_player.hasSavedCharge)
     {
-        // Calculate charge ratio (0.0 to 1.0)
-        float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
+        float centerOffsetX = 0.003f;
+        float centerOffsetY = 0.0f;
 
-        // depending on the charcer, the wrrow gets bigger
-        arrowSize = originalArrowSize * (1.0f + chargeRatio * 2.0f);
+        float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f + centerOffsetX;
+        float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f + centerOffsetY;
+
+        float arrowWidth = 0.15f;
+
+        // Get charge time
+        float chargeTime = 0.0f;
+        if (g_player.isCharging) {
+            chargeTime = g_player.chargeTime;
+        }
+        else if (g_player.hasSavedCharge) {
+            chargeTime = g_player.savedChargeTime;
+        }
+
+        // Calculate smooth charge ratio (0.0 to 1.0) across entire charge time
+        float chargeRatio = chargeTime / g_player.MAX_CHARGE_TIME;
+
+        // Calculate maximum dash distance based on charge - INCREASED VALUES
+        float minDashDistance = 0.15f;
+        float maxDashDistance = 2.0f;  // Increased from 0.4f to 2.0f - adjust as needed
+        float currentMaxDashDistance = minDashDistance + (maxDashDistance - minDashDistance) * chargeRatio;
+
+        // Calculate distance to mouse
+        float deltaX = m_mouseWorldX - playerCenterX;
+        float deltaY = m_mouseWorldY - playerCenterY;
+        float distanceToMouse = sqrtf(deltaX * deltaX + deltaY * deltaY);
+
+        // Arrow length is the minimum of distance to mouse OR max dash distance
+        float arrowLength = fminf(distanceToMouse, currentMaxDashDistance);
+
+        float tailX = playerCenterX;
+        float tailY = playerCenterY;
+
+        // Calculate the center of the arrow (midpoint between tail and head)
+        float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowLength * 0.5f);
+        float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowLength * 0.5f);
+
+        // Position calculation for screen rendering
+        auto arrowScreenPos = worldToScreen(arrowCenterX - arrowLength * 0.5f, arrowCenterY - arrowWidth * 0.5f);
+
+        // Calculate charge level for color
+        int chargeLevel = g_player.GetChargeLevelFromTime(chargeTime);
+
+        // Display different colors based on charge level
+        if (chargeLevel >= 3) {
+            //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+        }
+        else if (chargeLevel >= 2) {
+            //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+        }
+        else if (chargeLevel >= 1) {
+            //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+        }
+
+        // Render with arrowLength (horizontal stretch) and arrowWidth (vertical size)
+        RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
+            m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
+
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
-    float playerCenterX = g_player.posX + PLAYER_WIDTH *0.5f + centerOffsetX;
-    float playerCenterY = g_player.posY + PLAYER_HEIGHT *0.5f + centerOffsetY;
+   
+    //float tailX = playerCenterX;
+    //float tailY = playerCenterY;
 
-    float tailX = playerCenterX; 
-    float tailY = playerCenterY;
+    //// Calculate the center of the arrow (midpoint between tail and head)
+    //float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowLength * 0.5f);
+    //float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowLength * 0.5f);
 
-    // so the tail of the arrow stays in place and the head extends forward
-    float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowSize *0.5f);
-    float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowSize *0.5f);
-    auto arrowScreenPos = worldToScreen(arrowCenterX - arrowSize * 0.5f, arrowCenterY - arrowSize * 0.5f);
+    //// Position calculation for screen rendering
+    //auto arrowScreenPos = worldToScreen(arrowCenterX - arrowLength * 0.5f, arrowCenterY - arrowWidth * 0.5f);
+
+    //// Display different colors based on charge level
+    //if (chargeLevel >= 3) {
+    //    //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+    //}
+    //else if (chargeLevel >= 2) {
+    //    //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+    //}
+    //else if (chargeLevel >= 1) {
+    //    //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+    //}
+
+    //// Render with arrowLength (horizontal stretch) and arrowWidth (vertical size)
+    //RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
+    //    m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
+
+    //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    
+
+
+   // float originalArrowSize = 0.15f;
+   // float arrowSize = originalArrowSize;
+
+   // // If charging, make arrow longer based on charge level
+   //float arrowDistance = 0.0f;
+
+   //// with this you can change the center position of the arrow (the start point of the arrow "tail")
+   // float centerOffsetX = 0.003f;
+   // float centerOffsetY = 0.0f;
+
+   // if (g_player.isCharging)  // if the player is charging 
+   // {
+   //     // Calculate charge ratio (0.0 to 1.0)
+   //     float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
+
+   //     // depending on the charcer, the wrrow gets bigger
+   //     arrowSize = originalArrowSize * (1.0f + chargeRatio * 2.0f);
+   // }
+
+   // float playerCenterX = g_player.posX + PLAYER_WIDTH *0.5f + centerOffsetX;
+   // float playerCenterY = g_player.posY + PLAYER_HEIGHT *0.5f + centerOffsetY;
+
+   // float tailX = playerCenterX; 
+   // float tailY = playerCenterY;
+
+   // // so the tail of the arrow stays in place and the head extends forward
+   // float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowSize *0.5f);
+   // float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowSize *0.5f);
+   // auto arrowScreenPos = worldToScreen(arrowCenterX - arrowSize * 0.5f, arrowCenterY - arrowSize * 0.5f);
   
-    //SetColor(0.0f, 1.0f, 0.0f, 1.0f);
-    float levelX = 0.85f;
-    float levelY = 0.2f;
-    float levelSize = 0.05f;
-    int chargeLevel = g_player.GetChargeLevelFromTime(g_player.chargeTime);
-    if (g_player.hasSavedCharge) {
-        chargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
-    }
-    // Display different colors based on charge level
-    if (chargeLevel >= 1) {
-        //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
-    }
-    if (chargeLevel >= 2) {
-        //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
-    }
-    if (chargeLevel >= 3) {
-        //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
-    }
+   // //SetColor(0.0f, 1.0f, 0.0f, 1.0f);
+   // float levelX = 0.85f;
+   // float levelY = 0.2f;
+   // float levelSize = 0.05f;
+   // int chargeLevel = g_player.GetChargeLevelFromTime(g_player.chargeTime);
+   // if (g_player.hasSavedCharge) {
+   //     chargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
+   // }
+   // // Display different colors based on charge level
+   // if (chargeLevel >= 1) {
+   //     //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+   // }
+   // if (chargeLevel >= 2) {
+   //     //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+   // }
+   // if (chargeLevel >= 3) {
+   //     //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+   // }
 
-    RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
-        m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
+   // RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowSize, arrowSize,
+   //     m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+   // SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void MouseIndicatorSystem::Cleanup() {
