@@ -27,8 +27,8 @@ void UpdatePlayerPhysics(float deltaTime) {
     if (!g_player.isDashing) {
         float fixedDeltaTime = std::min(deltaTime, 0.033f);
         g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
-        if (g_player.velocityY < -0.2f) {
-            g_player.velocityY = -0.2f;
+        if (g_player.velocityY < -0.15f) {
+            g_player.velocityY = -0.15f;
         }
     }
 
@@ -48,7 +48,7 @@ void UpdatePlayerPhysics(float deltaTime) {
 
         // === FIX: Use continuous collision detection when speed exceeds threshold, regardless of dashing ===
         float speedSquared = g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY;
-        float speedThreshold = 0.5f; // Speed threshold for continuous collision detection
+        float speedThreshold = 0.1f; // Speed threshold for continuous collision detection
 
         if (g_player.isDashing || speedSquared > speedThreshold * speedThreshold) {
             int steps = 4; // Divide movement into 4 steps for detection
@@ -505,38 +505,29 @@ void DashToMouse() {
     g_player.mouseTargetY = mouseY;
     g_player.hasMouseTarget = true;
 }
-
-// Modified StartMouseChargeDash function: adds charge inheritance logic
+// 修改后的 StartMouseChargeDash 函数
 void StartMouseChargeDash() {
-    // Conditions: not dashing, not charging, points sufficient, in actionable state
+    // 条件：不在冲刺、不在蓄力、有点数、在可行动状态
     if (g_player.isDashing || g_player.isCharging || g_player.dashPoints <= 0) {
         return;
     }
 
     g_player.isCharging = true;
-
-    // Check for saved charge; if exists, inherit it
-    if (g_player.hasSavedCharge) {
-        g_player.LoadSavedCharge(); // Load saved charge time
-        // Do not clear saved charge, allowing continued inheritance (until decay time ends)
-    }
-    else {
-        g_player.chargeTime = 0.0f; // No saved charge, start from beginning
-    }
-
-    // Record initial mouse position
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
+
+    // 重置蓄力时间，从0开始计算本次蓄力
+    g_player.chargeTime = 0.0f;
+    // 不清除保存的蓄力，但本次重新开始
 }
 
-// Modified ExecuteMouseChargeDash function: save charge when dash ends
+// 修改后的 ExecuteMouseChargeDash 函数
 void ExecuteMouseChargeDash() {
     if (!g_player.isCharging) return;
 
-    // Allow charged dash even in aftermath state
     if (g_player.dashPoints <= 0) return;
 
-    // Clear aftermath state to allow new dash
+    // 清除硬直状态以允许新的冲刺
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -544,18 +535,18 @@ void ExecuteMouseChargeDash() {
     g_player.hitEnemies.clear();
     if (!ConsumeDashPoint()) return;
 
-    // Get current mouse position
+    // 获取当前鼠标位置
     float currentMouseX, currentMouseY;
     g_inputSystem.GetMousePosition(currentMouseX, currentMouseY);
 
-    // Calculate direction from player to mouse
+    // 计算从玩家到鼠标的方向
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
     float dirX = currentMouseX - playerCenterX;
     float dirY = currentMouseY - playerCenterY;
 
-    // Normalize
+    // 标准化方向
     float length = sqrt(dirX * dirX + dirY * dirY);
     if (length > 0.0f) {
         dirX /= length;
@@ -566,64 +557,106 @@ void ExecuteMouseChargeDash() {
         dirY = 0.0f;
     }
 
-    // Get current charge level
-    int chargeLevel = g_player.GetChargeLevel();
-
-    // Three-stage charge determination
+    // === 关键修改：判断是短按还是长按 ===
+    int chargeLevel = 0;
     float speedMultiplier = 1.0f;
     float durationMultiplier = 1.0f;
     float cooldownMultiplier = 1.0f;
 
-    // Set attribute multipliers based on charge level
-    switch (chargeLevel) {
-    case 1:
-        speedMultiplier = 1.3f;
-        durationMultiplier = 1.0f;
-        cooldownMultiplier = 0.8f;
-        break;
-    case 2:
-        speedMultiplier = 1.6f;
-        durationMultiplier = 1.0f;
-        cooldownMultiplier = 0.6f;
-        break;
-    case 3:
-        speedMultiplier = 2.0f;
-        durationMultiplier = 1.0f;
-        cooldownMultiplier = 0.5f;
-        break;
-    default:
-        speedMultiplier = 1.0f;
-        durationMultiplier = 1.0f;
-        cooldownMultiplier = 1.0f;
-        break;
+    if (g_player.chargeTime < g_player.CHARGE_THRESHOLD_LOW) {
+        // 短按：使用保存的蓄力（如果有的话）
+        if (g_player.hasSavedCharge) {
+            // 使用保存的蓄力等级
+            int savedChargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
+            chargeLevel = savedChargeLevel;
+
+            // 根据保存的蓄力等级设置属性倍数
+            switch (savedChargeLevel) {
+            case 1:
+                speedMultiplier = 1.3f;
+                cooldownMultiplier = 0.8f;
+                break;
+            case 2:
+                speedMultiplier = 1.6f;
+                cooldownMultiplier = 0.6f;
+                break;
+            case 3:
+                speedMultiplier = 2.0f;
+                cooldownMultiplier = 0.5f;
+                break;
+            default:
+                speedMultiplier = 1.0f;
+                cooldownMultiplier = 1.0f;
+                break;
+            }
+
+            // 短按不保存新的蓄力，保留原来的蓄力
+            // 但重置衰减计时器，让保存的蓄力保持更久
+            g_player.chargeDecayTimer = g_player.CHARGE_DECAY_TIME;
+        }
+        else {
+            // 没有保存的蓄力，则使用当前短暂的蓄力时间
+            chargeLevel = 0; // 相当于无蓄力
+            speedMultiplier = 1.0f;
+            durationMultiplier = 1.0f;
+            cooldownMultiplier = 1.0f;
+        }
+    }
+    else {
+        // 长按：使用本次蓄力，并保存
+        chargeLevel = g_player.GetChargeLevel();
+
+        // 根据当前蓄力等级设置属性倍数
+        switch (chargeLevel) {
+        case 1:
+            speedMultiplier = 1.3f;
+            durationMultiplier = 1.0f;
+            cooldownMultiplier = 0.8f;
+            break;
+        case 2:
+            speedMultiplier = 1.6f;
+            durationMultiplier = 1.0f;
+            cooldownMultiplier = 0.6f;
+            break;
+        case 3:
+            speedMultiplier = 2.0f;
+            durationMultiplier = 1.0f;
+            cooldownMultiplier = 0.5f;
+            break;
+        default:
+            speedMultiplier = 1.0f;
+            durationMultiplier = 1.0f;
+            cooldownMultiplier = 1.0f;
+            break;
+        }
+
+        // 长按蓄力：保存当前蓄力时间
+        if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
+            g_player.SaveCharge(); // 保存当前蓄力时间
+        }
+        else {
+            g_player.ClearSavedCharge(); // 时间太短，清除保存的蓄力
+        }
     }
 
-    // Set dash state
+    // 设置冲刺状态
     g_player.isDashing = true;
     g_player.dashTimer = DASH_DURATION * durationMultiplier;
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 
-    // Apply dash speed
+    // 应用冲刺速度
     g_player.velocityX = dirX * DASH_SPEED * speedMultiplier;
     g_player.velocityY = dirY * DASH_SPEED * speedMultiplier;
 
-    // Store new mouse target position
+    // 存储新的鼠标目标位置
     g_player.mouseTargetX = currentMouseX;
     g_player.mouseTargetY = currentMouseY;
 
-    // === Key modification: Save current charge time when dash ends ===
-    // Only save if charge time is at a valid value (to avoid saving invalid charges)
-    if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
-        g_player.SaveCharge(); // Save current charge time
-    }
-
-    // End charging state
+    // 结束蓄力状态
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
 }
-
-
 // Enter dash aftermath state
 void EnterDashAftermath() {
     // Clear all velocity to keep player stationary

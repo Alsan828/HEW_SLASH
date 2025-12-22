@@ -811,7 +811,7 @@ void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {
     posY += velocityY * deltaTime * 60.0f;
 
     // 边界检查（防止飞出世界）
-    if (posY < -5.0f) {
+    if (posY < -50.0f) {
         isAlive = false;
         return;
     }

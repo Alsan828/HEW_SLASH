@@ -43,7 +43,7 @@ const float JUMP_FORCE = 0.065f;
 const float MOVE_SPEED = 0.01f; 
 const float DASH_SPEED = 0.1f;      // Base dash speed
 const float DASH_DURATION = 0.11f;   // Base dash duration
-const float DASH_COOLDOWN = 0.1f;    // Dash cooldown time
+const float DASH_COOLDOWN = 0.05f;    // Dash cooldown time
 
 // Player structure
 struct Player {
