@@ -60,6 +60,11 @@ struct Player {
     const float DEATH_RESPAWN_TIME = 3.0f;  // 3秒后复活
     int deathCount = 0;  // 死亡计数（可选）
 
+    // for the combo UI of the player when attacking
+    int comboCount = 0;
+    float comboTimer = 0.0f;   // for the time before the combo resets
+    const float COMBO_RESET_TIME = 2.0f; // 2 seconds without killing, the combo will reset
+
 
     // 生命值系统
     float health = 100.0f;
@@ -236,6 +241,8 @@ extern ID3D11ShaderResourceView* g_numberTexture;
 extern ID3D11ShaderResourceView* g_uiNumberTexture;
 extern ID3D11ShaderResourceView* g_arrowTexture;
 extern ID3D11ShaderResourceView* g_cursorTexture;
+extern ID3D11ShaderResourceView* g_comboNumberTexture;
+extern ID3D11ShaderResourceView* g_comboXTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
@@ -274,6 +281,8 @@ void ExecuteMouseChargeDash();
 void CancelChargeDash();
 bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2);
+
+void DrawComboUI(void);
 
 
 //Player Movement Control
