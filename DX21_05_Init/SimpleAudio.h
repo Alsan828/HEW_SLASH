@@ -12,9 +12,9 @@ class SimpleAudio {
 private:
     struct SoundInfo {
         std::string filePath;
-        float volume;
-        float pitch;
-        bool loop;
+        float volume = 0.1f;
+        float pitch = 0.1f;
+        bool loop = false;
     };
 
     std::unordered_map<int, SoundInfo> playingSounds;

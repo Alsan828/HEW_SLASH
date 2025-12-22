@@ -361,11 +361,6 @@ void PlayShootSound();
 void PlayEnemyHitSound();
 void PlayEnemyDeathSound();
 void PlaySlowMotionSound(bool start);
-void PlayLevelCompleteSound();
-void PlayUIHoverSound();
-void PlayUIClickSound();
-void PlayPauseSound();
-void PlayResumeSound();
 
 void PlayStageMusic(int stage);
 void PlayBossMusic();

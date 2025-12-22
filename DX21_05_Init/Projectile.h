@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 // Projectile.h
 #include "Enemy.h"
 #include "Game.h"
@@ -6,28 +6,28 @@
 #include <vector>
 
 class Enemy;
-// Éäµ¯ÀàĞÍÃ¶¾Ù
+// å°„å¼¹ç±»å‹æšä¸¾
 enum class ProjectileType {
-    FIREBALL,       // »ğÇE- Ö±Ïß·ÉĞĞ£¬Åö×²±¬Õ¨
-    ICE_SHARD,      // ±ù¼ı - Ö±Ïß·ÉĞĞ£¬¼õËÙĞ§¹E
-    MAGIC_MISSILE,  // Ä§·¨·Éµ¯ - ¸ú×ÙµĞÈË
-    LIGHTNING,      // ÉÁµE- Ë²¼äÃE?
-    POISON_DART,    // ¶¾E - ³ÖĞøÉËº¦
-    HOLY_BOLT       // Ê¥¹â¼ı - ¶ÔÍöÁéÌØĞ§
+    FIREBALL,       // ç«èµE- ç›´çº¿é£è¡Œï¼Œç¢°æ’çˆ†ç‚¸
+    ICE_SHARD,      // å†°ç®­ - ç›´çº¿é£è¡Œï¼Œå‡é€Ÿæ•ˆç®’E
+    MAGIC_MISSILE,  // é­”æ³•é£å¼¹ - è·Ÿè¸ªæ•Œäºº
+    LIGHTNING,      // é—ªç¥¦E- ç¬é—´è„•E?
+    POISON_DART,    // æ¯’ä¸’ - æŒç»­ä¼¤å®³
+    HOLY_BOLT       // åœ£å…‰ç®­ - å¯¹äº¡çµç‰¹æ•ˆ
 };
 
-// Éäµ¯Ğ§¹û½á¹¹
+// å°„å¼¹æ•ˆæœç»“æ„
 struct ProjectileEffect {
     float damage = 10.0f;
-    float burnDamage = 0.0f;      // È¼ÉÕ³ÖĞøÉËº¦
-    float slowEffect = 0.0f;      // ¼õËÙĞ§¹E(0-1)
-    float stunDuration = 0.0f;    // Ñ£ÔÎÊ±¼E
-    bool pierce = false;          // ÊÇ·ñ´©Í¸
-    int maxPierceCount = 0;       // ×ûĞó´©Í¸ÊıÁ¿
-    float areaRadius = 0.0f;      // ·¶Î§±¬Õ¨°E?
+    float burnDamage = 0.0f;      // ç‡ƒçƒ§æŒç»­ä¼¤å®³
+    float slowEffect = 0.0f;      // å‡é€Ÿæ•ˆç®’E(0-1)
+    float stunDuration = 0.0f;    // çœ©æ™•æ—¶ç´’E
+    bool pierce = false;          // æ˜¯å¦ç©¿é€
+    int maxPierceCount = 0;       // î ‘ç•œç©¿é€æ•°é‡
+    float areaRadius = 0.0f;      // èŒƒå›´çˆ†ç‚¸çšE?
 };
 
-// Éäµ¯ÀE
+// å°„å¼¹çº´E
 class Projectile {
 public:
     Projectile(ProjectileType type, float startX, float startY,
@@ -39,36 +39,36 @@ public:
     bool IsActive() const { return isActive; }
     void Deactivate() { isActive = false; }
 
-    // »ñÈ¡Éäµ¯ĞÅÏ¢
+    // è·å–å°„å¼¹ä¿¡æ¯
     float GetDamage() const { return effect.damage; }
     bool IsFromPlayer() const { return fromPlayer; }
     ProjectileType GetType() const { return type; }
 
 private:
-    // Éäµ¯ÊôĞÔ
+    // å°„å¼¹å±æ€§
     ProjectileType type;
     float posX, posY;
     float velocityX, velocityY;
     float speed;
     float lifeTime;
-    float maxLifeTime;
+    float maxLifeTime = 5.0f;
     bool isActive;
     bool fromPlayer;
 
-    // ÊÓ¾õĞ§¹E
-    float size;
+    // è§†è§‰ 
+    float size = 0.5f;
     float rotation;
     float scaleEffect;
 
-    // Éäµ¯Ğ§¹E
+    // å°„å¼¹æ•ˆç®’E
     ProjectileEffect effect;
 
-    // ¸ú×ÙÏà¹Ø
+    // è·Ÿè¸ªç›¸å…³
     Enemy* homingTarget;
-    float homingStrength;
+    float homingStrength = 0.0f;
     int currentPierceCount;
 
-    // ¸¨Öú·½·¨
+    // è¾…åŠ©æ–¹æ³•
     void Move(float deltaTime);
     bool CheckMapCollision(MapManager* mapManager);
     void CheckEnemyCollision(std::vector<Enemy*>& enemies);
@@ -76,7 +76,7 @@ private:
     void ApplyEffectToEnemy(Enemy* enemy);
     void CreateImpactEffect();
 
-    // ÀàĞÍÌØ¶¨ĞĞÎª
+    // ç±»å‹ç‰¹å®šè¡Œä¸º
     void UpdateFireball(float deltaTime);
     void UpdateIceShard(float deltaTime);
     void UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemies);
@@ -85,7 +85,7 @@ private:
     void UpdateHolyBolt(float deltaTime);
 };
 
-// Éäµ¯¹ÜÀúâ÷ÀE
+// å°„å¼¹ç®¡å†æ€Šçº´E
 class ProjectileManager {
 public:
     static ProjectileManager& GetInstance();
@@ -98,7 +98,7 @@ public:
     void Render(const Camera& camera);
     void ClearAll();
 
-    // ¹¤¾ßº¯Êı£º´´½¨Ô¤¶¨ÒåĞ§¹ûµÄÉäµ¯
+    // å·¥å…·å‡½æ•°ï¼šåˆ›å»ºé¢„å®šä¹‰æ•ˆæœçš„å°„å¼¹
     void CreateFireball(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
     void CreateIceShard(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
     void CreateMagicMissile(float startX, float startY, Enemy* target, bool fromPlayer = true);
@@ -112,7 +112,7 @@ private:
     ProjectileManager() = default;
     std::vector<Projectile> projectiles;
 
-    // Éäµ¯ÎÆÀE
+    // å°„å¼¹çº¹çº´E
     ID3D11ShaderResourceView* fireballTexture = nullptr;
     ID3D11ShaderResourceView* iceShardTexture = nullptr;
     ID3D11ShaderResourceView* magicMissileTexture = nullptr;

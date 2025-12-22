@@ -1,6 +1,5 @@
 ﻿// SimpleAudio.cpp
 #include "SimpleAudio.h"
-#include <vector>
 #include <algorithm>
 
 SimpleAudio::SimpleAudio()

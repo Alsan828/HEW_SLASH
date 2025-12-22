@@ -35,9 +35,10 @@ struct SpawnPoint {
 
 // Enemy spawn information
 struct EnemySpawnInfo {
-    float posX, posY;      // Enemy spawn position
+    float posX = 0.0f;
+    float posY = 0.0f;      // Enemy spawn position
     std::string enemyType; // Enemy type code: "E1", "E2", "E3", etc.
-    int enemySubtype;      // Enemy subtype identifier
+    int enemySubtype = 1;      // Enemy subtype identifier
 };
 
 // Map layer types for organizing tiles
@@ -152,7 +153,8 @@ public:
 // 空间网格单元
 struct GridCell {
     std::vector<MapTile*> tiles;  // 指向实际的砖块
-    int x, y;                     // 网格坐标
+    int x = 0;
+    int y = 0;                     // 网格坐标
 };
 
 

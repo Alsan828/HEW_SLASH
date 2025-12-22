@@ -539,6 +539,7 @@ bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
 // FlyEnemy实现 - 飞行敌人，不受重力影响
 FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     // 飞行敌人：空中单位
+	targetAltitude = y;
     attackRange = 0.0f;  // 近战敌人
     SetDamageMultiplier(DIR_FRONT, 0.8f);
     SetDamageMultiplier(DIR_FRONT_UP, 0.8f);

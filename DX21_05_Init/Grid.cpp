@@ -1,4 +1,4 @@
-// SpatialGrid.cpp
+ï»¿// SpatialGrid.cpp
 #include "Map.h"
 #include <algorithm>
 
@@ -10,11 +10,11 @@ SpatialGrid::SpatialGrid(float cellSize, float worldMinX, float worldMinY,
     , m_worldWidth(worldMaxX - worldMinX)
     , m_worldHeight(worldMaxY - worldMinY) {
 
-    // ¼ÆËãÍø¸ñÎ¬¶È
+    // è®¡ç®—ç½‘æ ¼ç»´åº¦
     m_cellsX = static_cast<int>(std::ceil(m_worldWidth / m_cellSize));
     m_cellsY = static_cast<int>(std::ceil(m_worldHeight / m_cellSize));
 
-    // ³õÊ¼»¯ËùÓĞµ¥Ôª¸ñ
+    // åˆå§‹åŒ–æ‰€æœ‰å•å…ƒæ ¼
     m_cells.resize(m_cellsX * m_cellsY);
     for (int y = 0; y < m_cellsY; ++y) {
         for (int x = 0; x < m_cellsX; ++x) {
@@ -42,23 +42,23 @@ int SpatialGrid::WorldToGridIndex(float worldX, float worldY) const {
 }
 
 void SpatialGrid::BuildFromMap(Map& map) {
-    // Çå¿ÕËùÓĞµ¥Ôª¸ñ
+    // æ¸…ç©ºæ‰€æœ‰å•å…ƒæ ¼
     for (auto& cell : m_cells) {
         cell.tiles.clear();
     }
 
-    // Ö»´¦ÀíÖĞ¼ä²ã£¨¹ÌÌå×©¿é£©
+    // åªå¤„ç†ä¸­é—´å±‚ï¼ˆå›ºä½“ç –å—ï¼‰
     const auto& midgroundTiles = map.GetTiles(MapLayer::MIDGROUND);
 
     for (const auto& tile : midgroundTiles) {
         if (tile.tileInfo.isSolid) {
-            // ¼ÆËã×©¿é¸²¸ÇµÄÍø¸ñ·¶Î§
+            // è®¡ç®—ç –å—è¦†ç›–çš„ç½‘æ ¼èŒƒå›´
             int minX = WorldToGridX(tile.posX);
             int maxX = WorldToGridX(tile.posX + tile.width);
             int minY = WorldToGridY(tile.posY);
             int maxY = WorldToGridY(tile.posY + tile.height);
 
-            // ½«×©¿éÌí¼Óµ½Ëü¸²¸ÇµÄËùÓĞµ¥Ôª¸ñÖĞ
+            // å°†ç –å—æ·»åŠ åˆ°å®ƒè¦†ç›–çš„æ‰€æœ‰å•å…ƒæ ¼ä¸­
             for (int y = minY; y <= maxY; ++y) {
                 for (int x = minX; x <= maxX; ++x) {
                     int index = y * m_cellsX + x;
@@ -73,16 +73,16 @@ void SpatialGrid::GetTilesInArea(float x, float y, float width, float height,
     std::vector<MapTile*>& result) const {
     result.clear();
 
-    // ¼ÆËã²éÑ¯ÇøÓòµÄÍø¸ñ·¶Î§
+    // è®¡ç®—æŸ¥è¯¢åŒºåŸŸçš„ç½‘æ ¼èŒƒå›´
     int minX = WorldToGridX(x);
     int maxX = WorldToGridX(x + width);
     int minY = WorldToGridY(y);
     int maxY = WorldToGridY(y + height);
 
-    // È¥ÖØ¼¯ºÏ
+    // å»é‡é›†åˆ
     std::unordered_set<MapTile*> uniqueTiles;
 
-    // ÊÕ¼¯¸²¸ÇÇøÓòÄÚµÄËùÓĞµ¥Ôª¸ñÖĞµÄ×©¿é
+    // æ”¶é›†è¦†ç›–åŒºåŸŸå†…çš„æ‰€æœ‰å•å…ƒæ ¼ä¸­çš„ç –å—
     for (int gridY = minY; gridY <= maxY; ++gridY) {
         for (int gridX = minX; gridX <= maxX; ++gridX) {
             int index = gridY * m_cellsX + gridX;

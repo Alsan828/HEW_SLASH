@@ -29,7 +29,7 @@ private:
     float m_lookAheadFactor;       // Look ahead factor for player movement direction
     float m_deadZoneRadius;        // Dead zone radius where camera doesn't move
 
-    float m_zoomLevel; // 缩放级别
+    float m_zoomLevel = 1.0f; // 缩放级别
 
     int m_windowWidth, m_windowHeight; // 添加窗口尺寸记录
 

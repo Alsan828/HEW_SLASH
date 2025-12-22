@@ -1,4 +1,4 @@
-//================================
+﻿//================================
 //      TITLE
 //================================
 
@@ -9,6 +9,7 @@
 TitleScene::TitleScene(SceneManager* manager) 
 {
     sceneManager = manager;
+	tex = nullptr;
 }
 
 //it initializes the objects in title

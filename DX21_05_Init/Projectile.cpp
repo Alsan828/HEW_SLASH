@@ -1,4 +1,4 @@
-// Projectile.cpp
+﻿// Projectile.cpp
 #include "Projectile.h"
 
 // Global projectile manager instance
@@ -14,6 +14,7 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
     : type(type), posX(startX), posY(startY), speed(speed), effect(effect),
     fromPlayer(fromPlayer), isActive(true), homingTarget(nullptr),
     currentPierceCount(0), rotation(0.0f), scaleEffect(1.0f) {
+
 
     // Calculate direction vector
     float dx = targetX - startX;
