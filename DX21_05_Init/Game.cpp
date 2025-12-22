@@ -514,7 +514,7 @@ void DrawGame() {
         std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
         
         // for the size of the character
-        float scale = 2.8f;
+        float scale = 6.6f;
         float width = PLAYER_WIDTH * scale;
         float height = PLAYER_HEIGHT * scale;
 
@@ -702,7 +702,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
     float deltaY = m_mouseWorldY - playerCenterY;
 
     m_arrowAngle = atan2(deltaY, deltaX);
-
+    
     static int debugCounter = 0;
     if (debugCounter++ % 60 == 0) {
         printf("Mouse World: (%.2f, %.2f), Player: (%.2f, %.2f)\n",

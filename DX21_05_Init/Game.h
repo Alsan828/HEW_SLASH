@@ -40,9 +40,9 @@ const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
 const float GRAVITY = -0.003f;
 const float JUMP_FORCE = 0.065f;
-const float MOVE_SPEED = 0.01f;
+const float MOVE_SPEED = 0.01f; 
 const float DASH_SPEED = 0.1f;      // Base dash speed
-const float DASH_DURATION = 0.15f;   // Base dash duration
+const float DASH_DURATION = 0.11f;   // Base dash duration
 const float DASH_COOLDOWN = 0.1f;    // Dash cooldown time
 
 // Player structure
@@ -85,11 +85,11 @@ struct Player {
     // Charge dash specific variables
     bool isCharging = false;
     float chargeTime = 0.0f;
-    const float MAX_CHARGE_TIME = 2.5f;
+    const float MAX_CHARGE_TIME = 1.0f;
     const float MIN_CHARGE_TIME = 0.01f;
     const float CHARGE_THRESHOLD_LOW = 0.2f;
-    const float CHARGE_THRESHOLD_MID = 0.7f;
-    const float CHARGE_THRESHOLD_HIGH = 1.5f;
+    const float CHARGE_THRESHOLD_MID = 0.4f;
+    const float CHARGE_THRESHOLD_HIGH = 0.8f;
 
     // 新增：蓄力层数系统
     float savedChargeTime = 0.0f;        // 保存的蓄力时间
@@ -105,13 +105,13 @@ struct Player {
     int dashPoints = 3;
     const int MAX_DASH_POINTS = 3;
     float dashPointRecoverTimer = 0.0f;
-    const float DASH_POINT_RECOVER_TIME = 0.55f;
+    const float DASH_POINT_RECOVER_TIME = 0.1f;
 
     // 冲刺后硬直状态
     bool isInDashAftermath = false;
     float dashAftermathTimer = 0.0f;
     const float DASH_AFTERMATH_DURATION = 0.7f;
-
+    
     const float AFTERIMAGE_DURATION = 0.1f;
 
     // 新增：攻击检测相关

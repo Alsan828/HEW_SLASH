@@ -106,12 +106,6 @@ float Enemy::GetRelativeAngle(float attackAngle) const {
     return relativeAngle;
 }
 
-void Enemy::PlayAnimation(const std::string& clipName) {
-    if (anim.GetCurrentClipName() != clipName) {
-        anim.SetClip(clipName);
-    }
-}
-
 // 转换角度到方向索引（8方向）
 int Enemy::AngleToDirectionIndex(float relativeAngle) {
     // 标准化相对角度到[0, 2π]
@@ -161,7 +155,6 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
 
     if (health <= 0) {
         health = 0;
-        isAlive = false;
         OnDeath();
     }
 }
@@ -171,35 +164,36 @@ void Enemy::OnHit(int damage) {
 }
 
 void Enemy::OnDeath() {
-    // 基础敌人死亡处理
+    if (isDying) return;  // 避免重复触发
+
     isAlive = false;
-
     isDying = true;
-    deathAnimationTimer = 0.0f;
-
-    //PlayAnimation("death");
+    // 确保切换到死亡动画
     anim.SetClip("death");
+
+    // 重置动画到第一帧
+    anim.Reset();
+
     OnEnemyDefeated();
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
-    //if (!isAlive) return;
-
-    // 更新死亡动画
+    // 优先处理死亡状态
     if (isDying) {
+        anim.Update(deltaTime);  // 确保死亡动画得到更新
 
-        anim.SetClip("death");
-        deathAnimationTimer += deltaTime;
-        anim.Update(deltaTime);
-
-        if (deathAnimationTimer >= DEATH_ANIMATION_DURATION) {
-            //isAlive = false;
+        // 检查动画是否播放完毕
+        if (anim.IsFinished()) {
             markedForDeletion = true;
         }
         return;  // 死亡动画期间不执行其他逻辑
     }
 
-    if (!isAlive) return;
+    if (!isAlive) {
+        // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+        OnDeath();
+        return;
+    }
 
     // 可见性检测和优化逻辑
     bool isCurrentlyVisible = IsVisible(g_camera);
@@ -225,7 +219,8 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     }
 
     anim.Update(deltaTime);
-    // 完整更新逻辑
+
+    // 受击状态处理
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -257,6 +252,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     // 边界检查
     if (posY < -5.0f) {
         isAlive = false;
+        OnDeath();  // 触发死亡动画
         return;
     }
 
@@ -407,25 +403,8 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
-    // 获取当前动画的纹理
-    ID3D11ShaderResourceView* currentTexture = anim.GetCurrentClipTexture();
-    if (currentTexture == nullptr) {
-        currentTexture = texture;  // 如果动画纹理为空，使用传入的纹理
-    }
-
     // 获取UV偏移用于精灵表动画
     DirectX::XMFLOAT2 uvOffset = anim.GetUVOffset();
-
-    // 受击状态：闪烁或颜色变化效果
-    if (isHit) {
-        SetColor(1.0f, 0.5f, 0.5f, 1.0f);  // 红色闪烁
-    }
-
-    // 死亡动画透明度
-    if (isDying) {
-        float alpha = 1.0f - (deathAnimationTimer / DEATH_ANIMATION_DURATION);
-        SetColor(1.0f, 1.0f, 1.0f, alpha);
-    }
 
     // 渲染敌人精灵
     RenderImage(
@@ -433,7 +412,7 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
         screenY,
         width,
         height,
-        texture,
+        anim.GetCurrentClipTexture(),
         anim.GetCurrentFrame(),
         anim.GetSplitX(),  // 替换为动画的X分割数
         anim.GetSplitY(),  // 替换为动画的Y分割数
@@ -663,11 +642,8 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
 
     // 添加动画剪辑
     anim.AddClip("idle", 0, 1, 1, 2, 0.2f, true, g_mageEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.9f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
+    anim.AddClip("death", 0, 3, 1, 4, 0.2f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
     anim.SetClip("idle");
-
-
-
 
 
     // 射弹相关参数
@@ -708,6 +684,9 @@ void MageEnemy::ChaseBehavior(float deltaTime) {
 }
 
 void MageEnemy::CastProjectile() {
+    //如果死亡
+    if (!isAlive) return;
+
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
@@ -740,7 +719,7 @@ void MageEnemy::CastProjectile() {
         );
 
         // 播放攻击动画
-        PlayAnimation("attack");
+        //PlayAnimation("attack");
     }
 }
 
@@ -772,8 +751,22 @@ void FastEnemy::Update(float deltaTime, MapManager* mapManager) {
     }
 }
 
-void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {
-    if (!isAlive) return;
+void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {  
+    if (isDying) {
+        anim.Update(deltaTime);  // 确保死亡动画得到更新
+
+        // 检查动画是否播放完毕
+        if (anim.IsFinished()) {
+            markedForDeletion = true;
+        }
+        return;  // 死亡动画期间不执行其他逻辑
+    }
+
+    if (!isAlive) {
+        // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+        OnDeath();
+        return;
+    }
 
     // 可见性检测和优化逻辑
     bool isCurrentlyVisible = IsVisible(g_camera);
@@ -874,7 +867,7 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     detectionRange = 2.0f;
 
     anim.AddClip("idle", 0, 0, 1, 1, 0.3f, true, g_bombEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.5f, false, g_bombEnemyDeathTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.3f, false, g_bombEnemyDeathTexture);
 
     anim.SetClip("idle");
 
@@ -927,9 +920,22 @@ void BombEnemy::TakeDamage(int damage, float attackAngle) {
     }
 }
 
-void BombEnemy::Update(float deltaTime, MapManager* mapManager) {
-    if (!isAlive) return;
+void BombEnemy::Update(float deltaTime, MapManager* mapManager) {    // 优先处理死亡状态
+    if (isDying) {
+        anim.Update(deltaTime);  // 确保死亡动画得到更新
 
+        // 检查动画是否播放完毕
+        if (anim.IsFinished()) {
+            markedForDeletion = true;
+        }
+        return;  // 死亡动画期间不执行其他逻辑
+    }
+
+    if (!isAlive) {
+        // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+        OnDeath();
+        return;
+    }
     // 调用基类的受击状态更新
     if (isHit) {
         hitTimer -= deltaTime;
