@@ -90,6 +90,8 @@ struct Player {
     const float CHARGE_THRESHOLD_LOW = 0.2f;
     const float CHARGE_THRESHOLD_MID = 0.4f;
     const float CHARGE_THRESHOLD_HIGH = 0.8f;
+    int hitStopTriggered = 0 ;     // 本次冲刺中已触发的顿刀次数
+    float hitStopTimer = 0.0f;       // 顿刀计时器
 
     // 新增：蓄力层数系统
     float savedChargeTime = 0.0f;        // 保存的蓄力时间

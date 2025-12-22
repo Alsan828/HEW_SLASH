@@ -261,11 +261,16 @@ void UpdateGame(float deltaTime) {
 
     float scaledDeltaTime = deltaTime * timeScale;
 
-    // Update game logic using adjusted time
-    UpdateDash(deltaTime);
     g_camera.Update(scaledDeltaTime);
-    UpdatePlayerPhysics(scaledDeltaTime);
-    UpdateEnemies(scaledDeltaTime, &g_mapManager);
+    g_player.hitStopTimer -= scaledDeltaTime; // 使用真实时间，不受时间缩放影响
+    if (g_player.hitStopTimer <= 0.0f) {
+    // Update game logic using adjusted time
+        UpdateDash(deltaTime);
+        UpdatePlayerPhysics(scaledDeltaTime);
+        UpdateEnemies(scaledDeltaTime, &g_mapManager);
+        g_player.anim.Update(scaledDeltaTime);
+        UpdatePlayerDeath(scaledDeltaTime);
+    }
     // Update all projectiles
     g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
     // 在UpdateGame函数中修改动画设置部分
@@ -349,9 +354,6 @@ void UpdateGame(float deltaTime) {
     }
 
     g_mouseIndicator.Update(scaledDeltaTime);
-    g_player.anim.Update(scaledDeltaTime);
-
-    UpdatePlayerDeath(scaledDeltaTime);
 }
 
 // Helper function: Get texture based on tile code

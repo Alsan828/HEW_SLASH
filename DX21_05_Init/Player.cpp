@@ -3,10 +3,6 @@
 
 // Update player physics
 void UpdatePlayerPhysics(float deltaTime) {
-    // Skip physics update if player is dead
-    if (g_player.isDead) {
-        return;
-    }
 
     // Ignore gravity and movement during stun state
     if (g_player.isInDashAftermath) {
@@ -365,6 +361,7 @@ void CheckPlayerDeath() {
 
 // Modified UpdateDash function: add charge decay update
 void UpdateDash(float deltaTime) {
+
     // Prioritize dashing state update
     if (g_player.isDashing) {
         g_player.dashTimer -= deltaTime;
@@ -725,35 +722,46 @@ void OnEnemyDefeated() {
     }
 }
 
-
 void CheckDashAttack() {
     if (!g_player.isDashing) {
         g_player.hitEnemies.clear();
+        g_player.hitStopTriggered = 0; // 重置顿刀触发计数
+        g_player.hitStopTimer = 0.0f;  // 重置顿刀计时器
         return;
     }
 
-    // Calculate player dash angle
+    // 计算玩家冲刺角度
     float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
 
     for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive()) continue;
 
-        // Check if already hit this enemy
+        // 检查是否已经击中过这个敌人
         if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
             continue;
         }
 
-        // Check collision
+        // 检查碰撞
         if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
-            // Directly pass player dash angle, enemy calculates relative direction
+            // === 新增：触发顿刀效果 ===
+            if (g_player.hitStopTriggered < 3) {
+                g_camera.Shake(0.03f, 0.05f);
+                g_player.hitStopTimer = 0.05f; // 0.05秒的顿刀
+                g_player.hitStopTriggered++;   // 增加触发计数
+
+                // 触发全局慢动作效果（可选，可注释掉）
+                // TriggerSlowMotion(0.05f, 0.3f);
+            }
+
+            // 直接传递玩家冲刺角度，敌人计算相对方向
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
 
-            // Deal damage to enemy
+            // 对敌人造成伤害
             enemy->TakeDamage(actualDamage, dashAngle);
 
-            // Mark as hit
+            // 标记为已击中
             g_player.hitEnemies.push_back(enemy);
         }
     }
