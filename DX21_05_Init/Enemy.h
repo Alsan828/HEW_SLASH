@@ -114,6 +114,7 @@ public:
     bool IsAlive() const { return isAlive; }
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
+    bool IsMarkedForDeletion() const { return markedForDeletion; } // added december 22nd
 
     Animation anim;  // 动画系统
     void PlayAnimation(const std::string& clipName);  // 播放动画剪辑
@@ -218,12 +219,13 @@ protected:
     float maxHealth;
     float moveSpeed;
     bool isAlive;
+    bool markedForDeletion = false; // to see the animation after I kill the enemy
     bool wasVisible = false;  // 上次更新时是否可见
     float offScreenTimer = 0.0f;  // 离开屏幕的时间计时器
     static constexpr float MAX_OFFSCREEN_TIME = 5.0f;  // 最大离开屏幕时间
     bool isDying = false;  // 新增：是否正在播放死亡动画
     float deathAnimationTimer = 0.0f;  // 死亡动画计时器
-    const float DEATH_ANIMATION_DURATION = 0.5f;  // 死亡动画持续时间
+    const float DEATH_ANIMATION_DURATION = 5.5f;  // 死亡动画持续时间
 
     // 移动相关
     float velocityX;
