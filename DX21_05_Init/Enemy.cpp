@@ -173,23 +173,33 @@ void Enemy::OnHit(int damage) {
 void Enemy::OnDeath() {
     // 基础敌人死亡处理
     isAlive = false;
-    PlayAnimation("death");
+
+    isDying = true;
+    deathAnimationTimer = 0.0f;
+
+    //PlayAnimation("death");
+    anim.SetClip("death");
     OnEnemyDefeated();
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
-    if (!isAlive) return;
+    //if (!isAlive) return;
 
     // 更新死亡动画
     if (isDying) {
+
+        anim.SetClip("death");
         deathAnimationTimer += deltaTime;
         anim.Update(deltaTime);
 
         if (deathAnimationTimer >= DEATH_ANIMATION_DURATION) {
-            isAlive = false;
+            //isAlive = false;
+            markedForDeletion = true;
         }
         return;  // 死亡动画期间不执行其他逻辑
     }
+
+    if (!isAlive) return;
 
     // 可见性检测和优化逻辑
     bool isCurrentlyVisible = IsVisible(g_camera);
@@ -552,7 +562,7 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
 
     // 添加动画剪辑
     anim.AddClip("idle", 0, 3, 1, 4, 0.15f, true, g_flyEnemyIdleTexture);
-    // anim.AddClip("death", 0, 5, 0.1f, false, g_flyEnemyDeathTexture);
+    //anim.AddClip("death", 0, 5, 0.1f, false, g_flyEnemyDeathTexture);
 
     anim.SetClip("idle");
     width = PLAYER_WIDTH * 1.5f;
@@ -653,7 +663,12 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
 
     // 添加动画剪辑
     anim.AddClip("idle", 0, 1, 1, 2, 0.2f, true, g_mageEnemyIdleTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.9f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
     anim.SetClip("idle");
+
+
+
+
 
     // 射弹相关参数
     projectileSpeed = 2.0f;
@@ -1052,7 +1067,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     g_enemies.erase(
         std::remove_if(g_enemies.begin(), g_enemies.end(),
             [](Enemy* e) {
-                if (!e->IsAlive()) {
+                if (/*!e->IsAlive()*/e->IsMarkedForDeletion()) {
                     delete e;
                     return true;
                 }
