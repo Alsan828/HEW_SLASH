@@ -64,8 +64,6 @@ struct Player {
     // 生命值系统
     float health = 100.0f;
     float maxHealth = 100.0f;
-    bool isAlive = true;
-
     // 攻击系统
     float attackDamage = 30000.0f;  // 基础攻击力
     bool isAttacking = false;    // 攻击状态
@@ -128,12 +126,12 @@ struct Player {
 
     // 受到伤害
     void TakeDamage(float damage) {
-        if (!isAlive) return;
+        if (isDead) return;
 
         health -= damage;
         if (health <= 0) {
             health = 0;
-            isAlive = false;
+            isDead = false;
             // 玩家死亡处理
         }
     }

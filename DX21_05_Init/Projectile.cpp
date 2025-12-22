@@ -134,13 +134,10 @@ void  Projectile::CheckPlayerCollision() {
         posY < playerY + playerHeight &&
         posY + size > playerY)
     {
-        if (!g_player.isDashing) {
+        if (!g_player.isDashing && !g_player.isDead) {
             // Apply effect to player
             OnPlayerDeath();
-
-            CreateImpactEffect();
         }
-
     }
 }
 
