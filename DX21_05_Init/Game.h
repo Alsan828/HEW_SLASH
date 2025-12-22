@@ -15,7 +15,7 @@
 #include "SceneBase.h"
 #include "Pause.h"
 #include "Projectile.h"
-#include "SimpleAudio.h"
+#include "Enemy.h"
 
 class ProjectileManager;
 
@@ -40,9 +40,9 @@ const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
 const float GRAVITY = -0.003f;
 const float JUMP_FORCE = 0.065f;
-const float MOVE_SPEED = 0.01f;
+const float MOVE_SPEED = 0.01f; 
 const float DASH_SPEED = 0.1f;      // Base dash speed
-const float DASH_DURATION = 0.15f;   // Base dash duration
+const float DASH_DURATION = 0.11f;   // Base dash duration
 const float DASH_COOLDOWN = 0.1f;    // Dash cooldown time
 
 // Player structure
@@ -64,8 +64,6 @@ struct Player {
     // 生命值系统
     float health = 100.0f;
     float maxHealth = 100.0f;
-    bool isAlive = true;
-
     // 攻击系统
     float attackDamage = 30000.0f;  // 基础攻击力
     bool isAttacking = false;    // 攻击状态
@@ -87,11 +85,11 @@ struct Player {
     // Charge dash specific variables
     bool isCharging = false;
     float chargeTime = 0.0f;
-    const float MAX_CHARGE_TIME = 2.5f;
+    const float MAX_CHARGE_TIME = 1.0f;
     const float MIN_CHARGE_TIME = 0.01f;
     const float CHARGE_THRESHOLD_LOW = 0.2f;
-    const float CHARGE_THRESHOLD_MID = 0.7f;
-    const float CHARGE_THRESHOLD_HIGH = 1.5f;
+    const float CHARGE_THRESHOLD_MID = 0.4f;
+    const float CHARGE_THRESHOLD_HIGH = 0.8f;
 
     // 新增：蓄力层数系统
     float savedChargeTime = 0.0f;        // 保存的蓄力时间
@@ -101,19 +99,19 @@ struct Player {
 
     Animation anim;
     float animLockTimer = 0.0f; // used for when changing from one animation to another
-    float animLockDuration = 0.4f;
+    float animLockDuration = 0.25f;
 
     // 冲刺点数系统
     int dashPoints = 3;
     const int MAX_DASH_POINTS = 3;
     float dashPointRecoverTimer = 0.0f;
-    const float DASH_POINT_RECOVER_TIME = 0.55f;
+    const float DASH_POINT_RECOVER_TIME = 0.1f;
 
     // 冲刺后硬直状态
     bool isInDashAftermath = false;
     float dashAftermathTimer = 0.0f;
     const float DASH_AFTERMATH_DURATION = 0.7f;
-
+    
     const float AFTERIMAGE_DURATION = 0.1f;
 
     // 新增：攻击检测相关
@@ -128,12 +126,12 @@ struct Player {
 
     // 受到伤害
     void TakeDamage(float damage) {
-        if (!isAlive) return;
+        if (isDead) return;
 
         health -= damage;
         if (health <= 0) {
             health = 0;
-            isAlive = false;
+            isDead = false;
             // 玩家死亡处理
         }
     }
@@ -214,26 +212,16 @@ extern Player g_player;
 extern ID3D11ShaderResourceView* g_playerTexture;
 
 // for the characteer
-extern ID3D11ShaderResourceView* g_playerIdleLeftTexture;
-extern ID3D11ShaderResourceView* g_playerIdleRightTexture;
-extern ID3D11ShaderResourceView* g_playerJumpLeftTexture;
-extern ID3D11ShaderResourceView* g_playerJumpRightTexture;
-extern ID3D11ShaderResourceView* g_playerRunLeftTexture;
-extern ID3D11ShaderResourceView* g_playerRunRightTexture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft1Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight1Texture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft2Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight2Texture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft3Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight3Texture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft4Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight4Texture;
-extern ID3D11ShaderResourceView* g_playerAirChargeLeftTexture;
-extern ID3D11ShaderResourceView* g_playerAirChargeRightTexture;
-extern ID3D11ShaderResourceView* g_playerFallingLeftTexture;
-extern ID3D11ShaderResourceView* g_playerFallingRightTexture;
-extern ID3D11ShaderResourceView* g_playerGroundChargeLeftTexture;
-extern ID3D11ShaderResourceView* g_playerGroundChargeRightTexture;
+extern ID3D11ShaderResourceView* g_playerIdleTexture;    // 通用站立纹理
+extern ID3D11ShaderResourceView* g_playerJumpTexture;   // 通用跳跃纹理
+extern ID3D11ShaderResourceView* g_playerRunTexture;     // 通用奔跑纹理
+extern ID3D11ShaderResourceView* g_playerSlash1Texture; // 通用斩击1纹理
+extern ID3D11ShaderResourceView* g_playerSlash2Texture; // 通用斩击2纹理
+extern ID3D11ShaderResourceView* g_playerSlash3Texture; // 通用斩击3纹理
+extern ID3D11ShaderResourceView* g_playerSlash4Texture; // 通用斩击4纹理
+extern ID3D11ShaderResourceView* g_playerAirChargeTexture; // 通用空中蓄力纹理
+extern ID3D11ShaderResourceView* g_playerFallingTexture;  // 通用下落纹理
+extern ID3D11ShaderResourceView* g_playerGroundChargeTexture; // 通用地面蓄力纹理
 
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
@@ -322,7 +310,6 @@ public:
 // 全局实例
 extern MouseIndicatorSystem g_mouseIndicator;
 
-extern SimpleAudio g_audioManager;
 
 // 音效文件常量
 namespace SoundEffect {
@@ -351,23 +338,3 @@ namespace BackgroundMusic {
     const std::string GAME_OVER = "asset/Music/game_over.wav";
     const std::string VICTORY = "asset/Music/victory.wav";
 }
-
-
-void PlayJumpSound();
-void PlayDashSound();
-void PlayChargeStartSound();
-void PlayChargeReleaseSound();
-void PlayShootSound();
-void PlayEnemyHitSound();
-void PlayEnemyDeathSound();
-void PlaySlowMotionSound(bool start);
-void PlayLevelCompleteSound();
-void PlayUIHoverSound();
-void PlayUIClickSound();
-void PlayPauseSound();
-void PlayResumeSound();
-
-void PlayStageMusic(int stage);
-void PlayBossMusic();
-void PlayVictoryMusic();
-void PlayGameOverMusic();

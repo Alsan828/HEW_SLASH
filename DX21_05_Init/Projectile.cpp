@@ -1,4 +1,4 @@
-// Projectile.cpp
+﻿// Projectile.cpp
 #include "Projectile.h"
 
 // Global projectile manager instance
@@ -14,6 +14,7 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
     : type(type), posX(startX), posY(startY), speed(speed), effect(effect),
     fromPlayer(fromPlayer), isActive(true), homingTarget(nullptr),
     currentPierceCount(0), rotation(0.0f), scaleEffect(1.0f) {
+
 
     // Calculate direction vector
     float dx = targetX - startX;
@@ -133,13 +134,10 @@ void  Projectile::CheckPlayerCollision() {
         posY < playerY + playerHeight &&
         posY + size > playerY)
     {
-        if (!g_player.isDashing) {
+        if (!g_player.isDashing && !g_player.isDead) {
             // Apply effect to player
             OnPlayerDeath();
-
-            CreateImpactEffect();
         }
-
     }
 }
 

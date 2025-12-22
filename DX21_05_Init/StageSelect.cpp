@@ -1,8 +1,9 @@
-#include "StageSelect.h"
+ï»¿#include "StageSelect.h"
 
 
 StageSelect::StageSelect(SceneManager* manager, SCENE returnTo)
 {
+	backgroundTexture = nullptr;
 	sceneManager = manager;
 	returnScene = returnTo;
 }
@@ -56,13 +57,13 @@ void StageSelect::Update(float deltaTime)
 			sceneManager->SwitchScene(btn.GetTargetScene());
 			return;
 		}*/
-		if (btn.Process() == UIButtonResult::Clicked) { // If this is the BACK button ¨ use returnScene 
+		if (btn.Process() == UIButtonResult::Clicked) { // If this is the BACK button ä»º use returnScene 
 			if (btn.GetTargetScene() == MENU || btn.GetTargetScene() == PAUSE) 
 			{ 
 				sceneManager->SwitchScene(returnScene); 
 			} 
 			else 
-			{ // Stage buttons ¨ go to the stage 
+			{ // Stage buttons ä»º go to the stage 
 				sceneManager->SwitchScene(btn.GetTargetScene()); 
 			} 
 			return; 

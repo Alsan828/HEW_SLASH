@@ -1,4 +1,4 @@
-#include "Enemy.h"
+﻿#include "Enemy.h"
 
 void DamageNumberManager::AddDamageNumber(float x, float y, int damage, bool isCritical) {
     damageNumbers.emplace_back(x, y, damage, isCritical);

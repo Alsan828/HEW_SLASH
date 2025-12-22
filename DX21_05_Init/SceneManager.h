@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 
 enum SCENE 
@@ -20,10 +20,10 @@ class SceneManager
 {
 private:
     SceneBase* currentScene = nullptr; // this is for for the current scene. It starts empty until a scene is loaded
-    SCENE currentSceneType;
+    SCENE currentSceneType = STAGE;
 
     SceneBase* previousScene = nullptr;
-    SCENE previousSceneType;
+    SCENE previousSceneType = STAGE;
 
     SCENE originalPausedScene = STAGE;
 

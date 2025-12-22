@@ -10,7 +10,12 @@ Camera::Camera()
     , m_shakeTimer(0.0f)
     , m_shakeIntensity(0.0f)
     , m_lookAheadFactor(0.3f)
-    , m_deadZoneRadius(0.2f) {
+    , m_deadZoneRadius(0.2f){
+
+
+    m_zoomLevel = 1.0f;
+	m_windowWidth = 1920;
+	m_windowHeight = 1080;
 }
 
 void Camera::SetTarget(float x, float y) {

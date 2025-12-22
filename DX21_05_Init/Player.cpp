@@ -1,4 +1,4 @@
-#include "Game.h"
+﻿#include "Game.h"
 #include "Enemy.h"
 
 // Update player physics
@@ -332,8 +332,6 @@ void OnPlayerDeath() {
 
     // Death sound can be added here
     // g_audioManager.PlaySFX("death_sound.wav");
-
-    printf("Player died! Respawning in 3 seconds...\n");
 }
 
 
@@ -359,7 +357,6 @@ void CheckPlayerDeath() {
                 // Otherwise, player dies
                 OnPlayerDeath();
             }
-
             return;
         }
     }

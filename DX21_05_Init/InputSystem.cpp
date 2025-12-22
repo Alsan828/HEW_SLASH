@@ -2,6 +2,7 @@
 #include "Game.h"
 
 InputSystem::InputSystem() {
+    m_mousePos = { 0, 0 };
     // Initialize all key states to false
     int keys[] = {
         VK_LEFT, 'A', VK_RIGHT, 'D', VK_UP, 'W',

@@ -7,27 +7,18 @@ ProjectileManager& g_projectileManager = ProjectileManager::GetInstance();
 Player g_player;
 ID3D11ShaderResourceView* g_playerTexture = nullptr; // maybe we wont use this
 
-// for the character
-ID3D11ShaderResourceView* g_playerIdleLeftTexture = nullptr;
-ID3D11ShaderResourceView* g_playerIdleRightTexture = nullptr;
-ID3D11ShaderResourceView* g_playerJumpLeftTexture = nullptr;
-ID3D11ShaderResourceView* g_playerJumpRightTexture = nullptr;
-ID3D11ShaderResourceView* g_playerRunLeftTexture = nullptr;
-ID3D11ShaderResourceView* g_playerRunRightTexture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashLeft1Texture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashRight1Texture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashLeft2Texture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashRight2Texture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashLeft3Texture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashRight3Texture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashLeft4Texture = nullptr;
-ID3D11ShaderResourceView* g_playerSlashRight4Texture = nullptr;
-ID3D11ShaderResourceView* g_playerAirChargeLeftTexture = nullptr;
-ID3D11ShaderResourceView* g_playerAirChargeRightTexture = nullptr;
-ID3D11ShaderResourceView* g_playerFallingLeftTexture = nullptr;
-ID3D11ShaderResourceView* g_playerFallingRightTexture = nullptr;
-ID3D11ShaderResourceView* g_playerGroundChargeLeftTexture = nullptr;
-ID3D11ShaderResourceView* g_playerGroundChargeRightTexture = nullptr;
+// for the character// 在全局变量部分，删除向左的纹理变量
+// 保留右边的纹理变量，并重命名为通用名称
+ID3D11ShaderResourceView* g_playerIdleTexture = nullptr;    // 通用站立纹理
+ID3D11ShaderResourceView* g_playerJumpTexture = nullptr;   // 通用跳跃纹理
+ID3D11ShaderResourceView* g_playerRunTexture = nullptr;     // 通用奔跑纹理
+ID3D11ShaderResourceView* g_playerSlash1Texture = nullptr; // 通用斩击1纹理
+ID3D11ShaderResourceView* g_playerSlash2Texture = nullptr; // 通用斩击2纹理
+ID3D11ShaderResourceView* g_playerSlash3Texture = nullptr; // 通用斩击3纹理
+ID3D11ShaderResourceView* g_playerSlash4Texture = nullptr; // 通用斩击4纹理
+ID3D11ShaderResourceView* g_playerAirChargeTexture = nullptr; // 通用空中蓄力纹理
+ID3D11ShaderResourceView* g_playerFallingTexture = nullptr;  // 通用下落纹理
+ID3D11ShaderResourceView* g_playerGroundChargeTexture = nullptr; // 通用地面蓄力纹理
 
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
@@ -57,7 +48,6 @@ std::vector<Enemy*> g_enemies;
 Camera g_camera;
 
 MouseIndicatorSystem g_mouseIndicator;
-SimpleAudio g_audioManager;
 // 在Game.cpp开头定义全局变量
 int g_windowWidth = 0;
 int g_windowHeight = 0;

@@ -1,7 +1,4 @@
 ﻿#include "Game.h"
-#include "Enemy.h"
-#include "SimpleAudio.h"
-
 // Add to global variable definition section in Game.cpp
 float g_slowMoTimer = 0.0f;
 float g_slowMoFactor = 1.0f;
@@ -67,93 +64,54 @@ void CleanUpGameWorld()
     CleanupEnemies();
     g_mouseIndicator.Cleanup();
 
-    // Release all textures
+    // 释放所有纹理 - 只保留右边纹理
     if (g_playerTexture) {
         g_playerTexture->Release();
         g_playerTexture = nullptr;
     }
     
-    // for the character
-    if (g_playerIdleLeftTexture) {
-        g_playerIdleLeftTexture->Release();
-        g_playerIdleLeftTexture = nullptr;
+    // 只保留右边的纹理
+    if (g_playerIdleTexture) {
+        g_playerIdleTexture->Release();
+        g_playerIdleTexture = nullptr;
     }
-    if (g_playerIdleRightTexture) {
-        g_playerIdleRightTexture->Release();
-        g_playerIdleRightTexture = nullptr;
+    if (g_playerJumpTexture) {
+        g_playerJumpTexture->Release();
+        g_playerJumpTexture = nullptr;
     }
-    if (g_playerJumpRightTexture) {
-        g_playerJumpRightTexture->Release();
-        g_playerJumpRightTexture = nullptr;
+    if (g_playerRunTexture) {
+        g_playerRunTexture->Release();
+        g_playerRunTexture = nullptr;
     }
-    if (g_playerJumpLeftTexture) {
-        g_playerJumpLeftTexture->Release();
-        g_playerJumpLeftTexture = nullptr;
+    if (g_playerSlash1Texture) {
+        g_playerSlash1Texture->Release();
+        g_playerSlash1Texture = nullptr;
     }
-    if (g_playerRunRightTexture) {
-        g_playerRunRightTexture->Release();
-        g_playerRunRightTexture = nullptr;
+    if (g_playerSlash2Texture) {
+        g_playerSlash2Texture->Release();
+        g_playerSlash2Texture = nullptr;
     }
-    if (g_playerRunLeftTexture) {
-        g_playerRunLeftTexture->Release();
-        g_playerRunLeftTexture = nullptr;
+    if (g_playerSlash3Texture) {
+        g_playerSlash3Texture->Release();
+        g_playerSlash3Texture = nullptr;
     }
-    if (g_playerSlashRight1Texture) {
-        g_playerSlashRight1Texture->Release();
-        g_playerSlashRight1Texture = nullptr;
+    if (g_playerSlash4Texture) {
+        g_playerSlash4Texture->Release();
+        g_playerSlash4Texture = nullptr;
     }
-    if (g_playerSlashLeft1Texture) {
-        g_playerSlashLeft1Texture->Release();
-        g_playerSlashLeft1Texture = nullptr;
+    if (g_playerAirChargeTexture) {
+        g_playerAirChargeTexture->Release();
+        g_playerAirChargeTexture = nullptr;
     }
-    if (g_playerSlashLeft2Texture) {
-        g_playerSlashLeft2Texture->Release();
-        g_playerSlashLeft2Texture = nullptr;
+    if (g_playerFallingTexture) {
+        g_playerFallingTexture->Release();
+        g_playerFallingTexture = nullptr;
     }
-    if (g_playerSlashRight2Texture) {
-        g_playerSlashRight2Texture->Release();
-        g_playerSlashRight2Texture = nullptr;
+    if (g_playerGroundChargeTexture) {
+        g_playerGroundChargeTexture->Release();
+        g_playerGroundChargeTexture = nullptr;
     }
-    if (g_playerSlashLeft3Texture) {
-        g_playerSlashLeft3Texture->Release();
-        g_playerSlashLeft3Texture = nullptr;
-    }
-    if (g_playerSlashRight3Texture) {
-        g_playerSlashRight3Texture->Release();
-        g_playerSlashRight3Texture = nullptr;
-    }
-    if (g_playerSlashLeft4Texture) {
-        g_playerSlashLeft4Texture->Release();
-        g_playerSlashLeft4Texture = nullptr;
-    }
-    if (g_playerSlashRight4Texture) {
-        g_playerSlashRight4Texture->Release();
-        g_playerSlashRight4Texture = nullptr;
-    }
-    if (g_playerAirChargeLeftTexture) {
-        g_playerAirChargeLeftTexture->Release();
-        g_playerAirChargeLeftTexture = nullptr;
-    }
-    if (g_playerAirChargeRightTexture) {
-        g_playerAirChargeRightTexture->Release();
-        g_playerAirChargeRightTexture = nullptr;
-    }
-    if (g_playerFallingLeftTexture) {
-        g_playerFallingLeftTexture->Release();
-        g_playerFallingLeftTexture = nullptr;
-    }
-    if (g_playerFallingRightTexture) {
-        g_playerFallingRightTexture->Release();
-        g_playerFallingRightTexture = nullptr;
-    }
-    if (g_playerGroundChargeLeftTexture) {
-        g_playerGroundChargeLeftTexture->Release();
-        g_playerGroundChargeLeftTexture = nullptr;
-    }
-    if (g_playerGroundChargeRightTexture) {
-        g_playerGroundChargeRightTexture->Release();
-        g_playerGroundChargeRightTexture = nullptr;
-    }
+    
 
 
     if (g_groundTexture) {
@@ -204,49 +162,31 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 }
 // Game initialization
 void InitGameWorld() {
-
     g_projectileManager.LoadTextures(g_pDevice);
-    // for the character
-    LoadTexture(g_pDevice, "asset/character/idle_left.png", &g_playerIdleLeftTexture);    // when looking left
-    LoadTexture(g_pDevice, "asset/character/idle_right.png", &g_playerIdleRightTexture);  // when looking right
-    LoadTexture(g_pDevice, "asset/character/jump_left.png", &g_playerJumpLeftTexture);  // when jumping left
-    LoadTexture(g_pDevice, "asset/character/jump_right.png", &g_playerJumpRightTexture);  // when jumping right
-    LoadTexture(g_pDevice, "asset/character/run_left.png", &g_playerRunLeftTexture);  // when running left
-    LoadTexture(g_pDevice, "asset/character/run_right.png", &g_playerRunRightTexture);  // when running right
-    LoadTexture(g_pDevice, "asset/character/slash_left1.png", &g_playerSlashLeft1Texture);  // when slagh 1 left
-    LoadTexture(g_pDevice, "asset/character/slash_right1.png", &g_playerSlashRight1Texture);  // when salsh1 right
-    LoadTexture(g_pDevice, "asset/character/slash_left2.png", &g_playerSlashLeft2Texture);  // when slash2 left
-    LoadTexture(g_pDevice, "asset/character/slash_right2.png", &g_playerSlashRight2Texture);  // when slash2 right
-    LoadTexture(g_pDevice, "asset/character/slash_left3.png", &g_playerSlashLeft3Texture);  // when slash3 left
-    LoadTexture(g_pDevice, "asset/character/slash_right3.png", &g_playerSlashRight3Texture);  // when slash3 right
-    LoadTexture(g_pDevice, "asset/character/slash_left4.png", &g_playerSlashLeft4Texture);  // when slash4 left
-    LoadTexture(g_pDevice, "asset/character/slash_right4.png", &g_playerSlashRight4Texture);  // when slash4 right
-    LoadTexture(g_pDevice, "asset/character/air_charge_left.png", &g_playerAirChargeLeftTexture);  // when air charge left
-    LoadTexture(g_pDevice, "asset/character/air_charge_right.png", &g_playerAirChargeRightTexture);  // when air charge right
-    LoadTexture(g_pDevice, "asset/character/falling_left.png", &g_playerFallingLeftTexture);  // when falling left
-    LoadTexture(g_pDevice, "asset/character/falling_right.png", &g_playerFallingRightTexture);  // when falling right
-    LoadTexture(g_pDevice, "asset/character/ground_charge_left.png", &g_playerGroundChargeLeftTexture);  // when ground charge left
-    LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeRightTexture);  // when ground charge right
-    g_player.anim.AddClip("IdleLeft", 0, 3, 4, 1, 0.25f, true, g_playerIdleLeftTexture); // ※ splitX is number of columns and splitY is number of rows
-    g_player.anim.AddClip("IdleRight", 0, 3, 4, 1, 0.25f, true, g_playerIdleRightTexture);
-    g_player.anim.AddClip("JumpLeft", 0, 3, 4, 1, 0.25f, false, g_playerJumpLeftTexture);
-    g_player.anim.AddClip("JumpRight", 0, 3, 4, 1, 0.25f, false, g_playerJumpRightTexture);
-    g_player.anim.AddClip("RunLeft", 0, 3, 4, 1, 0.1f, true, g_playerRunLeftTexture);
-    g_player.anim.AddClip("RunRight", 0, 3, 4, 1, 0.1f, true, g_playerRunRightTexture);
-    g_player.anim.AddClip("SlashLeft1", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft1Texture);
-    g_player.anim.AddClip("SlashRight1", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight1Texture);
-    g_player.anim.AddClip("SlashLeft2", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft2Texture);
-    g_player.anim.AddClip("SlashRight2", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight2Texture);
-    g_player.anim.AddClip("SlashLeft3", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft3Texture);
-    g_player.anim.AddClip("SlashRight3", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight3Texture);
-    g_player.anim.AddClip("SlashLeft4", 0, 3, 4, 1, 0.06f, false, g_playerSlashLeft4Texture);
-    g_player.anim.AddClip("SlashRight4", 0, 3, 4, 1, 0.06f, false, g_playerSlashRight4Texture);
-    g_player.anim.AddClip("AirChargeLeft", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeLeftTexture);
-    g_player.anim.AddClip("AirChargeRight", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeRightTexture);
-    g_player.anim.AddClip("FallingLeft", 0, 0, 1, 1, 0.25f, true, g_playerFallingLeftTexture);
-    g_player.anim.AddClip("FallingRight", 0, 0, 1, 1, 0.25f, true, g_playerFallingRightTexture);
-    g_player.anim.AddClip("GroundChargeLeft", 0, 0, 1, 1, 0.25f, true, g_playerGroundChargeLeftTexture);
-    g_player.anim.AddClip("GroundChargeRight", 0, 0, 1, 1, 0.25f, true, g_playerGroundChargeRightTexture);
+
+    // 只加载右边的纹理
+    LoadTexture(g_pDevice, "asset/character/idle_right.png", &g_playerIdleTexture);
+    LoadTexture(g_pDevice, "asset/character/jump_right.png", &g_playerJumpTexture);
+    LoadTexture(g_pDevice, "asset/character/run_right.png", &g_playerRunTexture);
+    LoadTexture(g_pDevice, "asset/character/slash_right1.png", &g_playerSlash1Texture);
+    LoadTexture(g_pDevice, "asset/character/slash_right2.png", &g_playerSlash2Texture);
+    LoadTexture(g_pDevice, "asset/character/slash_right3.png", &g_playerSlash3Texture);
+    LoadTexture(g_pDevice, "asset/character/slash_right4.png", &g_playerSlash4Texture);
+    LoadTexture(g_pDevice, "asset/character/air_charge_right.png", &g_playerAirChargeTexture);
+    LoadTexture(g_pDevice, "asset/character/falling_right.png", &g_playerFallingTexture);
+    LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeTexture);
+
+    // 为动画剪辑添加通用名称（不再区分左右）
+    g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
+    g_player.anim.AddClip("Jump", 0, 3, 4, 1, 0.25f, false, g_playerJumpTexture);
+    g_player.anim.AddClip("Run", 0, 3, 4, 1, 0.1f, true, g_playerRunTexture);
+    g_player.anim.AddClip("Slash1", 0, 3, 4, 1, 0.06f, false, g_playerSlash1Texture);
+    g_player.anim.AddClip("Slash2", 0, 3, 4, 1, 0.06f, false, g_playerSlash2Texture);
+    g_player.anim.AddClip("Slash3", 0, 3, 4, 1, 0.06f, false, g_playerSlash3Texture);
+    g_player.anim.AddClip("Slash4", 0, 3, 4, 1, 0.06f, false, g_playerSlash4Texture);
+    g_player.anim.AddClip("AirCharge", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeTexture);
+    g_player.anim.AddClip("Falling", 0, 0, 1, 1, 0.25f, true, g_playerFallingTexture);
+    g_player.anim.AddClip("GroundCharge", 0, 0, 1, 1, 0.25f, true, g_playerGroundChargeTexture);
 
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
@@ -268,8 +208,6 @@ void InitGameWorld() {
     g_camera.SetLookAhead(camera_LookAhead);
     g_camera.SetDeadZone(camera_DeadZone);
 
-    g_audioManager.Initialize();
-    g_audioManager.PlayBGM("asset/Music/level1.wav");
     ResetGame();
 }
 
@@ -278,9 +216,9 @@ void UpdateGame(float deltaTime) {
     if (g_gameState != STATE_PLAYING) {
         return;
     }
+    g_player.animLockDuration -= deltaTime;
 
     // Update audio manager
-    g_audioManager.Update(deltaTime);
     g_gameTimer.Tick(); // added december 3rd
 
     // added december 4th
@@ -330,179 +268,82 @@ void UpdateGame(float deltaTime) {
     UpdateEnemies(scaledDeltaTime, &g_mapManager);
     // Update all projectiles
     g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
-
-    // for the character animation
-    if (g_player.animLockTimer > 0.0f) 
-    { 
-        g_player.animLockTimer -= deltaTime; 
-    }
+    // 在UpdateGame函数中修改动画设置部分
     if (g_player.animLockTimer <= 0.0f)
     {
-        if (g_player.isCharging) // if player is charging
+        if (g_player.isCharging) // 如果玩家正在蓄力
         {
-            if (!g_player.isOnGround) // if the player is not on the ground while charging
+            if (!g_player.isOnGround) // 如果玩家在空中蓄力
             {
-                if (g_player.facingRight) // when looking right
-                {
-                    if (g_player.anim.GetCurrentClipName() != "AirChargeRight") { // if not doing the animation
-                        g_player.anim.SetClip("AirChargeRight"); // do the animation
-                    }
-                }
-                else // when looking left
-                {
-                    if (g_player.anim.GetCurrentClipName() != "AirChargeLeft") { // if not doing the animation
-                        g_player.anim.SetClip("AirChargeLeft"); // do the animation
-                    }
+                if (g_player.anim.GetCurrentClipName() != "AirCharge") {
+                    g_player.anim.SetClip("AirCharge");
                 }
             }
-            else // if the player is on the ground while charging
+            else // 如果玩家在地面蓄力
             {
-                if (g_player.facingRight) // when looking right
-                {
-                    if (g_player.anim.GetCurrentClipName() != "GroundChargeRight") { // if not doing the animation
-                        g_player.anim.SetClip("GroundChargeRight"); // do the animation
-                    }
-                }
-                else  // when looking left
-                {
-                    if (g_player.anim.GetCurrentClipName() != "GroundChargeLeft") { // if not doing the animation
-                        g_player.anim.SetClip("GroundChargeLeft"); // do the animation
-                    }
+                if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
+                    g_player.anim.SetClip("GroundCharge");
                 }
             }
         }
-        else if (g_player.isDashing) // if the character is dashing
+        else if (g_player.isDashing) // 如果玩家正在冲刺
         {
-            // for the types of slash
             int chargeType = g_player.GetChargeLevel();
 
-            if (g_player.facingRight) // when the character is facing right
+            if (chargeType == 0) // 斩击1
             {
-                if (chargeType == 0) // for the type 1 slash 
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashRight1") { // if not doing the animation
-                        g_player.anim.SetClip("SlashRight1"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
-                }
-                else if (chargeType == 1) // for the type 2 slash
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashRight2") { // if not doing the animation
-                        g_player.anim.SetClip("SlashRight2"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
-                }
-                else if (chargeType == 2) // for the type 3 slash
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashRight3") { // if not doing the animation
-                        g_player.anim.SetClip("SlashRight3"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
-                }
-                else  // for the type 4 slash
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashRight4") { // if not doing the animation
-                        g_player.anim.SetClip("SlashRight4"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+                if (g_player.anim.GetCurrentClipName() != "Slash1") {
+                    g_player.anim.SetClip("Slash1");
+                    g_player.animLockTimer = g_player.animLockDuration;
                 }
             }
-            else  // when the character is looking left
+            else if (chargeType == 1) // 斩击2
             {
-                if (chargeType == 0) // for the type 1 slash
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashLeft1") { // if not doing the animation
-                        g_player.anim.SetClip("SlashLeft1"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+                if (g_player.anim.GetCurrentClipName() != "Slash2") {
+                    g_player.anim.SetClip("Slash2");
+                    g_player.animLockTimer = g_player.animLockDuration;
                 }
-                else if (chargeType == 1) // for the type 2 slash
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashLeft2") { // if not doing the animation
-                        g_player.anim.SetClip("SlashLeft2"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+            }
+            else if (chargeType == 2) // 斩击3
+            {
+                if (g_player.anim.GetCurrentClipName() != "Slash3") {
+                    g_player.anim.SetClip("Slash3");
+                    g_player.animLockTimer = g_player.animLockDuration;
                 }
-                else if (chargeType == 2) // for the type 3 slash
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashLeft3") { // if not doing the animation
-                        g_player.anim.SetClip("SlashLeft3"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
-                }
-                else  // for the type 4 slash
-                {
-                    if (g_player.anim.GetCurrentClipName() != "SlashLeft4") { // if not doing the animation
-                        g_player.anim.SetClip("SlashLeft4"); // do the animation
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+            }
+            else  // 斩击4
+            {
+                if (g_player.anim.GetCurrentClipName() != "Slash4") {
+                    g_player.anim.SetClip("Slash4");
+                    g_player.animLockTimer = g_player.animLockDuration;
                 }
             }
         }
-        else if (!g_player.isOnGround) // the character is not on the ground
+        else if (!g_player.isOnGround) // 玩家不在地面上
         {
-            // if the player is falling
-            if (g_player.velocityY < 0.0f)
+            if (g_player.velocityY < 0.0f) // 下落
             {
-                if (g_player.facingRight)  // when looking right
-                {
-                    if (g_player.anim.GetCurrentClipName() != "FallingRight") { // if not doing the aniamtion
-                        g_player.anim.SetClip("FallingRight"); // do the animation
-                    }
-                }
-                else  // when looking left
-                {
-                    if (g_player.anim.GetCurrentClipName() != "FallingLeft") { // if not doing the animation
-                        g_player.anim.SetClip("FallingLeft"); // do the animation
-                    }
+                if (g_player.anim.GetCurrentClipName() != "Falling") {
+                    g_player.anim.SetClip("Falling");
                 }
             }
-
-            else // when player is jumping
+            else // 跳跃
             {
-                if (g_player.facingRight) // when looking right
-                {
-                    if (g_player.anim.GetCurrentClipName() != "JumpRight") {
-                        g_player.anim.SetClip("JumpRight");
-                    }
-                }
-                else // when looking left
-                {
-                    if (g_player.anim.GetCurrentClipName() != "JumpLeft") {
-                        g_player.anim.SetClip("JumpLeft");
-                    }
-                }
-            }
-
-        }
-        else if (g_player.isMoving) // the character is moving
-        {
-            if (g_player.facingRight) // when looking right right
-            {
-                if (g_player.anim.GetCurrentClipName() != "RunRight") {
-                    g_player.anim.SetClip("RunRight");
-                }
-            }
-            else // when looking left
-            {
-                if (g_player.anim.GetCurrentClipName() != "RunLeft") {
-                    g_player.anim.SetClip("RunLeft");
+                if (g_player.anim.GetCurrentClipName() != "Jump") {
+                    g_player.anim.SetClip("Jump");
                 }
             }
         }
-        else // player is not running (not moving)
+        else if (g_player.isMoving) // 玩家在移动
         {
-            if (g_player.facingRight) // when looking right
-            {
-                if (g_player.anim.GetCurrentClipName() != "IdleRight") {
-                    g_player.anim.SetClip("IdleRight");
-                }
+            if (g_player.anim.GetCurrentClipName() != "Run") {
+                g_player.anim.SetClip("Run");
             }
-            else // when looking left
-            {
-                if (g_player.anim.GetCurrentClipName() != "IdleLeft") {
-                    g_player.anim.SetClip("IdleLeft");
-                }
+        }
+        else // 玩家站立
+        {
+            if (g_player.anim.GetCurrentClipName() != "Idle") {
+                g_player.anim.SetClip("Idle");
             }
         }
     }
@@ -671,36 +512,9 @@ void DrawGame() {
     if (!g_player.isDead) {
         // Normal drawing when alive
         std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
-        int frameIndex = 0;
-
-        if (g_player.isCharging) {
-            //SetColor(0.0f, 1.0f, 0.0f, 1.0f);
-            frameIndex = 4;
-        }
-        else if (g_player.isDashing) {
-            //SetColor(1.0f, 0.0f, 0.0f, 1.0f);
-            frameIndex = 3;
-        }
-        else if (!g_player.isOnGround) {
-           // SetColor(1.0f, 0.5f, 0.0f, 1.0f);
-            frameIndex = 2;
-        }
-        else if (g_player.isMoving) {
-            frameIndex = 1;
-            if (g_player.facingRight) {
-               // SetColor(0.0f, 0.0f, 1.0f, 1.0f);
-            }
-            else {
-               // SetColor(1.0f, 0.0f, 1.0f, 1.0f);
-            }
-        }
-        else {
-            //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        }
-
         
         // for the size of the character
-        float scale = 2.8f;
+        float scale = 6.6f;
         float width = PLAYER_WIDTH * scale;
         float height = PLAYER_HEIGHT * scale;
 
@@ -708,17 +522,19 @@ void DrawGame() {
         float offsetX = (width - PLAYER_WIDTH) * 0.5f;
         float offsetY = (height - PLAYER_HEIGHT) * 0.5f;
 
-        frameIndex = g_player.anim.GetCurrentFrame();
-
-        // with this I get the spritesheet. (the row and columns)
+        // 获取当前动画剪辑的纹理
+        ID3D11ShaderResourceView* currentTexture = g_player.anim.GetCurrentClipTexture();
+        int frameIndex = g_player.anim.GetCurrentFrame();
         int splitX = g_player.anim.GetSplitX();
         int splitY = g_player.anim.GetSplitY();
 
-    
+        // 根据朝向决定是否水平翻转
+        // 如果facingRight为true（面向右），不翻转
+        // 如果facingRight为false（面向左），水平翻转
+        bool flipHorizontal = !g_player.facingRight;
 
-        // for the idle when looking left
         RenderImage(playerPos.first - offsetX, playerPos.second - offsetY, width, height,
-            g_player.anim.GetCurrentClipTexture(), frameIndex, splitY, splitX/*1, 4*/);
+            currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
     }
     else {
         // Flickering disappearance animation when dead
@@ -771,9 +587,9 @@ void DrawGame() {
 
             // for the character
             int frameIndex = g_player.anim.GetCurrentFrame();
+            bool flipHorizontal = !g_player.facingRight;
             RenderImage(playerPos.first, playerPos.second, width, height,
-                g_player.anim.GetCurrentClipTexture(), frameIndex, splitY, splitX/*1, 4*/);
-
+                g_player.anim.GetCurrentClipTexture(), frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
 
             float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
         }
@@ -886,7 +702,7 @@ void MouseIndicatorSystem::Update(float deltaTime) {
     float deltaY = m_mouseWorldY - playerCenterY;
 
     m_arrowAngle = atan2(deltaY, deltaX);
-
+    
     static int debugCounter = 0;
     if (debugCounter++ % 60 == 0) {
         printf("Mouse World: (%.2f, %.2f), Player: (%.2f, %.2f)\n",
@@ -981,8 +797,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     // so the tail of the arrow stays in place and the head extends forward
     float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowSize *0.5f);
     float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowSize *0.5f);
-
-    auto arrowScreenPos = worldToScreen(arrowCenterX - arrowSize *0.5, arrowCenterY - arrowSize *0.5);
+    auto arrowScreenPos = worldToScreen(arrowCenterX - arrowSize * 0.5f, arrowCenterY - arrowSize * 0.5f);
   
     //SetColor(0.0f, 1.0f, 0.0f, 1.0f);
     float levelX = 0.85f;
@@ -1015,73 +830,4 @@ void MouseIndicatorSystem::Cleanup() {
 }
 
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {
-}
-
-// Sound effect functions
-void PlayJumpSound() {
-    g_audioManager.PlaySFX(SoundEffect::JUMP, 0.5f);
-}
-
-void PlayDashSound() {
-    g_audioManager.PlaySFX(SoundEffect::DASH, 0.7f);
-}
-
-void PlayChargeStartSound() {
-    g_audioManager.PlaySFX(SoundEffect::CHARGE_START, 0.4f, true);
-}
-
-void PlayChargeReleaseSound() {
-    g_audioManager.PlaySFX(SoundEffect::CHARGE_RELEASE, 0.6f);
-}
-
-void PlayShootSound() {
-    g_audioManager.PlaySFX(SoundEffect::SHOOT, 0.6f);
-}
-
-void PlayEnemyHitSound() {
-    g_audioManager.PlaySFX(SoundEffect::ENEMY_HIT, 0.5f);
-}
-
-void PlayEnemyDeathSound() {
-    g_audioManager.PlaySFX(SoundEffect::ENEMY_DEATH, 0.7f);
-}
-
-void PlaySlowMotionSound(bool start) {
-    if (start) {
-        g_audioManager.PlaySFX(SoundEffect::SLOWMO_START, 0.8f);
-    }
-    else {
-        g_audioManager.PlaySFX(SoundEffect::SLOWMO_END, 0.8f);
-    }
-}
-
-// Background music functions
-void PlayStageMusic(int stage) {
-    switch (stage) {
-    case 1:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL1, 0.7f, true);
-        break;
-    case 2:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL2, 0.7f, true);
-        break;
-    case 3:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL3, 0.7f, true);
-        break;
-    default:
-        g_audioManager.PlayBGM(BackgroundMusic::LEVEL1, 0.7f, true);
-    }
-}
-
-void PlayBossMusic() {
-    g_audioManager.PlayBGM(BackgroundMusic::BOSS_BATTLE, 0.8f, true);
-}
-
-void PlayVictoryMusic() {
-    g_audioManager.StopBGM();
-    g_audioManager.PlayBGM(BackgroundMusic::VICTORY, 0.8f, false);
-}
-
-void PlayGameOverMusic() {
-    g_audioManager.StopBGM();
-    g_audioManager.PlayBGM(BackgroundMusic::GAME_OVER, 0.8f, false);
 }

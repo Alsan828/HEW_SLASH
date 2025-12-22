@@ -450,3 +450,23 @@ void Map::BuildSpatialGrid(float cellSize) {
     m_spatialGrid = new SpatialGrid(cellSize, minX, minY, maxX, maxY);
     m_spatialGrid->BuildFromMap(*this);
 }
+
+//GetCell implementation
+const GridCell& SpatialGrid::GetCell(int x, int y) const {
+    if (x < 0 || x >= m_cellsX || y < 0 || y >= m_cellsY) {
+        static GridCell emptyCell;
+        return emptyCell;
+    }
+    int index = y * m_cellsX + x;
+    return m_cells[index];
+}
+
+//Rebuild implementation
+void SpatialGrid::Rebuild(Map& map) {
+    // 清空现有单元格
+    for (auto& cell : m_cells) {
+        cell.tiles.clear();
+    }
+    // 重新从地图构建网格
+    BuildFromMap(map);
+}
