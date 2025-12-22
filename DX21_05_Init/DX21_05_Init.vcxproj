@@ -143,7 +143,6 @@
     <ClCompile Include="DamageNumber.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
-    <ClCompile Include="SimpleAudio.h" />
     <ClCompile Include="Camera.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>

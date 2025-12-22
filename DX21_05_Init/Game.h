@@ -15,7 +15,6 @@
 #include "SceneBase.h"
 #include "Pause.h"
 #include "Projectile.h"
-#include "SimpleAudio.h"
 #include "Enemy.h"
 
 class ProjectileManager;
@@ -100,7 +99,7 @@ struct Player {
 
     Animation anim;
     float animLockTimer = 0.0f; // used for when changing from one animation to another
-    float animLockDuration = 0.4f;
+    float animLockDuration = 0.25f;
 
     // 冲刺点数系统
     int dashPoints = 3;
@@ -213,26 +212,16 @@ extern Player g_player;
 extern ID3D11ShaderResourceView* g_playerTexture;
 
 // for the characteer
-extern ID3D11ShaderResourceView* g_playerIdleLeftTexture;
-extern ID3D11ShaderResourceView* g_playerIdleRightTexture;
-extern ID3D11ShaderResourceView* g_playerJumpLeftTexture;
-extern ID3D11ShaderResourceView* g_playerJumpRightTexture;
-extern ID3D11ShaderResourceView* g_playerRunLeftTexture;
-extern ID3D11ShaderResourceView* g_playerRunRightTexture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft1Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight1Texture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft2Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight2Texture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft3Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight3Texture;
-extern ID3D11ShaderResourceView* g_playerSlashLeft4Texture;
-extern ID3D11ShaderResourceView* g_playerSlashRight4Texture;
-extern ID3D11ShaderResourceView* g_playerAirChargeLeftTexture;
-extern ID3D11ShaderResourceView* g_playerAirChargeRightTexture;
-extern ID3D11ShaderResourceView* g_playerFallingLeftTexture;
-extern ID3D11ShaderResourceView* g_playerFallingRightTexture;
-extern ID3D11ShaderResourceView* g_playerGroundChargeLeftTexture;
-extern ID3D11ShaderResourceView* g_playerGroundChargeRightTexture;
+extern ID3D11ShaderResourceView* g_playerIdleTexture;    // 通用站立纹理
+extern ID3D11ShaderResourceView* g_playerJumpTexture;   // 通用跳跃纹理
+extern ID3D11ShaderResourceView* g_playerRunTexture;     // 通用奔跑纹理
+extern ID3D11ShaderResourceView* g_playerSlash1Texture; // 通用斩击1纹理
+extern ID3D11ShaderResourceView* g_playerSlash2Texture; // 通用斩击2纹理
+extern ID3D11ShaderResourceView* g_playerSlash3Texture; // 通用斩击3纹理
+extern ID3D11ShaderResourceView* g_playerSlash4Texture; // 通用斩击4纹理
+extern ID3D11ShaderResourceView* g_playerAirChargeTexture; // 通用空中蓄力纹理
+extern ID3D11ShaderResourceView* g_playerFallingTexture;  // 通用下落纹理
+extern ID3D11ShaderResourceView* g_playerGroundChargeTexture; // 通用地面蓄力纹理
 
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
