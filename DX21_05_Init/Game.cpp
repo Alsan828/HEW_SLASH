@@ -828,71 +828,76 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
 
     // Draw direction arrow
-
     if (g_player.isCharging || g_player.hasSavedCharge)
     {
-        float centerOffsetX = 0.003f;
-        float centerOffsetY = 0.0f;
+        if (!m_arrowShow) {
 
-        float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f + centerOffsetX;
-        float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f + centerOffsetY;
-
-        float arrowWidth = 0.15f;
-
-        // Get charge time
-        float chargeTime = 0.0f;
-        if (g_player.isCharging) {
-            chargeTime = g_player.chargeTime;
         }
-        else if (g_player.hasSavedCharge) {
-            chargeTime = g_player.savedChargeTime;
+        else {
+
+            float centerOffsetX = 0.003f;
+            float centerOffsetY = 0.0f;
+
+            float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f + centerOffsetX;
+            float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f + centerOffsetY;
+
+            float arrowWidth = 0.15f;
+
+            // Get charge time
+            float chargeTime = 0.0f;
+            if (g_player.isCharging) {
+                chargeTime = g_player.chargeTime;
+            }
+            else if (g_player.hasSavedCharge) {
+                chargeTime = g_player.savedChargeTime;
+            }
+
+            // Calculate smooth charge ratio (0.0 to 1.0) across entire charge time
+            float chargeRatio = chargeTime / g_player.MAX_CHARGE_TIME;
+
+            // Calculate maximum dash distance based on charge - INCREASED VALUES
+            float minDashDistance = 0.15f;
+            float maxDashDistance = 2.0f;  // Increased from 0.4f to 2.0f - adjust as needed
+            float currentMaxDashDistance = minDashDistance + (maxDashDistance - minDashDistance) * chargeRatio;
+
+            // Calculate distance to mouse
+            float deltaX = m_mouseWorldX - playerCenterX;
+            float deltaY = m_mouseWorldY - playerCenterY;
+            float distanceToMouse = sqrtf(deltaX * deltaX + deltaY * deltaY);
+
+            // Arrow length is the minimum of distance to mouse OR max dash distance
+            float arrowLength = fminf(distanceToMouse, currentMaxDashDistance);
+
+            float tailX = playerCenterX;
+            float tailY = playerCenterY;
+
+            // Calculate the center of the arrow (midpoint between tail and head)
+            float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowLength * 0.5f);
+            float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowLength * 0.5f);
+
+            // Position calculation for screen rendering
+            auto arrowScreenPos = worldToScreen(arrowCenterX - arrowLength * 0.5f, arrowCenterY - arrowWidth * 0.5f);
+
+            // Calculate charge level for color
+            int chargeLevel = g_player.GetChargeLevelFromTime(chargeTime);
+
+            // Display different colors based on charge level
+            if (chargeLevel >= 3) {
+                //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+            }
+            else if (chargeLevel >= 2) {
+                //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+            }
+            else if (chargeLevel >= 1) {
+                //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+            }
+
+            // Render with arrowLength (horizontal stretch) and arrowWidth (vertical size)
+            RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
+                m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
+
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
-
-        // Calculate smooth charge ratio (0.0 to 1.0) across entire charge time
-        float chargeRatio = chargeTime / g_player.MAX_CHARGE_TIME;
-
-        // Calculate maximum dash distance based on charge - INCREASED VALUES
-        float minDashDistance = 0.15f;
-        float maxDashDistance = 2.0f;  // Increased from 0.4f to 2.0f - adjust as needed
-        float currentMaxDashDistance = minDashDistance + (maxDashDistance - minDashDistance) * chargeRatio;
-
-        // Calculate distance to mouse
-        float deltaX = m_mouseWorldX - playerCenterX;
-        float deltaY = m_mouseWorldY - playerCenterY;
-        float distanceToMouse = sqrtf(deltaX * deltaX + deltaY * deltaY);
-
-        // Arrow length is the minimum of distance to mouse OR max dash distance
-        float arrowLength = fminf(distanceToMouse, currentMaxDashDistance);
-
-        float tailX = playerCenterX;
-        float tailY = playerCenterY;
-
-        // Calculate the center of the arrow (midpoint between tail and head)
-        float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowLength * 0.5f);
-        float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowLength * 0.5f);
-
-        // Position calculation for screen rendering
-        auto arrowScreenPos = worldToScreen(arrowCenterX - arrowLength * 0.5f, arrowCenterY - arrowWidth * 0.5f);
-
-        // Calculate charge level for color
-        int chargeLevel = g_player.GetChargeLevelFromTime(chargeTime);
-
-        // Display different colors based on charge level
-        if (chargeLevel >= 3) {
-            //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
-        }
-        else if (chargeLevel >= 2) {
-            //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
-        }
-        else if (chargeLevel >= 1) {
-            //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
-        }
-
-        // Render with arrowLength (horizontal stretch) and arrowWidth (vertical size)
-        RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
-            m_arrowTexture, 0, 1, 1, false, m_arrowAngle);
-
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 
    
