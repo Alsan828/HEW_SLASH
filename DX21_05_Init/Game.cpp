@@ -233,9 +233,6 @@ void InitGameWorld() {
 
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
-    LoadTexture(g_pDevice, "asset/effect/dash.png", &g_dashEffectTexture);
-    LoadTexture(g_pDevice, "asset/effect/hit.png", &g_chargeEffectTexture);
-    LoadTexture(g_pDevice, "asset/effect/hit.png", &g_hitEffectTexture);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
     LoadTexture(g_pDevice, "asset/UI/time1.png", &g_uiNumberTexture);

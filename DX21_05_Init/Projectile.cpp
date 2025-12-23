@@ -435,10 +435,6 @@ void ProjectileManager::LoadTextures(ID3D11Device* device) {
     // Load various projectile textures
     LoadTexture(device, "asset/enemy/enemy_005_thorn/enemy_005_thorn_Pbullet_right.png", &fireballTexture);
     LoadTexture(device, "asset/Projectile_IceShard.png", &iceShardTexture);
-    LoadTexture(device, "asset/Projectile_MagicMissile.png", &magicMissileTexture);
-    LoadTexture(device, "asset/Projectile_Lightning.png", &lightningTexture);
-    LoadTexture(device, "asset/Projectile_PoisonDart.png", &poisonDartTexture);
-    LoadTexture(device, "asset/Projectile_HolyBolt.png", &holyBoltTexture);
 
 }
 
