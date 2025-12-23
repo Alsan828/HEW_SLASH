@@ -29,6 +29,7 @@ void Map::InitializeTileDictionary() {
         // Platform types
         {"P1", {"P1", "platform", "wood", true, false, false, false}},
         {"P2", {"P2", "platform", "metal", true, false, false, false}},
+        {"OP", {"OP", "platform", "one_way", true, false, false, false}},  // 单向平台
 
         // Enemy types
         {"E1", {"E1", "enemy", "normal", false, false, false, true}},
@@ -304,11 +305,11 @@ void Map::CreateTestMap() {
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"},
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"},
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","G1","G1","00","00","00","00","00","G1","G1","00","00","00","00"},
-        {"00","00","00","00","00","00","00","00","00","00","00","00","00","G1","G1","00","00","00","00","00","G1","G1","00","00","00","00"},
+        {"00","00","00","00","00","00","00","00","OP","OP","OP","00","00","G1","G1","00","00","00","00","00","G1","G1","00","00","00","00"},
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","G1","G1","00","00","00","00","00","G1","G1","00","00","00","00"},
         {"00","00","00","00","G1","G1","00","00","00","00","00","00","00","G1","G1","00","00","00","00","00","G1","G1","00","00","00","00"},
         {"00","S1","00","00","G1","G1","00","00","00","00","00","00","00","G1","G1","00","00","00","00","00","G1","G1","00","00","DF","00"},
-        {"G1","G1","G1","G1","G1","G1","G1","G1","00","00","G1","G1","G1","G1","G1","00","00","00","00","00","G1","G1","G1","G1","G1","G1"},
+        {"G1","G1","G1","G1","G1","G1","G1","G1","OP","OP","G1","G1","G1","G1","G1","00","00","00","00","00","G1","G1","G1","G1","G1","G1"},
         {"G1","G1","G1","G1","G1","G1","G1","G1","00","00","G1","G1","G1","G1","G1","00","00","00","00","00","G1","G1","G1","G1","G1","G1"}
     };
 
@@ -451,4 +452,42 @@ void SpatialGrid::Rebuild(Map& map) {
     }
     // 重新从地图构建网格
     BuildFromMap(map);
+}
+
+// 单向平台碰撞检测
+bool Map::CheckOneWayPlatformCollision(float x, float y, float width, float height,
+    const MapTile& platform, float& penetrationY) const {
+    // 检测基本AABB碰撞
+    if (x + width <= platform.posX || x >= platform.posX + platform.width ||
+        y + height <= platform.posY || y >= platform.posY + platform.height) {
+        return false;
+    }
+
+    // 计算各边的穿透深度
+    float leftPenetration = (x + width) - platform.posX;
+    float rightPenetration = (platform.posX + platform.width) - x;
+    float topPenetration = (y + height) - platform.posY;  // 玩家底部到平台顶部的距离
+    float bottomPenetration = (platform.posY + platform.height) - y;
+
+    // 对于单向平台，只有从上方碰撞才有效
+    // 当玩家的底部在平台顶部附近，并且玩家正在下落时，才视为有效碰撞
+    if (topPenetration > 0 && topPenetration < 0.1f) {  // 设置一个小的容差范围
+        penetrationY = -topPenetration;  // 负值表示向上调整
+        return true;
+    }
+
+    return false;
+}
+
+// 获取所有单向平台
+std::vector<MapTile> Map::GetOneWayPlatforms() const {
+    std::vector<MapTile> oneWayPlatforms;
+
+    for (const auto& tile : m_midgroundTiles) {
+        if (tile.tileInfo.type == "platform" && tile.tileInfo.subtype == "one_way") {
+            oneWayPlatforms.push_back(tile);
+        }
+    }
+
+    return oneWayPlatforms;
 }

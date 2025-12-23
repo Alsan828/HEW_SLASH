@@ -75,7 +75,12 @@ private:
 public:
     // Constructor: create a map with specified name and grid dimensions
     Map(const std::string& name, float gridWidth, float gridHeight);
+    // 单向平台碰撞检测
+    bool CheckOneWayPlatformCollision(float x, float y, float width, float height,
+        const MapTile& platform, float& penetrationY) const;
 
+    // 获取单向平台列表
+    std::vector<MapTile> GetOneWayPlatforms() const;
     SpatialGrid* GetSpatialGrid() { return m_spatialGrid; }
     void BuildSpatialGrid(float cellSize = 2.0f);
     // Map loading methods

@@ -426,6 +426,9 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     else if (tileCode == "D1" || tileCode == "D2") {
         return g_backgroundTexture3;
     }
+    else if (tileCode == "OP") {
+        return g_playerJumpTexture;
+    }
     else {
         return g_groundTexture;
     }
