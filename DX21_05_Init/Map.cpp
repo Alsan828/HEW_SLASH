@@ -271,41 +271,20 @@ bool Map::GetDefaultSpawnPoint(float& x, float& y) const {
 // 同样可以优化传送门检测
 bool Map::CheckPortalCollision(float x, float y, float width, float height,
     std::string& targetMap, int& portalId, int& linkedSpawnId) const {
-    if (m_spatialGrid) {
-        std::vector<MapTile*> nearbyTiles;
-        float padding = 1.0f;
-        m_spatialGrid->GetTilesInArea(
-            x - padding, y - padding,
-            width + padding * 2, height + padding * 2,
-            nearbyTiles
-        );
 
-        for (const auto& tile : nearbyTiles) {
-            if (tile->tileInfo.isPortal) {
-                if (CheckCollision(x, y, width, height,
-                    tile->posX, tile->posY, tile->width, tile->height)) {
-                    targetMap = tile->targetMap;
-                    portalId = tile->linkedSpawnId;
-                    linkedSpawnId = tile->linkedSpawnId;
-                    return true;
-                }
+    // 回退到原始方法
+    for (const auto& tile : m_midgroundTiles) {
+        if (tile.tileInfo.isPortal) {
+            if (CheckCollision(x, y, width, height,
+                tile.posX, tile.posY, tile.width, tile.height)) {
+                targetMap = tile.targetMap;
+                portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
+                linkedSpawnId = tile.linkedSpawnId;
+                return true;
             }
         }
     }
-    else {
-        // 回退到原始方法
-        for (const auto& tile : m_midgroundTiles) {
-            if (tile.tileInfo.isPortal) {
-                if (CheckCollision(x, y, width, height,
-                    tile.posX, tile.posY, tile.width, tile.height)) {
-                    targetMap = tile.targetMap;
-                    portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
-                    linkedSpawnId = tile.linkedSpawnId;
-                    return true;
-                }
-            }
-        }
-    }
+
     return false;
 }
 
