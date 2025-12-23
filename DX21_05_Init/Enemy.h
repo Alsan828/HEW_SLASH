@@ -61,7 +61,7 @@ class Enemy {
 public:
     Enemy(float x, float y, float hp = 100.0f);
     virtual ~Enemy() = default;
-
+    
     // 设置伤害系数
     void SetDamageMultiplier(Direction dir, float multiplier);
 
@@ -250,6 +250,9 @@ protected:
     bool isHit = false;
     float hitTimer = 0.0f;
     const float HIT_DURATION = 0.01f;
+
+    // default to 3.0, so I can change the scale of the enemy later if needed
+    float scale = 3.0f;
 };
 
 // 飞行敌人类
