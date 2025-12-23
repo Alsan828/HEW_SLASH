@@ -302,9 +302,10 @@ void UpdateGame(float deltaTime) {
 
     float scaledDeltaTime = deltaTime * timeScale;
 
+    g_camera.Update(scaledDeltaTime);
+
     // Update game logic using adjusted time
     UpdateDash(deltaTime);
-    g_camera.Update(scaledDeltaTime);
     UpdatePlayerPhysics(scaledDeltaTime);
     UpdateEnemies(scaledDeltaTime, &g_mapManager);
     // Update all projectiles
