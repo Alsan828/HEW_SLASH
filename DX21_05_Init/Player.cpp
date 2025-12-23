@@ -1,6 +1,8 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
 void UpdatePlayerPhysics(float deltaTime) {
+    if (g_player.isDead)
+        return;
     // 计算玩家当前的碰撞体大小
     float currentWidth = PLAYER_WIDTH;
     float currentHeight = PLAYER_HEIGHT;
