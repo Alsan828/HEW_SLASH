@@ -19,7 +19,7 @@ ID3D11ShaderResourceView* g_playerSlash4Texture = nullptr; // 通用斩击4纹�
 ID3D11ShaderResourceView* g_playerAirChargeTexture = nullptr; // 通用空中蓄力纹理
 ID3D11ShaderResourceView* g_playerFallingTexture = nullptr;  // 通用下落纹理
 ID3D11ShaderResourceView* g_playerGroundChargeTexture = nullptr; // 通用地面蓄力纹理
-
+ID3D11ShaderResourceView* g_playerWallSlideTexture = nullptr; 
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture2 = nullptr;

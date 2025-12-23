@@ -111,6 +111,10 @@ void CleanUpGameWorld()
         g_playerGroundChargeTexture->Release();
         g_playerGroundChargeTexture = nullptr;
     }
+    if (g_playerWallSlideTexture) {
+        g_playerWallSlideTexture->Release();
+        g_playerWallSlideTexture = nullptr;
+    }
 
 
 
@@ -218,6 +222,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character/air_charge_right.png", &g_playerAirChargeTexture);
     LoadTexture(g_pDevice, "asset/character/falling_right.png", &g_playerFallingTexture);
     LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeTexture);
+    LoadTexture(g_pDevice, "asset/character/wall_slide_right.png", &g_playerWallSlideTexture);
 
     // 为动画剪辑添加通用名称（不再区分左右）
     g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
@@ -230,6 +235,7 @@ void InitGameWorld() {
     g_player.anim.AddClip("AirCharge", 0, 0, 1, 1, 0.25f, true, g_playerAirChargeTexture);
     g_player.anim.AddClip("Falling", 0, 0, 1, 1, 0.25f, true, g_playerFallingTexture);
     g_player.anim.AddClip("GroundCharge", 0, 0, 1, 1, 0.25f, true, g_playerGroundChargeTexture);
+    g_player.anim.AddClip("WallSlide", 0, 0, 1, 1, 0.25f, true, g_playerWallSlideTexture);
 
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
@@ -361,6 +367,11 @@ void UpdateGame(float deltaTime) {
                         g_player.anim.SetClip("Slash4");
                         g_player.animLockTimer = g_player.animLockDuration;
                     }
+                }
+            }
+            else if (g_player.isWallSliding) {
+                if (g_player.anim.GetCurrentClipName() != "WallSlide") {
+                    g_player.anim.SetClip("WallSlide");
                 }
             }
             else if (!g_player.isOnGround) // 玩家不在地面上
@@ -646,7 +657,9 @@ void HandleInput() {
     if (g_inputSystem.IsResetting()) {
         ResetGame();
     }
-
+    if (g_inputSystem.IsMouseRightDown()) {
+        CancelChargeDash();
+    }
     // for pausing the game press P or Esc key
     if (g_inputSystem.IsTogglePressed(VK_P) || g_inputSystem.IsTogglePressed(VK_ESCAPE))
     {
@@ -810,8 +823,6 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     RenderNumber(secondOnes, timerX + timerDigitWidth * 4.0f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     //SetColor(1.0f, 1.0f, 1.0f, 1.0f); 
-
-
 
     // Draw direction arrow
 
