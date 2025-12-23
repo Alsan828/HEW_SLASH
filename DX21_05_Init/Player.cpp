@@ -304,7 +304,7 @@ void UpdatePlayerPhysics(float deltaTime) {
                     float platformLeft = tile->posX;
                     float platformRight = platformLeft + tile->width;
                     float platformTop = tile->posY;
-                    float platformBottom = platformTop + tile->height - 0.15f;
+                    float platformBottom = platformTop + tile->height;
 
                     // 1. 检测水平方向的重叠
                     bool horizontalOverlap = (playerRight > platformLeft && playerLeft < platformRight);
@@ -317,7 +317,7 @@ void UpdatePlayerPhysics(float deltaTime) {
 
                     float currentBottom = playerBottom;
 
-                    if (currentBottom > platformTop) {
+                    if (currentBottom > platformTop + currentHeight + offsetY) {
                         if (g_inputSystem.IsKeyDown(VK_S)) {
                             g_player.isOnGround = false;
                             continue;
