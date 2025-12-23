@@ -59,7 +59,7 @@ Enemy::Enemy(float x, float y, float hp)
 
     // 为基类敌人添加默认动画剪辑
     anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_enemyIdleTexture);
-    anim.AddClip("death", 0, 4, 1, 5, 0.2f, false, g_enemyDeathTexture);
+    anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_enemyDeathTexture);
 
     anim.SetClip("idle");
 
