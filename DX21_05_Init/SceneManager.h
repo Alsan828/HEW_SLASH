@@ -8,6 +8,7 @@ enum SCENE
     STAGE,
     STAGE2,
     STAGE3,
+    BOSS,
     PAUSE,
     HOWTOPLAY,
     STAGESELECT,

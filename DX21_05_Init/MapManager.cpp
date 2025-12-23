@@ -144,6 +144,11 @@ void MapManager::InitializeMaps() {
     iceMap.CreateIceMap();
     AddMap(iceMap);
 
+    // Create boss map
+    Map bossMap ("boss", 0.15f, 0.15f);
+    bossMap.CreateBossMap();
+    AddMap(bossMap);
+
     // Set initial current map to test map
     m_currentMap = GetMap("test");
 
