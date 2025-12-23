@@ -54,6 +54,10 @@ void BossScene::Update(float deltaTime)
     if (m_boss && !m_boss->IsAlive()) 
     {
         m_boss = nullptr;  
+
+        // Switch to CakeScene after boss death 
+        sceneManager->SwitchScene(CAKE); 
+        return; // Stop updating this scene
     }
  
 }

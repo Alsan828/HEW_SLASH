@@ -3,6 +3,7 @@
 #include "SceneManager.h"
 #include "Game.h"
 #include "Enemy.h"
+#include "CakeScene.h"
 
 
 // added November 14th

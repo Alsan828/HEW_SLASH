@@ -149,6 +149,11 @@ void MapManager::InitializeMaps() {
     bossMap.CreateBossMap();
     AddMap(bossMap);
 
+    // Create cake map
+    Map cakeMap("cake", 0.15f, 0.15f);
+    cakeMap.CreateCakeMap();
+    AddMap(cakeMap);
+
     // Set initial current map to test map
     m_currentMap = GetMap("test");
 

@@ -4,15 +4,16 @@
 #include "Stage2.h"
 #include "Stage3.h"
 #include "BossScene.h"
+#include "CakeScene.h"
 #include "Menu.h"
 #include "HowToPlay.h"
 #include "Pause.h"
 #include "StageSelect.h"
+#include "Result.h"
 
 //for initializing it
 bool SceneManager::Init(SCENE startScene) 
 {
-
     return SwitchScene(startScene);
 }
 
@@ -24,7 +25,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
     
     if (currentScene) 
     {       
-        if (!(currentSceneType == STAGE || currentSceneType == STAGE2 || currentSceneType == STAGE3 || currentSceneType == BOSS) // add here mor stages depening on how many there are 
+        if (!(currentSceneType == STAGE || currentSceneType == STAGE2 || currentSceneType == STAGE3 || currentSceneType == BOSS || currentSceneType == CAKE) // add here mor stages depening on how many there are 
             || newScene != PAUSE) 
         {
             currentScene->Uninit();
@@ -116,6 +117,24 @@ bool SceneManager::SwitchScene(SCENE newScene)
         return currentScene->Init();
         break;
 
+    case CAKE:
+        if (caller == PAUSE && previousScene)
+        {
+            currentScene = previousScene;     // resume existing stage 
+            previousScene = nullptr;
+            return true;
+        }
+
+        if (previousScene)
+        {
+            previousScene->Uninit();
+            delete previousScene;
+            previousScene = nullptr;
+        }
+        currentScene = new CakeScene(this);
+        return currentScene->Init();
+        break;
+
     case MENU:
         if (caller == PAUSE)  // if you come from pause scene, start the stage from the beginning
         { 
@@ -147,7 +166,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case PAUSE:
-        if (caller == STAGE || caller == STAGE2 || caller == STAGE3 || caller == BOSS)  // add here more stages depending on how many there are 
+        if (caller == STAGE || caller == STAGE2 || caller == STAGE3 || caller == BOSS || caller == CAKE)  // add here more stages depending on how many there are 
         {
             // so you can preserve the gameplay scene for when you resume the game
             previousScene = oldScene;                
@@ -194,6 +213,12 @@ bool SceneManager::SwitchScene(SCENE newScene)
         {
             currentScene = new StageSelect(this, TITLE); // for default in case there is an error
         }
+        return currentScene->Init();
+        break;
+
+    case RESULT:
+        currentScene = new ResultScene(this);
+       
         return currentScene->Init();
         break;
 
