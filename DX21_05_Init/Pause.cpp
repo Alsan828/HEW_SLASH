@@ -67,7 +67,6 @@ void PauseScene::Update(float deltaTime)
 
             if (target == QUIT_GAME)
             {
-                CleanUpGameWorld();
                 PostQuitMessage(0);// it quits the game
                 return;
             }
