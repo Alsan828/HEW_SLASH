@@ -1059,6 +1059,70 @@ void BombEnemy::CreateProjectiles() {
     // CreateParticleEffect(posX, posY, "explosion");
 }
 
+
+BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
+{
+    // change these variables as you want. this is just for the test of the testboss
+    SetMaxHealth(500000.0f); 
+    SetHealth(500000.0f);
+
+    width = PLAYER_WIDTH * 3.0f;
+    height = PLAYER_HEIGHT * 3.0f;
+    scale = 5.0f;  // Even bigger sprite
+    moveSpeed = MOVE_SPEED * 0.3f;  // Slower movement
+
+
+    // Boss has different damage multipliers (harder to damage from front)
+
+
+    // also add animations, etc....
+}
+
+void BossEnemy::Update(float deltaTime, MapManager* mapManager)
+{
+    // write here the update code regardsing the boss 
+
+    float healthPercent = health / maxHealth;
+    if (healthPercent < 0.3f && phase == 1) {
+        phase = 2;
+        moveSpeed *= 1.5f;  // Faster in phase 2
+    }
+}
+void BossEnemy::ChaseBehavior(float deltaTime) {
+    float dx = g_player.posX - posX;
+    float distance = fabs(dx);
+
+    // Boss moves toward player
+    if (distance > attackRange) {
+        if (dx > 0) {
+            velocityX = moveSpeed;
+        }
+        else {
+            velocityX = -moveSpeed;
+        }
+    }
+    else {
+        velocityX = 0;  // Stop at attack range
+    }
+}
+
+void BossEnemy::SpecialAttack() {
+    // Boss special attack - shoot multiple projectiles, etc.
+    // Use ProjectileManager to create attacks
+}
+
+void BossEnemy::OnHit(int damage) {
+    Enemy::OnHit(damage);
+    // Boss hit reaction
+}
+
+void BossEnemy::OnDeath() {
+    Enemy::OnDeath();
+    // Boss death - maybe trigger cutscene or level completion
+}
+
+
+
 // 敌人更新函数
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     DamageNumberManager::Update(deltaTime);
