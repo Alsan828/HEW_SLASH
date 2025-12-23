@@ -221,7 +221,7 @@ void InitGameWorld() {
 
     // 为动画剪辑添加通用名称（不再区分左右）
     g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
-    g_player.anim.AddClip("Jump", 0, 3, 4, 1, 0.25f, false, g_playerJumpTexture);
+    g_player.anim.AddClip("Jump", 0, 10, 11, 1, 0.06f, false, g_playerJumpTexture);
     g_player.anim.AddClip("Run", 0, 3, 4, 1, 0.1f, true, g_playerRunTexture);
     g_player.anim.AddClip("Slash1", 0, 3, 4, 1, 0.06f, false, g_playerSlash1Texture);
     g_player.anim.AddClip("Slash2", 0, 3, 4, 1, 0.06f, false, g_playerSlash2Texture);

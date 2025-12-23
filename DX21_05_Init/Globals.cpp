@@ -39,9 +39,9 @@ GameState g_gameState = STATE_PLAYING;
 
 ID3D11ShaderResourceView* g_pauseTexture = nullptr; // added for pause overlay
 
- float camera_Smoothness = 0.02f;
- float camera_LookAhead = 0.6f;
- float camera_DeadZone = 0.2f;
+ float camera_Smoothness = 0.02f;//0.02f
+ float camera_LookAhead = 0.6f;//0.6f
+ float camera_DeadZone = 0.02f;//0.2f
 
 // 敌人相关的全局变量
 std::vector<Enemy*> g_enemies;

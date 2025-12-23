@@ -18,6 +18,7 @@ ID3D11ShaderResourceView* g_mageEnemyAttackTexture = nullptr;
 ID3D11ShaderResourceView* g_mageEnemyDeathTexture = nullptr;
 
 ID3D11ShaderResourceView* g_fastEnemyRunTexture = nullptr;
+ID3D11ShaderResourceView* g_fastEnemyDeathTexture = nullptr;
 
 ID3D11ShaderResourceView* g_bombEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_bombEnemyDeathTexture = nullptr;
@@ -31,6 +32,7 @@ void InitEnemies() {
 
     // 飞行敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_right.png", &g_flyEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_death.png", &g_flyEnemyDeathTexture);
 
     // 法师敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_idle.png", &g_mageEnemyIdleTexture);
@@ -38,7 +40,8 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_death.png", &g_mageEnemyDeathTexture);
 
     // 快速敌人
-    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant/enemy_002_ant.png", &g_fastEnemyRunTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant/enemy_002_ant_right.png", &g_fastEnemyRunTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant/enemy_002_ant_death.png", &g_fastEnemyDeathTexture);
 
     // 炸弹敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_idle.png", &g_bombEnemyIdleTexture);
@@ -406,12 +409,19 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     // 获取UV偏移用于精灵表动画
     DirectX::XMFLOAT2 uvOffset = anim.GetUVOffset();
 
+    // Apply scale to sprite size
+    float renderWidth = width * scale;
+    float renderHeight = height * scale;
+    // Center the bigger sprite on collision box
+    float offsetX = (renderWidth - width) * 0.5f;
+    float offsetY = (renderHeight - height) * 0.5f;
+
     // 渲染敌人精灵
     RenderImage(
-        screenX,
-        screenY,
-        width,
-        height,
+        screenX - offsetX,
+        screenY - offsetY,
+        renderWidth,
+        renderHeight,
         anim.GetCurrentClipTexture(),
         anim.GetCurrentFrame(),
         anim.GetSplitX(),  // 替换为动画的X分割数
@@ -541,7 +551,7 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
 
     // 添加动画剪辑
     anim.AddClip("idle", 0, 3, 1, 4, 0.15f, true, g_flyEnemyIdleTexture);
-    //anim.AddClip("death", 0, 5, 0.1f, false, g_flyEnemyDeathTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_flyEnemyDeathTexture);
 
     anim.SetClip("idle");
     width = PLAYER_WIDTH * 1.5f;
@@ -554,6 +564,8 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     patrolAltitude = y;  // 巡逻高度
     altitudeChangeTimer = 0.0f;
     altitudeChangeRate = 0.05f;  // 高度变化速度
+
+    scale = 3.0f;
 }
 
 
@@ -642,7 +654,7 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
 
     // 添加动画剪辑
     anim.AddClip("idle", 0, 1, 1, 2, 0.2f, true, g_mageEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.2f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
     anim.SetClip("idle");
 
 
@@ -651,6 +663,8 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     lastAttackTime = 0.0f;
     attackCooldown = 1.5f;  // 攻击冷却时间
     projectileDamage = 20.0f;
+
+    scale = 3.0f;
 }
 
 void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
@@ -733,7 +747,10 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
 
     attackRange = 0.0f;  // 近战敌人
     anim.AddClip("run", 0, 3, 1, 4, 0.05f, true, g_fastEnemyRunTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_fastEnemyDeathTexture);
     anim.SetClip("run");
+
+    scale = 3.0f;
 }
 
 
@@ -867,7 +884,7 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     detectionRange = 2.0f;
 
     anim.AddClip("idle", 0, 0, 1, 1, 0.3f, true, g_bombEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.3f, false, g_bombEnemyDeathTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_bombEnemyDeathTexture);
 
     anim.SetClip("idle");
 
@@ -875,6 +892,8 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     baseSize = 1.0f;
     explosionRadius = 1.5f;
     explosionDamage = 50.0f;
+
+    scale = 3.0f;
 }
 
 // 覆盖TakeDamage函数，添加爆炸检测
