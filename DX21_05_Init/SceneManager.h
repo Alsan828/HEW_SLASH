@@ -9,6 +9,8 @@ enum SCENE
     STAGE2,
     STAGE3,
     BOSS,
+    CAKE,
+    RESULT,
     PAUSE,
     HOWTOPLAY,
     STAGESELECT,
