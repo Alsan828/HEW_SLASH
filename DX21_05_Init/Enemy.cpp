@@ -551,7 +551,7 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
 
     // 添加动画剪辑
     anim.AddClip("idle", 0, 3, 1, 4, 0.15f, true, g_flyEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.1f, false, g_flyEnemyDeathTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_flyEnemyDeathTexture);
 
     anim.SetClip("idle");
     width = PLAYER_WIDTH * 1.5f;
@@ -654,7 +654,7 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
 
     // 添加动画剪辑
     anim.AddClip("idle", 0, 1, 1, 2, 0.2f, true, g_mageEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.2f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
     anim.SetClip("idle");
 
 
@@ -747,6 +747,7 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
 
     attackRange = 0.0f;  // 近战敌人
     anim.AddClip("run", 0, 3, 1, 4, 0.05f, true, g_fastEnemyRunTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_fastEnemyDeathTexture);
     anim.SetClip("run");
 
     scale = 3.0f;
@@ -883,7 +884,7 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
     detectionRange = 2.0f;
 
     anim.AddClip("idle", 0, 0, 1, 1, 0.3f, true, g_bombEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.3f, false, g_bombEnemyDeathTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_bombEnemyDeathTexture);
 
     anim.SetClip("idle");
 
