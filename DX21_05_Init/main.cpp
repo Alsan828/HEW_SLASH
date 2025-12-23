@@ -110,6 +110,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_CLOSE: {
+
+        CleanUpGameWorld();
         int res = MessageBoxA(NULL, "Are you sure you want to exit?", "Confirmation", MB_OKCANCEL);
         if (res == IDOK) {
             DestroyWindow(hWnd);

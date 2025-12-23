@@ -53,7 +53,6 @@ void MenuScene::Update(float deltaTime)
 		{
 			if (btn.GetTargetScene() == QUIT_GAME)
 			{
-				CleanUpGameWorld();
 				PostQuitMessage(0); // it quits the game
 			}
 			else

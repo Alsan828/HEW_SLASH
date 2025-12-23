@@ -262,7 +262,7 @@ void CheckDashAttack() {
             // === 新增：触发顿刀效果 ===
             if (g_player.hitStopTriggered < 3) {
                 g_camera.Shake(0.02f, 0.05f);
-                g_player.hitStopTimer = 0.05f; // 0.05秒的顿刀
+                g_player.hitStopTimer = 0.075f; // 0.05秒的顿刀
                 g_player.hitStopTriggered++;   // 增加触发计数
 
                 // 触发全局慢动作效果（可选，可注释掉）

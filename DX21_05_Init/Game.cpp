@@ -221,7 +221,7 @@ void InitGameWorld() {
 
     // 为动画剪辑添加通用名称（不再区分左右）
     g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
-    g_player.anim.AddClip("Jump", 0, 3, 4, 1, 0.25f, false, g_playerJumpTexture);
+    g_player.anim.AddClip("Jump", 0, 10, 11, 1, 0.06f, false, g_playerJumpTexture);
     g_player.anim.AddClip("Run", 0, 3, 4, 1, 0.1f, true, g_playerRunTexture);
     g_player.anim.AddClip("Slash1", 0, 3, 4, 1, 0.06f, false, g_playerSlash1Texture);
     g_player.anim.AddClip("Slash2", 0, 3, 4, 1, 0.06f, false, g_playerSlash2Texture);
@@ -233,9 +233,6 @@ void InitGameWorld() {
 
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
-    LoadTexture(g_pDevice, "asset/effect/dash.png", &g_dashEffectTexture);
-    LoadTexture(g_pDevice, "asset/effect/hit.png", &g_chargeEffectTexture);
-    LoadTexture(g_pDevice, "asset/effect/hit.png", &g_hitEffectTexture);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
     LoadTexture(g_pDevice, "asset/UI/time1.png", &g_uiNumberTexture);
@@ -305,97 +302,100 @@ void UpdateGame(float deltaTime) {
 
     float scaledDeltaTime = deltaTime * timeScale;
 
-    // Update game logic using adjusted time
-    UpdateDash(deltaTime);
     g_camera.Update(scaledDeltaTime);
-    UpdatePlayerPhysics(scaledDeltaTime);
-    UpdateEnemies(scaledDeltaTime, &g_mapManager);
-    // Update all projectiles
-    g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
-    // 在UpdateGame函数中修改动画设置部分
-    if (g_player.animLockTimer <= 0.0f)
-    {
-        if (g_player.isCharging) // 如果玩家正在蓄力
-        {
-            if (!g_player.isOnGround) // 如果玩家在空中蓄力
-            {
-                if (g_player.anim.GetCurrentClipName() != "AirCharge") {
-                    g_player.anim.SetClip("AirCharge");
-                }
-            }
-            else // 如果玩家在地面蓄力
-            {
-                if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
-                    g_player.anim.SetClip("GroundCharge");
-                }
-            }
-        }
-        else if (g_player.isDashing) // 如果玩家正在冲刺
-        {
-            int chargeType = g_player.GetChargeLevel();
+	g_player.hitStopTimer -= scaledDeltaTime;
+    if (g_player.hitStopTimer <= 0.0f) {
+        // Update game logic using adjusted time
+        UpdateDash(deltaTime);
+        UpdatePlayerPhysics(scaledDeltaTime);
 
-            if (chargeType == 0) // 斩击1
-            {
-                if (g_player.anim.GetCurrentClipName() != "Slash1") {
-                    g_player.anim.SetClip("Slash1");
-                    g_player.animLockTimer = g_player.animLockDuration;
-                }
-            }
-            else if (chargeType == 1) // 斩击2
-            {
-                if (g_player.anim.GetCurrentClipName() != "Slash2") {
-                    g_player.anim.SetClip("Slash2");
-                    g_player.animLockTimer = g_player.animLockDuration;
-                }
-            }
-            else if (chargeType == 2) // 斩击3
-            {
-                if (g_player.anim.GetCurrentClipName() != "Slash3") {
-                    g_player.anim.SetClip("Slash3");
-                    g_player.animLockTimer = g_player.animLockDuration;
-                }
-            }
-            else  // 斩击4
-            {
-                if (g_player.anim.GetCurrentClipName() != "Slash4") {
-                    g_player.anim.SetClip("Slash4");
-                    g_player.animLockTimer = g_player.animLockDuration;
-                }
-            }
-        }
-        else if (!g_player.isOnGround) // 玩家不在地面上
+        UpdateEnemies(scaledDeltaTime, &g_mapManager);
+        // Update all projectiles
+        g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
+        // 在UpdateGame函数中修改动画设置部分
+        if (g_player.animLockTimer <= 0.0f)
         {
-            if (g_player.velocityY < 0.0f) // 下落
+            if (g_player.isCharging) // 如果玩家正在蓄力
             {
-                if (g_player.anim.GetCurrentClipName() != "Falling") {
-                    g_player.anim.SetClip("Falling");
+                if (!g_player.isOnGround) // 如果玩家在空中蓄力
+                {
+                    if (g_player.anim.GetCurrentClipName() != "AirCharge") {
+                        g_player.anim.SetClip("AirCharge");
+                    }
+                }
+                else // 如果玩家在地面蓄力
+                {
+                    if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
+                        g_player.anim.SetClip("GroundCharge");
+                    }
                 }
             }
-            else // 跳跃
+            else if (g_player.isDashing) // 如果玩家正在冲刺
             {
-                if (g_player.anim.GetCurrentClipName() != "Jump") {
-                    g_player.anim.SetClip("Jump");
+                int chargeType = g_player.GetChargeLevel();
+
+                if (chargeType == 0) // 斩击1
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Slash1") {
+                        g_player.anim.SetClip("Slash1");
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (chargeType == 1) // 斩击2
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Slash2") {
+                        g_player.anim.SetClip("Slash2");
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (chargeType == 2) // 斩击3
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Slash3") {
+                        g_player.anim.SetClip("Slash3");
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else  // 斩击4
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Slash4") {
+                        g_player.anim.SetClip("Slash4");
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+            }
+            else if (!g_player.isOnGround) // 玩家不在地面上
+            {
+                if (g_player.velocityY < 0.0f) // 下落
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Falling") {
+                        g_player.anim.SetClip("Falling");
+                    }
+                }
+                else // 跳跃
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Jump") {
+                        g_player.anim.SetClip("Jump");
+                    }
+                }
+            }
+            else if (g_player.isMoving) // 玩家在移动
+            {
+                if (g_player.anim.GetCurrentClipName() != "Run") {
+                    g_player.anim.SetClip("Run");
+                }
+            }
+            else // 玩家站立
+            {
+                if (g_player.anim.GetCurrentClipName() != "Idle") {
+                    g_player.anim.SetClip("Idle");
                 }
             }
         }
-        else if (g_player.isMoving) // 玩家在移动
-        {
-            if (g_player.anim.GetCurrentClipName() != "Run") {
-                g_player.anim.SetClip("Run");
-            }
-        }
-        else // 玩家站立
-        {
-            if (g_player.anim.GetCurrentClipName() != "Idle") {
-                g_player.anim.SetClip("Idle");
-            }
-        }
+
+        g_player.anim.Update(scaledDeltaTime);
+        UpdatePlayerDeath(scaledDeltaTime);
     }
-
     g_mouseIndicator.Update(scaledDeltaTime);
-    g_player.anim.Update(scaledDeltaTime);
-
-    UpdatePlayerDeath(scaledDeltaTime);
 }
 
 // Helper function: Get texture based on tile code
