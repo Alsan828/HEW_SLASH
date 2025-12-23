@@ -1,11 +1,16 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
+
 void UpdatePlayerPhysics(float deltaTime) {
+    if (g_player.isDead)
+        return;
+
     // 计算玩家当前的碰撞体大小
     float currentWidth = PLAYER_WIDTH;
     float currentHeight = PLAYER_HEIGHT;
 
     g_mapManager.GetCurrentMap()->BuildSpatialGrid();//TODO
+
     // 计算碰撞体偏移量，确保中心位置不变
     float offsetX = 0.0f;
     float offsetY = 0.0f;
@@ -20,13 +25,105 @@ void UpdatePlayerPhysics(float deltaTime) {
         offsetY = heightReduction;
     }
 
-
     // 应用重力
     if (!g_player.isDashing || g_player.isInDashAftermath) {
         float fixedDeltaTime = std::min(deltaTime, 0.033f);
-        g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
+
+        // 如果在墙壁滑行状态，应用较小的重力
+        if (g_player.isWallSliding) {
+            // 墙壁滑行时，垂直速度限制在滑行速度
+            if (g_player.velocityY < g_player.WALL_SLIDE_SPEED) {
+                g_player.velocityY = g_player.WALL_SLIDE_SPEED;
+            }
+            else if (g_player.velocityY > 0) {
+                // 如果向上移动，仍然应用正常重力
+                g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
+            }
+            else {
+                // 向下移动时，应用较小的重力
+                g_player.velocityY += GRAVITY * 0.3f * fixedDeltaTime * 60.0f;
+            }
+
+            // 墙壁滑行时水平速度逐渐减小
+            if (g_player.velocityX > 0) {
+                g_player.velocityX = std::max(0.0f, g_player.velocityX - 0.1f);
+            }
+            else if (g_player.velocityX < 0) {
+                g_player.velocityX = std::min(0.0f, g_player.velocityX + 0.1f);
+            }
+        }
+        else {
+            // 正常重力
+            g_player.velocityY += GRAVITY * fixedDeltaTime * 60.0f;
+        }
+
         if (g_player.velocityY < -0.15f) {
             g_player.velocityY = -0.15f;
+        }
+    }
+
+    // 重置墙壁滑行状态
+    g_player.isWallSliding = false;
+    g_player.wallSlideDirection = 0;
+
+    // 如果不在冲刺状态且不在地面上，检测墙壁滑行
+    if (!g_player.isDashing && !g_player.isOnGround && g_player.velocityY < 0) {
+        // 获取当前地图的空间网格
+        SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
+        if (spatialGrid) {
+            std::vector<MapTile*> nearbyTiles;
+
+            // 获取玩家周围的瓦片
+            float padding = 1.0f;
+            spatialGrid->GetTilesInArea(
+                g_player.posX + offsetX - padding,
+                g_player.posY + offsetY - padding,
+                currentWidth + padding * 2,
+                currentHeight + padding * 2,
+                nearbyTiles
+            );
+
+            // 使用玩家的实际碰撞体进行接触检测
+            float playerLeft = g_player.posX + offsetX;
+            float playerRight = playerLeft + currentWidth;
+            float playerTop = g_player.posY + offsetY;
+            float playerBottom = playerTop + currentHeight;
+
+            // 定义很小的接触阈值
+            const float CONTACT_EPSILON = 0.002f;
+
+            // 检测左右墙壁接触
+            for (const auto& tile : nearbyTiles) {
+                if (tile->tileInfo.isSolid) {
+                    float tileLeft = tile->posX;
+                    float tileRight = tile->posX + tile->width;
+                    float tileTop = tile->posY;
+                    float tileBottom = tile->posY + tile->height;
+
+                    // 检查垂直方向重叠（Y轴有重叠）
+                    bool verticalOverlap = (playerTop < tileBottom && playerBottom > tileTop);
+
+                    if (verticalOverlap) {
+                        // 检测左侧墙壁接触
+                        float leftDistance = tileRight - playerLeft;
+                        if (leftDistance >= 0 && leftDistance <= CONTACT_EPSILON) {
+                            g_player.isWallSliding = true;
+                            g_player.wallSlideDirection = -1; // 左侧墙
+                            g_player.facingRight = true;
+                            break; // 找到一面墙就足够
+                        }
+
+                        // 检测右侧墙壁接触
+                        float rightDistance = playerRight - tileLeft;
+                        if (rightDistance >= 0 && rightDistance <= CONTACT_EPSILON) {
+                            g_player.isWallSliding = true;
+                            g_player.wallSlideDirection = 1;  // 右侧墙
+                            g_player.facingRight = false;
+                            break; // 找到一面墙就足够
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -37,6 +134,7 @@ void UpdatePlayerPhysics(float deltaTime) {
     // 计算移动距离
     float moveX = g_player.velocityX * deltaTime * 60.0f;
     float moveY = g_player.velocityY * deltaTime * 60.0f;
+
     // 获取当前地图的空间网格
     SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
 
@@ -175,8 +273,8 @@ void UpdatePlayerPhysics(float deltaTime) {
             // 如果两个方向都发生碰撞
             if (xCollision && yCollision) {
                 // 可以在这里添加对角线碰撞的特殊处理
-				g_player.posY -= stepY; // 回退垂直移动
-				g_player.posX -= stepX; // 回退水平移动
+                g_player.posY -= stepY; // 回退垂直移动
+                g_player.posX -= stepX; // 回退水平移动
             }
         }
     }
@@ -226,7 +324,6 @@ void UpdatePlayerPhysics(float deltaTime) {
 
     CheckDashAttack();
 }
-
 void CheckDashAttack() {
     if (!g_player.isDashing) {
         g_player.hitEnemies.clear();
@@ -386,14 +483,13 @@ void CancelChargeDash() {
         g_player.chargeTime = 0.0f;
     }
 }
-
 void MovePlayerLeft() {
-    // Check if charging and movement is not allowed during charge
+    // 检查是否正在蓄力且不允许移动
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
-        return;  // Do not allow movement during charge
+        return;
     }
 
-    // If in aftermath, movement will interrupt it
+    // 如果在硬直中，移动会中断它
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
@@ -404,12 +500,12 @@ void MovePlayerLeft() {
 }
 
 void MovePlayerRight() {
-    // Check if charging and movement is not allowed during charge
+    // 检查是否正在蓄力且不允许移动
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
         return;
     }
 
-    // If in aftermath, movement will interrupt it
+    // 如果在硬直中，移动会中断它
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }

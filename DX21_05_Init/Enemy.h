@@ -59,6 +59,16 @@ enum AIState { PATROL, CHASE };
 // 敌人类声明
 class Enemy {
 public:
+    // this is for a test of the boss fight so I can change the HP of the boss for testing
+    void SetHealth(float hp) {
+        health = hp;
+        //maxHealth = hp;
+    }
+    void SetMaxHealth(float hp) { 
+        maxHealth = hp; 
+    }
+
+
     Enemy(float x, float y, float hp = 100.0f);
     virtual ~Enemy() = default;
     
@@ -332,6 +342,28 @@ private:
     float baseSize = 1.0f;
     float explosionRadius = 1.5f;  // 爆炸半径
     float explosionDamage = 50.0f;  // 爆炸伤害
+};
+
+// for the boss enemy
+class BossEnemy : public Enemy 
+{
+public:
+    BossEnemy(float x, float y);
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+
+protected:
+    virtual void ChaseBehavior(float deltaTime) override;
+    virtual void OnHit(int damage) override;
+    virtual void OnDeath() override;
+
+private:
+    //write here anything related to the boss (phases, types of attacks if there are, attack cooldown, etc....)
+    void SpecialAttack(); // special attack if there is one
+
+    // Boss stats
+    float specialAttackCooldown = 5.0f;
+    float currentSpecialCooldown = 0.0f;
+    int phase = 1;  // Boss phases
 };
 
 

@@ -38,8 +38,8 @@ const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
-const float GRAVITY = -0.003f;
-const float JUMP_FORCE = 0.065f;
+const float GRAVITY = -0.002f;
+const float JUMP_FORCE = 0.045f;
 const float MOVE_SPEED = 0.01f; 
 const float DASH_SPEED = 0.1f;      // Base dash speed
 const float DASH_DURATION = 0.11f;   // Base dash duration
@@ -81,6 +81,11 @@ struct Player {
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
     int dashLevel = 0; 
+    // 在 Player 结构体中添加以下变量
+    bool isWallSliding = false;
+    int wallSlideDirection = 0; // 0=无, -1=左墙, 1=右墙
+    float wallSlideTimer = 0.0f;
+    const float WALL_SLIDE_SPEED = -0.02f;    // 墙壁滑行速度
 
     float mouseTargetX = 0.0f;
     float mouseTargetY = 0.0f;
@@ -229,7 +234,7 @@ extern ID3D11ShaderResourceView* g_playerSlash4Texture; // 通用斩击4纹理
 extern ID3D11ShaderResourceView* g_playerAirChargeTexture; // 通用空中蓄力纹理
 extern ID3D11ShaderResourceView* g_playerFallingTexture;  // 通用下落纹理
 extern ID3D11ShaderResourceView* g_playerGroundChargeTexture; // 通用地面蓄力纹理
-
+extern ID3D11ShaderResourceView* g_playerWallSlideTexture; // 通用地面蓄力纹理
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
 extern ID3D11ShaderResourceView* g_backgroundTexture2;

@@ -23,6 +23,7 @@ bool StageSelect::Init()
 	uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, STAGE, buttonTexture, buttonHoverTexture); // go to 1-1
 	uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, STAGE2, buttonTexture, buttonHoverTexture); // go to 1-2
 	uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, STAGE3, buttonTexture, buttonHoverTexture); // go to 1-3
+	uiButtons.emplace_back(0.65f, 0.-0.5f, 0.4f, 0.8f, BOSS, buttonTexture, buttonHoverTexture); // go to boss
 	for (auto& btn : uiButtons)
 	{
 		btn.SetHitboxScale(0.7f, 0.2f);
