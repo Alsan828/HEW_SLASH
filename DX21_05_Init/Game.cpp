@@ -668,7 +668,7 @@ void HandleInput() {
     {
         SCENE currentScene = sceneManager.GetCurrentSceneType();
 
-        if (currentScene == STAGE || currentScene == STAGE2 || currentScene == STAGE3) // add more stages here depending on how many stages there are 
+        if (currentScene == STAGE || currentScene == STAGE2 || currentScene == STAGE3 || currentScene == BOSS || currentScene == CAKE) // add more stages here depending on how many stages there are 
         {
             sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
         }
@@ -677,7 +677,7 @@ void HandleInput() {
         else if (currentScene == PAUSE)
         {
             SCENE previousScene = sceneManager.GetOriginalPausedScene();
-            if (previousScene == STAGE || previousScene == STAGE2 || previousScene == STAGE3) // add more stages here depending on how many stages there are 
+            if (previousScene == STAGE || previousScene == STAGE2 || previousScene == STAGE3 || previousScene == BOSS || previousScene == CAKE) // add more stages here depending on how many stages there are 
             {
                 sceneManager.SwitchScene(previousScene);
             }

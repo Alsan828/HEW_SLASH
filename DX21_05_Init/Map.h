@@ -115,6 +115,8 @@ public:
     void CreateTestMap();
     void CreateForestMap();
     void CreateIceMap();
+    void CreateBossMap();
+    void CreateCakeMap();
 
     // Map clearing methods
     void ClearLayer(MapLayer layer);
