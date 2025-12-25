@@ -419,6 +419,10 @@ void CheckDashAttack() {
         if (CheckCollision(g_player.posX, g_player.posY, playerWidth, playerHeight,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
+            // for the combo when hitting enemies
+            g_player.comboCount++;
+            g_player.comboTimer = 5.0f;
+
             // === 新增：触发顿刀效果 ===
             if (g_player.hitStopTriggered < 3) {
                 g_camera.Shake(0.02f, 0.05f);
@@ -445,6 +449,10 @@ void UpdatePlayerDeath(float deltaTime) {
     if (!g_player.isDead) {
         return;
     }
+
+    // Reset combo when player dies
+    g_player.comboCount = 0;
+    g_player.comboTimer = 0.0f;
 
     g_player.deathTimer -= deltaTime;
 

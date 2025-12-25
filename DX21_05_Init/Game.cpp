@@ -53,6 +53,10 @@ void ResetGame() {
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
     }
+
+    g_player.comboCount = 0;
+    g_player.comboTimer = 0.0f;
+
     g_gameState = STATE_PLAYING;
 
 }
@@ -175,36 +179,46 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
         y1 < y2 + h2 && y1 + h1 > y2);
 }
 
-// todo: finish the draw combo UI 
-// for the combo UI of the player
-void DrawComboUI(void)//TODO
+// for the combo UI of the player when hitting enemies
+void DrawComboUI(void)
 {
-    if (g_player.comboCount <= 1)
+    if (g_player.comboCount < 1)
     {
         return;
     }
 
+    float comboX = 0.6f;   // right side
+    float comboY = 0.7f;   // top side
+
+    // change the size of it
+    float xWidth = 0.15f;   // Width of the "X" symbol
+    float xHeight = 0.15f;  // Height of the "X" symbol
+    float numberWidth = 0.1f;   // Width of the number
+    float numberHeight = 0.1f;  // Height of the number
+    float spaceBetweenDigits = 0.1f;
+
     float pixelX = (SCREEN_WIDTH * 0.5f) - 120.0f;
     float pixelY = (SCREEN_HEIGHT * 0.5f) - 40.0f;
-
-    // Convert to normalized (-1 to 1) coordinates
-    float normalizedX = (pixelX / SCREEN_WIDTH) * 2.0f - 1.0f;
-    float normalizedY = 1.0f - (pixelY / SCREEN_HEIGHT) * 2.0f;
-
-    // Size in normalized coordinates
-    float normalizedWidth = (100.0f / SCREEN_WIDTH) * 2.0f;
-    float normalizedHeight = (100.0f / SCREEN_HEIGHT) * 2.0f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Draw "X" symbol
-    RenderImage(normalizedX, normalizedY, normalizedWidth, normalizedHeight,
-        g_comboXTexture, 0, 1, 1);
+    RenderImage(comboX, comboY, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
+
+    char buffer[32];
+    sprintf_s(buffer, "%d", g_player.comboCount);
+
+    float numberXaxis = comboX + numberWidth + 0.02f; // for the first number x axis position
 
     // Draw combo number
-    RenderImage(normalizedX + normalizedWidth + 0.02f, normalizedY,
-        normalizedWidth, normalizedHeight,
-        g_comboNumberTexture, g_player.comboCount - 1, 1, 10);
+    for (int i = 0; buffer[i] != '\0'; i++)
+    {
+        int digit = buffer[i] - '0';  // 1 for frame 1, 2 for frame 2, 3 for frame 3, etc etc
+        RenderImage(numberXaxis, comboY, numberWidth, numberHeight,
+            pTextureNum, digit, 1, 10);
+
+        numberXaxis += spaceBetweenDigits;  // Move to next digit position
+    }
 }
 
 // Game initialization
@@ -305,6 +319,28 @@ void UpdateGame(float deltaTime) {
         chargeRatio = std::min(chargeRatio * 8, 1.0f);
         timeScale = 1.0f - chargeRatio * 0.8f;
     }
+
+
+    // for updating the combo timer
+    //if (g_player.comboCount > 0) 
+    //{
+    //    g_player.comboTimer += deltaTime;
+
+    //    // Reset combo after 5 seconds if there are no kills
+    //    if (g_player.comboTimer >= 5.0f) 
+    //    {
+    //        g_player.comboCount = 0;
+    //        g_player.comboTimer = 0.0f;
+    //    }
+    //}
+    if (g_player.comboCount > 0) {
+        g_player.comboTimer -= deltaTime;
+        if (g_player.comboTimer <= 0.0f) {
+            g_player.comboCount = 0;
+            g_player.comboTimer = 0.0f;
+        }
+    }
+
 
     float scaledDeltaTime = deltaTime * timeScale;
 
@@ -653,8 +689,8 @@ void DrawGame() {
         }
     }
 
-    //DrawComboUI();
-
+    DrawComboUI();
+    
 }
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {

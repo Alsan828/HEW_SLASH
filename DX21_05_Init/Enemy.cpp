@@ -160,6 +160,7 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
         health = 0;
         OnDeath();
     }
+
 }
 
 void Enemy::OnHit(int damage) {
@@ -176,6 +177,10 @@ void Enemy::OnDeath() {
 
     // 重置动画到第一帧
     anim.Reset();
+
+    // increments the player combo when enemy dies
+    //g_player.comboCount++;
+    //g_player.comboTimer = 0.0f; // it resets the timer
 
     OnEnemyDefeated();
 }
