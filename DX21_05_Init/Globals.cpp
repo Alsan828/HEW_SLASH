@@ -10,6 +10,7 @@ ID3D11ShaderResourceView* g_playerTexture = nullptr; // maybe we wont use this
 // for the character// 在全局变量部分，删除向左的纹理变量
 // 保留右边的纹理变量，并重命名为通用名称
 ID3D11ShaderResourceView* g_playerIdleTexture = nullptr;    // 通用站立纹理
+ID3D11ShaderResourceView* g_playerDeathTexture = nullptr;    // 通用站立纹理
 ID3D11ShaderResourceView* g_playerJumpTexture = nullptr;   // 通用跳跃纹理
 ID3D11ShaderResourceView* g_playerRunTexture = nullptr;     // 通用奔跑纹理
 ID3D11ShaderResourceView* g_playerSlash1Texture = nullptr; // 通用斩击1纹理

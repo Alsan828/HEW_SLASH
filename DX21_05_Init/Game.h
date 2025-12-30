@@ -225,6 +225,7 @@ extern ID3D11ShaderResourceView* g_playerTexture;
 
 // for the characteer
 extern ID3D11ShaderResourceView* g_playerIdleTexture;    // 通用站立纹理
+extern ID3D11ShaderResourceView* g_playerDeathTexture;   // for when the character dies
 extern ID3D11ShaderResourceView* g_playerJumpTexture;   // 通用跳跃纹理
 extern ID3D11ShaderResourceView* g_playerRunTexture;     // 通用奔跑纹理
 extern ID3D11ShaderResourceView* g_playerSlash1Texture; // 通用斩击1纹理
