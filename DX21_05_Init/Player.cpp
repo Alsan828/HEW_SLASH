@@ -1,15 +1,13 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
-
 void UpdatePlayerPhysics(float deltaTime) {
     if (g_player.isDead)
         return;
 
+    g_mapManager.GetCurrentMap()->BuildSpatialGrid();//TODO
     // 计算玩家当前的碰撞体大小
     float currentWidth = PLAYER_WIDTH;
     float currentHeight = PLAYER_HEIGHT;
-
-    g_mapManager.GetCurrentMap()->BuildSpatialGrid();//TODO
 
     // 计算碰撞体偏移量，确保中心位置不变
     float offsetX = 0.0f;
@@ -138,38 +136,61 @@ void UpdatePlayerPhysics(float deltaTime) {
     // 获取当前地图的空间网格
     SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
 
-    // === 根据速度动态调整检测次数 ===
-    float speed = sqrt(g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY);
-    int steps = 1;
-
-    if (g_player.isDashing) {
-        // 冲刺时增加检测次数
-        steps = 8; // 从4增加到8
-    }
-    else if (speed > 0.2f) {
-        // 高速移动时增加检测次数
-        steps = std::min(static_cast<int>(speed * 10.0f), 6);
-    }
-    else {
-        // 正常移动
-        steps = 4; // 保持原来的4次
-    }
-
     if (!spatialGrid) {
+        // 如果没有空间网格，使用原始方法
+        g_player.posX += moveX;
+        g_player.posY += moveY;
     }
     else {
-        // 使用空间网格优化的碰撞检测
+        // === 根据速度动态调整检测次数 ===
+        float speed = sqrt(g_player.velocityX * g_player.velocityX + g_player.velocityY * g_player.velocityY);
+        int steps = 1;
+
+        if (g_player.isDashing) {
+            // 冲刺时增加检测次数
+            steps = 8; // 从4增加到8
+        }
+        else if (speed > 0.2f) {
+            // 高速移动时增加检测次数
+            steps = std::min(static_cast<int>(speed * 10.0f), 6);
+        }
+        else {
+            // 正常移动
+            steps = 4; // 保持原来的4次
+        }
+
+        // === 预收集所有可能碰撞的瓦片 ===
         std::vector<MapTile*> nearbyTiles;
 
-        // 获取玩家周围的瓦片
-        float padding = 2.0f;  // 增加范围以确保检测
-        spatialGrid->GetTilesInArea(
-            g_player.posX + offsetX - padding,
-            g_player.posY + offsetY - padding,
-            currentWidth + padding * 2,
-            currentHeight + padding * 2,
-            nearbyTiles
-        );
+        // 计算移动范围，扩大检测区域
+        float paddingX = 2.0f;
+        float paddingY = 2.0f;
+
+        // 预测移动后的位置范围
+        float minX = std::min(g_player.posX + offsetX, g_player.posX + offsetX + moveX) - paddingX;
+        float minY = std::min(g_player.posY + offsetY, g_player.posY + offsetY + moveY) - paddingY;
+        float maxX = std::max(g_player.posX + offsetX + currentWidth,
+            g_player.posX + offsetX + moveX + currentWidth) + paddingX;
+        float maxY = std::max(g_player.posY + offsetY + currentHeight,
+            g_player.posY + offsetY + moveY + currentHeight) + paddingY;
+
+        // 获取移动范围内的所有瓦片
+        spatialGrid->GetTilesInArea(minX, minY, maxX - minX, maxY - minY, nearbyTiles);
+
+        // 分离普通固体瓦片和单向平台
+        std::vector<MapTile*> regularSolidTiles;
+        std::vector<MapTile*> oneWayPlatformTiles;
+
+        for (const auto& tile : nearbyTiles) {
+            if (tile->tileInfo.isSolid) {
+                if (tile->tileInfo.type == "platform" && tile->tileInfo.subtype == "one_way") {
+                    oneWayPlatformTiles.push_back(tile);
+                }
+                else {
+                    regularSolidTiles.push_back(tile);
+                }
+            }
+        }
 
         // 使用连续碰撞检测
         float stepX = moveX / steps;
@@ -178,13 +199,12 @@ void UpdatePlayerPhysics(float deltaTime) {
         for (int i = 0; i < steps; i++) {
             g_player.posX += stepX;
 
-            // 水平碰撞检测
+            // 水平碰撞检测（只检测普通固体，单向平台不影响水平移动）
             bool xCollision = false;
-            for (const auto& tile : nearbyTiles) {
-                if (tile->tileInfo.isSolid &&
-                    CheckCollision(g_player.posX + offsetX, g_player.posY + offsetY,
-                        currentWidth, currentHeight,
-                        tile->posX, tile->posY, tile->width, tile->height)) {
+            for (const auto& tile : regularSolidTiles) {
+                if (CheckCollision(g_player.posX + offsetX, g_player.posY + offsetY,
+                    currentWidth, currentHeight,
+                    tile->posX, tile->posY, tile->width, tile->height)) {
 
                     // 计算碰撞方向和回退
                     float playerCenterX = g_player.posX + offsetX + currentWidth / 2;
@@ -225,13 +245,14 @@ void UpdatePlayerPhysics(float deltaTime) {
 
             g_player.posY += stepY;
 
-            // 垂直碰撞检测
+            // 垂直碰撞检测（先检测普通固体）
             bool yCollision = false;
-            for (const auto& tile : nearbyTiles) {
-                if (tile->tileInfo.isSolid &&
-                    CheckCollision(g_player.posX + offsetX, g_player.posY + offsetY,
-                        currentWidth, currentHeight,
-                        tile->posX, tile->posY, tile->width, tile->height)) {
+            float preCollisionY = g_player.posY - stepY; // 记录碰撞前的Y位置
+
+            for (const auto& tile : regularSolidTiles) {
+                if (CheckCollision(g_player.posX + offsetX, g_player.posY + offsetY,
+                    currentWidth, currentHeight,
+                    tile->posX, tile->posY, tile->width, tile->height)) {
 
                     // 计算碰撞方向和回退
                     float playerCenterX = g_player.posX + offsetX + currentWidth / 2;
@@ -267,6 +288,48 @@ void UpdatePlayerPhysics(float deltaTime) {
                     }
                     yCollision = true;
                     break;
+                }
+            }
+
+            // 如果没有与普通固体碰撞，检测单向平台
+            if (!yCollision) {
+                for (const auto& tile : oneWayPlatformTiles) {
+                    // 计算玩家的边界
+                    float playerLeft = g_player.posX + offsetX;
+                    float playerRight = playerLeft + currentWidth;
+                    float playerTop = g_player.posY + offsetY;
+                    float playerBottom = playerTop + currentHeight;
+
+                    // 计算平台的边界
+                    float platformLeft = tile->posX;
+                    float platformRight = platformLeft + tile->width;
+                    float platformTop = tile->posY;
+                    float platformBottom = platformTop + tile->height;
+
+                    // 1. 检测水平方向的重叠
+                    bool horizontalOverlap = (playerRight > platformLeft && playerLeft < platformRight);
+
+                    if (!horizontalOverlap)
+                        continue;
+
+                    if (g_player.velocityY >= 0.0f) 
+                        continue; 
+
+                    float currentBottom = playerBottom;
+
+                    if (currentBottom > platformTop + currentHeight + offsetY) {
+                        if (g_inputSystem.IsKeyDown(VK_S)) {
+                            g_player.isOnGround = false;
+                            continue;
+                        }
+                        if (g_player.posY < platformTop + currentHeight + offsetY) {
+                            g_player.isOnGround = true;
+                            g_player.posY = platformTop + currentHeight + offsetY;
+                            g_player.velocityY = 0.0f;
+                        }
+                        yCollision = true;
+                        break;
+                    }
                 }
             }
 
@@ -356,6 +419,10 @@ void CheckDashAttack() {
         if (CheckCollision(g_player.posX, g_player.posY, playerWidth, playerHeight,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
+            // for the combo when hitting enemies
+            g_player.comboCount++;
+            g_player.comboTimer = 5.0f;
+
             // === 新增：触发顿刀效果 ===
             if (g_player.hitStopTriggered < 3) {
                 g_camera.Shake(0.02f, 0.05f);
@@ -382,6 +449,10 @@ void UpdatePlayerDeath(float deltaTime) {
     if (!g_player.isDead) {
         return;
     }
+
+    // Reset combo when player dies
+    g_player.comboCount = 0;
+    g_player.comboTimer = 0.0f;
 
     g_player.deathTimer -= deltaTime;
 

@@ -53,6 +53,10 @@ void ResetGame() {
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
     }
+
+    g_player.comboCount = 0;
+    g_player.comboTimer = 0.0f;
+
     g_gameState = STATE_PLAYING;
 
 }
@@ -115,6 +119,10 @@ void CleanUpGameWorld()
         g_playerWallSlideTexture->Release();
         g_playerWallSlideTexture = nullptr;
     }
+    if (g_playerDeathTexture) {
+        g_playerDeathTexture->Release();
+        g_playerDeathTexture = nullptr;
+    }
 
 
 
@@ -175,36 +183,46 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
         y1 < y2 + h2 && y1 + h1 > y2);
 }
 
-// todo: finish the draw combo UI 
-// for the combo UI of the player
-void DrawComboUI(void)//TODO
+// for the combo UI of the player when hitting enemies
+void DrawComboUI(void)
 {
-    if (g_player.comboCount <= 1)
+    if (g_player.comboCount < 1)
     {
         return;
     }
 
+    float comboX = 0.6f;   // right side
+    float comboY = 0.7f;   // top side
+
+    // change the size of it
+    float xWidth = 0.15f;   // Width of the "X" symbol
+    float xHeight = 0.15f;  // Height of the "X" symbol
+    float numberWidth = 0.1f;   // Width of the number
+    float numberHeight = 0.1f;  // Height of the number
+    float spaceBetweenDigits = 0.1f;
+
     float pixelX = (SCREEN_WIDTH * 0.5f) - 120.0f;
     float pixelY = (SCREEN_HEIGHT * 0.5f) - 40.0f;
-
-    // Convert to normalized (-1 to 1) coordinates
-    float normalizedX = (pixelX / SCREEN_WIDTH) * 2.0f - 1.0f;
-    float normalizedY = 1.0f - (pixelY / SCREEN_HEIGHT) * 2.0f;
-
-    // Size in normalized coordinates
-    float normalizedWidth = (100.0f / SCREEN_WIDTH) * 2.0f;
-    float normalizedHeight = (100.0f / SCREEN_HEIGHT) * 2.0f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Draw "X" symbol
-    RenderImage(normalizedX, normalizedY, normalizedWidth, normalizedHeight,
-        g_comboXTexture, 0, 1, 1);
+    RenderImage(comboX, comboY, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
+
+    char buffer[32];
+    sprintf_s(buffer, "%d", g_player.comboCount);
+
+    float numberXaxis = comboX + numberWidth + 0.02f; // for the first number x axis position
 
     // Draw combo number
-    RenderImage(normalizedX + normalizedWidth + 0.02f, normalizedY,
-        normalizedWidth, normalizedHeight,
-        g_comboNumberTexture, g_player.comboCount - 1, 1, 10);
+    for (int i = 0; buffer[i] != '\0'; i++)
+    {
+        int digit = buffer[i] - '0';  // 1 for frame 1, 2 for frame 2, 3 for frame 3, etc etc
+        RenderImage(numberXaxis, comboY, numberWidth, numberHeight,
+            pTextureNum, digit, 1, 10);
+
+        numberXaxis += spaceBetweenDigits;  // Move to next digit position
+    }
 }
 
 // Game initialization
@@ -223,6 +241,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character/falling_right.png", &g_playerFallingTexture);
     LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeTexture);
     LoadTexture(g_pDevice, "asset/character/wall_slide_right.png", &g_playerWallSlideTexture);
+    LoadTexture(g_pDevice, "asset/character/death_right.png", &g_playerDeathTexture);
 
     // 为动画剪辑添加通用名称（不再区分左右）
     g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
@@ -236,6 +255,7 @@ void InitGameWorld() {
     g_player.anim.AddClip("Falling", 0, 0, 1, 1, 0.25f, true, g_playerFallingTexture);
     g_player.anim.AddClip("GroundCharge", 0, 0, 1, 1, 0.25f, true, g_playerGroundChargeTexture);
     g_player.anim.AddClip("WallSlide", 0, 0, 1, 1, 0.25f, true, g_playerWallSlideTexture);
+    g_player.anim.AddClip("Death", 0, 10, 11, 1, 0.1f, false, g_playerDeathTexture);
 
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
@@ -306,6 +326,28 @@ void UpdateGame(float deltaTime) {
         timeScale = 1.0f - chargeRatio * 0.8f;
     }
 
+
+    // for updating the combo timer
+    //if (g_player.comboCount > 0) 
+    //{
+    //    g_player.comboTimer += deltaTime;
+
+    //    // Reset combo after 5 seconds if there are no kills
+    //    if (g_player.comboTimer >= 5.0f) 
+    //    {
+    //        g_player.comboCount = 0;
+    //        g_player.comboTimer = 0.0f;
+    //    }
+    //}
+    if (g_player.comboCount > 0) {
+        g_player.comboTimer -= deltaTime;
+        if (g_player.comboTimer <= 0.0f) {
+            g_player.comboCount = 0;
+            g_player.comboTimer = 0.0f;
+        }
+    }
+
+
     float scaledDeltaTime = deltaTime * timeScale;
 
     g_camera.Update(scaledDeltaTime);
@@ -321,7 +363,14 @@ void UpdateGame(float deltaTime) {
         // 在UpdateGame函数中修改动画设置部分
         if (g_player.animLockTimer <= 0.0f)
         {
-            if (g_player.isCharging) // 如果玩家正在蓄力
+            if (g_player.isDead) // for when dying
+            {
+                if (g_player.anim.GetCurrentClipName() != "Death") {
+                    g_player.anim.SetClip("Death");
+                }
+            }
+
+            else if (g_player.isCharging) // 如果玩家正在蓄力
             {
                 if (!g_player.isOnGround) // 如果玩家在空中蓄力
                 {
@@ -425,6 +474,9 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     }
     else if (tileCode == "D1" || tileCode == "D2") {
         return g_backgroundTexture3;
+    }
+    else if (tileCode == "OP") {
+        return g_playerJumpTexture;
     }
     else {
         return g_groundTexture;
@@ -592,66 +644,89 @@ void DrawGame() {
             currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
     }
     else {
-        // Flickering disappearance animation when dead
+        //// Flickering disappearance animation when dead
+        //std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
+
+        //// Death animation duration
+        //const float DEATH_ANIM_DURATION = 1.0f;
+
+        //if (g_player.deathTimer < DEATH_ANIM_DURATION) {
+        //    float animProgress = g_player.deathTimer / DEATH_ANIM_DURATION;
+
+        //    // Flicker frequency gradually slows down
+        //    float flickerFreq = 20.0f * (1.0f - animProgress);
+
+        //    // Control flicker effect, gradually disappear in latter half of animation
+        //    if (animProgress < 0.7f) {
+        //        // First half: rapid flickering
+        //        float sinValue = sin(g_player.deathTimer * flickerFreq);
+        //        float alpha = 0.5f + 0.5f * sinValue;
+
+        //        if (animProgress > 0.3f) {
+        //            // Middle segment: add red flickering
+        //            float redIntensity = 0.5f + 0.5f * sin(g_player.deathTimer * 10.0f);
+        //            SetColor(1.0f, 1.0f - redIntensity, 1.0f - redIntensity, alpha);
+        //        }
+        //        else {
+        //            // Initial segment: white flickering
+        //            SetColor(1.0f, 1.0f, 1.0f, alpha);
+        //        }
+        //    }
+        //    else {
+        //        // Latter half: gradually disappear
+        //        float fadeOut = 1.0f - ((animProgress - 0.7f) / 0.3f);
+        //        float alpha = fadeOut * 0.5f;
+        //        SetColor(1.0f, 0.3f, 0.3f, alpha);
+        //    }
+
+        //    // Gradually shrink
+        //    float scale = 1.0f - animProgress * 0.5f;
+        //    float width = PLAYER_WIDTH * scale;
+        //    float height = PLAYER_HEIGHT * scale;
+
+        //    // Center position adjustment
+        //    playerPos.first += (PLAYER_WIDTH - width) * 0.5f;
+        //    playerPos.second += (PLAYER_HEIGHT - height) * 0.5f;
+
+        //    // for this I get the spritesheet. (the row and columns)
+        //    int splitX = g_player.anim.GetSplitX();
+        //    int splitY = g_player.anim.GetSplitY();
+
+        //    // for the character
+        //    int frameIndex = g_player.anim.GetCurrentFrame();
+        //    bool flipHorizontal = !g_player.facingRight;
+        //    RenderImage(playerPos.first, playerPos.second, width, height,
+        //        g_player.anim.GetCurrentClipTexture(), frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
+
+        //    float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
+        //}
+        
+        // Death animation
         std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
 
-        // Death animation duration
-        const float DEATH_ANIM_DURATION = 1.0f;
+        float scale = 6.6f;
+        float width = PLAYER_WIDTH * scale;
+        float height = PLAYER_HEIGHT * scale;
 
-        if (g_player.deathTimer < DEATH_ANIM_DURATION) {
-            float animProgress = g_player.deathTimer / DEATH_ANIM_DURATION;
+        float offsetX = (width - PLAYER_WIDTH) * 0.5f;
+        float offsetY = (height - PLAYER_HEIGHT) * 0.5f;
 
-            // Flicker frequency gradually slows down
-            float flickerFreq = 20.0f * (1.0f - animProgress);
+        // Get death animation texture and frame
+        ID3D11ShaderResourceView* currentTexture = g_player.anim.GetCurrentClipTexture();
+        int frameIndex = g_player.anim.GetCurrentFrame();
+        int splitX = g_player.anim.GetSplitX();
+        int splitY = g_player.anim.GetSplitY();
 
-            // Control flicker effect, gradually disappear in latter half of animation
-            if (animProgress < 0.7f) {
-                // First half: rapid flickering
-                float sinValue = sin(g_player.deathTimer * flickerFreq);
-                float alpha = 0.5f + 0.5f * sinValue;
+        bool flipHorizontal = !g_player.facingRight;
 
-                if (animProgress > 0.3f) {
-                    // Middle segment: add red flickering
-                    float redIntensity = 0.5f + 0.5f * sin(g_player.deathTimer * 10.0f);
-                    SetColor(1.0f, 1.0f - redIntensity, 1.0f - redIntensity, alpha);
-                }
-                else {
-                    // Initial segment: white flickering
-                    SetColor(1.0f, 1.0f, 1.0f, alpha);
-                }
-            }
-            else {
-                // Latter half: gradually disappear
-                float fadeOut = 1.0f - ((animProgress - 0.7f) / 0.3f);
-                float alpha = fadeOut * 0.5f;
-                SetColor(1.0f, 0.3f, 0.3f, alpha);
-            }
-
-            // Gradually shrink
-            float scale = 1.0f - animProgress * 0.5f;
-            float width = PLAYER_WIDTH * scale;
-            float height = PLAYER_HEIGHT * scale;
-
-            // Center position adjustment
-            playerPos.first += (PLAYER_WIDTH - width) * 0.5f;
-            playerPos.second += (PLAYER_HEIGHT - height) * 0.5f;
-
-            // for this I get the spritesheet. (the row and columns)
-            int splitX = g_player.anim.GetSplitX();
-            int splitY = g_player.anim.GetSplitY();
-
-            // for the character
-            int frameIndex = g_player.anim.GetCurrentFrame();
-            bool flipHorizontal = !g_player.facingRight;
-            RenderImage(playerPos.first, playerPos.second, width, height,
-                g_player.anim.GetCurrentClipTexture(), frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
-
-            float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
-        }
+        // Render death animation
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderImage(playerPos.first - offsetX, playerPos.second - offsetY, width, height,
+            currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
     }
 
-    //DrawComboUI();
-
+    DrawComboUI();
+    
 }
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {

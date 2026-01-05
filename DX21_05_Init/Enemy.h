@@ -14,6 +14,35 @@ class MapManager;
 bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2);
 
+// for the direction of the projectiles when the enemy throws them after dying
+struct ProjectileDirection 
+{
+    float x;
+    float y;
+};
+
+// for 4 direction projectile
+const ProjectileDirection FOUR_DIRECTIONS[4] = 
+{
+    {1.0f, 0.0f},    // right
+    {-1.0f, 0.0f},   // left
+    {0.0f, 1.0f},    // up
+    {0.0f, -1.0f}    // down
+};
+
+// for 8 direction projectile
+const ProjectileDirection EIGHT_DIRECTIONS[8] = 
+{
+    {1.0f, 0.0f},       // right
+    {-1.0f, 0.0f},      // left
+    {0.0f, 1.0f},       // up
+    {0.0f, -1.0f},      // down
+    {0.707f, 0.707f},   // up right
+    {-0.707f, 0.707f},  // up left
+    {0.707f, -0.707f},  // down right
+    {-0.707f, -0.707f}  // down left
+};
+
 // 伤害数字结构 - 独立于敌人
 struct DamageNumber {
     float posX, posY;
