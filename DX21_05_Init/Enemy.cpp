@@ -23,6 +23,9 @@ ID3D11ShaderResourceView* g_fastEnemyDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_bombEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_bombEnemyDeathTexture = nullptr;
 
+ID3D11ShaderResourceView* g_squareEnemyIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_squareEnemyDeathTexture = nullptr;
+
 // 修改InitEnemies函数，加载所有纹理
 void InitEnemies() {
     // 加载敌人纹理
@@ -46,6 +49,10 @@ void InitEnemies() {
     // 炸弹敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_idle.png", &g_bombEnemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_death.png", &g_bombEnemyDeathTexture);
+
+    // Square enemy
+    LoadTexture(g_pDevice, "asset/enemy/enemy_006_square/enemy_006_square.png", &g_squareEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_006_square/enemy_006_square_death.png", &g_squareEnemyDeathTexture);
 }
 
 // Enemy类实现
@@ -1153,6 +1160,123 @@ void BossEnemy::OnDeath() {
 }
 
 
+// SquareEnemy implementation - stationary enemy
+SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 100.0f) {
+    // Square enemy: takes normal damage from all directions
+    SetDamageMultiplier(DIR_FRONT, 1.0f);
+    SetDamageMultiplier(DIR_BACK, 1.0f);
+    SetDamageMultiplier(DIR_UP, 1.0f);
+    SetDamageMultiplier(DIR_DOWN, 1.0f);
+    SetDamageMultiplier(DIR_FRONT_UP, 1.0f);
+    SetDamageMultiplier(DIR_FRONT_DOWN, 1.0f);
+    SetDamageMultiplier(DIR_BACK_UP, 1.0f);
+    SetDamageMultiplier(DIR_BACK_DOWN, 1.0f);
+
+    width = PLAYER_WIDTH * 1.0f;
+    height = PLAYER_HEIGHT * 1.0f;
+    moveSpeed = 0.0f;  // Doesn't move
+    detectionRange = 0.0f;  // Doesn't chase
+    attackRange = 0.0f;  // Contact damage only
+
+    // Add animations (adjust frame counts based on your sprites)
+    anim.AddClip("idle", 0, 0, 1, 1, 0.1f, true, g_squareEnemyIdleTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.1f, false, g_squareEnemyDeathTexture); // Adjust frames as needed
+
+    anim.SetClip("idle");
+
+    pulseTimer = 0.0f;
+    scale = 3.0f;
+}
+
+void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
+    // Handle death state first
+    if (isDying) {
+        anim.Update(deltaTime);
+
+        if (anim.IsFinished()) {
+            markedForDeletion = true;
+        }
+        return;
+    }
+
+    if (!isAlive) {
+        OnDeath();
+        return;
+    }
+
+    // Visibility detection
+    bool isCurrentlyVisible = IsVisible(g_camera);
+
+    if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
+        offScreenTimer += deltaTime;
+        if (offScreenTimer > MAX_OFFSCREEN_TIME &&
+            currentState == PATROL &&
+            !isHit &&
+            health >= maxHealth) {
+            return;
+        }
+    }
+
+    if (isCurrentlyVisible && !wasVisible) {
+        ResetOffScreenTimer();
+    }
+    wasVisible = isCurrentlyVisible;
+
+    if (!isCurrentlyVisible && NeedsMinimalUpdate()) {
+        UpdateMinimal(deltaTime);
+        return;
+    }
+
+    anim.Update(deltaTime);
+
+    // Handle hit state
+    if (isHit) {
+        hitTimer -= deltaTime;
+        if (hitTimer <= 0.0f) {
+            isHit = false;
+        }
+    }
+
+    // Square enemy doesn't move
+    velocityX = 0.0f;
+    velocityY = 0.0f;
+
+    // Optional: Pulse effect for visual feedback
+    pulseTimer += deltaTime;
+
+    // Simple AI: just stay in place
+    currentState = PATROL;
+
+    if (!isCurrentlyVisible) {
+        offScreenTimer += deltaTime;
+    }
+    else {
+        offScreenTimer = 0.0f;
+    }
+}
+
+void SquareEnemy::PatrolBehavior(float deltaTime) {
+    // Square enemy doesn't patrol
+    velocityX = 0.0f;
+    velocityY = 0.0f;
+}
+
+void SquareEnemy::ChaseBehavior(float deltaTime) {
+    // Square enemy doesn't chase
+    velocityX = 0.0f;
+    velocityY = 0.0f;
+}
+
+void SquareEnemy::OnHit(int damage) {
+    // Square enemy has no special behavior when hit
+    Enemy::OnHit(damage);
+}
+
+void SquareEnemy::OnDeath() {
+    // Call base death logic
+    Enemy::OnDeath();
+}
+
 
 // 敌人更新函数
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {
@@ -1212,6 +1336,9 @@ void RenderEnemies(const Camera& camera) {
         }
         else if (dynamic_cast<BombEnemy*>(enemy)) {
             texture = g_bombEnemyIdleTexture;
+        }
+        else if (dynamic_cast<SquareEnemy*>(enemy)) {
+            texture = g_squareEnemyIdleTexture;
         }
 
         enemy->Render(texture, camera); // 传递相机参数

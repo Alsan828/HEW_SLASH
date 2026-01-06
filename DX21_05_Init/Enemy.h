@@ -395,6 +395,24 @@ private:
     int phase = 1;  // Boss phases
 };
 
+// for the square enemy class 
+class SquareEnemy : public Enemy 
+{
+public:
+    SquareEnemy(float x, float y);
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+
+protected:
+    virtual void PatrolBehavior(float deltaTime) override;
+    virtual void ChaseBehavior(float deltaTime) override;
+    virtual void OnHit(int damage) override;
+    virtual void OnDeath() override;
+
+private:
+    // Square enemy doesn't move, just stays in place
+    float pulseTimer = 0.0f;  // Optional: for pulsing animation effect
+};
+
 
 // 敌人管理函数声明
 void InitEnemies();
