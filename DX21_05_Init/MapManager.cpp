@@ -64,6 +64,9 @@ void MapManager::CreateMapEnemies() {
         else if(enemyType == "E6") {
             g_enemies.push_back(new SquareEnemy(x, y));    //square enemy
         }
+        else if (enemyType == "E7") {
+            g_enemies.push_back(new BeamEnemy(x, y));    //square enemy
+        }
     }
 }
 // Find and return a map by name from the map collection

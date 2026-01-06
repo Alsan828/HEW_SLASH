@@ -395,7 +395,8 @@ private:
     int phase = 1;  // Boss phases
 };
 
-// for the square enemy class 
+
+// for the square enemy class
 class SquareEnemy : public Enemy 
 {
 public:
@@ -410,6 +411,54 @@ private:
     // Square enemy doesn't move, just stays in place
     float pulseTimer = 0.0f;  // Optional: for pulsing animation effect
 };
+
+
+// for the beam enemy
+// todo: needs to be improved
+class BeamEnemy : public Enemy {
+public:
+    BeamEnemy(float x, float y);
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+    virtual void TakeDamage(int damage, float attackAngle) override;
+
+protected:
+    virtual void OnDeath() override;
+
+private:
+    enum BeamState {
+        BEAM_IDLE,
+        BEAM_PRE_ATTACK,
+        BEAM_ATTACKING,
+        BEAM_POST_ATTACK
+    };
+
+    void CheckBeamDamage();
+    void CreateDeathExplosion();
+
+    // Beam parameters - separate horizontal and vertical!
+    float beamHitboxWidth = 0.05f;        // make it wider as you want
+    float beamHorizontalLength = 0.4f;    // make it lager horiontally
+    float beamVerticalLength = 0.43f;      // make it larger vertically
+    float deathExplosionRadius = 1.5f;    
+    float deathExplosionDamage = 100000.0f; // change this as you want
+
+    // Attack state machine
+    BeamState beamState = BEAM_IDLE;
+    float attackCooldown = 3.0f;
+    float currentCooldown = 0.0f;
+    float preAttackDuration = 0.5f;
+    float attackDuration = 1.0f;
+    float postAttackDuration = 0.5f;
+    float stateTimer = 0.0f;
+
+    // Death animation tracking
+    int deathAnimationPhase = 0;
+    bool hasExploded = false;
+    bool hasKilledPlayerThisAttack = false;  // Prevent multiple kills per attack
+
+    float pulseTimer = 0.0f;
+};
+
 
 
 // 敌人管理函数声明
