@@ -436,9 +436,9 @@ private:
     void CreateDeathExplosion();
 
     // Beam parameters - separate horizontal and vertical!
-    float beamHitboxWidth = 0.05f;        // make it wider as you want
-    float beamHorizontalLength = 0.4f;    // make it lager horiontally
-    float beamVerticalLength = 0.43f;      // make it larger vertically
+    float beamHitboxWidth = 0.1f;        // make it wider as you want
+    float beamHorizontalLength = 0.8f;    // make it lager horiontally
+    float beamVerticalLength = 0.86f;      // make it larger vertically
     float deathExplosionRadius = 1.5f;    
     float deathExplosionDamage = 100000.0f; // change this as you want
 

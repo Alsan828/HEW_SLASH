@@ -1307,7 +1307,7 @@ BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 150.0f) {
 
     anim.SetClip("idle");
 
-    scale = 6.6f;
+    scale = 13.2f;
     beamState = BEAM_IDLE;
     currentCooldown = 0.0f;
     stateTimer = 0.0f;
