@@ -26,6 +26,14 @@ ID3D11ShaderResourceView* g_bombEnemyDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_squareEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_squareEnemyDeathTexture = nullptr;
 
+ID3D11ShaderResourceView* g_beamEnemyIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_beamEnemyPreAttackTexture = nullptr;
+ID3D11ShaderResourceView* g_beamEnemyAttackTexture = nullptr;
+ID3D11ShaderResourceView* g_beamEnemyPostAttackTexture = nullptr;
+ID3D11ShaderResourceView* g_beamEnemyPreDeathTexture = nullptr;
+ID3D11ShaderResourceView* g_beamEnemyDeathTexture = nullptr;
+ID3D11ShaderResourceView* g_beamEnemyPostDeathTexture = nullptr;
+
 // 修改InitEnemies函数，加载所有纹理
 void InitEnemies() {
     // 加载敌人纹理
@@ -53,6 +61,15 @@ void InitEnemies() {
     // Square enemy
     LoadTexture(g_pDevice, "asset/enemy/enemy_006_square/enemy_006_square.png", &g_squareEnemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_006_square/enemy_006_square_death.png", &g_squareEnemyDeathTexture);
+
+    // Beam enemy
+    LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_idle.png", &g_beamEnemyIdleTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_attack_before.png", &g_beamEnemyPreAttackTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_attack.png", &g_beamEnemyAttackTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_attack_after.png", &g_beamEnemyPostAttackTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_before.png", &g_beamEnemyPreDeathTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack.png", &g_beamEnemyDeathTexture);
+    LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_after.png", &g_beamEnemyPostDeathTexture);
 }
 
 // Enemy类实现
@@ -1264,6 +1281,277 @@ void SquareEnemy::OnDeath() {
     // Call base death logic
     Enemy::OnDeath();
 }
+
+
+// for the beam enemy
+BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 150.0f) {
+    // Weak points: Vertical and Horizontal lines (like a cross)
+    SetDamageMultiplier(DIR_UP, 8.0f);
+    SetDamageMultiplier(DIR_DOWN, 8.0f);
+    SetDamageMultiplier(DIR_FRONT, 8.0f);
+    SetDamageMultiplier(DIR_BACK, 8.0f);
+
+    width = PLAYER_WIDTH * 1.3f;
+    height = PLAYER_HEIGHT * 1.3f;
+    moveSpeed = 0.0f;
+    detectionRange = 0.6f;  // change this depending on the range you want
+
+    // for the animation
+    anim.AddClip("idle", 0, 2, 1, 3, 0.25f, true, g_beamEnemyIdleTexture);
+    anim.AddClip("pre_attack", 0, 3, 1, 4, 0.15f, false, g_beamEnemyPreAttackTexture);
+    anim.AddClip("attack", 0, 3, 1, 4, 0.1f, false, g_beamEnemyAttackTexture);
+    anim.AddClip("post_attack", 0, 2, 1, 3, 0.15f, false, g_beamEnemyPostAttackTexture);
+    anim.AddClip("pre_death", 0, 5, 1, 6, 0.15f, false, g_beamEnemyPreDeathTexture);
+    anim.AddClip("death", 0, 2, 1, 3, 0.1f, false, g_beamEnemyDeathTexture);
+    anim.AddClip("post_death", 0, 2, 1, 3, 0.15f, false, g_beamEnemyPostDeathTexture);
+
+    anim.SetClip("idle");
+
+    scale = 6.6f;
+    beamState = BEAM_IDLE;
+    currentCooldown = 0.0f;
+    stateTimer = 0.0f;
+    deathAnimationPhase = 0;
+    hasExploded = false;
+    hasKilledPlayerThisAttack = false;
+    pulseTimer = 0.0f;
+}
+
+void BeamEnemy::TakeDamage(int damage, float attackAngle) {
+    if (!isAlive) return;
+
+    float multiplier = GetDamageMultiplier(attackAngle);
+    int actualDamage = (int)(damage * multiplier);
+
+    // Show damage number
+    bool isCritical = (multiplier >= 8.0f);
+    DamageNumberManager::AddDamageNumber(
+        posX + width * 0.5f,
+        posY + height,
+        actualDamage,
+        isCritical
+    );
+
+    // If hit on weak points, instant death
+    if (multiplier >= 8.0f) {
+        health = 0;
+        isAlive = false;
+        OnDeath();
+        return;
+    }
+
+    // Normal damage
+    health -= actualDamage;
+    isHit = true;
+    hitTimer = HIT_DURATION;
+    OnHit(actualDamage);
+
+    if (health <= 0) {
+        health = 0;
+        isAlive = false;
+        OnDeath();
+    }
+}
+
+void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
+    // Handle death animation sequence
+    if (isDying) {
+        anim.Update(deltaTime);
+
+        // Phase 0: pre_death animation
+        if (deathAnimationPhase == 0) {
+            if (anim.GetCurrentClipName() != "pre_death") {
+                anim.SetClip("pre_death");
+            }
+            if (anim.IsFinished()) {
+                deathAnimationPhase = 1;
+                anim.SetClip("death");
+            }
+        }
+        // Phase 1: main death with explosion
+        else if (deathAnimationPhase == 1) {
+            // Trigger the explosion
+            if (!hasExploded && anim.GetCurrentFrame() >= 1) {
+                CreateDeathExplosion();
+                hasExploded = true;
+            }
+            if (anim.IsFinished()) {
+                deathAnimationPhase = 2;
+                anim.SetClip("post_death");
+            }
+        }
+        // Phase 2: post_death animation (beam fading)
+        else if (deathAnimationPhase == 2) {
+            if (anim.IsFinished()) {
+                markedForDeletion = true;
+            }
+        }
+
+        return;
+    }
+
+    if (!isAlive) {
+        OnDeath();
+        return;
+    }
+
+    // Handle hit state
+    if (isHit) {
+        hitTimer -= deltaTime;
+        if (hitTimer <= 0.0f) {
+            isHit = false;
+        }
+    }
+
+    velocityX = 0.0f;
+    velocityY = 0.0f;
+    pulseTimer += deltaTime;
+
+    // Calculate distance to player
+    float dx = g_player.posX - posX;
+    float dy = g_player.posY - posY;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    // Update facing direction
+    if (dx != 0) {
+        facingRight = (dx > 0);
+    }
+
+    // Get current frame (declare before switch to avoid scoping issues)
+    int currentFrame = anim.GetCurrentFrame();
+
+    // State machine for beam attack cycle
+    switch (beamState) {
+    case BEAM_IDLE:
+        if (anim.GetCurrentClipName() != "idle") {
+            anim.SetClip("idle");
+        }
+
+        // Cooldown timer
+        if (currentCooldown > 0.0f) {
+            currentCooldown -= deltaTime;
+        }
+
+        // Check if player is in range and cooldown is done
+        if (distance < detectionRange && currentCooldown <= 0.0f) {
+            beamState = BEAM_PRE_ATTACK;
+            stateTimer = 0.0f;
+            anim.SetClip("pre_attack");
+        }
+        break;
+
+    case BEAM_PRE_ATTACK:
+        stateTimer += deltaTime;
+
+        hasKilledPlayerThisAttack = false; // Reset kill flag when starting new attack
+
+        // After charging animation completes, start attack
+        if (stateTimer >= preAttackDuration || anim.IsFinished()) {
+            beamState = BEAM_ATTACKING;
+            stateTimer = 0.0f;
+            anim.SetClip("attack");
+        }
+        break;
+
+    case BEAM_ATTACKING:
+        stateTimer += deltaTime;
+
+        CheckBeamDamage(); // Check beam damage EVERY frame during attack, not just specific frames
+
+        // After attack duration, start post-attack
+        if (stateTimer >= attackDuration) {
+            beamState = BEAM_POST_ATTACK;
+            stateTimer = 0.0f;
+            anim.SetClip("post_attack");
+        }
+        break;
+
+    case BEAM_POST_ATTACK:
+        stateTimer += deltaTime;
+
+        // After post-attack animation, return to idle
+        if (stateTimer >= postAttackDuration || anim.IsFinished()) {
+            beamState = BEAM_IDLE;
+            currentCooldown = attackCooldown;  // Reset cooldown
+            anim.SetClip("idle");
+        }
+        break;
+    }
+
+    anim.Update(deltaTime);  // Update animation
+}
+
+void BeamEnemy::CheckBeamDamage() {
+    // so the enemy kills one time per attack to the player kill once per attack
+    if (hasKilledPlayerThisAttack) return;
+
+    // Get centers
+    float centerX = posX + width * 0.5f;
+    float centerY = posY + height * 0.5f;
+
+    float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+
+    float distanceX = fabs(playerCenterX - centerX);
+    float distanceY = fabs(playerCenterY - centerY);
+
+    bool hitHorizontal = false;
+    bool hitVertical = false;
+
+    // Check horizontal beam (left-right line)
+    if (distanceY < beamHitboxWidth && distanceX < beamHorizontalLength) {
+        hitHorizontal = true;
+    }
+
+    // Check vertical beam (up-down line)
+    if (distanceX < beamHitboxWidth && distanceY < beamVerticalLength) {
+        hitVertical = true;
+    }
+
+    // Create a small safe zone in the very center
+    float centerSafeZone = 0.15f;
+    bool inCenterSafeZone = (distanceX < centerSafeZone && distanceY < centerSafeZone);
+
+    // Hit if touching either line, but NOT in the center safe zone
+    bool hit = (hitHorizontal || hitVertical) && !inCenterSafeZone;
+
+    // the player dies instantly
+    if (hit && !g_player.isDead && !g_player.isInvincible && !g_player.isDashing) {
+        g_player.health = 0.0f;
+        OnPlayerDeath();
+        hasKilledPlayerThisAttack = true;
+    }
+}
+
+void BeamEnemy::OnDeath() {
+    if (isDying) return;
+
+    // Start death animation sequence
+    Enemy::OnDeath();
+    deathAnimationPhase = 0;  // Start with pre_death animation
+    hasExploded = false;
+}
+
+void BeamEnemy::CreateDeathExplosion() {
+    // Damages other enemies but not the player
+    float centerX = posX + width * 0.5f;
+    float centerY = posY + height * 0.5f;
+
+    // Damage nearby enemies
+    for (auto& enemy : g_enemies) {
+        if (!enemy->IsAlive() || enemy == this) continue;
+
+        float dx = enemy->GetX() + enemy->GetWidth() * 0.5f - centerX;
+        float dy = enemy->GetY() + enemy->GetHeight() * 0.5f - centerY;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        if (distance <= deathExplosionRadius) {
+            float angle = atan2(dy, dx);
+            enemy->TakeDamage((int)deathExplosionDamage, angle);
+        }
+    }
+}
+
 
 
 // 敌人更新函数
