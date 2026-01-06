@@ -30,6 +30,8 @@ private:
 
     SCENE originalPausedScene = STAGE;
 
+    bool comingFromStageSelect = false;
+
 public:
     bool Init(SCENE startScene);
     void Update(float deltaTime);

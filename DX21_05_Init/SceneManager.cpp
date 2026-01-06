@@ -50,6 +50,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         {
             currentScene = previousScene;     // resume existing stage 
             previousScene = nullptr;
+            comingFromStageSelect = false;
             return true;                     
         }
 
@@ -59,6 +60,16 @@ bool SceneManager::SwitchScene(SCENE newScene)
             delete previousScene;
             previousScene = nullptr;
         }
+
+        // Reset gauge bar if coming from stage select
+        if (comingFromStageSelect)
+        {
+            g_player.gaugePoints = 0;
+            g_player.isInvincible = false;
+            g_player.invincibleTimer = 0.0f;
+            comingFromStageSelect = false;
+        }
+
         currentScene = new StageScene(this);
         return currentScene->Init();
         break;
@@ -68,6 +79,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         {
             currentScene = previousScene;     // resume existing stage
             previousScene = nullptr;
+            comingFromStageSelect = false;
             return true;                    
         }
 
@@ -77,6 +89,16 @@ bool SceneManager::SwitchScene(SCENE newScene)
             delete previousScene;
             previousScene = nullptr;
         }
+
+        // Reset gauge bar if coming from stage select
+        if (comingFromStageSelect)
+        {
+            g_player.gaugePoints = 0;
+            g_player.isInvincible = false;
+            g_player.invincibleTimer = 0.0f;
+            comingFromStageSelect = false; 
+        }
+
         currentScene = new Stage2Scene(this);
         return currentScene->Init();
         break;
@@ -86,6 +108,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         {
             currentScene = previousScene;     // resume existing stage 
             previousScene = nullptr;
+            comingFromStageSelect = false;
             return true;                      
         }
 
@@ -94,6 +117,15 @@ bool SceneManager::SwitchScene(SCENE newScene)
             previousScene->Uninit();
             delete previousScene;
             previousScene = nullptr;
+        }
+
+        // Reset gauge bar if coming from stage select
+        if (comingFromStageSelect)
+        {
+            g_player.gaugePoints = 0;
+            g_player.isInvincible = false;
+            g_player.invincibleTimer = 0.0f;
+            comingFromStageSelect = false;
         }
         currentScene = new Stage3Scene(this);
         return currentScene->Init();
@@ -104,6 +136,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         {
             currentScene = previousScene;     // resume existing stage 
             previousScene = nullptr;
+            comingFromStageSelect = false;
             return true;
         }
 
@@ -112,6 +145,15 @@ bool SceneManager::SwitchScene(SCENE newScene)
             previousScene->Uninit();
             delete previousScene;
             previousScene = nullptr;
+        }
+
+        // Reset gauge bar if coming from stage select
+        if (comingFromStageSelect)
+        {
+            g_player.gaugePoints = 0;
+            g_player.isInvincible = false;
+            g_player.invincibleTimer = 0.0f;
+            comingFromStageSelect = false;
         }
         currentScene = new BossScene(this);
         return currentScene->Init();
@@ -122,6 +164,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         {
             currentScene = previousScene;     // resume existing stage 
             previousScene = nullptr;
+            comingFromStageSelect = false;
             return true;
         }
 
@@ -130,6 +173,15 @@ bool SceneManager::SwitchScene(SCENE newScene)
             previousScene->Uninit();
             delete previousScene;
             previousScene = nullptr;
+        }
+
+        // Reset gauge bar if coming from stage select
+        if (comingFromStageSelect)
+        {
+            g_player.gaugePoints = 0;
+            g_player.isInvincible = false;
+            g_player.invincibleTimer = 0.0f;
+            comingFromStageSelect = false;
         }
         currentScene = new CakeScene(this);
         return currentScene->Init();
@@ -201,6 +253,8 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case STAGESELECT:
+        comingFromStageSelect = true;
+
         if (caller == PAUSE) // if in pause
         {
             currentScene = new StageSelect(this, PAUSE); // go back to pause
