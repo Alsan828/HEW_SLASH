@@ -14,7 +14,10 @@ private:
 
     ID3D11ShaderResourceView* backgroundTexture = nullptr;
 
-    // add here buttons in the future maybe
+
+    std::vector<UIButton> uiButtons;
+    ID3D11ShaderResourceView* titleTexture = nullptr;
+    ID3D11ShaderResourceView* titleHoverTexture = nullptr;
 
 public:
     ResultScene(SceneManager* manager); // constructor
