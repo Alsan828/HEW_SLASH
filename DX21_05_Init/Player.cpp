@@ -555,10 +555,11 @@ void UpdateDash(float deltaTime) {
         // Allow charging during stun, but charge time cannot be too long
         if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
             // When charge time is max, clear aftermath first if in aftermath
-            if (g_player.isInDashAftermath) {
+            /*if (g_player.isInDashAftermath) {
                 g_player.isInDashAftermath = false;
             }
-            ExecuteMouseChargeDash();
+            ExecuteMouseChargeDash();*/
+            g_player.chargeTime = g_player.MAX_CHARGE_TIME; // it caps to max charge time and it doesnt release it unless you stop clicking
         }
     }
 

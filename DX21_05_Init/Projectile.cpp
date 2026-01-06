@@ -445,7 +445,7 @@ void ProjectileManager::CreateFireball(float startX, float startY, float targetX
     effect.burnDamage = 5.0f;
     effect.areaRadius = 0.3f;
 
-    AddProjectile(ProjectileType::FIREBALL, startX, startY, targetX, targetY, 1.5f, effect, fromPlayer);
+    AddProjectile(ProjectileType::FIREBALL, startX, startY, targetX, targetY, 0.2f, effect, fromPlayer);
 }
 
 void ProjectileManager::CreateIceShard(float startX, float startY, float targetX, float targetY, bool fromPlayer) {
