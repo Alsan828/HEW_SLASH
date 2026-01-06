@@ -65,6 +65,13 @@ struct Player {
     float comboTimer = 0.0f;   // for the time before the combo resets
     const float COMBO_RESET_TIME = 2.0f; // 2 seconds without killing, the combo will reset
 
+    // for the gauge bar system
+    int gaugePoints = 0;              // current gauge points
+    const int MAX_GAUGE_POINTS = 10;  // maximum gauge points
+    bool isInvincible = false;        // invincibility state
+    float invincibleTimer = 0.0f;     // invincibility timer
+    const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
+
 
     // 生命值系统
     float health = 100.0f;
@@ -249,6 +256,7 @@ extern ID3D11ShaderResourceView* g_arrowTexture;
 extern ID3D11ShaderResourceView* g_cursorTexture;
 extern ID3D11ShaderResourceView* g_comboNumberTexture;
 extern ID3D11ShaderResourceView* g_comboXTexture;
+extern ID3D11ShaderResourceView* g_gaugeBarTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
@@ -289,6 +297,7 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2);
 
 void DrawComboUI(void);
+void DrawGaugeUI(void);
 
 
 //Player Movement Control

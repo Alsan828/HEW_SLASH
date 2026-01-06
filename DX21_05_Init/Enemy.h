@@ -403,8 +403,6 @@ public:
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
 
 protected:
-    virtual void PatrolBehavior(float deltaTime) override;
-    virtual void ChaseBehavior(float deltaTime) override;
     virtual void OnHit(int damage) override;
     virtual void OnDeath() override;
 

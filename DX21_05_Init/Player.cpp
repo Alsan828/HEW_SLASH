@@ -423,6 +423,24 @@ void CheckDashAttack() {
             g_player.comboCount++;
             g_player.comboTimer = 5.0f;
 
+
+            // Update the gauge bar
+            float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
+            float multiplier = enemy->GetDamageMultiplier(dashAngle);
+
+            // Check if it's a weak point hit (multiplier > 1.5 means critical/weak point)
+            if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                g_player.gaugePoints += 2;  // Weak point hit: +2
+            }
+            else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                g_player.gaugePoints += 1;  // Normal hit: +1
+            }
+            // Cap at max
+            if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+                g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+            }
+
+
             // === 新增：触发顿刀效果 ===
             if (g_player.hitStopTriggered < 3) {
                 g_camera.Shake(0.02f, 0.05f);
@@ -482,7 +500,7 @@ void OnPlayerDeath() {
 
 // New: Check if player should die
 void CheckPlayerDeath() {
-    if (g_player.isDead) {
+    if (g_player.isDead || g_player.isInvincible) {
         return;
     }
 
@@ -859,6 +877,12 @@ void UpdateDashPoints(float deltaTime) {
 
 // Consume dash point
 bool ConsumeDashPoint() {
+
+    // if the player is invincible 
+    if (g_player.isInvincible) {
+        return true;  // so I can dash, but dont consume the point
+    }
+
     if (g_player.dashPoints > 0) {
         g_player.dashPoints--;
         return true;

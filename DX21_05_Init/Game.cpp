@@ -57,6 +57,11 @@ void ResetGame() {
     g_player.comboCount = 0;
     g_player.comboTimer = 0.0f;
 
+    // Reset gauge bar
+    g_player.gaugePoints = 0;
+    g_player.isInvincible = false;
+    g_player.invincibleTimer = 0.0f;
+
     g_gameState = STATE_PLAYING;
 
 }
@@ -174,6 +179,12 @@ void CleanUpGameWorld()
         g_comboXTexture = nullptr;
     }
 
+    //for the gague bar when there is one
+    if (g_gaugeBarTexture) {
+        g_gaugeBarTexture->Release();
+        g_gaugeBarTexture = nullptr;
+    }
+
 }
 
 // Improved collision detection function
@@ -206,7 +217,7 @@ void DrawComboUI(void)
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Draw "X" symbol
+    // Draw the "X" symbol
     RenderImage(comboX, comboY, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
 
     char buffer[32];
@@ -223,6 +234,46 @@ void DrawComboUI(void)
 
         numberXaxis += spaceBetweenDigits;  // Move to next digit position
     }
+}
+
+// for the gauge bar UI
+void DrawGaugeUI(void)
+{
+    // Position on left side of screen
+    float gaugeX = -0.9f;   // Left side
+    float gaugeY = -0.5f;   // Center vertical
+
+    // Gauge bar dimensions (vertical bar)
+    float gaugeWidth = 0.08f;
+    float gaugeHeight = 1.0f;  // Total height
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    // Draw the empy bar
+    SetColor(0.2f, 0.2f, 0.2f, 0.8f);
+    RenderImage(gaugeX, gaugeY, gaugeWidth, gaugeHeight, g_groundTexture, 0, 1, 1);
+
+    // Calculate the fill ratio 
+    float fillRatio = static_cast<float>(g_player.gaugePoints) / static_cast<float>(g_player.MAX_GAUGE_POINTS);
+
+    // Filled portion of the bar (height)
+    float filledHeight = gaugeHeight * fillRatio;
+
+    // Draw filled bar (yellow when filling, bright yellow when full)
+    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
+        // when full bar (with pulsing effect so you know you can click in order to be invicible)
+        float barBeating = 0.8f + 0.2f * sin(g_gameElapsedTime * 5.0f);
+        SetColor(1.0f * barBeating, 1.0f * barBeating, 0.0f, 1.0f);
+    }
+    else {
+        // when filling 
+        SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+    }
+
+    // Draw filled portion from the bottom to up
+    RenderImage(gaugeX, gaugeY, gaugeWidth, filledHeight, g_groundTexture, 0, 1, 1);
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 // Game initialization
@@ -268,6 +319,9 @@ void InitGameWorld() {
 
     LoadTexture(g_pDevice, "asset/UI/combo/combo_number.png", &g_comboNumberTexture);
     LoadTexture(g_pDevice, "asset/UI/combo/combo_X.png", &g_comboXTexture);
+
+    // todo: add here the gague bar texture when there is one
+    //LoadTexture(g_pDevice, "asset/UI/gauge_bar.png", &g_gaugeBarTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -328,22 +382,20 @@ void UpdateGame(float deltaTime) {
 
 
     // for updating the combo timer
-    //if (g_player.comboCount > 0) 
-    //{
-    //    g_player.comboTimer += deltaTime;
-
-    //    // Reset combo after 5 seconds if there are no kills
-    //    if (g_player.comboTimer >= 5.0f) 
-    //    {
-    //        g_player.comboCount = 0;
-    //        g_player.comboTimer = 0.0f;
-    //    }
-    //}
     if (g_player.comboCount > 0) {
         g_player.comboTimer -= deltaTime;
         if (g_player.comboTimer <= 0.0f) {
             g_player.comboCount = 0;
             g_player.comboTimer = 0.0f;
+        }
+    }
+
+    // for updating the invincibility timer
+    if (g_player.isInvincible) {
+        g_player.invincibleTimer -= deltaTime;
+        if (g_player.invincibleTimer <= 0.0f) {
+            g_player.isInvincible = false;
+            g_player.invincibleTimer = 0.0f;
         }
     }
 
@@ -640,67 +692,22 @@ void DrawGame() {
         // 如果facingRight为false（面向左），水平翻转
         bool flipHorizontal = !g_player.facingRight;
 
+        // Set color based on invincibility state
+        if (g_player.isInvincible) {
+            // Yellow when invincible
+            SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+        }
+        else {
+            // Normal white
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+
         RenderImage(playerPos.first - offsetX, playerPos.second - offsetY, width, height,
             currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
+
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Reset color after being invincible
     }
     else {
-        //// Flickering disappearance animation when dead
-        //std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
-
-        //// Death animation duration
-        //const float DEATH_ANIM_DURATION = 1.0f;
-
-        //if (g_player.deathTimer < DEATH_ANIM_DURATION) {
-        //    float animProgress = g_player.deathTimer / DEATH_ANIM_DURATION;
-
-        //    // Flicker frequency gradually slows down
-        //    float flickerFreq = 20.0f * (1.0f - animProgress);
-
-        //    // Control flicker effect, gradually disappear in latter half of animation
-        //    if (animProgress < 0.7f) {
-        //        // First half: rapid flickering
-        //        float sinValue = sin(g_player.deathTimer * flickerFreq);
-        //        float alpha = 0.5f + 0.5f * sinValue;
-
-        //        if (animProgress > 0.3f) {
-        //            // Middle segment: add red flickering
-        //            float redIntensity = 0.5f + 0.5f * sin(g_player.deathTimer * 10.0f);
-        //            SetColor(1.0f, 1.0f - redIntensity, 1.0f - redIntensity, alpha);
-        //        }
-        //        else {
-        //            // Initial segment: white flickering
-        //            SetColor(1.0f, 1.0f, 1.0f, alpha);
-        //        }
-        //    }
-        //    else {
-        //        // Latter half: gradually disappear
-        //        float fadeOut = 1.0f - ((animProgress - 0.7f) / 0.3f);
-        //        float alpha = fadeOut * 0.5f;
-        //        SetColor(1.0f, 0.3f, 0.3f, alpha);
-        //    }
-
-        //    // Gradually shrink
-        //    float scale = 1.0f - animProgress * 0.5f;
-        //    float width = PLAYER_WIDTH * scale;
-        //    float height = PLAYER_HEIGHT * scale;
-
-        //    // Center position adjustment
-        //    playerPos.first += (PLAYER_WIDTH - width) * 0.5f;
-        //    playerPos.second += (PLAYER_HEIGHT - height) * 0.5f;
-
-        //    // for this I get the spritesheet. (the row and columns)
-        //    int splitX = g_player.anim.GetSplitX();
-        //    int splitY = g_player.anim.GetSplitY();
-
-        //    // for the character
-        //    int frameIndex = g_player.anim.GetCurrentFrame();
-        //    bool flipHorizontal = !g_player.facingRight;
-        //    RenderImage(playerPos.first, playerPos.second, width, height,
-        //        g_player.anim.GetCurrentClipTexture(), frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
-
-        //    float uiScale = std::min(currentWidth / 1920.0f, currentHeight / 1080.0f);
-        //}
-        
         // Death animation
         std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
 
@@ -726,14 +733,27 @@ void DrawGame() {
     }
 
     DrawComboUI();
+    DrawGaugeUI();
     
 }
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {
         ResetGame();
     }
-    if (g_inputSystem.IsMouseRightDown()) {
+   /* if (g_inputSystem.IsMouseRightDown()) {
         CancelChargeDash();
+    }*/
+    // Right click: Activate invincibility if gauge is full
+    if (g_inputSystem.IsMouseRightDown()) {
+        if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS && !g_player.isInvincible) {
+            // Activate invincibility
+            g_player.isInvincible = true;
+            g_player.invincibleTimer = g_player.INVINCIBLE_DURATION;
+            g_player.gaugePoints = 0;  // Reset gauge
+        }
+        else {
+            CancelChargeDash();  // Original right-click behavior
+        }
     }
     // for pausing the game press P or Esc key
     if (g_inputSystem.IsTogglePressed(VK_P) || g_inputSystem.IsTogglePressed(VK_ESCAPE))

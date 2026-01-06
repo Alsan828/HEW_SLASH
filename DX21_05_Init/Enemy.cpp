@@ -1237,14 +1237,14 @@ void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Square enemy doesn't move
+    // Square enemy doesnt move
     velocityX = 0.0f;
     velocityY = 0.0f;
 
-    // Optional: Pulse effect for visual feedback
+    // Pulse effect for visual feedback
     pulseTimer += deltaTime;
 
-    // Simple AI: just stay in place
+    // just stay in place
     currentState = PATROL;
 
     if (!isCurrentlyVisible) {
@@ -1253,18 +1253,6 @@ void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
     else {
         offScreenTimer = 0.0f;
     }
-}
-
-void SquareEnemy::PatrolBehavior(float deltaTime) {
-    // Square enemy doesn't patrol
-    velocityX = 0.0f;
-    velocityY = 0.0f;
-}
-
-void SquareEnemy::ChaseBehavior(float deltaTime) {
-    // Square enemy doesn't chase
-    velocityX = 0.0f;
-    velocityY = 0.0f;
 }
 
 void SquareEnemy::OnHit(int damage) {
