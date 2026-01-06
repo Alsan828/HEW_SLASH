@@ -136,18 +136,18 @@ void MapManager::RespawnPlayer(int spawnId) {
 // Initialize all game maps and set up the initial game state
 void MapManager::InitializeMaps() {
     // Create test map with basic layout
-    Map testMap("test", 0.15f, 0.15f);
-    testMap.CreateTestMap();
+    Map testMap("World1Area1", 0.15f, 0.15f);
+    testMap.CreateWorld1Area1Map();
     AddMap(testMap);
 
     // Create forest-themed map
-    Map forestMap("forest", 0.15f, 0.15f);
-    forestMap.CreateForestMap();
+    Map forestMap("World1Area2", 0.15f, 0.15f);
+    forestMap.CreateWorld1Area2Map();
     AddMap(forestMap);
 
     // Create ice-themed map
-    Map iceMap("ice", 0.15f, 0.15f);
-    iceMap.CreateIceMap();
+    Map iceMap("World1Area3", 0.15f, 0.15f);
+    iceMap.CreateWorld1Area3Map();
     AddMap(iceMap);
 
     // Create boss map
@@ -161,7 +161,7 @@ void MapManager::InitializeMaps() {
     AddMap(cakeMap);
 
     // Set initial current map to test map
-    m_currentMap = GetMap("test");
+    m_currentMap = GetMap("World1Area1");
 
     // Create enemies for the starting map
     CreateMapEnemies();

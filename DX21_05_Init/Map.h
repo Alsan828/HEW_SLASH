@@ -112,9 +112,9 @@ public:
         std::string& targetMap, int& portalId, int& linkedSpawnId) const;
 
     // Predefined map creation methods
-    void CreateTestMap();
-    void CreateForestMap();
-    void CreateIceMap();
+    void CreateWorld1Area1Map();
+    void CreateWorld1Area2Map();
+    void CreateWorld1Area3Map();
     void CreateBossMap();
     void CreateCakeMap();
 

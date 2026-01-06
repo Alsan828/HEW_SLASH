@@ -41,9 +41,9 @@ void Map::InitializeTileDictionary() {
         {"E7", {"E7", "enemy", "beam", false, false, false, true}},
 
         // Portal types
-        {"DF", {"DF", "door", "forest", false, false, true, false}},
-        {"DI", {"DI", "door", "ice", false, false, true, false}},
-        {"DT", {"DT", "door", "test", false, false, true, false}},
+        {"DF", {"DF", "door", "World1Area2", false, false, true, false}},
+        {"DI", {"DI", "door", "World1Area3", false, false, true, false}},
+        {"DT", {"DT", "door", "World1Area1", false, false, true, false}},
 
         // Spawn point types
         {"S1", {"S1", "spawn", "default", false, true, false, false}},
@@ -124,16 +124,16 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
 
             // Handle portal tiles
             if (tileInfo.isPortal) {
-                if (tileInfo.subtype == "forest") {
-                    tile.targetMap = "forest";
+                if (tileInfo.subtype == "World1Area2") {
+                    tile.targetMap = "World1Area2";
                     tile.linkedSpawnId = 1;
                 }
-                else if (tileInfo.subtype == "ice") {
-                    tile.targetMap = "ice";
+                else if (tileInfo.subtype == "World1Area3") {
+                    tile.targetMap = "World1Area3";
                     tile.linkedSpawnId = 1;
                 }
-                else if (tileInfo.subtype == "test") {
-                    tile.targetMap = "test";
+                else if (tileInfo.subtype == "World1Area1") {
+                    tile.targetMap = "World1Area1";
                     tile.linkedSpawnId = 1;
                 }
             }
@@ -292,7 +292,7 @@ bool Map::CheckPortalCollision(float x, float y, float width, float height,
 }
 
 // Create a test map with basic layout
-void Map::CreateTestMap() {
+void Map::CreateWorld1Area1Map() {
     ClearAll();
     m_spawnPoints.clear();
     m_enemySpawns.clear();
@@ -319,7 +319,7 @@ void Map::CreateTestMap() {
 }
 
 // Create a forest-themed map
-void Map::CreateForestMap() {
+void Map::CreateWorld1Area2Map() {
     ClearAll();
     m_spawnPoints.clear();
     m_enemySpawns.clear();
@@ -351,7 +351,7 @@ void Map::CreateForestMap() {
 }
 
 // Create an ice-themed map
-void Map::CreateIceMap() {
+void Map::CreateWorld1Area3Map() {
     ClearAll();
     m_spawnPoints.clear();
     m_enemySpawns.clear();
@@ -406,7 +406,7 @@ void Map::CreateIceMap() {
     LoadFromGrid(massiveTestGrid, MapLayer::MIDGROUND);
 
     AddSpawnPoint(-0.5f, -0.5f, 1, "IceSpawn");
-    AddTile(0.7f, -0.8f, "PT", MapLayer::MIDGROUND, "test", 1);
+    AddTile(0.7f, -0.8f, "PT", MapLayer::MIDGROUND, "World1Area1", 1);
 }
 
 // Create a boss map

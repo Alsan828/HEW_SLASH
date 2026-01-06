@@ -10,7 +10,7 @@ Stage2Scene::Stage2Scene(SceneManager* manager)
 bool Stage2Scene::Init()
 {
 
-    g_mapManager.SwitchMap("forest", 0, 1);
+    g_mapManager.SwitchMap("World1Area2", 0, 1);
     
 
     g_gameState = STATE_PLAYING;

@@ -12,7 +12,7 @@ bool StageScene::Init()
 
     g_gameState = STATE_PLAYING;
 
-    g_mapManager.SwitchMap("test", -1, -1);
+    g_mapManager.SwitchMap("World1Area1", -1, -1);
     ResetGame();
     return true;
 }

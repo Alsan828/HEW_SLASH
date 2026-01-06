@@ -10,7 +10,7 @@ Stage3Scene::Stage3Scene(SceneManager* manager)
 bool Stage3Scene::Init()
 {
 
-    g_mapManager.SwitchMap("ice", 0, 1);
+    g_mapManager.SwitchMap("World1Area3", 0, 1);
 
     g_gameState = STATE_PLAYING;
 
