@@ -206,22 +206,44 @@ struct Player {
 };
 
 
-struct GameStatistics {
+// for the statistics of the game. deaths, kills, etc
+class GameStatistics {
+private:
     int enemiesKilled = 0;
+    int weakPointKills = 0;
     int totalDeaths = 0;
     float totalTime = 0.0f;
+    int totalScore = 0;
 
-    void Reset() {
-        enemiesKilled = 0;
-        totalDeaths = 0;
-        totalTime = 0.0f;
-    }
+public:
+   // no need construct now bc I initialied the variables above
 
-    void IncrementKills() { enemiesKilled++; }
-    void IncrementDeaths() { totalDeaths++; }
-    void UpdateTime(float time) { totalTime = time; }
+    // Reset all statistics
+    void Reset();
+
+    // Increment counters
+    void IncrementKills();
+    void IncrementWeakPointKills();
+    void IncrementDeaths();
+
+    // Update time
+    void UpdateTime(float time);
+
+    // Calculate final score
+    void CalculateFinalScore();
+
+    void AddScore(int points);
+
+    // Getters (read-only access to private data)
+    int GetEnemiesKilled() const { return enemiesKilled; }
+    int GetWeakPointKills() const { return weakPointKills; }
+    int GetTotalDeaths() const { return totalDeaths; }
+    float GetTotalTime() const { return totalTime; }
+    int GetTotalScore() const { return totalScore; }
 };
-extern GameStatistics g_gameStats; // global declaration
+extern GameStatistics g_gameStats;
+
+
 
 
 class GameTimer {
@@ -321,6 +343,7 @@ bool CheckCollision(float x1, float y1, float w1, float h1,
 
 void DrawComboUI(void);
 void DrawGaugeUI(void);
+void DrawScoreUI(void);
 
 
 //Player Movement Control
@@ -331,6 +354,7 @@ void UpdatePlayerDeath(float deltaTime);
 void UpdateDash(float deltaTime);
 void UpdatePlayerPhysics(float deltaTime);
 void OnEnemyDefeated();
+void OnEnemyDefeated(bool wasWeakPointKill);
 bool ConsumeDashPoint();
 void UpdateDashPoints(float deltaTime);
 void UpdateDashAftermath(float deltaTime);

@@ -72,15 +72,18 @@ void ResultScene::Draw()
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         // for kills
-        DrawNumber(g_gameStats.enemiesKilled, -0.5f, 0.5f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetEnemiesKilled(), -0.5f, 0.5f, 0.1f, numberTexture);
 
         // for deaths
-        DrawNumber(g_gameStats.totalDeaths, -0.5f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetTotalDeaths(), -0.5f, 0.1f, 0.1f, numberTexture);
 
         // for time
-        int minutes = (int)(g_gameStats.totalTime / 60.0f);
-        int seconds = (int)g_gameStats.totalTime % 60;
+        int minutes = (int)(g_gameStats.GetTotalTime() / 60.0f);
+        int seconds = (int)g_gameStats.GetTotalTime() % 60;
         DrawTime(minutes, seconds, -0.5f, 0.3f, 0.1f, numberTexture);
+
+        // for the score
+        DrawNumber(g_gameStats.GetTotalScore(), 0.4f, 0.1f, 0.1f, numberTexture);
     }
 
     for (const auto& btn : uiButtons)

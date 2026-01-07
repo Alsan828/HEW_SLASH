@@ -241,7 +241,7 @@ void DrawGaugeUI(void)
 {
     // Position on left side of screen
     float gaugeX = -0.9f;   // Left side
-    float gaugeY = -0.5f;   // Center vertical
+    float gaugeY = -0.8f;   // Center vertical
 
     // Gauge bar dimensions (vertical bar)
     float gaugeWidth = 0.08f;
@@ -275,6 +275,35 @@ void DrawGaugeUI(void)
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
+
+// for the score UI
+void DrawScoreUI(void)
+{
+    if (!g_uiNumberTexture) return;
+
+    // Position on top left, below the timer
+    float scoreX = -0.8f;   // left side in the x axis
+    float scoreY = 0.6f;    // below the timer in the y axis
+    float numberSize = 0.08f; // the size of the number
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    // Get current score
+    int currentScore = g_gameStats.GetTotalScore();
+
+    // Recalculate score in during the game
+    // You can comment this out if you only want final score at the end
+    int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
+    //int timeBonus = std::max(0, static_cast<int>(60 - g_gameElapsedTime));
+    int timePenalty = static_cast<int>(g_gameElapsedTime);  // current elapsed time in seconds
+    int deathPenalty = g_gameStats.GetTotalDeaths() * 5;
+    //int liveScore = std::max(0, (killPoints * timeBonus) - deathPenalty);
+    int liveScore = std::max(0, killPoints - timePenalty - deathPenalty);
+
+    // Draw the live score
+    DrawNumber(liveScore, scoreX, scoreY, numberSize, g_numberTexture);
+}
+
 
 // Game initialization
 void InitGameWorld() {
@@ -737,6 +766,7 @@ void DrawGame() {
 
     DrawComboUI();
     DrawGaugeUI();
+    DrawScoreUI();
     
 }
 void HandleInput() {
@@ -1001,4 +1031,79 @@ void MouseIndicatorSystem::Cleanup() {
 }
 
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {
+}
+
+
+// Reset all statistics
+void GameStatistics::Reset() {
+    enemiesKilled = 0;
+    weakPointKills = 0;
+    totalDeaths = 0;
+    totalTime = 0.0f;
+    totalScore = 0;
+}
+
+// Increment kill counter
+void GameStatistics::IncrementKills() {
+    enemiesKilled++;
+}
+
+// Increment weak point kill counter
+void GameStatistics::IncrementWeakPointKills() {
+    weakPointKills++;
+}
+
+// Increment death counter
+void GameStatistics::IncrementDeaths() {
+    totalDeaths++;
+}
+
+// Update total time
+void GameStatistics::UpdateTime(float time) {
+    totalTime = time;
+}
+
+// Calculate the final score based on kills, time, and deaths
+void GameStatistics::CalculateFinalScore() {
+    // the kill points: normal kills = 10, weak point kills = 30
+    int killPoints = (enemiesKilled * 10) + (weakPointKills * 30);
+
+    // the time bonus. 0 is the minimum
+    int timePenalty = static_cast<int>(totalTime); // -1 point per seconds that has elapsed
+
+    // the death penalty: deaths * 5
+    int deathPenalty = totalDeaths * 5;
+
+    totalScore = std::max(0, killPoints - timePenalty - deathPenalty);
+
+    // the debug
+ /*   char debugMsg[512];
+    sprintf_s(debugMsg,
+        "=== SCORE CALCULATION ===\n"
+        "Enemies Killed: %d (normal)\n"
+        "Weak Point Kills: %d\n"
+        "Total Deaths: %d\n"
+        "Total Time: %.2f seconds\n"
+        "---\n"
+        "Kill Points: (%d * 10) + (%d * 30) = %d\n"
+        "Time Bonus: max(0, 60 - %.2f) = %d\n"
+        "Death Penalty: %d * 5 = %d\n"
+        "---\n"
+        "Final Score: (%d * %d) - %d = %d\n"
+        "========================\n",
+        enemiesKilled, weakPointKills,
+        totalDeaths, totalTime,
+        killPoints,
+        timePenalty,
+        deathPenalty,
+        killPoints, timePenalty, deathPenalty, totalScore
+    );
+    OutputDebugStringA(debugMsg);*/
+}
+
+void GameStatistics::AddScore(int points) {
+    totalScore += points;
+    if (totalScore < 0) {
+        totalScore = 0; // so there will not be negative score
+    }
 }

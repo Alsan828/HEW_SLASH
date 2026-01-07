@@ -25,6 +25,9 @@ void CakeScene::Update(float deltaTime)
     // if all the enemies are killed and animations are done
     if (g_enemies.empty()) 
     { 
+        g_gameStats.UpdateTime(g_gameElapsedTime);
+        g_gameStats.CalculateFinalScore();
+
         sceneManager->SwitchScene(RESULT); // it goes to result
         return; 
     }

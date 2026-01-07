@@ -182,6 +182,11 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
 
     if (health <= 0) {
         health = 0;
+
+        if (multiplier >= 2.0f) {
+            weakSpotDeath = true;
+        }
+
         OnDeath();
     }
 
@@ -206,7 +211,8 @@ void Enemy::OnDeath() {
     //g_player.comboCount++;
     //g_player.comboTimer = 0.0f; // it resets the timer
 
-    OnEnemyDefeated();
+    //OnEnemyDefeated();
+    OnEnemyDefeated(weakSpotDeath);
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {

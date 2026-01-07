@@ -903,3 +903,17 @@ void OnEnemyDefeated() {
         g_player.dashPoints++;
     }
 }
+
+void OnEnemyDefeated(bool wasWeakPointKill) {
+    // for 30 points kill
+    if (wasWeakPointKill) {
+        g_gameStats.IncrementWeakPointKills();
+    }
+    else { // for 10 points kill
+        g_gameStats.IncrementKills();
+    }
+
+    if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
+        g_player.dashPoints++;
+    }
+}
