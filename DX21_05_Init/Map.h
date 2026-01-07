@@ -115,6 +115,7 @@ public:
     void CreateWorld1Area1Map();
     void CreateWorld1Area2Map();
     void CreateWorld1Area3Map();
+    void CreateWorld1Area4Map();
     void CreateBossMap();
     void CreateCakeMap();
 

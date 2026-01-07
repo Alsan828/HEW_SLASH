@@ -215,6 +215,7 @@
     <ClCompile Include="Stage3.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="Stage4.cpp" />
     <ClCompile Include="StageSelect.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
@@ -277,6 +278,7 @@
     <ClInclude Include="Stage.h" />
     <ClInclude Include="Stage2.h" />
     <ClInclude Include="Stage3.h" />
+    <ClInclude Include="Stage4.h" />
     <ClInclude Include="StageSelect.h" />
     <ClInclude Include="stb_image.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>

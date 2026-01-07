@@ -150,6 +150,11 @@ void MapManager::InitializeMaps() {
     iceMap.CreateWorld1Area3Map();
     AddMap(iceMap);
 
+    // create the world1 area4
+    Map world1Area4Map("World1Area4", 0.15f, 0.15f);
+    world1Area4Map.CreateWorld1Area4Map();
+    AddMap(world1Area4Map);
+
     // Create boss map
     Map bossMap ("boss", 0.15f, 0.15f);
     bossMap.CreateBossMap();

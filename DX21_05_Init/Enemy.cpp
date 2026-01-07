@@ -163,6 +163,8 @@ int Enemy::CalculateDamageFromPlayer(int baseDamage, float playerDashAngle) {
 void Enemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
+    weakSpotDeath = false;
+
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
@@ -183,10 +185,12 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
     if (health <= 0) {
         health = 0;
 
-        if (multiplier >= 2.0f) {
+        /*if (multiplier >= 2.0f) {
+            weakSpotDeath = true;
+        }*/
+        if (multiplier > 1.5f) {  // CHANGED FROM >= 2.0f to > 1.5f
             weakSpotDeath = true;
         }
-
         OnDeath();
     }
 

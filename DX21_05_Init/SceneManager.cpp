@@ -3,6 +3,7 @@
 #include "Stage.h"
 #include "Stage2.h"
 #include "Stage3.h"
+#include "Stage4.h"
 #include "BossScene.h"
 #include "CakeScene.h"
 #include "Menu.h"
@@ -25,7 +26,8 @@ bool SceneManager::SwitchScene(SCENE newScene)
     
     if (currentScene) 
     {       
-        if (!(currentSceneType == STAGE || currentSceneType == STAGE2 || currentSceneType == STAGE3 || currentSceneType == BOSS || currentSceneType == CAKE) // add here mor stages depening on how many there are 
+        if (!(currentSceneType == STAGE || currentSceneType == STAGE2 || currentSceneType == STAGE3 || currentSceneType == STAGE4 
+            || currentSceneType == BOSS || currentSceneType == CAKE) // add here more stages depening on how many there are 
             || newScene != PAUSE) 
         {
             currentScene->Uninit();
@@ -131,6 +133,34 @@ bool SceneManager::SwitchScene(SCENE newScene)
         return currentScene->Init();
         break;
 
+    case STAGE4:
+        if (caller == PAUSE && previousScene)
+        {
+            currentScene = previousScene;     // resume existing stage 
+            previousScene = nullptr;
+            comingFromStageSelect = false;
+            return true;
+        }
+
+        if (previousScene)
+        {
+            previousScene->Uninit();
+            delete previousScene;
+            previousScene = nullptr;
+        }
+
+        // Reset gauge bar if coming from stage select
+        if (comingFromStageSelect)
+        {
+            g_player.gaugePoints = 0;
+            g_player.isInvincible = false;
+            g_player.invincibleTimer = 0.0f;
+            comingFromStageSelect = false;
+        }
+        currentScene = new Stage4Scene(this);
+        return currentScene->Init();
+        break;
+
     case BOSS:
         if (caller == PAUSE && previousScene)
         {
@@ -218,7 +248,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case PAUSE:
-        if (caller == STAGE || caller == STAGE2 || caller == STAGE3 || caller == BOSS || caller == CAKE)  // add here more stages depending on how many there are 
+        if (caller == STAGE || caller == STAGE2 || caller == STAGE3 || caller == STAGE4 || caller == BOSS || caller == CAKE)  // add here more stages depending on how many there are 
         {
             // so you can preserve the gameplay scene for when you resume the game
             previousScene = oldScene;                

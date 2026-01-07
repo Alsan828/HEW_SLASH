@@ -8,6 +8,7 @@ enum SCENE
     STAGE,
     STAGE2,
     STAGE3,
+    STAGE4,
     BOSS,
     CAKE,
     RESULT,

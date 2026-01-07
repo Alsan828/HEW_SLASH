@@ -899,9 +899,9 @@ void OnEnemyDefeated() {
     // Track kill for statistics
     g_gameStats.IncrementKills();
 
-    if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
+   /* if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
-    }
+    }*/
 }
 
 void OnEnemyDefeated(bool wasWeakPointKill) {
