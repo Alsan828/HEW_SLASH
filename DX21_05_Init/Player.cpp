@@ -485,6 +485,9 @@ void OnPlayerDeath() {
     g_player.deathTimer = g_player.DEATH_RESPAWN_TIME;
     g_player.deathCount++;
 
+    // Track death
+    g_gameStats.IncrementDeaths();
+
     // Stop all player actions
     g_player.isMoving = false;
     g_player.isDashing = false;
@@ -893,6 +896,9 @@ bool ConsumeDashPoint() {
 
 // Restore point on enemy defeat (reserved interface)
 void OnEnemyDefeated() {
+    // Track kill for statistics
+    g_gameStats.IncrementKills();
+
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
     }

@@ -18,6 +18,7 @@ int g_chargeSoundId = -1;
 int g_shootSoundId = -1;
 int g_slowMoTimerSoundId = -1;
 
+GameStatistics g_gameStats;
 
 // Game timer implementation
 GameTimer::GameTimer()
@@ -63,7 +64,6 @@ void ResetGame() {
     g_player.invincibleTimer = 0.0f;
 
     g_gameState = STATE_PLAYING;
-
 }
 
 // added december 11th
@@ -332,6 +332,7 @@ void InitGameWorld() {
     g_camera.SetDeadZone(camera_DeadZone);
 }
 
+
 // Modified game update function
 void UpdateGame(float deltaTime) {
     if (g_gameState != STATE_PLAYING) {
@@ -346,6 +347,8 @@ void UpdateGame(float deltaTime) {
     g_gameElapsedTime += deltaTime;
     g_gameMinutes = static_cast<int>(g_gameElapsedTime) / 60;
     g_gameSeconds = static_cast<int>(g_gameElapsedTime) % 60;
+
+    g_gameStats.UpdateTime(g_gameElapsedTime); // track total time
 
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);

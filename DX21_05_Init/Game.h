@@ -205,6 +205,25 @@ struct Player {
     }
 };
 
+
+struct GameStatistics {
+    int enemiesKilled = 0;
+    int totalDeaths = 0;
+    float totalTime = 0.0f;
+
+    void Reset() {
+        enemiesKilled = 0;
+        totalDeaths = 0;
+        totalTime = 0.0f;
+    }
+
+    void IncrementKills() { enemiesKilled++; }
+    void IncrementDeaths() { totalDeaths++; }
+    void UpdateTime(float time) { totalTime = time; }
+};
+extern GameStatistics g_gameStats; // global declaration
+
+
 class GameTimer {
 private:
     __int64 m_prevTime = 0;
@@ -278,6 +297,10 @@ extern ID3D11ShaderResourceView* g_pauseTexture;
 void InitGameWorld();
 // Drawing function
 void DrawGame();
+
+// used for statistics in the result
+void DrawNumber(int number, float x, float y, float size, ID3D11ShaderResourceView* texture);
+void DrawTime(int minutes, int seconds, float x, float y, float size, ID3D11ShaderResourceView* texture);
 
 // Input handling
 void HandleInput();

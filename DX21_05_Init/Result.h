@@ -5,6 +5,7 @@
 #include <vector>
 #include "Render.h"
 #include "UIButton.h"
+#include "Game.h"
 
 
 class ResultScene : public SceneBase
@@ -13,11 +14,18 @@ private:
     SceneManager* sceneManager;   // pointer to the scene manager
 
     ID3D11ShaderResourceView* backgroundTexture = nullptr;
+    ID3D11ShaderResourceView* normalScoreTexture = nullptr;
+    //todo: make also for high score and low sccore texture
+
+    ID3D11ShaderResourceView* numberTexture = nullptr;
 
 
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* titleTexture = nullptr;
     ID3D11ShaderResourceView* titleHoverTexture = nullptr;
+
+    ID3D11ShaderResourceView* continueTexture = nullptr;
+    ID3D11ShaderResourceView* continueHoverTexture = nullptr;
 
 public:
     ResultScene(SceneManager* manager); // constructor
