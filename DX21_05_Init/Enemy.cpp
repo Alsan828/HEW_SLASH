@@ -765,7 +765,7 @@ void MageEnemy::CastProjectile() {
         // 发射魔法射弹
         projectileManager.CreateFireball(
             posX + width * 0.5f,  // 从中心发射
-            posY + height * 0.7f,  // 从敌人高度70%处发射
+            posY + height * 0.4f,  // 从敌人高度40%处发射（原来是0.7f，降低了30%）
             targetX,
             targetY,
             false
@@ -1002,10 +1002,6 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {    // 优先�
         }
     }
 
-    // 炸弹敌人不移动，所以不需要处理重力和碰撞
-    velocityX = 0.0f;
-    velocityY = 0.0f;
-
     // 脉动效果
     pulseTimer += deltaTime;
     float pulseEffect = sin(pulseTimer * 3.0f) * 0.1f;
@@ -1107,7 +1103,7 @@ void BombEnemy::CreateProjectiles() {
 
     // Calculate center position of the enemy
     float centerX = posX + width * 0.5f;
-    float centerY = posY + height * 0.5f;
+    float centerY = posY + height * 0.3f;  // 从敌人高度30%处发射（原来是0.5f，降低了20%）
 
     // for the 8 directions pattern
     for (int i = 0; i < 8; i++) {
@@ -1293,7 +1289,6 @@ void SquareEnemy::OnDeath() {
 }
 
 
-// for the beam enemy
 BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     // Weak points: Vertical and Horizontal lines (like a cross)
     SetDamageMultiplier(DIR_UP, 8.0f);

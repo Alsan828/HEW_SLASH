@@ -149,15 +149,41 @@ void  Projectile::CheckPlayerCollision() {
     float playerWidth = PLAYER_WIDTH;
     float playerHeight = PLAYER_HEIGHT;
 
-    // Collision detection
-    if (posX < playerX + playerWidth &&
-        posX + size > playerX &&
-        posY < playerY + playerHeight &&
-        posY + size > playerY)
+    // 考虑玩家冲刺时的碰撞体变化
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
+    if (g_player.isDashing) {
+        playerWidth = PLAYER_WIDTH * 0.25f;
+        playerHeight = PLAYER_HEIGHT * 0.25f;
+        offsetX = (PLAYER_WIDTH - playerWidth) * 0.5f;
+        offsetY = (PLAYER_HEIGHT - playerHeight) * 0.5f;
+    }
+
+    // 计算射弹的实际碰撞体大小（考虑缩放效果）
+    float actualSize = size * scaleEffect * 0.5f;
+
+    // 射弹中心点
+    float projectileCenterX = posX + actualSize * 0.5f;
+    float projectileCenterY = posY + actualSize * 0.5f;
+
+    // 玩家碰撞体中心点
+    float playerCenterX = playerX + offsetX + playerWidth * 0.5f;
+    float playerCenterY = playerY + offsetY + playerHeight * 0.5f;
+
+    // 使用中心点距离检测碰撞（更准确）
+    float dx = projectileCenterX - playerCenterX;
+    float dy = projectileCenterY - playerCenterY;
+    float distance = sqrt(dx * dx + dy * dy);
+    
+    // 碰撞半径
+    float collisionRadius = (actualSize + std::min(playerWidth, playerHeight)) * 0.5f;
+
+    if (distance < collisionRadius)
     {
         if (!g_player.isDashing && !g_player.isDead) {
             // Apply effect to player
             OnPlayerDeath();
+            isActive = false; // 射弹命中后应该消失
         }
     }
 }
