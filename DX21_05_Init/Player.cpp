@@ -1,5 +1,69 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
+
+// 冲刺命中检测辅助：给定测试位置，使用缩小并居中的碰撞盒检测敌人
+static void PerformDashHitTest(float testX, float testY) {
+    if (!g_player.isDashing) {
+        return;
+    }
+
+    float playerWidth = PLAYER_WIDTH;
+    float playerHeight = PLAYER_HEIGHT;
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
+
+    if (g_player.isDashing) {
+        playerWidth = PLAYER_WIDTH * 0.25f;
+        playerHeight = PLAYER_HEIGHT * 0.25f;
+        offsetX = (PLAYER_WIDTH - playerWidth) * 0.5f;
+        offsetY = (PLAYER_HEIGHT - playerHeight) * 0.5f;
+    }
+
+    float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
+
+    for (auto& enemy : g_enemies) {
+        if (!enemy->IsAlive()) {
+            continue;
+        }
+
+        // 已命中过的敌人跳过
+        if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
+            continue;
+        }
+
+        if (CheckCollision(testX + offsetX, testY + offsetY, playerWidth, playerHeight,
+            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
+
+            g_player.comboCount++;
+            g_player.comboTimer = 5.0f;
+
+            float multiplier = enemy->GetDamageMultiplier(dashAngle);
+            if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                g_player.gaugePoints += 2;
+            }
+            else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                g_player.gaugePoints += 1;
+            }
+            if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+                g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+            }
+
+            if (g_player.hitStopTriggered < 3) {
+                g_camera.Shake(0.02f, 0.05f);
+                g_player.hitStopTimer = 0.075f;
+                g_player.hitStopTriggered++;
+                // 可选全局慢动作
+                // TriggerSlowMotion(0.05f, 0.3f);
+            }
+
+            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
+            enemy->TakeDamage(actualDamage, dashAngle);
+
+            g_player.hitEnemies.push_back(enemy);
+        }
+    }
+}
+
 void UpdatePlayerPhysics(float deltaTime) {
     if (g_player.isDead)
         return;
@@ -147,12 +211,12 @@ void UpdatePlayerPhysics(float deltaTime) {
         int steps = 1;
 
         if (g_player.isDashing) {
-            // 冲刺时增加检测次数
-            steps = 8; // 从4增加到8
+            // 冲刺：基础8步，按速度提升，封顶16步
+            steps = std::min(std::max(16, static_cast<int>(ceilf(speed * 20.0f))), 32);
         }
         else if (speed > 0.2f) {
             // 高速移动时增加检测次数
-            steps = std::min(static_cast<int>(speed * 10.0f), 6);
+            steps = std::min(static_cast<int>(speed * 10.0f), 16);
         }
         else {
             // 正常移动
@@ -163,8 +227,8 @@ void UpdatePlayerPhysics(float deltaTime) {
         std::vector<MapTile*> nearbyTiles;
 
         // 计算移动范围，扩大检测区域
-        float paddingX = 2.0f;
-        float paddingY = 2.0f;
+        float paddingX = 3.0f;
+        float paddingY = 3.0f;
 
         // 预测移动后的位置范围
         float minX = std::min(g_player.posX + offsetX, g_player.posX + offsetX + moveX) - paddingX;
@@ -339,6 +403,11 @@ void UpdatePlayerPhysics(float deltaTime) {
                 g_player.posY -= stepY; // 回退垂直移动
                 g_player.posX -= stepX; // 回退水平移动
             }
+
+            // 冲刺时在每个子步位置做敌人命中检测，避免高速穿过
+            if (g_player.isDashing) {
+                PerformDashHitTest(g_player.posX, g_player.posY);
+            }
         }
     }
 
@@ -387,6 +456,7 @@ void UpdatePlayerPhysics(float deltaTime) {
 
     CheckDashAttack();
 }
+
 void CheckDashAttack() {
     if (!g_player.isDashing) {
         g_player.hitEnemies.clear();
@@ -395,77 +465,10 @@ void CheckDashAttack() {
         return;
     }
 
-    // 冲刺时使用缩小并居中的碰撞体
-    float playerWidth = PLAYER_WIDTH;
-    float playerHeight = PLAYER_HEIGHT;
-    float offsetX = 0.0f;
-    float offsetY = 0.0f;
-
-    if (g_player.isDashing) {
-        playerWidth = PLAYER_WIDTH * 0.25f;
-        playerHeight = PLAYER_HEIGHT * 0.25f;
-        offsetX = (PLAYER_WIDTH - playerWidth) * 0.5f;
-        offsetY = (PLAYER_HEIGHT - playerHeight) * 0.5f;
-    }
-
-    // 计算玩家冲刺角度
-    float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
-
-    for (auto& enemy : g_enemies) {
-        if (!enemy->IsAlive()) continue;
-
-        // 检查是否已经击中过这个敌人
-        if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
-            continue;
-        }
-
-        // 使用缩小且居中的碰撞体进行检测
-        if (CheckCollision(g_player.posX + offsetX, g_player.posY + offsetY, playerWidth, playerHeight,
-            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
-
-            // for the combo when hitting enemies
-            g_player.comboCount++;
-            g_player.comboTimer = 5.0f;
-
-
-            // Update the gauge bar
-            float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
-            float multiplier = enemy->GetDamageMultiplier(dashAngle);
-
-            // Check if it's a weak point hit (multiplier > 1.5 means critical/weak point)
-            if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
-                g_player.gaugePoints += 2;  // Weak point hit: +2
-            }
-            else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
-                g_player.gaugePoints += 1;  // Normal hit: +1
-            }
-            // Cap at max
-            if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
-                g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
-            }
-
-
-            // === 新增：触发顿刀效果 ===
-            if (g_player.hitStopTriggered < 3) {
-                g_camera.Shake(0.02f, 0.05f);
-                g_player.hitStopTimer = 0.075f; // 0.05秒的顿刀
-                g_player.hitStopTriggered++;   // 增加触发计数
-
-                // 触发全局慢动作效果（可选，可注释掉）
-                // TriggerSlowMotion(0.05f, 0.3f);
-            }
-
-            // 直接传递玩家冲刺角度，敌人计算相对方向
-            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
-
-            // 对敌人造成伤害
-            enemy->TakeDamage(actualDamage, dashAngle);
-
-            // 标记为已击中
-            g_player.hitEnemies.push_back(enemy);
-        }
-    }
+    // 使用当前最终位置检测（作为兜底），子步检测已在UpdatePlayerPhysics中进行
+    PerformDashHitTest(g_player.posX, g_player.posY);
 }
+
 // New: Update player death state
 void UpdatePlayerDeath(float deltaTime) {
     if (!g_player.isDead) {
@@ -503,7 +506,6 @@ void OnPlayerDeath() {
     // Death sound can be added here
     // g_audioManager.PlaySFX("death_sound.wav");
 }
-
 
 // New: Check if player should die
 void CheckPlayerDeath() {
