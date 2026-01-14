@@ -451,7 +451,7 @@ private:
     BeamState beamState = BEAM_IDLE;
     float attackCooldown = 3.0f;
     float currentCooldown = 0.0f;
-    float preAttackDuration = 0.5f;
+    float preAttackDuration = 1.5f;
     float attackDuration = 1.0f;
     float postAttackDuration = 0.5f;
     float stateTimer = 0.0f;
