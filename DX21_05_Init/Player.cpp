@@ -395,13 +395,17 @@ void CheckDashAttack() {
         return;
     }
 
-    // 冲刺时使用缩小的碰撞体
+    // 冲刺时使用缩小并居中的碰撞体
     float playerWidth = PLAYER_WIDTH;
     float playerHeight = PLAYER_HEIGHT;
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
 
     if (g_player.isDashing) {
         playerWidth = PLAYER_WIDTH * 0.25f;
         playerHeight = PLAYER_HEIGHT * 0.25f;
+        offsetX = (PLAYER_WIDTH - playerWidth) * 0.5f;
+        offsetY = (PLAYER_HEIGHT - playerHeight) * 0.5f;
     }
 
     // 计算玩家冲刺角度
@@ -415,8 +419,8 @@ void CheckDashAttack() {
             continue;
         }
 
-        // 检查碰撞，使用缩小的碰撞体
-        if (CheckCollision(g_player.posX, g_player.posY, playerWidth, playerHeight,
+        // 使用缩小且居中的碰撞体进行检测
+        if (CheckCollision(g_player.posX + offsetX, g_player.posY + offsetY, playerWidth, playerHeight,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
             // for the combo when hitting enemies
