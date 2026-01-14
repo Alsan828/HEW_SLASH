@@ -467,7 +467,7 @@ void ProjectileManager::LoadTextures(ID3D11Device* device) {
 // Predefined projectile creation functions
 void ProjectileManager::CreateFireball(float startX, float startY, float targetX, float targetY, bool fromPlayer) {
     ProjectileEffect effect;
-    effect.damage = 25.0f;
+    effect.damage = 100000.0f;
     effect.burnDamage = 5.0f;
     effect.areaRadius = 0.3f;
 
