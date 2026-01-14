@@ -450,7 +450,7 @@ void UpdatePlayerPhysics(float deltaTime) {
     }
 
     // 边界检查
-    if (g_player.posY < -2.0f) {
+    if (g_player.posY < -4.0f) {
         ResetGame();
     }
 

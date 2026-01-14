@@ -553,7 +553,7 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     else if (tileCode == "P1" || tileCode == "P2") {
         return g_groundTexture;
     }
-    else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT" || tileCode == "D4") {
+    else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT" || tileCode == "D4" || tileCode == "D5" || tileCode == "D6" || tileCode == "D7" || tileCode == "DB") {
         return g_groundTexture;
     }
     else if (tileCode == "D1" || tileCode == "D2") {
@@ -793,7 +793,9 @@ void HandleInput() {
     {
         SCENE currentScene = sceneManager.GetCurrentSceneType();
 
-        if (currentScene == STAGE || currentScene == STAGE2 || currentScene == STAGE3 || currentScene == STAGE4 || currentScene == BOSS || currentScene == CAKE) // add more stages here depending on how many stages there are 
+        if (currentScene == STAGE  || currentScene == STAGE2 || currentScene == STAGE3 || currentScene == STAGE4 || currentScene == STAGE5 || 
+            currentScene == STAGE6 || currentScene == STAGE7 ||
+            currentScene == BOSS   || currentScene == CAKE) // add more stages here depending on how many stages there are 
         {
             sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
         }
@@ -802,7 +804,9 @@ void HandleInput() {
         else if (currentScene == PAUSE)
         {
             SCENE previousScene = sceneManager.GetOriginalPausedScene();
-            if (previousScene == STAGE || previousScene == STAGE2 || previousScene == STAGE3 || previousScene == STAGE4 ||previousScene == BOSS || previousScene == CAKE) // add more stages here depending on how many stages there are 
+            if (previousScene == STAGE  || previousScene == STAGE2 || previousScene == STAGE3 || previousScene == STAGE4 || previousScene == STAGE5 || 
+                previousScene == STAGE6 || previousScene == STAGE7 ||
+                previousScene == BOSS   || previousScene == CAKE) // add more stages here depending on how many stages there are 
             {
                 sceneManager.SwitchScene(previousScene);
             }

@@ -37,6 +37,10 @@ void BossScene::Update(float deltaTime)
     static bool wasPlayerAlive = true;
     bool isPlayerAlive = !g_player.isDead;
 
+    if (!g_enemies.empty() && !m_boss) {
+        m_boss = g_enemies[0];
+    }
+
     // for checking if the hp bar reahed the checkpoint or not
     if (m_boss && m_boss->IsAlive()) {
         CheckBossCheckPoints();
@@ -51,13 +55,19 @@ void BossScene::Update(float deltaTime)
     }
 
     // if boss died, the hp bar disspears as well as the boss.
-    if (m_boss && !m_boss->IsAlive()) 
-    {
-        m_boss = nullptr;  
+    //if (m_boss && !m_boss->IsAlive()) 
+    //{
+    //    m_boss = nullptr;  
 
+    //    // Switch to CakeScene after boss death 
+    //    sceneManager->SwitchScene(CAKE); 
+    //    return; // Stop updating this scene
+    //}
+    if (g_enemies.empty())
+    {
         // Switch to CakeScene after boss death 
-        sceneManager->SwitchScene(CAKE); 
-        return; // Stop updating this scene
+        sceneManager->SwitchScene(CAKE);
+        return;
     }
  
 }

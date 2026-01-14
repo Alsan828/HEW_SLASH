@@ -155,6 +155,21 @@ void MapManager::InitializeMaps() {
     world1Area4Map.CreateWorld1Area4Map();
     AddMap(world1Area4Map);
 
+    // create the world1 area5
+    Map world1Area5Map("World1Area5", 0.15f, 0.15f);
+    world1Area5Map.CreateWorld1Area5Map();
+    AddMap(world1Area5Map);
+
+    // create the world1 area6
+    Map world1Area6Map("World1Area6", 0.15f, 0.15f);
+    world1Area6Map.CreateWorld1Area6Map();
+    AddMap(world1Area6Map);
+
+    // create the world1 area7
+    Map world1Area7Map("World1Area7", 0.15f, 0.15f);
+    world1Area7Map.CreateWorld1Area7Map();
+    AddMap(world1Area7Map);
+
     // Create boss map
     Map bossMap ("boss", 0.15f, 0.15f);
     bossMap.CreateBossMap();
