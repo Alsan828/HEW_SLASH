@@ -73,6 +73,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
 
@@ -102,6 +103,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false; 
         }
 
@@ -131,6 +133,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
         currentScene = new Stage3Scene(this);
@@ -159,6 +162,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
         currentScene = new Stage4Scene(this);
@@ -187,6 +191,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
         currentScene = new Stage5Scene(this);
@@ -215,6 +220,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
         currentScene = new Stage6Scene(this);
@@ -243,6 +249,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
         currentScene = new Stage7Scene(this);
@@ -271,6 +278,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
         currentScene = new BossScene(this);
@@ -299,6 +307,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.gaugePoints = 0;
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
+            g_gameStats.Reset();
             comingFromStageSelect = false;
         }
         currentScene = new CakeScene(this);
