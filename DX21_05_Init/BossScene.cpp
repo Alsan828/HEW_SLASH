@@ -13,6 +13,8 @@ BossScene::BossScene(SceneManager* manager)
 // Initialize the stage
 bool BossScene::Init()
 {
+    CleanupEnemies();
+
     g_mapManager.SwitchMap("boss", 0, 1);
 
     g_gameState = STATE_PLAYING;
@@ -28,6 +30,7 @@ bool BossScene::Init()
         m_boss->SetHealth(500000.0f);
     }
 
+
     return true;
 }
 
@@ -36,10 +39,6 @@ void BossScene::Update(float deltaTime)
 {
     static bool wasPlayerAlive = true;
     bool isPlayerAlive = !g_player.isDead;
-
-    if (!g_enemies.empty() && !m_boss) {
-        m_boss = g_enemies[0];
-    }
 
     // for checking if the hp bar reahed the checkpoint or not
     if (m_boss && m_boss->IsAlive()) {
@@ -55,19 +54,13 @@ void BossScene::Update(float deltaTime)
     }
 
     // if boss died, the hp bar disspears as well as the boss.
-    //if (m_boss && !m_boss->IsAlive()) 
-    //{
-    //    m_boss = nullptr;  
-
-    //    // Switch to CakeScene after boss death 
-    //    sceneManager->SwitchScene(CAKE); 
-    //    return; // Stop updating this scene
-    //}
-    if (g_enemies.empty())
+    if (m_boss && !m_boss->IsAlive()) 
     {
+        m_boss = nullptr;  
+
         // Switch to CakeScene after boss death 
-        sceneManager->SwitchScene(CAKE);
-        return;
+        sceneManager->SwitchScene(CAKE); 
+        return; // Stop updating this scene
     }
  
 }
@@ -88,10 +81,10 @@ void BossScene::CheckBossCheckPoints()
         m_bossCheckpointHP = currentHP; // save the boss hp for the respawn
 
         // erase later. this is jsut for debug
-        char debugMsg[256];
+       /* char debugMsg[256];
         sprintf_s(debugMsg, "Boss Checkpoint 1 reached! HP saved at: %.0f (%.1f%%)\n",
             currentHP, healthPercent * 100.0f);
-        OutputDebugStringA(debugMsg);
+        OutputDebugStringA(debugMsg);*/
     }
 
     // if the hp bar is 1/3
@@ -101,10 +94,10 @@ void BossScene::CheckBossCheckPoints()
         m_bossCheckpointHP = currentHP; // saves the boss hp for the respawn
 
         // erased later. just for debug
-        char debugMsg[256];
+        /*char debugMsg[256];
         sprintf_s(debugMsg, "Boss Checkpoint 2 reached! HP saved at: %.0f (%.1f%%)\n",
             currentHP, healthPercent * 100.0f);
-        OutputDebugStringA(debugMsg);
+        OutputDebugStringA(debugMsg);*/
     }
 }
 

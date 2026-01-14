@@ -439,8 +439,16 @@ void UpdatePlayerPhysics(float deltaTime) {
             portalWidth, portalHeight,
             targetMap, portalId, linkedSpawnId)) {
 
-            g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
-            portalCooldown = 1.0f;
+            if (targetMap == "boss") {
+                // it goes to boss of world1
+                sceneManager.SwitchScene(BOSS);
+                portalCooldown = 1.0f;
+            }
+
+            else {
+                g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
+                portalCooldown = 1.0f;
+            }
         }
     }
 
