@@ -115,6 +115,11 @@ public:
     // 重置离开屏幕计时器
     void ResetOffScreenTimer() { offScreenTimer = 0.0f; }
 
+    // 检查敌人是否进入深度休眠（完全停止更新）
+    bool IsFullySleeping(const Camera& camera) const {
+        return !IsVisible(camera) && offScreenTimer > MAX_OFFSCREEN_TIME;
+    }
+
     void UpdateMinimal(float deltaTime);
     // 检查是否需要最小更新（即使不在屏幕内）
     void UpdateAIMinimal(float deltaTime);
