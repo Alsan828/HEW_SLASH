@@ -1202,8 +1202,8 @@ SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 100.0f) {
     attackRange = 0.0f;  // Contact damage only
 
     // Add animations (adjust frame counts based on your sprites)
-    anim.AddClip("idle", 0, 0, 1, 1, 0.1f, true, g_squareEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.1f, false, g_squareEnemyDeathTexture); // Adjust frames as needed
+    anim.AddClip("idle", 0, 7, 1, 8, 0.15f, true, g_squareEnemyIdleTexture);
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_squareEnemyDeathTexture); // Adjust frames as needed
 
     anim.SetClip("idle");
 
