@@ -26,8 +26,8 @@ private:
     
     bool isHovered = false;
 
-    bool s_wasMouseDown = false;
-    bool s_wasMouseDownInitialized = false;
+    bool g_wasMouseDown = false;
+    bool g_wasMouseDownInitialized = false;
 
     float hitboxScaleWidth = 1.0f;
     float hitboxScaleHeight = 1.0f;

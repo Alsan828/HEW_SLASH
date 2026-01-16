@@ -151,7 +151,6 @@ void BossScene::RespawnBossAtCheckpoint()
 // Draw the stage
 void BossScene::Draw()
 {
-    // Call your global draw function
     DrawGame();
 
     RenderBossHealthBar();

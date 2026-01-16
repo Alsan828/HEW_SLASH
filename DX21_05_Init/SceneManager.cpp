@@ -1,18 +1,26 @@
 ﻿#include "SceneManager.h"
 #include "TitleScene.h"
-#include "Stage.h"
-#include "Stage2.h"
-#include "Stage3.h"
-#include "Stage4.h"
-#include "Stage5.h"
-#include "Stage6.h"
-#include "Stage7.h"
-#include "BossScene.h"
+
+#include "GameplayScene.h" 
+
+
+//#include "Stage.h"
+//#include "Stage2.h"
+//#include "Stage3.h"
+//#include "Stage4.h"
+//#include "Stage5.h"
+//#include "Stage6.h"
+//#include "Stage7.h"
+//#include "BossScene.h"
+
+
 #include "CakeScene.h"
 #include "Menu.h"
 #include "HowToPlay.h"
 #include "Pause.h"
 #include "StageSelect.h"
+#include "StageSelect2.h"
+#include "StageSelect3.h"
 #include "Result.h"
 
 //for initializing it
@@ -27,12 +35,11 @@ bool SceneManager::SwitchScene(SCENE newScene)
     SceneBase* oldScene = currentScene;  // used for the pause menu
     SCENE caller = currentSceneType;     // save who called us (the scene type) before overwriting it
     
-    if (currentScene) 
-    {       
-        if (!(currentSceneType == STAGE  || currentSceneType == STAGE2 || currentSceneType == STAGE3 || currentSceneType == STAGE4 || currentSceneType == STAGE5 
-           || currentSceneType == STAGE6 || currentSceneType == STAGE7
-           || currentSceneType == BOSS   || currentSceneType == CAKE) // add here more stages depening on how many there are 
-           || newScene != PAUSE) 
+   
+    if (currentScene)
+    {
+        if (!(currentSceneType == GAMEPLAY || currentSceneType == CAKE)
+            || newScene != PAUSE)
         {
             currentScene->Uninit();
             delete currentScene;
@@ -51,99 +58,10 @@ bool SceneManager::SwitchScene(SCENE newScene)
         return currentScene->Init();
         break;
 
-    case STAGE:
-        if (caller == PAUSE && previousScene) 
-        {
-            currentScene = previousScene;     // resume existing stage 
-            previousScene = nullptr;
-            comingFromStageSelect = false;
-            return true;                     
-        }
-
-        if (previousScene) 
-        {
-            previousScene->Uninit();
-            delete previousScene;
-            previousScene = nullptr;
-        }
-
-        // Reset gauge bar if coming from stage select
-        if (comingFromStageSelect)
-        {
-            g_player.gaugePoints = 0;
-            g_player.isInvincible = false;
-            g_player.invincibleTimer = 0.0f;
-            g_gameStats.Reset();
-            comingFromStageSelect = false;
-        }
-
-        currentScene = new StageScene(this);
-        return currentScene->Init();
-        break;
-
-    case STAGE2:
-        if (caller == PAUSE && previousScene) 
-        {
-            currentScene = previousScene;     // resume existing stage
-            previousScene = nullptr;
-            comingFromStageSelect = false;
-            return true;                    
-        }
-
-        if (previousScene)
-        {
-            previousScene->Uninit();
-            delete previousScene;
-            previousScene = nullptr;
-        }
-
-        // Reset gauge bar if coming from stage select
-        if (comingFromStageSelect)
-        {
-            g_player.gaugePoints = 0;
-            g_player.isInvincible = false;
-            g_player.invincibleTimer = 0.0f;
-            g_gameStats.Reset();
-            comingFromStageSelect = false; 
-        }
-
-        currentScene = new Stage2Scene(this);
-        return currentScene->Init();
-        break;
-
-    case STAGE3:
-        if (caller == PAUSE && previousScene) 
-        {
-            currentScene = previousScene;     // resume existing stage 
-            previousScene = nullptr;
-            comingFromStageSelect = false;
-            return true;                      
-        }
-
-        if (previousScene) 
-        {
-            previousScene->Uninit();
-            delete previousScene;
-            previousScene = nullptr;
-        }
-
-        // Reset gauge bar if coming from stage select
-        if (comingFromStageSelect)
-        {
-            g_player.gaugePoints = 0;
-            g_player.isInvincible = false;
-            g_player.invincibleTimer = 0.0f;
-            g_gameStats.Reset();
-            comingFromStageSelect = false;
-        }
-        currentScene = new Stage3Scene(this);
-        return currentScene->Init();
-        break;
-
-    case STAGE4:
+    case GAMEPLAY:  // for all the areas (stages) including the boss
         if (caller == PAUSE && previousScene)
         {
-            currentScene = previousScene;     // resume existing stage 
+            currentScene = previousScene;
             previousScene = nullptr;
             comingFromStageSelect = false;
             return true;
@@ -156,7 +74,6 @@ bool SceneManager::SwitchScene(SCENE newScene)
             previousScene = nullptr;
         }
 
-        // Reset gauge bar if coming from stage select
         if (comingFromStageSelect)
         {
             g_player.gaugePoints = 0;
@@ -165,123 +82,8 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_gameStats.Reset();
             comingFromStageSelect = false;
         }
-        currentScene = new Stage4Scene(this);
-        return currentScene->Init();
-        break;
 
-    case STAGE5:
-        if (caller == PAUSE && previousScene)
-        {
-            currentScene = previousScene;     // resume existing stage 
-            previousScene = nullptr;
-            comingFromStageSelect = false;
-            return true;
-        }
-
-        if (previousScene)
-        {
-            previousScene->Uninit();
-            delete previousScene;
-            previousScene = nullptr;
-        }
-
-        // Reset gauge bar if coming from stage select
-        if (comingFromStageSelect)
-        {
-            g_player.gaugePoints = 0;
-            g_player.isInvincible = false;
-            g_player.invincibleTimer = 0.0f;
-            g_gameStats.Reset();
-            comingFromStageSelect = false;
-        }
-        currentScene = new Stage5Scene(this);
-        return currentScene->Init();
-        break;
-
-    case STAGE6:
-        if (caller == PAUSE && previousScene)
-        {
-            currentScene = previousScene;     // resume existing stage 
-            previousScene = nullptr;
-            comingFromStageSelect = false;
-            return true;
-        }
-
-        if (previousScene)
-        {
-            previousScene->Uninit();
-            delete previousScene;
-            previousScene = nullptr;
-        }
-
-        // Reset gauge bar if coming from stage select
-        if (comingFromStageSelect)
-        {
-            g_player.gaugePoints = 0;
-            g_player.isInvincible = false;
-            g_player.invincibleTimer = 0.0f;
-            g_gameStats.Reset();
-            comingFromStageSelect = false;
-        }
-        currentScene = new Stage6Scene(this);
-        return currentScene->Init();
-        break;
-
-    case STAGE7:
-        if (caller == PAUSE && previousScene)
-        {
-            currentScene = previousScene;     // resume existing stage 
-            previousScene = nullptr;
-            comingFromStageSelect = false;
-            return true;
-        }
-
-        if (previousScene)
-        {
-            previousScene->Uninit();
-            delete previousScene;
-            previousScene = nullptr;
-        }
-
-        // Reset gauge bar if coming from stage select
-        if (comingFromStageSelect)
-        {
-            g_player.gaugePoints = 0;
-            g_player.isInvincible = false;
-            g_player.invincibleTimer = 0.0f;
-            g_gameStats.Reset();
-            comingFromStageSelect = false;
-        }
-        currentScene = new Stage7Scene(this);
-        return currentScene->Init();
-        break;
-
-    case BOSS:
-        if (caller == PAUSE && previousScene)
-        {
-            currentScene = previousScene;     // resume existing stage 
-            previousScene = nullptr;
-            comingFromStageSelect = false;
-            return true;
-        }
-
-        if (previousScene)
-        {
-            previousScene->Uninit();
-            delete previousScene;
-            previousScene = nullptr;
-        }
-
-        // Reset gauge bar if coming from stage select
-        if (comingFromStageSelect)
-        {
-            g_player.gaugePoints = 0;
-            g_player.isInvincible = false;
-            g_player.invincibleTimer = 0.0f;
-            g_gameStats.Reset();
-            comingFromStageSelect = false;
-        }
-        currentScene = new BossScene(this);
+        currentScene = new GameplayScene(this, currentStageInfo.GetWorld(), currentStageInfo.GetArea());
         return currentScene->Init();
         break;
 
@@ -345,8 +147,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case PAUSE:
-        if (caller == STAGE || caller == STAGE2 || caller == STAGE3 || caller == STAGE4 || caller == STAGE5 || caller == STAGE6 || caller == STAGE7 
-            || caller == BOSS || caller == CAKE)  // add here more stages depending on how many there are 
+        if (caller == GAMEPLAY || caller == CAKE)
         {
             // so you can preserve the gameplay scene for when you resume the game
             previousScene = oldScene;                
@@ -360,7 +161,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             currentScene = new PauseScene(this, previousScene, originalPausedScene);
             return currentScene->Init();
         }
-        else if (caller == STAGESELECT)
+        else if (caller == STAGESELECT || caller == STAGESELECT2 || caller == STAGESELECT3)
         {   
             // if coming bak from stageselect scene,you can continue from you were in the stage
             currentScene = new PauseScene(this, previousScene, originalPausedScene); 
@@ -375,7 +176,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
                 delete previousScene;
                 previousScene = nullptr;
             }
-            currentScene = new PauseScene(this, nullptr, STAGE); // resume target unused
+            currentScene = new PauseScene(this, nullptr, GAMEPLAY); // resume target unused
             return currentScene->Init();
         }
         break;
@@ -383,18 +184,37 @@ bool SceneManager::SwitchScene(SCENE newScene)
     case STAGESELECT:
         comingFromStageSelect = true;
 
-        if (caller == PAUSE) // if in pause
+        // Only update origin if we are entering the stage-select system from outside
+        if (caller != STAGESELECT && caller != STAGESELECT2 && caller != STAGESELECT3)
         {
-            currentScene = new StageSelect(this, PAUSE); // go back to pause
+            stageSelectOrigin = caller;
         }
-        else if (caller == MENU) // if in menu
+
+        currentScene = new StageSelect(this, stageSelectOrigin);
+        return currentScene->Init();
+        break;
+
+    case STAGESELECT2:
+        comingFromStageSelect = true;
+
+        if (caller != STAGESELECT && caller != STAGESELECT2 && caller != STAGESELECT3)
         {
-            currentScene = new StageSelect(this, MENU);// go back to menu
+            stageSelectOrigin = caller;
         }
-        else
+
+        currentScene = new StageSelect2(this, stageSelectOrigin);
+        return currentScene->Init();
+        break;
+
+    case STAGESELECT3:
+        comingFromStageSelect = true;
+
+        if (caller != STAGESELECT && caller != STAGESELECT2 && caller != STAGESELECT3)
         {
-            currentScene = new StageSelect(this, TITLE); // for default in case there is an error
+            stageSelectOrigin = caller;
         }
+
+        currentScene = new StageSelect3(this, stageSelectOrigin);
         return currentScene->Init();
         break;
 
@@ -408,6 +228,14 @@ bool SceneManager::SwitchScene(SCENE newScene)
         return false;
     }
 
+}
+
+
+//new test
+bool SceneManager::SwitchToStage(int world, int stage)
+{
+    currentStageInfo = StageInfo(world, stage);
+    return SwitchScene(GAMEPLAY);
 }
 
 //for updating 
