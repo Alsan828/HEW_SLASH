@@ -38,22 +38,25 @@ static void PerformDashHitTest(float testX, float testY) {
             g_player.comboTimer = 5.0f;
 
             float multiplier = enemy->GetDamageMultiplier(dashAngle);
-            if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
-                g_player.gaugePoints += 2;
-            }
-            else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
-                g_player.gaugePoints += 1;
-            }
-            if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
-                g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
-            }
+            if (!g_player.isInvincible)// if player is not invincible
+            {
+                if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                    g_player.gaugePoints += 2;
+                }
+                else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                    g_player.gaugePoints += 1;
+                }
+                if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+                    g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+                }
 
-            if (g_player.hitStopTriggered < 3) {
-                g_camera.Shake(0.02f, 0.05f);
-                g_player.hitStopTimer = 0.075f;
-                g_player.hitStopTriggered++;
-                // 可选全局慢动作
-                // TriggerSlowMotion(0.05f, 0.3f);
+                if (g_player.hitStopTriggered < 3) {
+                    g_camera.Shake(0.02f, 0.05f);
+                    g_player.hitStopTimer = 0.075f;
+                    g_player.hitStopTriggered++;
+                    // 可选全局慢动作
+                    // TriggerSlowMotion(0.05f, 0.3f);
+                }
             }
 
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
