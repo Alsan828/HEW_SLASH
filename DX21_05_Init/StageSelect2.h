@@ -7,8 +7,8 @@
 #include "Game.h"
 #include "UIButton.h"
 
-// used for stage select for World 1 (8 areas including boss)
-class StageSelect : public SceneBase
+// used for stage select for World 2 (8 areas including boss)
+class StageSelect2 : public SceneBase
 {
 private:
     SceneManager* sceneManager;   // pointer to the scene manager
@@ -26,7 +26,7 @@ private:
     ID3D11ShaderResourceView* backHoverTexture = nullptr;
 
 public:
-    StageSelect(SceneManager* manager, SCENE returnTo); // constructor
+    StageSelect2(SceneManager* manager, SCENE returnTo); // constructor
 
     bool Init() override;
     void Update(float deltaTime) override;

@@ -1,40 +1,40 @@
 ﻿#pragma once
 #include "SceneBase.h"
+#include "StageInfo.h"
 
 enum SCENE 
 {
     TITLE,
     MENU,
-    STAGE,
-    STAGE2,
-    STAGE3,
-    STAGE4,
-    STAGE5,
-    STAGE6,
-    STAGE7,
-    BOSS,
+    GAMEPLAY, // this is for all the areas (8 areas) I have including the boss area 
     CAKE,
     RESULT,
     PAUSE,
     HOWTOPLAY,
-    STAGESELECT,
+    STAGESELECT,   // for stage1 (world 1)
+    STAGESELECT2,  // for stage2 (world 2)
+    STAGESELECT3,  // for stage3 (world 3)
     QUIT_GAME = -1
 
-    // ADD MORE HERE LATER
+    // ADD MORE HERE LATER IF NEEDED
 };
 
 class SceneManager 
 {
 private:
     SceneBase* currentScene = nullptr; // this is for for the current scene. It starts empty until a scene is loaded
-    SCENE currentSceneType = STAGE;
+    SCENE currentSceneType = GAMEPLAY;
 
     SceneBase* previousScene = nullptr;
-    SCENE previousSceneType = STAGE;
+    SCENE previousSceneType = GAMEPLAY;
 
-    SCENE originalPausedScene = STAGE;
+    SCENE originalPausedScene = GAMEPLAY;
 
     bool comingFromStageSelect = false;
+
+    StageInfo currentStageInfo; //new test
+
+    SCENE stageSelectOrigin = TITLE;
 
 public:
     bool Init(SCENE startScene);
@@ -42,6 +42,8 @@ public:
     void Draw();
     void Uninit();
     bool SwitchScene(SCENE newScene);
+
+    bool SwitchToStage(int world, int stage); //new test
 
     // Game loop
     void GameLoop();
@@ -53,4 +55,6 @@ public:
 
     SCENE GetOriginalPausedScene() const { return originalPausedScene; }
     void SetOriginalPausedScene(SCENE scene) { originalPausedScene = scene; }
+
+    StageInfo GetCurrentStageInfo() const { return currentStageInfo; } //new test
 };

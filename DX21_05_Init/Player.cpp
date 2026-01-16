@@ -441,7 +441,10 @@ void UpdatePlayerPhysics(float deltaTime) {
 
             if (targetMap == "boss") {
                 // it goes to boss of world1
-                sceneManager.SwitchScene(BOSS);
+                //sceneManager.SwitchScene(BOSS);
+                
+                // it goes to boss stage (World 1, Stage 8)
+                sceneManager.SwitchToStage(1, 8);
                 portalCooldown = 1.0f;
             }
 

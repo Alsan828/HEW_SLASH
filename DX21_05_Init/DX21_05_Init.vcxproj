@@ -158,6 +158,7 @@
     <ClCompile Include="Game.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="GameplayScene.cpp" />
     <ClCompile Include="Globals.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
@@ -206,22 +207,12 @@
     <ClCompile Include="SceneManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
-    <ClCompile Include="Stage.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
-    </ClCompile>
-    <ClCompile Include="Stage2.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
-    </ClCompile>
-    <ClCompile Include="Stage3.cpp">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
-    </ClCompile>
-    <ClCompile Include="Stage4.cpp" />
-    <ClCompile Include="Stage5.cpp" />
-    <ClCompile Include="Stage6.cpp" />
-    <ClCompile Include="Stage7.cpp" />
+    <ClCompile Include="StageInfo.cpp" />
     <ClCompile Include="StageSelect.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="StageSelect2.cpp" />
+    <ClCompile Include="StageSelect3.cpp" />
     <ClCompile Include="stb_image.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
@@ -260,6 +251,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameplayScene.h" />
     <ClInclude Include="HowToPlay.h" />
     <ClInclude Include="InputSystem.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
@@ -278,14 +270,10 @@
     <ClInclude Include="Result.h" />
     <ClInclude Include="SceneBase.h" />
     <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Stage.h" />
-    <ClInclude Include="Stage2.h" />
-    <ClInclude Include="Stage3.h" />
-    <ClInclude Include="Stage4.h" />
-    <ClInclude Include="Stage5.h" />
-    <ClInclude Include="Stage6.h" />
-    <ClInclude Include="Stage7.h" />
+    <ClInclude Include="StageInfo.h" />
     <ClInclude Include="StageSelect.h" />
+    <ClInclude Include="StageSelect2.h" />
+    <ClInclude Include="StageSelect3.h" />
     <ClInclude Include="stb_image.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>

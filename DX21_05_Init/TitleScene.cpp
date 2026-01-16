@@ -67,9 +67,15 @@ void TitleScene::Draw()
 //it erases the objects in title
 void TitleScene::Uninit() 
 {
+    if (tex)
+    {
+        tex->Release();
+        tex = nullptr;
+    }
 
     // clean up the texture for the animation
     m_titleAnim.ClearClips();
+
     // clean up the buttons
     uiButtons.clear();
     g_mouseIndicator.Cleanup();
