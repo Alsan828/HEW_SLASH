@@ -60,33 +60,6 @@ bool StageSelect::Init()
 	return true;
 }
 
-
-//void StageSelect::Update(float deltaTime)
-//{
-//	g_inputSystem.Update();
-//
-//	// for the buttons
-//	for (auto& btn : uiButtons)
-//	{
-//		/*if (btn.Process() == UIButtonResult::Clicked)
-//		{
-//			sceneManager->SwitchScene(btn.GetTargetScene());
-//			return;
-//		}*/
-//		if (btn.Process() == UIButtonResult::Clicked) { // If this is the BACK button 仺 use returnScene 
-//			if (btn.GetTargetScene() == MENU || btn.GetTargetScene() == PAUSE) 
-//			{ 
-//				sceneManager->SwitchScene(returnScene); 
-//			} 
-//			else 
-//			{ // Stage buttons 仺 go to the stage 
-//				sceneManager->SwitchScene(btn.GetTargetScene()); 
-//			} 
-//			return; 
-//		}
-//	}
-//}
-
 // new update stage select with the GAMEPLAY 
 void StageSelect::Update(float deltaTime)
 {
@@ -109,17 +82,6 @@ void StageSelect::Update(float deltaTime)
 				sceneManager->SwitchScene(STAGESELECT2);
 				return;
 			}
-			// if this is the back button use the returnScene
-			//else if (uiButtons[i].GetTargetScene() == MENU || uiButtons[i].GetTargetScene() == PAUSE)
-			//{
-			//	sceneManager->SwitchScene(returnScene);
-			//	return;
-			//}
-			//else // for safety if there is an error
-			//{
-			//	sceneManager->SwitchScene(uiButtons[i].GetTargetScene());
-			//	return;
-			//}
 			// back button
 			else
 			{

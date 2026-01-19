@@ -6,9 +6,11 @@
 #include "SceneManager.h" // for switching scenes
 
 // construct
-ResultScene::ResultScene(SceneManager* manager)
+ResultScene::ResultScene(SceneManager* manager, int completedWorld)
 {
     sceneManager = manager;
+    m_completedWorld = completedWorld;
+    m_nextScene = MENU; // default to MENU 
 }
 
 //it initializes the objects
@@ -25,9 +27,22 @@ bool ResultScene::Init()
     uiButtons.back().SetHitboxScale(0.45f, 0.1f);  // change this values if needed depending on the size of the button
     uiButtons.back().SetHitboxOffset(0.02f);
 
+    if (m_completedWorld == 1)
+    {
+        m_nextScene = STAGESELECT2;  // if you complete world1 you go to world12
+    }
+    else if (m_completedWorld == 2)
+    {
+        m_nextScene = STAGESELECT3;  // Cif you completr world2 you go to world3
+    }
+    else if (m_completedWorld == 3)
+    {
+        m_nextScene = MENU;  // if you compelte world3 you go to menu as default
+    }
+
     LoadTexture(g_pDevice, "asset/UI/result/next_normal.png", &continueTexture); // for the button
     LoadTexture(g_pDevice, "asset/UI/result/next_hover.png", &continueHoverTexture);
-    uiButtons.emplace_back(0.3f, -0.8f, 0.6f, 1.0f, MENU, continueTexture, continueHoverTexture); //todo: change MENU to next world when there is one
+    uiButtons.emplace_back(0.3f, -0.8f, 0.6f, 1.0f, m_nextScene/*MENU*/, continueTexture, continueHoverTexture); //todo: change MENU to next world when there is one
     uiButtons.back().SetHitboxScale(0.63f, 0.1f);  // change this values if needed depending on the size of the button3
     uiButtons.back().SetHitboxOffset(0.02f);
 

@@ -18,19 +18,19 @@ bool StageSelect2::Init()
     LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
 
     // add them when I have the actual stage
-    //uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-1
-    //uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-2
-    //uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-3
-    //uiButtons.emplace_back(0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-4
-    //uiButtons.emplace_back(-0.65f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-5
-    //uiButtons.emplace_back(-0.25f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-6
-    //uiButtons.emplace_back(0.15f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-7
-    //uiButtons.emplace_back(0.65f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-8 (boss)
-    //for (auto& btn : uiButtons)
-    //{
-    //    btn.SetHitboxScale(0.7f, 0.2f);
-    //    btn.SetHitboxOffset(-0.05f);
-    //}
+    uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-1
+    uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-2
+    uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-3
+    uiButtons.emplace_back(0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-4
+    uiButtons.emplace_back(-0.65f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-5
+    uiButtons.emplace_back(-0.25f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-6
+    uiButtons.emplace_back(0.15f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-7
+    uiButtons.emplace_back(0.65f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-8 (boss)
+    for (auto& btn : uiButtons)
+    {
+        btn.SetHitboxScale(0.7f, 0.2f);
+        btn.SetHitboxOffset(-0.05f);
+    }
 
     // left arrow so I can go to stage select world 1
     uiButtons.emplace_back(-0.9f, -0.2f, 0.3f, 0.2f, STAGESELECT, buttonTexture, buttonHoverTexture);
@@ -64,30 +64,25 @@ void StageSelect2::Update(float deltaTime)
   
         if (uiButtons[i].Process() == UIButtonResult::Clicked)
         {
-            // buttons for the areas (stage) ADD LATER
-            //if (i >= 0 && i < 8)
-            //{
-            //    // Go to World2Area1 and to the other onws
-            //    sceneManager->SwitchToStage(2, i + 1);
-            //    return;
-            //}
-            // =left arrow to go to stageselect world1
-            /*else*/ if (i == 0) // change to i = 8 later when there are areas (stages)
+            //buttons for the areas (stage) ADD LATER
+            if (i >= 0 && i < 8)
+            {
+                // Go to World2Area1 and to the other onws
+                sceneManager->SwitchToStage(2, i + 1);
+                return;
+            }
+            // left arrow to go to stageselect world1
+            if (i == 8) // change to i = 8 later when there are areas (stages)
             {
                 sceneManager->SwitchScene(STAGESELECT);
                 return;
             }
             // right arrow to go to stageselect world3
-            else if (i == 1) // change to i = 9 later when there are areas (stages)
+            else if (i == 9) // change to i = 9 later when there are areas (stages)
             {
                 sceneManager->SwitchScene(STAGESELECT3);
                 return;
             }
-           /* else
-            {
-                sceneManager->SwitchScene(uiButtons[i].GetTargetScene());
-                return;
-            }*/
             // back button
             else
             {

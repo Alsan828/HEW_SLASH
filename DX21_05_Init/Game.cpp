@@ -553,7 +553,8 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     else if (tileCode == "P1" || tileCode == "P2") {
         return g_groundTexture;
     }
-    else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT" || tileCode == "D4" || tileCode == "D5" || tileCode == "D6" || tileCode == "D7" || tileCode == "DB") {
+    else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT" || tileCode == "D4" || tileCode == "D5" || tileCode == "D6" || tileCode == "D7" || tileCode == "DB" ||
+             tileCode == "21" || tileCode == "21" || tileCode == "23" || tileCode == "24" || tileCode == "25" || tileCode == "26" || tileCode == "27") {
         return g_groundTexture;
     }
     else if (tileCode == "D1" || tileCode == "D2") {

@@ -219,7 +219,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case RESULT:
-        currentScene = new ResultScene(this);
+        currentScene = new ResultScene(this, currentStageInfo.GetWorld());
        
         return currentScene->Init();
         break;

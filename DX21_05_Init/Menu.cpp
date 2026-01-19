@@ -20,8 +20,6 @@ bool MenuScene::Init()
 	LoadTexture(g_pDevice, "asset/UI/menu/quit_normal.png", &quitTexture);
 	LoadTexture(g_pDevice, "asset/UI/menu/quit_hover.png", &quitHoverTexture);
 
-
-	// to do: make the stageselect part and move it to the left a bit
 	// because each puase button size is different so the hitbox will be different as well.
 	uiButtons.emplace_back(-0.7f, -0.3f, 0.5f, 0.9f, STAGESELECT, startTexture, startHoverTexture);
 	uiButtons.back().SetHitboxScale(0.4f, 0.13f);

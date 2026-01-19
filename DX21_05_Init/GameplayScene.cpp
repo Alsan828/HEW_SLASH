@@ -79,10 +79,10 @@ void GameplayScene::UpdateBossLogic(float deltaTime)
         m_boss = nullptr;
 
         // after killing the boss in world 1
-        if (worldNumber == 1) { 
-            
-            sceneManager->SwitchScene(CAKE); // go to cake scene
-        }
+        //if (worldNumber == 1) { 
+        //    
+        //    sceneManager->SwitchScene(CAKE); // go to cake scene
+        //}
         // after killing the boss in world 2. add it later when there is one
         //else if (worldNum == 2) {
         //    sceneManager->SwitchToStage(CAKE);
@@ -91,6 +91,8 @@ void GameplayScene::UpdateBossLogic(float deltaTime)
         //else if (worldNum == 3) {  
         //    sceneManager->SwitchScene(CAKE);
         //}
+
+        sceneManager->SwitchScene(CAKE);
 
         return;
     }

@@ -27,8 +27,11 @@ private:
     ID3D11ShaderResourceView* continueTexture = nullptr;
     ID3D11ShaderResourceView* continueHoverTexture = nullptr;
 
+    int m_completedWorld; // to track what world (stage) was completed
+    SCENE m_nextScene;
+
 public:
-    ResultScene(SceneManager* manager); // constructor
+    ResultScene(SceneManager* manager, int completedWorld); // constructor
 
     bool Init() override;
     void Update(float deltaTime) override;

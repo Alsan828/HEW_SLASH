@@ -135,6 +135,7 @@ void MapManager::RespawnPlayer(int spawnId) {
 
 // Initialize all game maps and set up the initial game state
 void MapManager::InitializeMaps() {
+    // FOR STAGE1
     // Create test map with basic layout
     Map testMap("World1Area1", 0.15f, 0.15f);
     testMap.CreateWorld1Area1Map();
@@ -179,6 +180,42 @@ void MapManager::InitializeMaps() {
     Map cakeMap("cake", 0.15f, 0.15f);
     cakeMap.CreateCakeMap();
     AddMap(cakeMap);
+
+    // FOR STAGE2
+    // create the world2 area1
+    Map world2Area1Map("World2Area1", 0.15f, 0.15f);
+    world2Area1Map.CreateWorld2Area1Map();
+    AddMap(world2Area1Map);
+
+    // create the world2 area2
+    Map world2Area2Map("World2Area2", 0.15f, 0.15f);
+    world2Area2Map.CreateWorld2Area2Map();
+    AddMap(world2Area2Map);
+
+    // create the world2 area3
+    Map world2Area3Map("World2Area3", 0.15f, 0.15f);
+    world2Area3Map.CreateWorld2Area3Map();
+    AddMap(world2Area3Map);
+
+    // create the world2 area4
+    Map world2Area4Map("World2Area4", 0.15f, 0.15f);
+    world2Area4Map.CreateWorld2Area4Map();
+    AddMap(world2Area4Map);
+
+    // create the world2 area5
+    Map world2Area5Map("World2Area5", 0.15f, 0.15f);
+    world2Area5Map.CreateWorld2Area5Map();
+    AddMap(world2Area5Map);
+
+    // create the world2 area6
+    Map world2Area6Map("World2Area6", 0.15f, 0.15f);
+    world2Area6Map.CreateWorld2Area6Map();
+    AddMap(world2Area6Map);
+
+    // create the world2 area7
+    Map world2Area7Map("World2Area7", 0.15f, 0.15f);
+    world2Area7Map.CreateWorld2Area7Map();
+    AddMap(world2Area7Map);
 
     // Set initial current map to test map
     m_currentMap = GetMap("World1Area1");

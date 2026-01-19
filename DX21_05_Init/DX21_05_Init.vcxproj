@@ -186,6 +186,8 @@
     <ClCompile Include="MapManager.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
+    <ClCompile Include="MapWorld1.cpp" />
+    <ClCompile Include="MapWorld2.cpp" />
     <ClCompile Include="Menu.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>

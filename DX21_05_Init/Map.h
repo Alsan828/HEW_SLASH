@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "Camera.h"
+
 class SpatialGrid;
 struct GridCell;
 // Tile information using string-based representation
@@ -121,6 +122,15 @@ public:
     void CreateWorld1Area7Map();
     void CreateBossMap();
     void CreateCakeMap();
+
+    void CreateWorld2Area1Map();
+    void CreateWorld2Area2Map();
+    void CreateWorld2Area3Map();
+    void CreateWorld2Area4Map();
+    void CreateWorld2Area5Map();
+    void CreateWorld2Area6Map();
+    void CreateWorld2Area7Map();
+    //void CreateBoss2Map();
 
     // Map clearing methods
     void ClearLayer(MapLayer layer);
