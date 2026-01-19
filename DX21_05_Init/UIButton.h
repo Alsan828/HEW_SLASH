@@ -19,6 +19,8 @@ private:
     float width = 0.4f;
     float height = 0.2f;
 
+    float rotation = 0.0f; 
+
     SCENE targetScene = MENU; // make MENU default bc its the scene where there are more buttons (maybe ?)
 
     ID3D11ShaderResourceView* texture = nullptr;
@@ -53,5 +55,8 @@ public:
     SCENE GetTargetScene() const { return targetScene; }
 
     void SetHitboxScale(float scaleWidth, float scaleHeight); 
-    void SetHitboxOffset(float offsetY); 
+	void SetHitboxOffset(float offsetY);  // adjust the vertical position
+
+    void SetRotation(float degrees) { rotation = degrees; } 
+    float GetRotation() const { return rotation; }
 };

@@ -114,7 +114,11 @@ void UIButton::Draw(float baseAlpha) const
     }
     // set the color with no transparency
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    RenderImage(x - width * 0.5f, y - height * 0.5f, width, height, tex, 0, 1, 1);
+    //RenderImage(x - width * 0.5f, y - height * 0.5f, width, height, tex, 0, 1, 1);
+
+    float rotationRadians = rotation * 3.14159265f / 180.0f;
+    RenderImage(x - width * 0.5f, y - height * 0.5f, width, height, tex,
+        0, 1, 1, false, rotationRadians, false);
 }
 
 void UIButton::SetHitboxScale(float scaleWidth, float scaleHeight)
