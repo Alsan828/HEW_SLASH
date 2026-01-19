@@ -28,6 +28,11 @@ void Camera::Update(float deltaTime) {
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
+    // Make the player appear more centered on screen (less bottom-heavy framing)
+    // Shift camera target upward a bit in world units.
+    const float centerBiasY = 0.12f;
+    playerCenterY += centerBiasY;
+
     // Apply look-ahead based on player movement direction
     float lookAheadX = 0.0f;
     float lookAheadY = 0.0f;
@@ -50,7 +55,19 @@ void Camera::Update(float deltaTime) {
     if (distance > m_deadZoneRadius) {
         // Apply smooth interpolation
         float smoothFactor = m_smoothSpeed * deltaTime * 60.0f; // Frame-rate independent
-        smoothFactor = std::clamp(smoothFactor, 0.01f, 0.5f); // Clamp to reasonable values
+
+        // Distance-based boost: when the camera is far away, it catches up faster.
+        // Close range keeps the original behavior.
+        const float boostStartDist = m_deadZoneRadius * 2.0f;
+        const float boostFullDist = m_deadZoneRadius * 10.0f;
+        float boostT = 0.0f;
+        if (boostFullDist > boostStartDist) {
+            boostT = std::clamp((distance - boostStartDist) / (boostFullDist - boostStartDist), 0.0f, 1.0f);
+        }
+        float boostedSmoothFactor = smoothFactor * (1.0f + 2.5f * boostT);
+
+        // Allow the camera to catch up faster.
+        smoothFactor = std::clamp(boostedSmoothFactor, 0.01f, 0.98f); // Clamp to reasonable values
 
         m_posX += dx * smoothFactor;
         m_posY += dy * smoothFactor;
