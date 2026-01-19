@@ -39,7 +39,7 @@ public:
     void Draw() override;
     void Uninit() override;
 
-    void DrawAreaNumber(int world, int stage, float x, float y, float size, float space);
+    void DrawAreaNumber(int world, int stage, float x, float y, float width, float height, float space);
 };
 
 extern InputSystem g_inputSystem;   // use the global input system

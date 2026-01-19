@@ -119,26 +119,27 @@ void StageSelect2::Draw()
     {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-        float numberSize = 0.04f;  // for the size of the numbers
-        float spacing = 0.06f;     // for the space between the numbers
+        float numberWidth = 0.03f;
+        float numberHeight = 0.05f;
+        float spaceBetweenNumbers = 0.045f;     // for the space between the numbers
 
-        DrawAreaNumber(2, 1, -0.7f, 0.16f, numberSize, spacing);    // 2-1
-        DrawAreaNumber(2, 2, -0.35f, 0.16f, numberSize, spacing);   // 2-2
-        DrawAreaNumber(2, 3, 0.01f, 0.16f, numberSize, spacing);    // 2-3
-        DrawAreaNumber(2, 4, 0.38f, 0.16f, numberSize, spacing);    // 2-4
-        DrawAreaNumber(2, 5, -0.55f, -0.32f, numberSize, spacing);  // 2-5
-        DrawAreaNumber(2, 6, -0.17f, -0.32f, numberSize, spacing);  // 2-6	
-        DrawAreaNumber(2, 7, 0.21f, -0.32f, numberSize, spacing);   // 2-7
+        DrawAreaNumber(2, 1, -0.69f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-1
+        DrawAreaNumber(2, 2, -0.34f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);   // 2-2
+        DrawAreaNumber(2, 3, 0.02f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-3
+        DrawAreaNumber(2, 4, 0.39f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-4
+        DrawAreaNumber(2, 5, -0.535f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 2-5
+        DrawAreaNumber(2, 6, -0.155f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 2-6	
+        DrawAreaNumber(2, 7, 0.22f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);   // 2-7
     }
 }
 
-void StageSelect2::DrawAreaNumber(int world, int stage, float x, float y, float size, float space)
+void StageSelect2::DrawAreaNumber(int world, int stage, float x, float y, float width, float height, float space)
 {
-    // Draw world number (first digit: 1)
-    RenderImage(x, y, size, size, g_numberTexture, world, 1, 10, false, 0.0f, false);
+    // Draw world number (first digit)
+    RenderImage(x, y, width, height, g_numberTexture, world, 1, 10, false, 0.0f, false);
 
     // Draw stage number (second digit: 1-8) with spacing
-    RenderImage(x + space, y, size, size, g_numberTexture, stage, 1, 10, false, 0.0f, false);
+    RenderImage(x + space, y, width, height, g_numberTexture, stage, 1, 10, false, 0.0f, false);
 }
 
 // for erasing
