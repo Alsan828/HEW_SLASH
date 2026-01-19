@@ -11,21 +11,26 @@ StageSelect2::StageSelect2(SceneManager* manager, SCENE returnTo)
 
 bool StageSelect2::Init()
 {
-    LoadTexture(g_pDevice, "asset/stageselect.png", &backgroundTexture); // background texture
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_background.png", &backgroundTexture);      // abckground texture
 
-    // for test now
-    LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the buttons
-    LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_stage_nomalsize.png", &buttonTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_stage_bigsize.png", &buttonHoverTexture);
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_Boss_nomalsize.png", &bossButtonTexture);
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_Boss_bigsize.png", &bossButtonHoverTexture);
+
+    // for the arrow to go to next stageselect screens
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_normalsize.png", &arrowTexture);
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_bigsize.png", &arrowHoverTexture);
 
     // add them when I have the actual stage
-    uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-1
-    uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-2
-    uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-3
-    uiButtons.emplace_back(0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-4
-    uiButtons.emplace_back(-0.65f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-5
-    uiButtons.emplace_back(-0.25f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-6
-    uiButtons.emplace_back(0.15f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-7
-    uiButtons.emplace_back(0.65f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-8 (boss)
+    uiButtons.emplace_back(-0.65f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-1
+    uiButtons.emplace_back(-0.3f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-2
+    uiButtons.emplace_back(0.06f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 2-3
+    uiButtons.emplace_back(0.43f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 2-4
+    uiButtons.emplace_back(-0.5f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 2-5
+    uiButtons.emplace_back(-0.12f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 2-6
+    uiButtons.emplace_back(0.26f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-7
+    uiButtons.emplace_back(0.63f, -0.33f, 0.4f, 0.8f, GAMEPLAY, bossButtonTexture, bossButtonHoverTexture);  // go to boss
     for (auto& btn : uiButtons)
     {
         btn.SetHitboxScale(0.7f, 0.2f);
@@ -33,13 +38,14 @@ bool StageSelect2::Init()
     }
 
     // left arrow so I can go to stage select world 1
-    uiButtons.emplace_back(-0.9f, -0.2f, 0.3f, 0.2f, STAGESELECT, buttonTexture, buttonHoverTexture);
-    uiButtons.back().SetHitboxScale(0.15f, 0.15f);
+    uiButtons.emplace_back(-0.92f, -0.2f, 0.4f, 0.6f, STAGESELECT, arrowTexture, arrowHoverTexture);
+    uiButtons.back().SetHitboxScale(0.4f, 0.6f);
     uiButtons.back().SetHitboxOffset(-0.04f);
+	uiButtons.back().SetRotation(-180.0f); // rotate to pointing to the left
 
-    //right arrow so I can go to stage select world 3
-    uiButtons.emplace_back(0.9f, -0.2f, 0.3f, 0.2f, STAGESELECT3, buttonTexture, buttonHoverTexture);
-    uiButtons.back().SetHitboxScale(0.15f, 0.15f);
+    // right arrow so I can go to stage select world 3
+    uiButtons.emplace_back(0.92f, -0.2f, 0.4f, 0.6f, STAGESELECT3, arrowTexture, arrowHoverTexture);
+    uiButtons.back().SetHitboxScale(0.4f, 0.6f);
     uiButtons.back().SetHitboxOffset(-0.04f);
 
     LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // for the button
@@ -107,6 +113,32 @@ void StageSelect2::Draw()
     // Draw all buttons
     for (const auto& btn : uiButtons)
         btn.Draw(0.65f);
+
+
+    if (g_numberTexture)
+    {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        float numberSize = 0.04f;  // for the size of the numbers
+        float spacing = 0.06f;     // for the space between the numbers
+
+        DrawAreaNumber(2, 1, -0.7f, 0.16f, numberSize, spacing);    // 2-1
+        DrawAreaNumber(2, 2, -0.35f, 0.16f, numberSize, spacing);   // 2-2
+        DrawAreaNumber(2, 3, 0.01f, 0.16f, numberSize, spacing);    // 2-3
+        DrawAreaNumber(2, 4, 0.38f, 0.16f, numberSize, spacing);    // 2-4
+        DrawAreaNumber(2, 5, -0.55f, -0.32f, numberSize, spacing);  // 2-5
+        DrawAreaNumber(2, 6, -0.17f, -0.32f, numberSize, spacing);  // 2-6	
+        DrawAreaNumber(2, 7, 0.21f, -0.32f, numberSize, spacing);   // 2-7
+    }
+}
+
+void StageSelect2::DrawAreaNumber(int world, int stage, float x, float y, float size, float space)
+{
+    // Draw world number (first digit: 1)
+    RenderImage(x, y, size, size, g_numberTexture, world, 1, 10, false, 0.0f, false);
+
+    // Draw stage number (second digit: 1-8) with spacing
+    RenderImage(x + space, y, size, size, g_numberTexture, stage, 1, 10, false, 0.0f, false);
 }
 
 // for erasing
@@ -127,6 +159,16 @@ void StageSelect2::Uninit()
         buttonHoverTexture->Release();
         buttonHoverTexture = nullptr;
     }
+    if (bossButtonTexture)
+    {
+        bossButtonTexture->Release();
+        bossButtonTexture = nullptr;
+    }
+    if (bossButtonHoverTexture)
+    {
+        bossButtonHoverTexture->Release();
+        bossButtonHoverTexture = nullptr;
+    }
 
     if (backTexture)
     {
@@ -137,6 +179,18 @@ void StageSelect2::Uninit()
     {
         backHoverTexture->Release();
         backHoverTexture = nullptr;
+    }
+
+
+    if (arrowTexture)
+    {
+        arrowTexture->Release();
+        arrowTexture = nullptr;
+    }
+    if (arrowHoverTexture)
+    {
+        arrowHoverTexture->Release();
+        arrowHoverTexture = nullptr;
     }
 
     // Clear buttons
