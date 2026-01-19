@@ -81,6 +81,7 @@ struct Player {
     bool isInvincible = false;        // invincibility state
     float invincibleTimer = 0.0f;     // invincibility timer
     const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
+	float g_gaugeEffectTimer = 0.0f;  // gauge effect timer
 
 
     // 生命值系统
@@ -331,6 +332,9 @@ extern ID3D11ShaderResourceView* g_cursorTexture;
 extern ID3D11ShaderResourceView* g_comboNumberTexture;
 extern ID3D11ShaderResourceView* g_comboXTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarTexture;
+extern ID3D11ShaderResourceView* g_gaugeBarEmptyTexture;
+extern ID3D11ShaderResourceView* g_gaugeBarFilledTexture;
+extern ID3D11ShaderResourceView* g_gaugeFullEffectTexture;
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
