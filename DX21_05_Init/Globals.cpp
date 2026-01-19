@@ -37,6 +37,7 @@ ID3D11ShaderResourceView* g_comboXTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarEmptyTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarFilledTexture = nullptr;
+ID3D11ShaderResourceView* g_gaugeFullEffectTexture = nullptr;
 InputSystem g_inputSystem;
 GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;
