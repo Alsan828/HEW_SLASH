@@ -180,6 +180,10 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
         isCritical
     );
 
+    if (isCritical) {
+        SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.5f);
+    }
+
     health -= actualDamage;
     isHit = true;
     hitTimer = HIT_DURATION;

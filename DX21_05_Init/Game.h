@@ -243,6 +243,16 @@ public:
 };
 extern GameStatistics g_gameStats;
 
+struct HitEffectInstance {
+    float x = 0.0f;
+    float y = 0.0f;
+    float timer = 0.0f;
+    float frameTime = 0.04f;
+    int frame = 0;
+    bool active = false;
+};
+
+void SpawnWeakPointHitEffect(float worldX, float worldY);
 
 
 

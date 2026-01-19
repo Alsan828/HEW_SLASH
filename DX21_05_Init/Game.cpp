@@ -18,7 +18,25 @@ int g_chargeSoundId = -1;
 int g_shootSoundId = -1;
 int g_slowMoTimerSoundId = -1;
 
+static std::vector<HitEffectInstance> g_weakPointHitEffects;
+static constexpr int WEAKPOINT_HIT_EFFECT_FRAMES = 8;
+static constexpr int WEAKPOINT_HIT_EFFECT_COLUMNS = 4;
+static constexpr int WEAKPOINT_HIT_EFFECT_ROWS = 2;
+
 GameStatistics g_gameStats;
+
+void SpawnWeakPointHitEffect(float worldX, float worldY) {
+    if (!g_hitEffectTexture) return;
+
+    HitEffectInstance e;
+    e.x = worldX;
+    e.y = worldY;
+    e.timer = 0.0f;
+    e.frameTime = 0.04f;
+    e.frame = 0;
+    e.active = true;
+    g_weakPointHitEffects.push_back(e);
+}
 
 // Game timer implementation
 GameTimer::GameTimer()
@@ -51,6 +69,7 @@ void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
 void ResetGame() {
     g_projectileManager.ClearAll();  // New: clear all projectiles
     CleanupEnemies();
+    g_weakPointHitEffects.clear();
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
     }
@@ -72,6 +91,7 @@ void CleanUpGameWorld()
     g_projectileManager.ClearAll();
     CleanupEnemies();
     g_mouseIndicator.Cleanup();
+    g_weakPointHitEffects.clear();
 
     // 释放所有纹理 - 只保留右边纹理
     if (g_playerTexture) {
@@ -349,6 +369,8 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/combo/combo_number.png", &g_comboNumberTexture);
     LoadTexture(g_pDevice, "asset/UI/combo/combo_X.png", &g_comboXTexture);
 
+    LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
+
     // todo: add here the gague bar texture when there is one
     //LoadTexture(g_pDevice, "asset/UI/gauge_bar.png", &g_gaugeBarTexture);
 
@@ -433,6 +455,26 @@ void UpdateGame(float deltaTime) {
 
 
     float scaledDeltaTime = deltaTime * timeScale;
+
+    for (auto it = g_weakPointHitEffects.begin(); it != g_weakPointHitEffects.end();) {
+        if (!it->active) {
+            it = g_weakPointHitEffects.erase(it);
+            continue;
+        }
+
+        it->timer += scaledDeltaTime;
+        while (it->timer >= it->frameTime) {
+            it->timer -= it->frameTime;
+            it->frame++;
+        }
+
+        if (it->frame >= WEAKPOINT_HIT_EFFECT_FRAMES) {
+            it = g_weakPointHitEffects.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
 
     g_camera.Update(scaledDeltaTime);
 	g_player.hitStopTimer -= scaledDeltaTime;
@@ -621,6 +663,18 @@ void DrawGame() {
     auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
         return { worldX - cameraX, worldY - cameraY };
         };
+
+    if (g_hitEffectTexture) {
+        for (const auto& e : g_weakPointHitEffects) {
+            if (!e.active) continue;
+            std::pair<float, float> screenPos = worldToScreen(e.x, e.y);
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+            float size = 0.25f;
+            RenderImage(screenPos.first - size * 0.5f, screenPos.second - size * 0.5f,
+                size, size, g_hitEffectTexture,
+                e.frame, WEAKPOINT_HIT_EFFECT_ROWS, WEAKPOINT_HIT_EFFECT_COLUMNS);
+        }
+    }
 
     // Draw background (with parallax effect)
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
