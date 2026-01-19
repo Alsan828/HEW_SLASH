@@ -32,7 +32,7 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
     e.x = worldX;
     e.y = worldY;
     e.timer = 0.0f;
-    e.frameTime = 0.04f;
+    e.frameTime = 0.08f;
     e.frame = 0;
     e.active = true;
     g_weakPointHitEffects.push_back(e);
@@ -669,7 +669,7 @@ void DrawGame() {
             if (!e.active) continue;
             std::pair<float, float> screenPos = worldToScreen(e.x, e.y);
             SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-            float size = 0.25f;
+            float size = 0.25f * 1.5f;
             RenderImage(screenPos.first - size * 0.5f, screenPos.second - size * 0.5f,
                 size, size, g_hitEffectTexture,
                 e.frame, WEAKPOINT_HIT_EFFECT_ROWS, WEAKPOINT_HIT_EFFECT_COLUMNS);
@@ -873,7 +873,17 @@ void HandleInput() {
 
     // Pure mouse control: press to start charging
     if (isMouseLeftPressed) {
-        StartMouseChargeDash();
+        // If we already have a saved charge, pressing should dash immediately
+        // (instead of waiting for release). Reuse existing dash execution logic
+        // by starting a charge with a near-zero charge time.
+        if (g_player.hasSavedCharge && !g_player.isCharging) {
+            StartMouseChargeDash();
+            g_player.chargeTime = 0.0f;
+            ExecuteMouseChargeDash();
+        }
+        else {
+            StartMouseChargeDash();
+        }
     }
 
     // Pure mouse control: release to execute dash

@@ -559,6 +559,11 @@ void UpdateDash(float deltaTime) {
         if (g_player.dashTimer <= 0.0f) {
             g_player.isDashing = false;
             g_player.hasMouseTarget = false;
+
+            // Brief invincibility window after dash ends
+            g_player.isInvincible = true;
+            g_player.invincibleTimer = std::max(g_player.invincibleTimer, 0.2f);
+
             EnterDashAftermath(); // Enter aftermath when dash ends
         }
     }
@@ -901,12 +906,6 @@ void UpdateDashPoints(float deltaTime) {
 
 // Consume dash point
 bool ConsumeDashPoint() {
-
-    // if the player is invincible 
-    if (g_player.isInvincible) {
-        return true;  // so I can dash, but dont consume the point
-    }
-
     if (g_player.dashPoints > 0) {
         g_player.dashPoints--;
         return true;
