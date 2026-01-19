@@ -612,7 +612,7 @@ void MovePlayerLeft() {
         g_player.isInDashAftermath = false;
     }
 
-    g_player.velocityX = -MOVE_SPEED;
+    g_player.velocityX = -MOVE_SPEED * g_player.GetMoveSpeedMultiplier();
     g_player.isMoving = true;
     g_player.facingRight = false;
 }
@@ -628,7 +628,7 @@ void MovePlayerRight() {
         g_player.isInDashAftermath = false;
     }
 
-    g_player.velocityX = MOVE_SPEED;
+    g_player.velocityX = MOVE_SPEED * g_player.GetMoveSpeedMultiplier();
     g_player.isMoving = true;
     g_player.facingRight = true;
 }

@@ -23,6 +23,22 @@ static constexpr int WEAKPOINT_HIT_EFFECT_FRAMES = 8;
 static constexpr int WEAKPOINT_HIT_EFFECT_COLUMNS = 4;
 static constexpr int WEAKPOINT_HIT_EFFECT_ROWS = 2;
 
+struct AfterImageInstance {
+    float x;
+    float y;
+    float width;
+    float height;
+    float timer;
+    float duration;
+    int frameIndex;
+    int splitX;
+    int splitY;
+    bool flipHorizontal;
+    ID3D11ShaderResourceView* texture;
+};
+
+static std::vector<AfterImageInstance> g_playerAfterImages;
+
 GameStatistics g_gameStats;
 
 void SpawnWeakPointHitEffect(float worldX, float worldY) {
@@ -36,6 +52,31 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
     e.frame = 0;
     e.active = true;
     g_weakPointHitEffects.push_back(e);
+}
+
+static void SpawnPlayerAfterImage() {
+    ID3D11ShaderResourceView* tex = g_player.anim.GetCurrentClipTexture();
+    if (!tex) return;
+
+    float scale = 6.6f;
+    float width = PLAYER_WIDTH * scale;
+    float height = PLAYER_HEIGHT * scale;
+    float offsetX = (width - PLAYER_WIDTH) * 0.5f;
+    float offsetY = (height - PLAYER_HEIGHT) * 0.5f;
+
+    AfterImageInstance a;
+    a.x = g_player.posX - offsetX;
+    a.y = g_player.posY - offsetY;
+    a.width = width;
+    a.height = height;
+    a.timer = 0.0f;
+    a.duration = g_player.AFTERIMAGE_DURATION;
+    a.texture = tex;
+    a.frameIndex = g_player.anim.GetCurrentFrame();
+    a.splitX = g_player.anim.GetSplitX();
+    a.splitY = g_player.anim.GetSplitY();
+    a.flipHorizontal = !g_player.facingRight;
+    g_playerAfterImages.push_back(a);
 }
 
 // Game timer implementation
@@ -70,12 +111,22 @@ void ResetGame() {
     g_projectileManager.ClearAll();  // New: clear all projectiles
     CleanupEnemies();
     g_weakPointHitEffects.clear();
+    g_playerAfterImages.clear();
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
     }
 
     g_player.comboCount = 0;
     g_player.comboTimer = 0.0f;
+
+    // Reset charge (charging / saved charge) state
+    g_player.isCharging = false;
+    g_player.chargeTime = 0.0f;
+    g_player.hitStopTriggered = 0;
+    g_player.hitStopTimer = 0.0f;
+    g_player.savedChargeTime = 0.0f;
+    g_player.hasSavedCharge = false;
+    g_player.chargeDecayTimer = 0.0f;
 
     // Reset gauge bar
     g_player.gaugePoints = 0;
@@ -92,6 +143,7 @@ void CleanUpGameWorld()
     CleanupEnemies();
     g_mouseIndicator.Cleanup();
     g_weakPointHitEffects.clear();
+    g_playerAfterImages.clear();
 
     // 释放所有纹理 - 只保留右边纹理
     if (g_playerTexture) {
@@ -444,6 +496,9 @@ void UpdateGame(float deltaTime) {
         }
     }
 
+    // Acceleration state: active only when comboCount > threshold
+    g_player.isAccelerated = (g_player.comboCount > ACCEL_COMBO_THRESHOLD);
+
     // for updating the invincibility timer
     if (g_player.isInvincible) {
         g_player.invincibleTimer -= deltaTime;
@@ -455,6 +510,41 @@ void UpdateGame(float deltaTime) {
 
 
     float scaledDeltaTime = deltaTime * timeScale;
+
+    // Update / spawn player afterimages
+    for (auto it = g_playerAfterImages.begin(); it != g_playerAfterImages.end();) {
+        it->timer += scaledDeltaTime;
+        if (it->timer >= it->duration) {
+            it = g_playerAfterImages.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    // Use displacement-based speed so afterimages still spawn even if velocity is
+    // temporarily overridden/reset during input/physics updates.
+    static float s_prevPlayerX = g_player.posX;
+    static float s_prevPlayerY = g_player.posY;
+    float dtForSpeed = (scaledDeltaTime > 1e-6f) ? scaledDeltaTime : 1e-6f;
+    float dx = g_player.posX - s_prevPlayerX;
+    float dy = g_player.posY - s_prevPlayerY;
+    float speed = sqrtf(dx * dx + dy * dy) / dtForSpeed;
+    s_prevPlayerX = g_player.posX;
+    s_prevPlayerY = g_player.posY;
+
+    // Afterimages only during accelerated state (per design)
+    bool shouldSpawnAfterImage = g_player.isAccelerated && !g_player.isDead;
+    if (shouldSpawnAfterImage && !g_player.isDead) {
+        g_player.afterImageSpawnTimer -= scaledDeltaTime;
+        if (g_player.afterImageSpawnTimer <= 0.0f) {
+            SpawnPlayerAfterImage();
+            g_player.afterImageSpawnTimer = g_player.afterImageSpawnInterval;
+        }
+    }
+    else {
+        g_player.afterImageSpawnTimer = 0.0f;
+    }
 
     for (auto it = g_weakPointHitEffects.begin(); it != g_weakPointHitEffects.end();) {
         if (!it->active) {
@@ -578,7 +668,8 @@ void UpdateGame(float deltaTime) {
             }
         }
 
-        g_player.anim.Update(scaledDeltaTime);
+        // Keep animation speed in sync with accelerated state
+        g_player.anim.Update(scaledDeltaTime * g_player.GetAnimSpeedMultiplier());
         UpdatePlayerDeath(scaledDeltaTime);
     }
     g_mouseIndicator.Update(scaledDeltaTime);
@@ -664,6 +755,19 @@ void DrawGame() {
         return { worldX - cameraX, worldY - cameraY };
         };
 
+    // Draw player afterimages (behind player)
+    for (const auto& a : g_playerAfterImages) {
+        if (!a.texture) continue;
+        float t = (a.duration <= 0.0f) ? 1.0f : std::clamp(a.timer / a.duration, 0.0f, 1.0f);
+        float alpha = (1.0f - t) * 0.85f;
+        float gray = 0.25f + (1.0f - t) * 0.35f;
+        auto p = worldToScreen(a.x, a.y);
+        SetColor(gray, gray, gray, alpha);
+        RenderImage(p.first, p.second, a.width, a.height,
+            a.texture, a.frameIndex, a.splitY, a.splitX, true, 0.0f, a.flipHorizontal);
+    }
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
     if (g_hitEffectTexture) {
         for (const auto& e : g_weakPointHitEffects) {
             if (!e.active) continue;
@@ -676,11 +780,8 @@ void DrawGame() {
         }
     }
 
-    // Draw background (with parallax effect)
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    float bgOffsetX = cameraX * 0.3f;
-    float bgOffsetY = cameraY * 0.3f;
-    RenderImage(-1.0f + bgOffsetX, -1.0f + bgOffsetY, 2.0f, 2.0f, g_backgroundTexture1, 0, 1, 1);
+    // Background disabled temporarily for debugging visibility
+    // (was: parallax background draw)
 
     // Use new map system to draw tiles
     if (g_mapManager.IsMapLoaded()) {
@@ -902,7 +1003,7 @@ void HandleInput() {
     bool moving = false;
     if (g_inputSystem.IsMovingLeft()) {
         if (!g_player.isDashing) {
-            g_player.velocityX = -MOVE_SPEED;
+            g_player.velocityX = -MOVE_SPEED * g_player.GetMoveSpeedMultiplier();
         }
         g_player.isMoving = true;
         g_player.facingRight = false;
@@ -910,7 +1011,7 @@ void HandleInput() {
     }
     if (g_inputSystem.IsMovingRight()) {
         if (!g_player.isDashing) {
-            g_player.velocityX = MOVE_SPEED;
+            g_player.velocityX = MOVE_SPEED * g_player.GetMoveSpeedMultiplier();
         }
         g_player.isMoving = true;
         g_player.facingRight = true;

@@ -40,10 +40,17 @@ const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
 const float GRAVITY = -0.002f;
 const float JUMP_FORCE = 0.045f;
-const float MOVE_SPEED = 0.01f; 
+// Base move speed (slower than before). The old value was 0.01f.
+// Normal state move speed now is 0.8x of the previous speed.
+const float MOVE_SPEED = 0.008f; 
 const float DASH_SPEED = 0.1f;      // Base dash speed
 const float DASH_DURATION = 0.11f;   // Base dash duration
 const float DASH_COOLDOWN = 0.0f;    // Dash cooldown time
+
+// Acceleration (combo) state
+const int ACCEL_COMBO_THRESHOLD = 5;        // comboCount > 5 to enter accelerated state
+const float ACCEL_MOVE_SPEED_MULT = 1.25f;  // accelerated speed equals the old MOVE_SPEED (0.01) relative to new base
+const float ACCEL_ANIM_SPEED_MULT = 1.25f;  // keep animation speed in sync with movement
 
 // Player structure
 struct Player {
@@ -64,6 +71,9 @@ struct Player {
     int comboCount = 0;
     float comboTimer = 0.0f;   // for the time before the combo resets
     const float COMBO_RESET_TIME = 2.0f; // 2 seconds without killing, the combo will reset
+
+    // Acceleration state (triggered by combos)
+    bool isAccelerated = false;
 
     // for the gauge bar system
     int gaugePoints = 0;              // current gauge points
@@ -131,7 +141,20 @@ struct Player {
     float dashAftermathTimer = 0.0f;
     const float DASH_AFTERMATH_DURATION = 0.7f;
     
-    const float AFTERIMAGE_DURATION = 0.1f;
+    const float AFTERIMAGE_DURATION = 0.35f;
+
+     // 残像参数
+     float afterImageSpawnTimer = 0.0f;
+     float afterImageSpawnInterval = 0.025f;
+     float afterImageMinSpeed = 0.06f;
+
+    float GetMoveSpeedMultiplier() const {
+        return isAccelerated ? ACCEL_MOVE_SPEED_MULT : 1.0f;
+    }
+
+    float GetAnimSpeedMultiplier() const {
+        return isAccelerated ? ACCEL_ANIM_SPEED_MULT : 1.0f;
+    }
 
     // 新增：攻击检测相关
     std::vector<Enemy*> hitEnemies; // 本次冲刺已击中的敌人（避免重复伤害）
