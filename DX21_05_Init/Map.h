@@ -73,9 +73,22 @@ private:
     // Convert tile code string to TileInfo structure
     TileInfo ParseTileCode(const std::string& code);
 
+    // Common handler used by grid-loading and incremental tile placement.
+    // Returns true when the tileCode is consumed as spawn/enemy and should not be added to tile list.
+    bool ProcessSpecialTileCode(float x, float y, const std::string& tileCode, const TileInfo& tileInfo);
+
+    // Portal subtype -> target map name
+    static const std::unordered_map<std::string, std::string>& GetPortalTargetMapLookup();
+
 public:
     // Constructor: create a map with specified name and grid dimensions
     Map(const std::string& name, float gridWidth, float gridHeight);
+
+    ~Map();
+    Map(const Map& other);
+    Map& operator=(const Map& other);
+    Map(Map&& other) noexcept;
+    Map& operator=(Map&& other) noexcept;
     // 单向平台碰撞检测
     bool CheckOneWayPlatformCollision(float x, float y, float width, float height,
         const MapTile& platform, float& penetrationY) const;
@@ -90,7 +103,7 @@ public:
         const std::string& targetMap = "", int linkedSpawnId = -1);
 
     // Get default spawn point ID (returns -1 as placeholder)
-    int GetDefaultSpawnId() const { return -1; }
+    int GetDefaultSpawnId() const { return m_defaultSpawnId; }
 
     // Spawn point management
     void AddSpawnPoint(float x, float y, int id, const std::string& name = "");

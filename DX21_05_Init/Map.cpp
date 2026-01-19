@@ -4,10 +4,89 @@
 #include <cmath>
 #include <algorithm>
 
+namespace {
+    const std::string kEmptyTileCode = "00";
+}
+
 // Map class implementation
 Map::Map(const std::string& name, float gridWidth, float gridHeight)
     : m_name(name), m_gridWidth(gridWidth), m_gridHeight(gridHeight), m_defaultSpawnId(0), m_spatialGrid(nullptr) {
     InitializeTileDictionary();
+}
+
+Map::~Map() {
+    delete m_spatialGrid;
+    m_spatialGrid = nullptr;
+}
+
+Map::Map(const Map& other)
+    : m_name(other.m_name),
+      m_backgroundTiles(other.m_backgroundTiles),
+      m_midgroundTiles(other.m_midgroundTiles),
+      m_foregroundTiles(other.m_foregroundTiles),
+      m_spawnPoints(other.m_spawnPoints),
+      m_enemySpawns(other.m_enemySpawns),
+      m_gridWidth(other.m_gridWidth),
+      m_gridHeight(other.m_gridHeight),
+      m_defaultSpawnId(other.m_defaultSpawnId),
+      m_spatialGrid(nullptr),
+      m_tileDictionary(other.m_tileDictionary) {
+}
+
+Map& Map::operator=(const Map& other) {
+    if (this == &other) return *this;
+
+    delete m_spatialGrid;
+    m_spatialGrid = nullptr;
+
+    m_name = other.m_name;
+    m_backgroundTiles = other.m_backgroundTiles;
+    m_midgroundTiles = other.m_midgroundTiles;
+    m_foregroundTiles = other.m_foregroundTiles;
+    m_spawnPoints = other.m_spawnPoints;
+    m_enemySpawns = other.m_enemySpawns;
+    m_gridWidth = other.m_gridWidth;
+    m_gridHeight = other.m_gridHeight;
+    m_defaultSpawnId = other.m_defaultSpawnId;
+    m_tileDictionary = other.m_tileDictionary;
+
+    return *this;
+}
+
+Map::Map(Map&& other) noexcept
+    : m_name(std::move(other.m_name)),
+      m_backgroundTiles(std::move(other.m_backgroundTiles)),
+      m_midgroundTiles(std::move(other.m_midgroundTiles)),
+      m_foregroundTiles(std::move(other.m_foregroundTiles)),
+      m_spawnPoints(std::move(other.m_spawnPoints)),
+      m_enemySpawns(std::move(other.m_enemySpawns)),
+      m_gridWidth(other.m_gridWidth),
+      m_gridHeight(other.m_gridHeight),
+      m_defaultSpawnId(other.m_defaultSpawnId),
+      m_spatialGrid(other.m_spatialGrid),
+      m_tileDictionary(std::move(other.m_tileDictionary)) {
+    other.m_spatialGrid = nullptr;
+}
+
+Map& Map::operator=(Map&& other) noexcept {
+    if (this == &other) return *this;
+
+    delete m_spatialGrid;
+
+    m_name = std::move(other.m_name);
+    m_backgroundTiles = std::move(other.m_backgroundTiles);
+    m_midgroundTiles = std::move(other.m_midgroundTiles);
+    m_foregroundTiles = std::move(other.m_foregroundTiles);
+    m_spawnPoints = std::move(other.m_spawnPoints);
+    m_enemySpawns = std::move(other.m_enemySpawns);
+    m_gridWidth = other.m_gridWidth;
+    m_gridHeight = other.m_gridHeight;
+    m_defaultSpawnId = other.m_defaultSpawnId;
+    m_spatialGrid = other.m_spatialGrid;
+    m_tileDictionary = std::move(other.m_tileDictionary);
+
+    other.m_spatialGrid = nullptr;
+    return *this;
 }
 
 // Initialize the tile dictionary with all available tile types
@@ -79,7 +158,48 @@ TileInfo Map::ParseTileCode(const std::string& code) {
         return it->second;
     }
     // Return empty tile by default
-    return m_tileDictionary.at("00");
+    return m_tileDictionary.at(kEmptyTileCode);
+}
+
+const std::unordered_map<std::string, std::string>& Map::GetPortalTargetMapLookup() {
+    static const std::unordered_map<std::string, std::string> lookup = {
+        {"World1Area1", "World1Area1"},
+        {"World1Area2", "World1Area2"},
+        {"World1Area3", "World1Area3"},
+        {"World1Area4", "World1Area4"},
+        {"World1Area5", "World1Area5"},
+        {"World1Area6", "World1Area6"},
+        {"World1Area7", "World1Area7"},
+        {"boss", "boss"},
+        {"World2Area1", "World2Area1"},
+        {"World2Area2", "World2Area2"},
+        {"World2Area3", "World2Area3"},
+        {"World2Area4", "World2Area4"},
+        {"World2Area5", "World2Area5"},
+        {"World2Area6", "World2Area6"},
+        {"World2Area7", "World2Area7"},
+    };
+    return lookup;
+}
+
+bool Map::ProcessSpecialTileCode(float x, float y, const std::string& tileCode, const TileInfo& tileInfo) {
+    if (tileInfo.isEnemy) {
+        EnemySpawnInfo spawn;
+        spawn.posX = x;
+        spawn.posY = y;
+        spawn.enemyType = tileCode;
+        spawn.enemySubtype = std::stoi(tileCode.substr(1));
+        m_enemySpawns.push_back(spawn);
+        return true;
+    }
+
+    if (tileInfo.isSpawn) {
+        int spawnId = std::stoi(tileCode.substr(1));
+        AddSpawnPoint(x, y, spawnId, "Spawn_" + tileCode);
+        return true;
+    }
+
+    return false;
 }
 
 // Load map data from a 2D grid of tile codes
@@ -92,6 +212,10 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
     int gridRows = static_cast<int>(grid.size());
     int gridCols = gridRows > 0 ? static_cast<int>(grid[0].size()) : 0;
 
+    if (gridRows <= 0 || gridCols <= 0) {
+        return;
+    }
+
     // Calculate total map dimensions
     float totalWidth = gridCols * m_gridWidth;
     float totalHeight = gridRows * m_gridHeight;
@@ -100,11 +224,13 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
     float startX = -totalWidth * 0.5f;
     float startY = -totalHeight * 0.5f;
 
+    tiles.reserve(static_cast<size_t>(gridRows) * static_cast<size_t>(gridCols));
+
     // Process each cell in the grid
     for (int y = 0; y < gridRows; y++) {
         for (int x = 0; x < gridCols; x++) {
             std::string tileCode = grid[y][x];
-            if (tileCode == "00") continue;  // Skip empty tiles
+            if (tileCode == kEmptyTileCode) continue;  // Skip empty tiles
 
             TileInfo tileInfo = ParseTileCode(tileCode);
 
@@ -112,22 +238,8 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
             float tileX = startX + static_cast<float>(x) * m_gridWidth;
             float tileY = startY + static_cast<float>(gridRows - 1 - y) * m_gridHeight;
 
-            // Handle enemy spawn points
-            if (tileInfo.isEnemy) {
-                EnemySpawnInfo spawn;
-                spawn.posX = tileX;
-                spawn.posY = tileY;
-                spawn.enemyType = tileCode;
-                spawn.enemySubtype = std::stoi(tileCode.substr(1)); // Extract numeric part
-                m_enemySpawns.push_back(spawn);
-                continue; // Don't add enemies to tile list
-            }
-
-            // Handle player spawn points
-            if (tileInfo.isSpawn) {
-                int spawnId = std::stoi(tileCode.substr(1)); // Extract numeric part
-                AddSpawnPoint(tileX, tileY, spawnId, "Spawn_" + tileCode);
-                continue; // Don't add spawn points to tile list
+            if (ProcessSpecialTileCode(tileX, tileY, tileCode, tileInfo)) {
+                continue;
             }
 
             // Create regular tile
@@ -139,71 +251,13 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
             tile.tileInfo = tileInfo;
             tile.linkedSpawnId = -1;
 
-            // Handle portal tiles
             if (tileInfo.isPortal) {
-                if (tileInfo.subtype == "World1Area2") {
-                    tile.targetMap = "World1Area2";
+                const auto& lookup = GetPortalTargetMapLookup();
+                auto it = lookup.find(tileInfo.subtype);
+                if (it != lookup.end()) {
+                    tile.targetMap = it->second;
                     tile.linkedSpawnId = 1;
                 }
-                else if (tileInfo.subtype == "World1Area3") {
-                    tile.targetMap = "World1Area3";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World1Area1") {
-                    tile.targetMap = "World1Area1";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World1Area4") {
-                    tile.targetMap = "World1Area4";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World1Area5") {
-                    tile.targetMap = "World1Area5";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World1Area6") {
-                    tile.targetMap = "World1Area6";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World1Area7") {
-                    tile.targetMap = "World1Area7";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "boss") {
-                    tile.targetMap = "boss";
-                    tile.linkedSpawnId = 1;
-                }
-                // FOR WORLD 2
-                else if (tileInfo.subtype == "World2Area1") {
-                    tile.targetMap = "World2Area1";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World2Area2") {
-                    tile.targetMap = "World2Area2";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World2Area3") {
-                    tile.targetMap = "World2Area3";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World2Area4") {
-                    tile.targetMap = "World2Area4";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World2Area5") {
-                    tile.targetMap = "World2Area5";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World2Area6") {
-                    tile.targetMap = "World2Area6";
-                    tile.linkedSpawnId = 1;
-                }
-                else if (tileInfo.subtype == "World2Area7") {
-                    tile.targetMap = "World2Area7";
-                    tile.linkedSpawnId = 1;
-                }
-
-                // FOR WORLD 3 ADD LATER
             }
 
             tiles.push_back(tile);
@@ -216,21 +270,7 @@ void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
     const std::string& targetMap, int linkedSpawnId) {
     TileInfo tileInfo = ParseTileCode(tileCode);
 
-    // Handle enemy spawn points
-    if (tileInfo.isEnemy) {
-        EnemySpawnInfo spawn;
-        spawn.posX = x;
-        spawn.posY = y;
-        spawn.enemyType = tileCode;
-        spawn.enemySubtype = std::stoi(tileCode.substr(1));
-        m_enemySpawns.push_back(spawn);
-        return;
-    }
-
-    // Handle player spawn points
-    if (tileInfo.isSpawn) {
-        int spawnId = std::stoi(tileCode.substr(1));
-        AddSpawnPoint(x, y, spawnId, "Spawn_" + tileCode);
+    if (ProcessSpecialTileCode(x, y, tileCode, tileInfo)) {
         return;
     }
 
@@ -295,6 +335,9 @@ void Map::ClearAll() {
     m_foregroundTiles.clear();
     m_spawnPoints.clear();
     m_enemySpawns.clear();
+
+    delete m_spatialGrid;
+    m_spatialGrid = nullptr;
 }
 
 // Get tiles from a specific layer
@@ -475,10 +518,7 @@ bool Map::CheckOneWayPlatformCollision(float x, float y, float width, float heig
     }
 
     // 计算各边的穿透深度
-    float leftPenetration = (x + width) - platform.posX;
-    float rightPenetration = (platform.posX + platform.width) - x;
     float topPenetration = (y + height) - platform.posY;  // 玩家底部到平台顶部的距离
-    float bottomPenetration = (platform.posY + platform.height) - y;
 
     // 对于单向平台，只有从上方碰撞才有效
     // 当玩家的底部在平台顶部附近，并且玩家正在下落时，才视为有效碰撞

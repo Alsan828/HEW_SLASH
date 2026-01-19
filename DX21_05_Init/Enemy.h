@@ -163,6 +163,11 @@ public:
     Animation anim;  // 动画系统
 
 protected:
+    // turning/facing cooldown
+    static constexpr float TURN_COOLDOWN_SECONDS = 1.0f;
+    float turnCooldownTimer = 0.0f;
+    bool useTurnCooldown = true;
+
     // AI行为方法
     virtual void PatrolBehavior(float deltaTime);
     virtual void ChaseBehavior(float deltaTime);

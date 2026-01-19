@@ -106,6 +106,9 @@ Enemy::Enemy(float x, float y, float hp)
     patrolTimer = 0.0f;
     detectionRange = 3.0f;  // 检测范围
     loseSightRange = 8.0f;  // 丢失视野范围
+
+    // base/normal enemy uses turn cooldown by default
+    useTurnCooldown = true;
 }
 
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
@@ -355,9 +358,23 @@ void Enemy::UpdateAI(float deltaTime) {
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // 更新面向方向
+    if (useTurnCooldown && turnCooldownTimer > 0.0f) {
+        turnCooldownTimer -= deltaTime;
+        if (turnCooldownTimer < 0.0f) turnCooldownTimer = 0.0f;
+    }
+
+    // 更新面向方向（普通敌人受冷却限制；其他敌人保持原本“立即转向”）
     if (dx != 0) {
-        facingRight = (dx > 0);
+        bool desiredFacingRight = (dx > 0);
+        if (useTurnCooldown) {
+            if (desiredFacingRight != facingRight && turnCooldownTimer <= 0.0f) {
+                facingRight = desiredFacingRight;
+                turnCooldownTimer = TURN_COOLDOWN_SECONDS;
+            }
+        }
+        else {
+            facingRight = desiredFacingRight;
+        }
     }
 
     // 状态机逻辑
@@ -404,24 +421,14 @@ void Enemy::ChaseBehavior(float deltaTime) {
     float dy = g_player.posY - posY;  // 添加垂直方向计算
     float distance = sqrt(dx * dx + dy * dy);  // 使用实际距离
 
-    // 更新面向方向
-    if (dx != 0) {
-        facingRight = (dx > 0);
-    }
-
     // 只有远程敌人才在攻击范围内停止移动
     if (attackRange > 0 && distance <= attackRange) {
         // 远程敌人在攻击范围内停止移动
         velocityX = 0;
     }
     else {
-        // 近战敌人一直向玩家移动
-        if (dx > 0) {
-            velocityX = moveSpeed;
-        }
-        else {
-            velocityX = -moveSpeed;
-        }
+        // 普通敌人：一直按自己当前面向方向移动（不再根据玩家位置改变移动方向）
+        velocityX = (facingRight ? 1.0f : -1.0f) * moveSpeed;
     }
 }
 
@@ -576,6 +583,7 @@ bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
 
 // FlyEnemy实现 - 飞行敌人，不受重力影响
 FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
+    useTurnCooldown = false;
     // 飞行敌人：空中单位
 	targetAltitude = y;
     attackRange = 0.0f;  // 近战敌人
@@ -679,6 +687,7 @@ void FlyEnemy::OnDeath() {
 
 // MageEnemy实现
 MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
+    useTurnCooldown = false;
     // 法师敌人：从顶部和底部易受伤害
     SetDamageMultiplier(DIR_UP, 2.0f);
     SetDamageMultiplier(DIR_DOWN, 2.0f);
@@ -778,6 +787,7 @@ void MageEnemy::CastProjectile() {
 
 // FastEnemy实现
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
+    useTurnCooldown = false;
     moveSpeed = MOVE_SPEED * 1.5f;
     dashCooldown = 2.0f;
     currentDashCooldown = 0.0f;
@@ -907,6 +917,7 @@ void FastEnemy::DashAttack() {
 
 // BombEnemy实现
 BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
+    useTurnCooldown = false;
     // 炸弹敌人：顶部和底部10倍伤害，其他方向减少伤害
     SetDamageMultiplier(DIR_UP, 10.0f);
     SetDamageMultiplier(DIR_DOWN, 10.0f);
@@ -1123,6 +1134,7 @@ void BombEnemy::CreateProjectiles() {
 
 BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
 {
+    useTurnCooldown = false;
     // change these variables as you want. this is just for the test of the testboss
     SetMaxHealth(500000.0f); 
     SetHealth(500000.0f);
@@ -1185,6 +1197,7 @@ void BossEnemy::OnDeath() {
 
 // SquareEnemy implementation - stationary enemy
 SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 100.0f) {
+    useTurnCooldown = false;
     // Square enemy: takes normal damage from all directions
     SetDamageMultiplier(DIR_FRONT, 1.0f);
     SetDamageMultiplier(DIR_BACK, 1.0f);
