@@ -9,7 +9,7 @@ HowToPlayScene::HowToPlayScene(SceneManager* manager, SCENE returnTo)
 
 bool HowToPlayScene::Init()
 {
-	LoadTexture(g_pDevice, "asset/UI/control/control.png", &backgroundTexture);      // abckground texture
+	LoadTexture(g_pDevice, "asset/UI/control/control2.png", &backgroundTexture);      // abckground texture
 
 	LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // for the button
 	LoadTexture(g_pDevice, "asset/UI/back/back_hover.png", &backHoverTexture);
