@@ -119,12 +119,12 @@ void StageSelect::Draw()
 		float spaceBetweenNumbers = 0.045f;     // for the space between the numbers
 
 		DrawAreaNumber(1, 1, -0.69f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-1
-		DrawAreaNumber(1, 2, -0.34f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-2
-		DrawAreaNumber(1, 3, 0.02f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-3
-		DrawAreaNumber(1, 4, 0.39f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-4
+		DrawAreaNumber(1, 2, -0.335f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-2
+		DrawAreaNumber(1, 3, 0.0215f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-3
+		DrawAreaNumber(1, 4, 0.395f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-4
 		DrawAreaNumber(1, 5, -0.535f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-5
 		DrawAreaNumber(1, 6, -0.155f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-6	
-		DrawAreaNumber(1, 7, 0.22f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-7
+		DrawAreaNumber(1, 7, 0.225f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-7
 	}
 
 }

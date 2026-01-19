@@ -204,6 +204,13 @@ void CleanUpGameWorld()
         g_gaugeBarTexture->Release();
         g_gaugeBarTexture = nullptr;
     }
+    if (g_gaugeBarEmptyTexture) {
+        g_gaugeBarEmptyTexture->Release();
+        g_gaugeBarEmptyTexture = nullptr;
+    }if (g_gaugeBarFilledTexture) {
+        g_gaugeBarFilledTexture->Release();
+        g_gaugeBarFilledTexture = nullptr;
+    }
 
 }
 
@@ -259,19 +266,60 @@ void DrawComboUI(void)
 // for the gauge bar UI
 void DrawGaugeUI(void)
 {
+    //// Position on left side of screen
+    //float gaugeX = -0.9f;   // Left side
+    //float gaugeY = -0.8f;   // Center vertical
+
+    //// Gauge bar dimensions (vertical bar)
+    //float gaugeWidth = 0.08f;
+    //float gaugeHeight = 1.0f;  // Total height
+
+    //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    //// Draw the empy bar
+    //SetColor(0.2f, 0.2f, 0.2f, 0.8f);
+    //RenderImage(gaugeX, gaugeY, gaugeWidth, gaugeHeight, g_groundTexture, 0, 1, 1);
+
+    //// Calculate the fill ratio 
+    //float fillRatio = static_cast<float>(g_player.gaugePoints) / static_cast<float>(g_player.MAX_GAUGE_POINTS);
+
+    //// Filled portion of the bar (height)
+    //float filledHeight = gaugeHeight * fillRatio;
+
+    //// Draw filled bar (yellow when filling, bright yellow when full)
+    //if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
+    //    // when full bar (with pulsing effect so you know you can click in order to be invicible)
+    //    float barBeating = 0.8f + 0.2f * sin(g_gameElapsedTime * 5.0f);
+    //    SetColor(1.0f * barBeating, 1.0f * barBeating, 0.0f, 1.0f);
+    //}
+    //else {
+    //    // when filling 
+    //    SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+    //}
+
+    //// Draw filled portion from the bottom to up
+    //RenderImage(gaugeX, gaugeY, gaugeWidth, filledHeight, g_groundTexture, 0, 1, 1);
+
+    //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     // Position on left side of screen
-    float gaugeX = -0.9f;   // Left side
-    float gaugeY = -0.8f;   // Center vertical
+    float gaugeX = -1.0f;   // Left side
+    float gaugeY = -0.5f;   // Center vertical
 
     // Gauge bar dimensions (vertical bar)
-    float gaugeWidth = 0.08f;
+    float gaugeWidth = 0.5f;
     float gaugeHeight = 1.0f;  // Total height
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Draw the empy bar
-    SetColor(0.2f, 0.2f, 0.2f, 0.8f);
-    RenderImage(gaugeX, gaugeY, gaugeWidth, gaugeHeight, g_groundTexture, 0, 1, 1);
+    // Draw the background (frame/border)
+    if (g_gaugeBarTexture) {
+        RenderImage(gaugeX, gaugeY, gaugeWidth, gaugeHeight, g_gaugeBarTexture, 0, 1, 1);
+    }
+
+    // Draw the empty bar
+    if (g_gaugeBarEmptyTexture) {
+        RenderImage(gaugeX, gaugeY, gaugeWidth, gaugeHeight, g_gaugeBarEmptyTexture, 0, 1, 1);
+    }
 
     // Calculate the fill ratio 
     float fillRatio = static_cast<float>(g_player.gaugePoints) / static_cast<float>(g_player.MAX_GAUGE_POINTS);
@@ -279,19 +327,21 @@ void DrawGaugeUI(void)
     // Filled portion of the bar (height)
     float filledHeight = gaugeHeight * fillRatio;
 
-    // Draw filled bar (yellow when filling, bright yellow when full)
-    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
-        // when full bar (with pulsing effect so you know you can click in order to be invicible)
-        float barBeating = 0.8f + 0.2f * sin(g_gameElapsedTime * 5.0f);
-        SetColor(1.0f * barBeating, 1.0f * barBeating, 0.0f, 1.0f);
-    }
-    else {
-        // when filling 
-        SetColor(1.0f, 1.0f, 0.0f, 1.0f);
-    }
+    // Draw filled bar (with pulsing effect when full)
+    if (g_gaugeBarFilledTexture) {
+        if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
+            // When full bar (with pulsing effect)
+            float barBeating = 0.8f + 0.2f * sin(g_gameElapsedTime * 5.0f);
+            SetColor(1.0f * barBeating, 1.0f * barBeating, 1.0f * barBeating, 1.0f);
+        }
+        else {
+            // When filling (normal color)
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
 
-    // Draw filled portion from the bottom to up
-    RenderImage(gaugeX, gaugeY, gaugeWidth, filledHeight, g_groundTexture, 0, 1, 1);
+        // Draw filled portion from the bottom to up
+        RenderImage(gaugeX, gaugeY, gaugeWidth, filledHeight, g_gaugeBarFilledTexture, 0, 1, 1);
+    }
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -371,8 +421,10 @@ void InitGameWorld() {
 
     LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
 
-    // todo: add here the gague bar texture when there is one
-    //LoadTexture(g_pDevice, "asset/UI/gauge_bar.png", &g_gaugeBarTexture);
+	// for the gauge bar 
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame.png", &g_gaugeBarTexture);
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame_background.png", &g_gaugeBarEmptyTexture);
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_filled.png", &g_gaugeBarFilledTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
