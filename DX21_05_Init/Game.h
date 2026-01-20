@@ -43,14 +43,15 @@ const float JUMP_FORCE = 0.045f;
 // Base move speed (slower than before). The old value was 0.01f.
 // Normal state move speed now is 0.8x of the previous speed.
 const float MOVE_SPEED = 0.008f; 
-const float DASH_SPEED = 0.1f;      // Base dash speed
+const float DASH_SPEED = 0.05f;      // Base dash speed (halved)
 const float DASH_DURATION = 0.11f;   // Base dash duration
 const float DASH_COOLDOWN = 0.0f;    // Dash cooldown time
 
 // Acceleration (combo) state
 const int ACCEL_COMBO_THRESHOLD = 5;        // comboCount > 5 to enter accelerated state
-const float ACCEL_MOVE_SPEED_MULT = 1.25f;  // accelerated speed equals the old MOVE_SPEED (0.01) relative to new base
-const float ACCEL_ANIM_SPEED_MULT = 1.25f;  // keep animation speed in sync with movement
+const float ACCEL_MOVE_SPEED_MULT = 1.5f;  // accelerated move speed multiplier
+const float ACCEL_ANIM_SPEED_MULT = 1.5f;  // keep animation speed in sync with movement
+const float ACCEL_CHARGE_SPEED_MULT = 1.5f; // accelerated charge speed multiplier
 
 // Player structure
 struct Player {
@@ -154,6 +155,10 @@ struct Player {
 
     float GetAnimSpeedMultiplier() const {
         return isAccelerated ? ACCEL_ANIM_SPEED_MULT : 1.0f;
+    }
+
+    float GetChargeSpeedMultiplier() const {
+        return isAccelerated ? ACCEL_CHARGE_SPEED_MULT : 1.0f;
     }
 
     // 新增：攻击检测相关

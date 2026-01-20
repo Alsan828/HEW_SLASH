@@ -306,6 +306,29 @@ void DrawComboUI(void)
 
         numberXaxis += spaceBetweenDigits;  // Move to next digit position
     }
+
+    // Combo remaining-time bar (under the combo UI)
+    // comboTimer counts down from COMBO_RESET_TIME to 0.
+    float ratio = 0.0f;
+    if (g_player.COMBO_RESET_TIME > 0.0f) {
+        ratio = g_player.comboTimer / g_player.COMBO_RESET_TIME;
+    }
+    ratio = std::clamp(ratio, 0.0f, 1.0f);
+
+    float barWidth = 0.28f;
+    float barHeight = 0.025f;
+    float barX = comboX + 0.02f;
+    float barY = comboY - 0.12f;
+
+    // background
+    SetColor(0.05f, 0.05f, 0.05f, 0.75f);
+    RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
+
+    // fill
+    SetColor(1.0f, 0.85f, 0.2f, 0.95f);
+    RenderImage(barX - (barWidth * (1.0f - ratio) * 0.5f), barY, barWidth * ratio, barHeight, g_groundTexture, 0, 1, 1);
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 // for the gauge bar UI
@@ -441,7 +464,14 @@ void UpdateGame(float deltaTime) {
     if (g_gameState != STATE_PLAYING) {
         return;
     }
-    g_player.animLockDuration -= deltaTime;
+    // `animLockDuration` is a constant duration; `animLockTimer` is the running countdown.
+    // Decrementing the duration itself can break the lock/unlock logic and freeze animation transitions.
+    if (g_player.animLockTimer > 0.0f) {
+        g_player.animLockTimer -= deltaTime;
+        if (g_player.animLockTimer < 0.0f) {
+            g_player.animLockTimer = 0.0f;
+        }
+    }
 
     // Update audio manager
     g_gameTimer.Tick(); // added december 3rd

@@ -578,7 +578,7 @@ void UpdateDash(float deltaTime) {
 
     // Charge logic should be independent of aftermath state
     if (g_player.isCharging) {
-        g_player.chargeTime += deltaTime;
+        g_player.chargeTime += deltaTime * g_player.GetChargeSpeedMultiplier();
 
         // Allow charging during stun, but charge time cannot be too long
         if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
@@ -642,7 +642,25 @@ void StopPlayer() {
 
 // Improved jump function
 void Jump() {
-    if (g_player.isOnGround && !g_player.isDashing && !g_player.isCharging) {
+    if (g_player.isDashing || g_player.isCharging) {
+        return;
+    }
+
+    // Wall jump: when sliding on a wall, jump to the opposite direction.
+    if (g_player.isWallSliding && g_player.wallSlideDirection != 0) {
+        g_player.isWallSliding = false;
+
+        g_player.velocityY = JUMP_FORCE;
+        // Push away from wall: wallSlideDirection is -1 for left wall, +1 for right wall.
+        // We want to jump opposite, so use negative direction.
+        g_player.velocityX = (-static_cast<float>(g_player.wallSlideDirection)) * MOVE_SPEED * 1.5f;
+        g_player.facingRight = (g_player.wallSlideDirection == -1);
+        g_player.isOnGround = false;
+        return;
+    }
+
+    // Normal jump
+    if (g_player.isOnGround) {
         g_player.velocityY = JUMP_FORCE;
         g_player.isOnGround = false;
     }
