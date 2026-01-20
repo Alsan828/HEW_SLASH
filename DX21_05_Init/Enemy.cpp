@@ -34,6 +34,103 @@ ID3D11ShaderResourceView* g_beamEnemyPreDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_beamEnemyDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_beamEnemyPostDeathTexture = nullptr;
 
+namespace {
+    struct ThrownEnemyState {
+        Enemy* enemy = nullptr;
+        bool active = false;
+        float vx = 0.0f;
+        float vy = 0.0f;
+    };
+
+    static std::unordered_map<Enemy*, ThrownEnemyState> g_thrownEnemies;
+
+    static void UpdateThrownEnemies(float deltaTime, MapManager* mapManager) {
+        if (!mapManager || !mapManager->GetCurrentMap()) {
+            return;
+        }
+
+        auto* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+
+        for (auto it = g_thrownEnemies.begin(); it != g_thrownEnemies.end();) {
+            Enemy* e = it->first;
+            ThrownEnemyState& s = it->second;
+
+            if (!e || !e->IsAlive()) {
+                it = g_thrownEnemies.erase(it);
+                continue;
+            }
+
+            if (s.active) {
+                it = g_thrownEnemies.erase(it);
+                continue;
+            }
+
+            float posX = e->GetX();
+            float posY = e->GetY();
+            const float w = e->GetWidth();
+            const float h = e->GetHeight();
+
+            float oldX = posX;
+            float oldY = posY;
+
+            float gravityPerFrame = GRAVITY;
+            s.vy += gravityPerFrame * deltaTime * 60.0f;
+
+            posX += s.vx * deltaTime * 60.0f;
+            posY += s.vy * deltaTime * 60.0f;
+
+            bool landed = false;
+            float newY = posY;
+
+            if (grid) {
+                std::vector<MapTile*> nearbyTiles;
+                grid->GetTilesInArea(posX - 0.5f, posY - 0.5f, w + 1.0f, h + 1.0f, nearbyTiles);
+                for (auto* tile : nearbyTiles) {
+                    if (!tile || !tile->tileInfo.isSolid) continue;
+                    if (CheckCollision(posX, posY, w, h, tile->posX, tile->posY, tile->width, tile->height)) {
+                        if (s.vy < 0.0f) {
+                            newY = tile->posY + tile->height;
+                            landed = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            else {
+                for (const auto& tile : solidTiles) {
+                    if (!tile.tileInfo.isSolid) continue;
+                    if (CheckCollision(posX, posY, w, h, tile.posX, tile.posY, tile.width, tile.height)) {
+                        if (s.vy < 0.0f) {
+                            newY = tile.posY + tile.height;
+                            landed = true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            e->SetPosition(posX, landed ? newY : posY);
+
+            // Simple facing based on horizontal velocity
+            if (fabs(s.vx) > 0.001f) {
+                e->SetFacingRight(s.vx > 0.0f);
+            }
+
+            if (landed) {
+                s.active = true;
+                s.vx = 0.0f;
+                s.vy = 0.0f;
+                e->SetVelocity(0.0f, 0.0f);
+                it = g_thrownEnemies.erase(it);
+                continue;
+            }
+
+            ++it;
+        }
+    }
+}
+
 // 修改InitEnemies函数，加载所有纹理
 void InitEnemies() {
     // 加载敌人纹理
@@ -70,6 +167,103 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_before.png", &g_beamEnemyPreDeathTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack.png", &g_beamEnemyDeathTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_after.png", &g_beamEnemyPostDeathTexture);
+}
+
+// ========== ThrowerEnemy ==========
+ThrowerEnemy::ThrowerEnemy(float x, float y)
+    : Enemy(x, y, 120.0f) {
+    // Reuse mage/"projectile" enemy texture as requested.
+    anim.ClearClips();
+    anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_mageEnemyIdleTexture);
+    anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_mageEnemyDeathTexture);
+    anim.SetClip("idle");
+
+    moveSpeed = MOVE_SPEED * 0.4f;
+    detectionRange = 10.0f;
+    loseSightRange = 12.0f;
+    throwCooldown = 2.5f;
+    currentThrowCooldown = 0.75f;
+    throwRange = 7.0f;
+    // Larger flight time => slower projectile speed while keeping the same ballistic arc formula
+    throwFlyTime = 0.9f;
+}
+
+bool ThrowerEnemy::CanThrow() const {
+    return currentThrowCooldown <= 0.0f;
+}
+
+void ThrowerEnemy::TryThrow(MapManager* mapManager) {
+    if (!mapManager || !mapManager->GetCurrentMap()) return;
+    if (!CanThrow()) return;
+
+    float enemyCenterX = posX + width * 0.5f;
+    float enemyCenterY = posY + height * 0.5f;
+    float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+
+    float dx = playerCenterX - enemyCenterX;
+    float dy = playerCenterY - enemyCenterY;
+    float dist = sqrtf(dx * dx + dy * dy);
+    if (dist > throwRange) return;
+
+    // Spawn a base enemy at thrower's position and launch it.
+    Enemy* thrown = new Enemy(posX, posY, 100.0f);
+    g_enemies.push_back(thrown);
+
+    float T = std::max(0.25f, throwFlyTime);
+    float g = GRAVITY;
+
+    // Convert to game units per second such that Update (vel * dt * 60)
+    // => one-second displacement is vel * 60.
+    float vx = dx / (T * 60.0f);
+    float vy = (dy - 0.5f * g * (T * 60.0f) * (T * 60.0f)) / (T * 60.0f);
+
+    g_thrownEnemies[thrown] = ThrownEnemyState{ thrown, false, vx, vy };
+
+    facingRight = (dx >= 0.0f);
+    currentThrowCooldown = throwCooldown;
+}
+
+void ThrowerEnemy::PatrolBehavior(float deltaTime) {
+    patrolTimer += deltaTime;
+    if (patrolTimer > 2.0f) {
+        patrolTimer = 0.0f;
+        patrolDirection = -patrolDirection;
+    }
+    velocityX = patrolDirection * moveSpeed;
+    facingRight = (velocityX > 0.0f);
+}
+
+void ThrowerEnemy::ChaseBehavior(float deltaTime) {
+    float dx = g_player.posX - posX;
+    facingRight = (dx >= 0.0f);
+
+    // Keep some distance; do not chase too aggressively.
+    if (fabs(dx) > 1.5f) {
+        velocityX = (dx > 0 ? 1.0f : -1.0f) * moveSpeed;
+    }
+    else {
+        velocityX = 0.0f;
+    }
+}
+
+void ThrowerEnemy::Update(float deltaTime, MapManager* mapManager) {
+    if (!isAlive) {
+        Enemy::Update(deltaTime, mapManager);
+        return;
+    }
+
+    currentThrowCooldown -= deltaTime;
+
+    // Update thrown enemies first so they can land this frame.
+    UpdateThrownEnemies(deltaTime, mapManager);
+
+    Enemy::Update(deltaTime, mapManager);
+
+    // Throw after movement logic so aiming uses current position.
+    if (currentState == CHASE) {
+        TryThrow(mapManager);
+    }
 }
 
 // Enemy类实现
@@ -720,7 +914,22 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
 }
 
 void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
+    // 死亡动画期间不应再产生新射弹
+    if (isDying) {
+        anim.Update(deltaTime);
+        if (anim.IsFinished()) {
+            markedForDeletion = true;
+        }
+        return;
+    }
+
     Enemy::Update(deltaTime, mapManager);
+
+    // Enemy::Update 可能在死亡/离屏最小更新等情况下提前返回，
+    // 这里再兜底一次，确保不会在这些状态下继续发射射弹。
+    if (!isAlive) {
+        return;
+    }
 
     lastAttackTime += deltaTime;
 

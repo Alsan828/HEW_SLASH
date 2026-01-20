@@ -160,6 +160,11 @@ public:
     float GetHeight() const { return height; }
     bool IsMarkedForDeletion() const { return markedForDeletion; } // added december 22nd
 
+    // Minimal setters (used by special behaviors like being thrown)
+    void SetPosition(float x, float y) { posX = x; posY = y; }
+    void SetVelocity(float vx, float vy) { velocityX = vx; velocityY = vy; }
+    void SetFacingRight(bool right) { facingRight = right; }
+
     Animation anim;  // 动画系统
 
 protected:
@@ -467,6 +472,26 @@ private:
     bool hasKilledPlayerThisAttack = false;  // Prevent multiple kills per attack
 
     float pulseTimer = 0.0f;
+};
+
+// 投掷者敌人：瞄准玩家，抛物线扔出一个基础敌人
+class ThrowerEnemy : public Enemy {
+public:
+    ThrowerEnemy(float x, float y);
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+
+protected:
+    virtual void PatrolBehavior(float deltaTime) override;
+    virtual void ChaseBehavior(float deltaTime) override;
+
+private:
+    void TryThrow(MapManager* mapManager);
+    bool CanThrow() const;
+
+    float throwCooldown = 3.0f;
+    float currentThrowCooldown = 0.0f;
+    float throwRange = 6.0f;
+    float throwFlyTime = 0.65f;
 };
 
 

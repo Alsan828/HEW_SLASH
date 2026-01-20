@@ -176,7 +176,10 @@ void  Projectile::CheckPlayerCollision() {
     float distance = sqrt(dx * dx + dy * dy);
     
     // 碰撞半径
-    float collisionRadius = (actualSize + std::min(playerWidth, playerHeight)) * 0.5f;
+    // 敌人射弹判定略微缩小，避免贴图较大导致“擦边也算命中”。
+    // 注意：这里只影响碰撞，不影响渲染。
+    constexpr float ENEMY_PROJECTILE_HITBOX_SCALE = 0.80f;
+    float collisionRadius = (actualSize + std::min(playerWidth, playerHeight)) * 0.5f * ENEMY_PROJECTILE_HITBOX_SCALE;
 
     if (distance < collisionRadius)
     {

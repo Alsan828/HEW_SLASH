@@ -7,14 +7,18 @@ static void PerformDashHitTest(float testX, float testY) {
         return;
     }
 
+    // 冲刺斩击的“攻击判定”不应该等同于冲刺时的“受击判定”(当前物理碰撞盒被缩小到 1/4)。
+    // 这里单独放大命中检测盒，避免高速擦肩而过。
+    constexpr float DASH_ATTACK_HITBOX_SCALE = 0.60f;
+
     float playerWidth = PLAYER_WIDTH;
     float playerHeight = PLAYER_HEIGHT;
     float offsetX = 0.0f;
     float offsetY = 0.0f;
 
     if (g_player.isDashing) {
-        playerWidth = PLAYER_WIDTH * 0.25f;
-        playerHeight = PLAYER_HEIGHT * 0.25f;
+        playerWidth = PLAYER_WIDTH * DASH_ATTACK_HITBOX_SCALE;
+        playerHeight = PLAYER_HEIGHT * DASH_ATTACK_HITBOX_SCALE;
         offsetX = (PLAYER_WIDTH - playerWidth) * 0.5f;
         offsetY = (PLAYER_HEIGHT - playerHeight) * 0.5f;
     }
@@ -132,7 +136,8 @@ void UpdatePlayerPhysics(float deltaTime) {
     g_player.wallSlideDirection = 0;
 
     // 如果不在冲刺状态且不在地面上，检测墙壁滑行
-    if (!g_player.isDashing && !g_player.isOnGround && g_player.velocityY < 0) {
+    // 注意：死亡状态下不应再根据环境改写朝向/状态
+    if (!g_player.isDead && !g_player.isDashing && !g_player.isOnGround && g_player.velocityY < 0) {
         // 获取当前地图的空间网格
         SpatialGrid* spatialGrid = g_mapManager.GetCurrentMap()->GetSpatialGrid();
         if (spatialGrid) {
@@ -602,6 +607,10 @@ void CancelChargeDash() {
     }
 }
 void MovePlayerLeft() {
+    // 死亡中禁止任何移动输入
+    if (g_player.isDead) {
+        return;
+    }
     // 检查是否正在蓄力且不允许移动
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
         return;
@@ -618,6 +627,10 @@ void MovePlayerLeft() {
 }
 
 void MovePlayerRight() {
+    // 死亡中禁止任何移动输入
+    if (g_player.isDead) {
+        return;
+    }
     // 检查是否正在蓄力且不允许移动
     if (g_player.isCharging && !g_player.allowMoveWhileCharging) {
         return;
@@ -634,6 +647,11 @@ void MovePlayerRight() {
 }
 
 void StopPlayer() {
+    if (g_player.isDead) {
+        g_player.velocityX = 0.0f;
+        g_player.isMoving = false;
+        return;
+    }
     if (!g_player.isDashing) {
         g_player.velocityX = 0.0f;
     }
@@ -642,6 +660,9 @@ void StopPlayer() {
 
 // Improved jump function
 void Jump() {
+    if (g_player.isDead) {
+        return;
+    }
     if (g_player.isDashing || g_player.isCharging) {
         return;
     }
@@ -668,6 +689,9 @@ void Jump() {
 
 // Method 3: Mouse direction dash
 void DashToMouse() {
+    if (g_player.isDead) {
+        return;
+    }
     // Check if points are sufficient
     if (g_player.dashPoints <= 0) {
         return;
@@ -718,6 +742,9 @@ void DashToMouse() {
 }
 // 修改后的 StartMouseChargeDash 函数
 void StartMouseChargeDash() {
+    if (g_player.isDead) {
+        return;
+    }
     // 条件：不在冲刺、不在蓄力、有点数、在可行动状态
     if (g_player.isDashing || g_player.isCharging || g_player.dashPoints <= 0) {
         return;
@@ -735,6 +762,9 @@ void StartMouseChargeDash() {
 
 // 修改后的 ExecuteMouseChargeDash 函数
 void ExecuteMouseChargeDash() {
+    if (g_player.isDead) {
+        return;
+    }
     if (!g_player.isCharging) return;
 
     if (g_player.dashPoints <= 0) return;
@@ -908,18 +938,36 @@ void UpdateDashAftermath(float deltaTime) {
 
 // Update dash point recovery
 void UpdateDashPoints(float deltaTime) {
-    // Ground recovery of points
-    if (g_player.isOnGround && g_player.dashPoints < g_player.MAX_DASH_POINTS) {
-        g_player.dashPointRecoverTimer += deltaTime;
+    // Ground recovery of points:
+    // - isOnGround 连续保持 > 1.0s 之后才开始回复
+    // - 开始回复后每 0.25s 回复 1 点直到回满
+    constexpr float DASH_POINT_RECOVER_DELAY = 0.75f;
+    constexpr float DASH_POINT_RECOVER_INTERVAL = 0.25f;
 
-        if (g_player.dashPointRecoverTimer >= g_player.DASH_POINT_RECOVER_TIME) {
-            g_player.dashPoints++;
-            g_player.dashPointRecoverTimer = 0.0f;
-        }
-    }
-    else {
+    if (!g_player.isOnGround || g_player.dashPoints >= g_player.MAX_DASH_POINTS) {
         g_player.dashPointRecoverTimer = 0.0f;
+        return;
     }
+
+    g_player.dashPointRecoverTimer += deltaTime;
+
+    if (g_player.dashPointRecoverTimer <= DASH_POINT_RECOVER_DELAY) {
+        return;
+    }
+
+    float timeAfterDelay = g_player.dashPointRecoverTimer - DASH_POINT_RECOVER_DELAY;
+    int pointsToRecover = static_cast<int>(floorf(timeAfterDelay / DASH_POINT_RECOVER_INTERVAL));
+    if (pointsToRecover <= 0) {
+        return;
+    }
+
+    int missing = g_player.MAX_DASH_POINTS - g_player.dashPoints;
+    int actualRecover = std::min(pointsToRecover, missing);
+    g_player.dashPoints += actualRecover;
+
+    // 保留余量时间，实现“每0.25秒一次”的稳定节拍
+    float leftover = fmodf(timeAfterDelay, DASH_POINT_RECOVER_INTERVAL);
+    g_player.dashPointRecoverTimer = DASH_POINT_RECOVER_DELAY + leftover;
 }
 
 // Consume dash point

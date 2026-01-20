@@ -75,7 +75,18 @@ static void SpawnPlayerAfterImage() {
     a.frameIndex = g_player.anim.GetCurrentFrame();
     a.splitX = g_player.anim.GetSplitX();
     a.splitY = g_player.anim.GetSplitY();
-    a.flipHorizontal = !g_player.facingRight;
+
+    // Use the same orientation source as the player render logic.
+    // During wall slide, facingRight can be momentarily out-of-sync with the visual orientation.
+    bool facingRightForAfterImage = g_player.facingRight;
+    if (g_player.isWallSliding && g_player.wallSlideDirection != 0) {
+        // In Player.cpp wall-slide detection:
+        //   left wall  => wallSlideDirection = -1, facingRight = true
+        //   right wall => wallSlideDirection =  1, facingRight = false
+        facingRightForAfterImage = (g_player.wallSlideDirection == -1);
+    }
+
+    a.flipHorizontal = !facingRightForAfterImage;
     g_playerAfterImages.push_back(a);
 }
 
@@ -538,6 +549,13 @@ void UpdateGame(float deltaTime) {
         }
     }
 
+    // Auto-activate invincibility when gauge is full
+    if (!g_player.isInvincible && g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
+        g_player.isInvincible = true;
+        g_player.invincibleTimer = g_player.INVINCIBLE_DURATION;
+        g_player.gaugePoints = 0;
+    }
+
 
     float scaledDeltaTime = deltaTime * timeScale;
 
@@ -959,20 +977,23 @@ void HandleInput() {
     if (g_inputSystem.IsResetting()) {
         ResetGame();
     }
+
+    // During death animation (death happens on hit), disable all gameplay inputs.
+    // Otherwise movement input below would still flip `g_player.facingRight`.
+    if (g_player.isDead) {
+        g_player.velocityX = 0.0f;
+        g_player.isMoving = false;
+        if (g_player.isCharging) {
+            CancelChargeDash();
+        }
+        return;
+    }
    /* if (g_inputSystem.IsMouseRightDown()) {
         CancelChargeDash();
     }*/
-    // Right click: Activate invincibility if gauge is full
+    // Right click: keep as cancel-charge only (invincibility is now auto-triggered)
     if (g_inputSystem.IsMouseRightDown()) {
-        if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS && !g_player.isInvincible) {
-            // Activate invincibility
-            g_player.isInvincible = true;
-            g_player.invincibleTimer = g_player.INVINCIBLE_DURATION;
-            g_player.gaugePoints = 0;  // Reset gauge
-        }
-        else {
-            CancelChargeDash();  // Original right-click behavior
-        }
+        CancelChargeDash();
     }
     // for pausing the game press P or Esc key
     if (g_inputSystem.IsTogglePressed(VK_P) || g_inputSystem.IsTogglePressed(VK_ESCAPE))
