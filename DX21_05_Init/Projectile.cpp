@@ -180,7 +180,14 @@ void  Projectile::CheckPlayerCollision() {
 
     if (distance < collisionRadius)
     {
-        if (!g_player.isDashing && !g_player.isDead) {
+        //if (!g_player.isDashing && !g_player.isDead) {
+        //    // Apply effect to player
+        //    OnPlayerDeath();
+        //    isActive = false; // 射弹命中后应该消失
+        //}
+        
+        // so the player doesnt die also if invincible
+        if (!g_player.isDashing && !g_player.isDead && !g_player.isInvincible) {
             // Apply effect to player
             OnPlayerDeath();
             isActive = false; // 射弹命中后应该消失
