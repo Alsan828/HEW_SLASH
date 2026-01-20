@@ -95,7 +95,9 @@ void UpdatePlayerPhysics(float deltaTime) {
     }
 
     // 应用重力
-    if (!g_player.isDashing || g_player.isInDashAftermath) {
+    // When no-gravity aftermath mode is enabled, aftermath behaves like a gravity-free state.
+    bool ignoreGravity = g_player.isDashing || (g_noGravityAftermathMode && g_player.isInDashAftermath);
+    if (!ignoreGravity) {
         float fixedDeltaTime = std::min(deltaTime, 0.033f);
 
         // 如果在墙壁滑行状态，应用较小的重力
@@ -941,8 +943,8 @@ void UpdateDashPoints(float deltaTime) {
     // Ground recovery of points:
     // - isOnGround 连续保持 > 1.0s 之后才开始回复
     // - 开始回复后每 0.25s 回复 1 点直到回满
-    constexpr float DASH_POINT_RECOVER_DELAY = 0.75f;
-    constexpr float DASH_POINT_RECOVER_INTERVAL = 0.25f;
+    constexpr float DASH_POINT_RECOVER_DELAY = 0.3f;
+    constexpr float DASH_POINT_RECOVER_INTERVAL = 0.2f;
 
     if (!g_player.isOnGround || g_player.dashPoints >= g_player.MAX_DASH_POINTS) {
         g_player.dashPointRecoverTimer = 0.0f;

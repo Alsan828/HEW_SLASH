@@ -49,8 +49,8 @@ const float DASH_COOLDOWN = 0.0f;    // Dash cooldown time
 
 // Acceleration (combo) state
 const int ACCEL_COMBO_THRESHOLD = 5;        // comboCount > 5 to enter accelerated state
-const float ACCEL_MOVE_SPEED_MULT = 1.5f;  // accelerated move speed multiplier
-const float ACCEL_ANIM_SPEED_MULT = 1.5f;  // keep animation speed in sync with movement
+const float ACCEL_MOVE_SPEED_MULT = 1.75f;  // accelerated move speed multiplier
+const float ACCEL_ANIM_SPEED_MULT = 1.75f;  // keep animation speed in sync with movement
 const float ACCEL_CHARGE_SPEED_MULT = 1.5f; // accelerated charge speed multiplier
 
 // Player structure
@@ -121,7 +121,7 @@ struct Player {
     int hitStopTriggered = 0 ;     // 本次冲刺中已触发的顿刀次数
     float hitStopTimer = 0.0f;       // 顿刀计时器
 
-    // 新增：蓄力层数系统
+    //蓄力层数系统
     float savedChargeTime = 0.0f;        // 保存的蓄力时间
     bool hasSavedCharge = false;         // 是否有保存的蓄力
     float chargeDecayTimer = 0.0f;        // 蓄力衰减计时器
@@ -307,6 +307,10 @@ extern int g_windowWidth;
 extern int g_windowHeight;
 
 extern Player g_player;
+
+// Gameplay toggles (runtime)
+extern bool g_releaseDashChargeMode;      // VK_T: dash executes on mouse release; short hold chains saved charge
+extern bool g_noGravityAftermathMode;     // VK_G: dash aftermath ignores gravity; movement input breaks aftermath
 extern ID3D11ShaderResourceView* g_playerTexture;
 
 // for the characteer

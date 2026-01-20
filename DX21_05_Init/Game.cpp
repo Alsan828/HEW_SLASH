@@ -54,6 +54,8 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
     g_weakPointHitEffects.push_back(e);
 }
 
+// ...existing code...
+
 static void SpawnPlayerAfterImage() {
     ID3D11ShaderResourceView* tex = g_player.anim.GetCurrentClipTexture();
     if (!tex) return;
@@ -1021,25 +1023,57 @@ void HandleInput() {
     bool isMouseLeftDown = g_inputSystem.IsMouseLeftDown();
     bool isMouseLeftReleased = g_inputSystem.IsMouseLeftReleased();
 
+    // Charge-dash input mode (VK_T):
+    // - false (default): if a saved charge exists, mouse press dashes immediately.
+    // - true: always dash on release even if a saved charge exists.
+    if (g_inputSystem.IsTogglePressed(VK_T)) {
+        g_releaseDashChargeMode = !g_releaseDashChargeMode;
+    }
+
+    // Dash aftermath behavior toggle (VK_G):
+    // - false (default): aftermath uses existing gravity/physics behavior.
+    // - true: aftermath ignores gravity; movement input breaks aftermath (already).
+    if (g_inputSystem.IsTogglePressed(VK_G)) {
+        g_noGravityAftermathMode = !g_noGravityAftermathMode;
+    }
+
     static bool wasMouseLeftDown = false;
 
     // Pure mouse control: press to start charging
     if (isMouseLeftPressed) {
-        // If we already have a saved charge, pressing should dash immediately
-        // (instead of waiting for release). Reuse existing dash execution logic
-        // by starting a charge with a near-zero charge time.
-        if (g_player.hasSavedCharge && !g_player.isCharging) {
-            StartMouseChargeDash();
-            g_player.chargeTime = 0.0f;
-            ExecuteMouseChargeDash();
+        if (!g_releaseDashChargeMode) {
+            // Legacy: if we already have a saved charge, pressing dashes immediately.
+            if (g_player.hasSavedCharge && !g_player.isCharging) {
+                StartMouseChargeDash();
+                g_player.chargeTime = 0.0f;
+                ExecuteMouseChargeDash();
+            }
+            else {
+                StartMouseChargeDash();
+            }
         }
         else {
+            // New mode: always start charging, dash will happen on release.
             StartMouseChargeDash();
         }
     }
 
     // Pure mouse control: release to execute dash
     if (isMouseLeftReleased && wasMouseLeftDown && g_player.isCharging) {
+        if (g_releaseDashChargeMode) {
+            // Hold < 0.2s: chain previous saved charge (if any).
+            // Hold >= 0.2s: use the new charge (override saved).
+            if (g_player.chargeTime < g_player.CHARGE_THRESHOLD_LOW) {
+                if (g_player.hasSavedCharge) {
+                    g_player.LoadSavedCharge();
+                }
+            }
+            else {
+                // Force_execute uses current charge by making sure we don't fall back to saved.
+                g_player.ClearSavedCharge();
+            }
+        }
+
         ExecuteMouseChargeDash();
     }
 
@@ -1141,6 +1175,19 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     // Render dash points
     RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
+
+    // Debug/toggle display (numeric):
+    // T-mode: charge-dash executes on release
+    // G-mode: dash aftermath ignores gravity
+    float toggleX = -0.95f;
+    float toggleY = 0.85f;
+    float toggleDigitW = 0.04f;
+    float toggleDigitH = 0.06f;
+
+    // [T] mode value (0/1)
+    RenderNumber(g_releaseDashChargeMode ? 1 : 0, toggleX, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
+    // [G] mode value (0/1)
+    RenderNumber(g_noGravityAftermathMode ? 1 : 0, toggleX + toggleDigitW * 1.4f, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
 
 
     float uiX = -1.0f;

@@ -5,6 +5,9 @@
 MapManager g_mapManager;
 ProjectileManager& g_projectileManager = ProjectileManager::GetInstance();
 Player g_player;
+
+bool g_releaseDashChargeMode = false;
+bool g_noGravityAftermathMode = false;
 ID3D11ShaderResourceView* g_playerTexture = nullptr; // maybe we wont use this
 
 // for the character// 在全局变量部分，删除向左的纹理变量

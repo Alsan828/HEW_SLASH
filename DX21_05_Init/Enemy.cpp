@@ -271,8 +271,13 @@ Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
     currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), weakSpotDeath(false), attackRange(0.0f) {
 
-    width = PLAYER_WIDTH * 1.2f;
-    height = PLAYER_HEIGHT * 1.2f;
+    // 普通敌人的碰撞盒不要比贴图大一圈：缩小并保持中心点不变
+    const float oldWidth = PLAYER_WIDTH * 1.2f;
+    const float oldHeight = PLAYER_HEIGHT * 1.2f;
+    width = PLAYER_WIDTH * 1.0f;
+    height = PLAYER_HEIGHT * 1.0f;
+    posX += (oldWidth - width) * 0.5f;
+    posY += (oldHeight - height) * 0.5f;
     moveSpeed = MOVE_SPEED * 0.65f;
 
     // 为基类敌人添加默认动画剪辑
@@ -1792,7 +1797,15 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     int visibleEnemyCount = 0;
     int totalEnemyCount = (int)g_enemies.size();
 
-    for (auto& enemy : g_enemies) {
+    // NOTE:
+    // Some enemies (e.g., ThrowerEnemy) can spawn new enemies during Update().
+    // Using a range-for over std::vector while it is modified can invalidate
+    // references/iterators and crash. Iterate by index over the initial count.
+    const size_t initialCount = g_enemies.size();
+    for (size_t i = 0; i < initialCount; ++i) {
+        Enemy* enemy = g_enemies[i];
+        if (!enemy) continue;
+
         // 调试信息：计数可见敌人
         if (enemy->IsVisible(g_camera)) {
             visibleEnemyCount++;
@@ -1817,6 +1830,9 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     g_enemies.erase(
         std::remove_if(g_enemies.begin(), g_enemies.end(),
             [](Enemy* e) {
+                if (!e) {
+                    return true;
+                }
                 if (/*!e->IsAlive()*/e->IsMarkedForDeletion()) {
                     delete e;
                     return true;
