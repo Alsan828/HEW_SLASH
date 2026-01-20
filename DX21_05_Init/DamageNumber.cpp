@@ -20,6 +20,9 @@ void DamageNumberManager::Update(float deltaTime) {
 }
 
 void DamageNumberManager::Render(const Camera& camera) {
+    // Temporarily disable damage number display.
+    return;
+
     for (auto& number : damageNumbers) {
         float screenX, screenY;
         // Use static world-to-screen coordinate conversion function
