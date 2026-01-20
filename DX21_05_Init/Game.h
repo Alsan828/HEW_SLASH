@@ -245,6 +245,7 @@ private:
     int totalDeaths = 0;
     float totalTime = 0.0f;
     int totalScore = 0;
+    int penalizableDeaths = 0;  // deaths happens when I have points
 
 public:
    // no need construct now bc I initialied the variables above
@@ -264,6 +265,9 @@ public:
     void CalculateFinalScore();
 
     void AddScore(int points);
+
+    void IncrementPenalizableDeaths() { penalizableDeaths++; }
+    int GetPenalizableDeaths() const { return penalizableDeaths; }
 
     // Getters (read-only access to private data)
     int GetEnemiesKilled() const { return enemiesKilled; }
