@@ -10,6 +10,8 @@ std::vector<DamageNumber> DamageNumberManager::damageNumbers;
 ID3D11ShaderResourceView* g_enemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_enemyDeathTexture = nullptr;
 
+ID3D11ShaderResourceView* g_blindEyeEnemyIdleTexture = nullptr;
+
 ID3D11ShaderResourceView* g_flyEnemyIdleTexture = nullptr;  // 改为飞行敌人纹理
 ID3D11ShaderResourceView* g_flyEnemyDeathTexture = nullptr;  // 改为飞行敌人死亡纹理
 
@@ -138,6 +140,9 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_idle.png", &g_enemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_death.png", &g_enemyDeathTexture);
 
+    // 盲眼普通敌人（idle/普通动画共用同一张图；死亡复用普通敌人死亡）
+    LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/blind_eye.png", &g_blindEyeEnemyIdleTexture);
+
     // 飞行敌人
     LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_right.png", &g_flyEnemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_death.png", &g_flyEnemyDeathTexture);
@@ -167,6 +172,92 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_before.png", &g_beamEnemyPreDeathTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack.png", &g_beamEnemyDeathTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_after.png", &g_beamEnemyPostDeathTexture);
+}
+
+// ========== BlindEyeEnemy ==========
+BlindEyeEnemy::BlindEyeEnemy(float x, float y)
+    : Enemy(x, y, 100.0f) {
+    // 盲眼敌人不追人，巡逻逻辑自己处理转向，不需要朝向冷却
+    useTurnCooldown = false;
+    detectionRange = 0.0f;
+    loseSightRange = 0.0f;
+
+    anim.ClearClips();
+    // idle/普通：使用同一张图（单帧/单格）
+    anim.AddClip("idle", 0, 0, 1, 1, 0.1f, true, g_blindEyeEnemyIdleTexture);
+    // 死亡动画：复用普通敌人死亡
+    anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_enemyDeathTexture);
+    anim.SetClip("idle");
+
+    // 轻微慢一点，符合“普通”巡逻敌人
+    moveSpeed = MOVE_SPEED * 0.55f;
+    patrolDirection = 1.0f;
+}
+
+void BlindEyeEnemy::Update(float deltaTime, MapManager* mapManager) {
+    Enemy::Update(deltaTime, mapManager);
+}
+
+void BlindEyeEnemy::ChaseBehavior(float deltaTime) {
+    // 不追逐
+    currentState = PATROL;
+}
+
+bool BlindEyeEnemy::IsGroundAhead(MapManager* mapManager, float directionSign) const {
+    if (!mapManager || !mapManager->GetCurrentMap()) {
+        return true;
+    }
+
+    // 在脚下前方做一个小探测点，判断是否还有地面
+    const float aheadX = posX + (directionSign > 0.0f ? width : 0.0f) + directionSign * 0.02f;
+    const float probeY = posY - 0.02f;
+    const float probeW = 0.02f;
+    const float probeH = 0.02f;
+
+    SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
+    if (!grid) {
+        auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+        for (const auto& tile : solidTiles) {
+            if (!tile.tileInfo.isSolid) continue;
+            if (CheckCollision(aheadX, probeY, probeW, probeH, tile.posX, tile.posY, tile.width, tile.height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::vector<MapTile*> nearbyTiles;
+    grid->GetTilesInArea(aheadX - 0.1f, probeY - 0.1f, probeW + 0.2f, probeH + 0.2f, nearbyTiles);
+    for (const auto* tile : nearbyTiles) {
+        if (!tile || !tile->tileInfo.isSolid) continue;
+        if (CheckCollision(aheadX, probeY, probeW, probeH, tile->posX, tile->posY, tile->width, tile->height)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void BlindEyeEnemy::PatrolBehavior(float deltaTime) {
+    if (!isAlive || isDying) return;
+
+    // 盲眼敌人只巡逻：遇墙或悬崖掉头
+    MapManager* mapManager = &g_mapManager;
+    const float dir = patrolDirection;
+
+    // 1) 前方是否还有地面（悬崖检测）
+    if (!IsGroundAhead(mapManager, dir)) {
+        patrolDirection = -patrolDirection;
+    }
+    else {
+        // 2) 墙壁检测：在预测位置放一个小偏移，若会撞墙则掉头
+        float nextX = posX + dir * moveSpeed * 0.5f * deltaTime * 60.0f;
+        if (CheckCollisionWithTilesAt(nextX, posY, mapManager)) {
+            patrolDirection = -patrolDirection;
+        }
+    }
+
+    velocityX = patrolDirection * moveSpeed * 1.0f;
+    facingRight = (velocityX > 0.0f);
 }
 
 // ========== ThrowerEnemy ==========

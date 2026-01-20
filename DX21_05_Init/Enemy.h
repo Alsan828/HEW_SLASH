@@ -494,6 +494,20 @@ private:
     float throwFlyTime = 0.65f;
 };
 
+// 盲眼普通敌人：只会左右巡逻，遇到墙/悬崖掉头
+class BlindEyeEnemy : public Enemy {
+public:
+    BlindEyeEnemy(float x, float y);
+    virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+
+protected:
+    virtual void PatrolBehavior(float deltaTime) override;
+    virtual void ChaseBehavior(float deltaTime) override;
+
+private:
+    bool IsGroundAhead(MapManager* mapManager, float directionSign) const;
+};
+
 
 
 // 敌人管理函数声明

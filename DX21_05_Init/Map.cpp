@@ -119,6 +119,7 @@ void Map::InitializeTileDictionary() {
         {"E6", {"E6", "enemy", "square", false, false, false, true}},
         {"E7", {"E7", "enemy", "beam", false, false, false, true}},
         {"E8", {"E8", "enemy", "thrower", false, false, false, true}},
+        {"E9", {"E9", "enemy", "blind_eye", false, false, false, true}},
 
         // Portal types
         {"DF", {"DF", "door", "World1Area2", false, false, true, false}},

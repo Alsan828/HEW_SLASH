@@ -1,6 +1,8 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
 
+static void PerformDashEndCircleHitTest();
+
 // 冲刺命中检测辅助：给定测试位置，使用缩小并居中的碰撞盒检测敌人
 static void PerformDashHitTest(float testX, float testY) {
     if (!g_player.isDashing) {
@@ -62,10 +64,70 @@ static void PerformDashHitTest(float testX, float testY) {
                     // TriggerSlowMotion(0.05f, 0.3f);
                 }
             }
-
+ 
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
             enemy->TakeDamage(actualDamage, dashAngle);
 
+            g_player.hitEnemies.push_back(enemy);
+        }
+    }
+}
+
+// 冲刺结束点追加一个“小圆形”命中判定：只在到达终点的那一刻触发一次。
+// 该判定复用 hitEnemies 去重，因此不会与冲刺过程中的伤害重合。
+static void PerformDashEndCircleHitTest() {
+    if (!g_player.isDashing || !g_player.hasMouseTarget) {
+        return;
+    }
+
+    const float forwardDistance = PLAYER_WIDTH * 0.5f;
+    const float radius = PLAYER_WIDTH * 0.35f;
+    const float radiusSq = radius * radius;
+
+    float endCenterX = g_player.mouseTargetX + g_player.dashDirectionX * forwardDistance;
+    float endCenterY = g_player.mouseTargetY + g_player.dashDirectionY * forwardDistance;
+
+    float dashAngle = atan2(g_player.dashDirectionY, g_player.dashDirectionX);
+
+    for (auto& enemy : g_enemies) {
+        if (!enemy || !enemy->IsAlive()) {
+            continue;
+        }
+
+        if (std::find(g_player.hitEnemies.begin(), g_player.hitEnemies.end(), enemy) != g_player.hitEnemies.end()) {
+            continue;
+        }
+
+        float enemyCenterX = enemy->GetX() + enemy->GetWidth() * 0.5f;
+        float enemyCenterY = enemy->GetY() + enemy->GetHeight() * 0.5f;
+
+        float dx = enemyCenterX - endCenterX;
+        float dy = enemyCenterY - endCenterY;
+        if (dx * dx + dy * dy <= radiusSq) {
+            g_player.comboCount++;
+            g_player.comboTimer = 5.0f;
+
+            float multiplier = enemy->GetDamageMultiplier(dashAngle);
+            if (!g_player.isInvincible) {
+                if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                    g_player.gaugePoints += 2;
+                }
+                else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                    g_player.gaugePoints += 1;
+                }
+                if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+                    g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+                }
+
+                if (g_player.hitStopTriggered < 3) {
+                    g_camera.Shake(0.02f, 0.05f);
+                    g_player.hitStopTimer = 0.075f;
+                    g_player.hitStopTriggered++;
+                }
+            }
+
+            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
+            enemy->TakeDamage(actualDamage, dashAngle);
             g_player.hitEnemies.push_back(enemy);
         }
     }
@@ -904,6 +966,10 @@ void ExecuteMouseChargeDash() {
 }
 // Enter dash aftermath state
 void EnterDashAftermath() {
+    // 在进入硬直前，补一次“终点小圆形”攻击判定（只触发一次）。
+    // 注意：这里仍处于 isDashing=true，因此会复用 hitEnemies 去重，不与冲刺过程伤害重合。
+    PerformDashEndCircleHitTest();
+
     // Clear all velocity to keep player stationary
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;

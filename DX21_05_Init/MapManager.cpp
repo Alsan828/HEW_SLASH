@@ -70,6 +70,9 @@ void MapManager::CreateMapEnemies() {
         else if (enemyType == "E8") {
             g_enemies.push_back(new ThrowerEnemy(x, y));
         }
+        else if (enemyType == "E9") {
+            g_enemies.push_back(new BlindEyeEnemy(x, y));
+        }
     }
 }
 // Find and return a map by name from the map collection
