@@ -3,6 +3,26 @@
 
 static void PerformDashEndCircleHitTest();
 
+static float ComputeDashHitStopTime()
+{
+    // Base feel (old value)
+    constexpr float BASE_HITSTOP = 0.075f;
+    // Extra hitstop per charge level (0..3)
+    constexpr float EXTRA_PER_LEVEL = 0.025f;
+    constexpr float MAX_HITSTOP = 0.18f;
+
+    int chargeLevel = 0;
+    if (g_player.hasSavedCharge) {
+        chargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
+    }
+    else {
+        chargeLevel = g_player.GetChargeLevelFromTime(g_player.chargeTime);
+    }
+
+    float hitStop = BASE_HITSTOP + static_cast<float>(chargeLevel) * EXTRA_PER_LEVEL;
+    return std::min(hitStop, MAX_HITSTOP);
+}
+
 // 冲刺命中检测辅助：给定测试位置，使用缩小并居中的碰撞盒检测敌人
 static void PerformDashHitTest(float testX, float testY) {
     if (!g_player.isDashing) {
@@ -58,7 +78,7 @@ static void PerformDashHitTest(float testX, float testY) {
 
                 if (g_player.hitStopTriggered < 3) {
                     g_camera.Shake(0.02f, 0.05f);
-                    g_player.hitStopTimer = 0.075f;
+                    g_player.hitStopTimer = ComputeDashHitStopTime();
                     g_player.hitStopTriggered++;
                     // 可选全局慢动作
                     // TriggerSlowMotion(0.05f, 0.3f);
@@ -121,7 +141,7 @@ static void PerformDashEndCircleHitTest() {
 
                 if (g_player.hitStopTriggered < 3) {
                     g_camera.Shake(0.02f, 0.05f);
-                    g_player.hitStopTimer = 0.075f;
+                    g_player.hitStopTimer = ComputeDashHitStopTime();
                     g_player.hitStopTriggered++;
                 }
             }
