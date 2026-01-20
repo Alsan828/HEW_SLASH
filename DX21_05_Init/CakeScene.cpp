@@ -13,7 +13,9 @@ bool CakeScene::Init()
     g_gameState = STATE_PLAYING;
 
     g_mapManager.SwitchMap("cake", -1, -1);
+
     ResetGame();
+   
     return true;
 }
 
@@ -38,7 +40,9 @@ void CakeScene::Draw()
 {
     // Call your global draw function
     DrawGame();
+
 }
+
 
 // Cleanup
 void CakeScene::Uninit()

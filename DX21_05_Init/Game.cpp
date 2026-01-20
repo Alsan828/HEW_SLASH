@@ -475,20 +475,14 @@ void DrawScoreUI(void)
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Get current score
-    int currentScore = g_gameStats.GetTotalScore();
-
-    // Recalculate score in during the game
-    // You can comment this out if you only want final score at the end
+    // for getting score after killing 
     int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
-    //int timeBonus = std::max(0, static_cast<int>(60 - g_gameElapsedTime));
-    int timePenalty = static_cast<int>(g_gameElapsedTime);  // current elapsed time in seconds
-    int deathPenalty = g_gameStats.GetTotalDeaths() * 5;
-    //int liveScore = std::max(0, (killPoints * timeBonus) - deathPenalty);
-    int liveScore = std::max(0, killPoints - timePenalty - deathPenalty);
+
+    int deathPenalty = g_gameStats.GetPenalizableDeaths() * 5;
+
+    int liveScore = std::max(0, killPoints - deathPenalty);
 
     // Draw the live score
-    //DrawNumber(liveScore, scoreX, scoreY, numberSize, g_numberTexture);
     DrawNumber(liveScore, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
 }
 
@@ -1252,9 +1246,9 @@ void MouseIndicatorSystem::Update(float deltaTime) {
 }
 
 void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
-    if (!m_showMouseIndicator) return;
-    // Do not show mouse indicator if protagonist is dead
-    if (g_player.isDead) return;
+    //if (!m_showMouseIndicator) return;
+    //// Do not show mouse indicator if protagonist is dead
+    //if (g_player.isDead) return;
     auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
         return { worldX - cameraX, worldY - cameraY };
         };
@@ -1319,6 +1313,10 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     RenderNumber(secondOnes, timerX + timerDigitWidth * 4.0f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     //SetColor(1.0f, 1.0f, 1.0f, 1.0f); 
+
+    if (!m_showMouseIndicator) return;
+    // Do not show mouse indicator if protagonist is dead
+    if (g_player.isDead) return;
 
     // Draw direction arrow
 
@@ -1437,12 +1435,13 @@ void GameStatistics::CalculateFinalScore() {
     int killPoints = (enemiesKilled * 10) + (weakPointKills * 30);
 
     // the time bonus. 0 is the minimum
-    int timePenalty = static_cast<int>(totalTime); // -1 point per seconds that has elapsed
+    int timeBonus = std::max(0, 60 - static_cast<int>(totalTime));
 
-    // the death penalty: deaths * 5
-    int deathPenalty = totalDeaths * 5;
+    int scoreBeforePenalty = killPoints + timeBonus;
 
-    totalScore = std::max(0, killPoints - timePenalty - deathPenalty);
+    int deathPenalty = penalizableDeaths * 5;
+
+    totalScore = std::max(0, killPoints + timeBonus - deathPenalty);
 
     // the debug
  /*   char debugMsg[512];

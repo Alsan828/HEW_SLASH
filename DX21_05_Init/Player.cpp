@@ -554,6 +554,14 @@ void UpdatePlayerPhysics(float deltaTime) {
 
     // 边界检查
     if (g_player.posY < -4.0f) {
+        g_gameStats.IncrementDeaths();
+
+        // only counts deaths if the player has points
+        int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
+        if (killPoints > 0) {
+            g_gameStats.IncrementPenalizableDeaths();
+        }
+
         ResetGame();
     }
 
@@ -597,6 +605,12 @@ void OnPlayerDeath() {
 
     // Track death
     g_gameStats.IncrementDeaths();
+
+    // only count deaths if the player has points
+    int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
+    if (killPoints > 0) {
+        g_gameStats.IncrementPenalizableDeaths();
+    }
 
     // Stop all player actions
     g_player.isMoving = false;
