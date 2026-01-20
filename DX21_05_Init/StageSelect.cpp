@@ -22,24 +22,17 @@ bool StageSelect::Init()
 	LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_normalsize.png", &arrowTexture);
 	LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_bigsize.png", &arrowHoverTexture);
 
-	
-	//uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, STAGE, buttonTexture, buttonHoverTexture); // go to 1-1
-	//uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, STAGE2, buttonTexture, buttonHoverTexture); // go to 1-2
-	//uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, STAGE3, buttonTexture, buttonHoverTexture); // go to 1-3
-	//uiButtons.emplace_back(0.65f, 0.1f, 0.4f, 0.8f, STAGE4, buttonTexture, buttonHoverTexture); // go to 1-4
-	//uiButtons.emplace_back(-0.65f, -0.5f, 0.4f, 0.8f, STAGE5, buttonTexture, buttonHoverTexture); // go to 1-5
-	//uiButtons.emplace_back(-0.25f, -0.5f, 0.4f, 0.8f, STAGE6, buttonTexture, buttonHoverTexture); // go to 1-6
-	//uiButtons.emplace_back(0.15f, -0.5f, 0.4f, 0.8f, STAGE7, buttonTexture, buttonHoverTexture); // go to 1-6
-	//uiButtons.emplace_back(0.65f, -0.5f, 0.4f, 0.8f, BOSS, buttonTexture, buttonHoverTexture); // go to boss
-
+	// top row
 	uiButtons.emplace_back(-0.65f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 1-1
-	uiButtons.emplace_back(-0.3f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 1-2
-	uiButtons.emplace_back(0.06f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 1-3
-	uiButtons.emplace_back(0.43f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 1-4
-	uiButtons.emplace_back(-0.5f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 1-5
-	uiButtons.emplace_back(-0.12f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 1-6
-	uiButtons.emplace_back(0.26f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 1-7
-	uiButtons.emplace_back(0.63f, -0.33f, 0.4f, 0.8f, GAMEPLAY, bossButtonTexture, bossButtonHoverTexture);  // go to boss
+	uiButtons.emplace_back(-0.3f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 1-3
+	uiButtons.emplace_back(0.06f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 1-5
+	uiButtons.emplace_back(0.43f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 1-7
+
+	// bottom row
+	uiButtons.emplace_back(-0.5f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 1-2
+	uiButtons.emplace_back(-0.12f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 1-4
+	uiButtons.emplace_back(0.26f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 1-6
+	uiButtons.emplace_back(0.63f, -0.33f, 0.4f, 0.8f, GAMEPLAY, bossButtonTexture, bossButtonHoverTexture); // go to boss
 	for (auto& btn : uiButtons)
 	{
 		btn.SetHitboxScale(0.5f, 0.3f);
@@ -77,8 +70,9 @@ void StageSelect::Update(float deltaTime)
 			// the first 8 buttons are for the stage
 			if (i >= 0 && i < 8)
 			{
-				// for world 1
-				sceneManager->SwitchToStage(1, i + 1);
+				int stageNumbers[8] = { 1, 3, 5, 7, 2, 4, 6, 8 };
+				sceneManager->SwitchToStage(1, stageNumbers[i]);
+
 				return;
 			}
 			// for the right arrow
@@ -118,15 +112,14 @@ void StageSelect::Draw()
 		float numberHeight = 0.05f;
 		float spaceBetweenNumbers = 0.045f;     // for the space between the numbers
 
-		DrawAreaNumber(1, 1, -0.69f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-1
-		DrawAreaNumber(1, 2, -0.335f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-2
-		DrawAreaNumber(1, 3, 0.0215f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-3
-		DrawAreaNumber(1, 4, 0.395f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-4
-		DrawAreaNumber(1, 5, -0.535f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-5
-		DrawAreaNumber(1, 6, -0.155f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-6	
-		DrawAreaNumber(1, 7, 0.225f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-7
+		DrawAreaNumber(1, 1, -0.693f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-1    1
+		DrawAreaNumber(1, 3, -0.343f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-2    3
+		DrawAreaNumber(1, 5, 0.018f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-3   5
+		DrawAreaNumber(1, 7, 0.39f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-4    7
+		DrawAreaNumber(1, 2, -0.54f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-5    2
+		DrawAreaNumber(1, 4, -0.16f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-6	  4
+		DrawAreaNumber(1, 6, 0.22f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-7    6
 	}
-
 }
 
 void StageSelect::DrawAreaNumber(int world, int stage, float x, float y, float width, float height, float space)
