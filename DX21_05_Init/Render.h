@@ -78,4 +78,7 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	int frameIndex = 0, int rows = 1, int columns = 1, bool enableCulling = false,
 	float rotation = 0.0f, bool flipHorizontal = false); // added the rotation
 
+void RenderImageWithCrop(float posX, float posY, float width, float height,
+	ID3D11ShaderResourceView* textureSRV, float fillRatio);
+
 void SetColor(float r, float g, float b, float a); // added november 12th

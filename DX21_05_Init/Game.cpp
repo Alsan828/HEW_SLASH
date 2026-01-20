@@ -40,6 +40,7 @@ struct AfterImageInstance {
 static std::vector<AfterImageInstance> g_playerAfterImages;
 
 GameStatistics g_gameStats;
+Animation g_gaugeEffectAnim;
 
 void SpawnWeakPointHitEffect(float worldX, float worldY) {
     if (!g_hitEffectTexture) return;
@@ -269,6 +270,18 @@ void CleanUpGameWorld()
         g_gaugeBarTexture->Release();
         g_gaugeBarTexture = nullptr;
     }
+    if (g_gaugeBarEmptyTexture) {
+        g_gaugeBarEmptyTexture->Release();
+        g_gaugeBarEmptyTexture = nullptr;
+    }
+    if (g_gaugeBarFilledTexture) {
+        g_gaugeBarFilledTexture->Release();
+        g_gaugeBarFilledTexture = nullptr;
+    }
+    if(g_gaugeFullEffectTexture) {
+        g_gaugeFullEffectTexture->Release();
+        g_gaugeFullEffectTexture = nullptr;
+	}
 
 }
 
@@ -347,42 +360,106 @@ void DrawComboUI(void)
 // for the gauge bar UI
 void DrawGaugeUI(void)
 {
-    // Position on left side of screen
-    float gaugeX = -0.9f;   // Left side
-    float gaugeY = -0.8f;   // Center vertical
+    // for the surrounded of the gauge bar. 
+    float gaugeX = -1.1f;
+    float gaugeY = -0.5f;
+    float frameWidth = 0.5f;
+    float frameHeight = 1.0f;
 
-    // Gauge bar dimensions (vertical bar)
-    float gaugeWidth = 0.08f;
-    float gaugeHeight = 1.0f;  // Total height
+	// for the inner part of the gauge bar
+    float barWidth = frameWidth * 0.078f;
+    float barHeight = frameHeight * 0.5f;
+    float barOffsetX = -0.005f;  // if positibe move right, if negative move left
+    float barOffsetY = 0.24f;    // if positive move up, if negative move down
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // Center horizontally, bottom aligned
+    float barX = gaugeX + (frameWidth - barWidth) * 0.5f + barOffsetX;
+    float barY = gaugeY + (frameHeight - barHeight) * 0.0f + barOffsetY;
 
-    // Draw the empy bar
-    SetColor(0.2f, 0.2f, 0.2f, 0.8f);
-    RenderImage(gaugeX, gaugeY, gaugeWidth, gaugeHeight, g_groundTexture, 0, 1, 1);
-
-    // Calculate the fill ratio 
-    float fillRatio = static_cast<float>(g_player.gaugePoints) / static_cast<float>(g_player.MAX_GAUGE_POINTS);
-
-    // Filled portion of the bar (height)
-    float filledHeight = gaugeHeight * fillRatio;
-
-    // Draw filled bar (yellow when filling, bright yellow when full)
-    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
-        // when full bar (with pulsing effect so you know you can click in order to be invicible)
-        float barBeating = 0.8f + 0.2f * sin(g_gameElapsedTime * 5.0f);
-        SetColor(1.0f * barBeating, 1.0f * barBeating, 0.0f, 1.0f);
-    }
-    else {
-        // when filling 
-        SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+	// for the empty bar background
+    SetColor(1, 1, 1, 1);
+    if (g_gaugeBarEmptyTexture) {
+        RenderImage(barX, barY, barWidth, barHeight,
+            g_gaugeBarEmptyTexture, 0, 1, 1);
     }
 
-    // Draw filled portion from the bottom to up
-    RenderImage(gaugeX, gaugeY, gaugeWidth, filledHeight, g_groundTexture, 0, 1, 1);
+	// draw the gauge full effect animation when the gauge is full
+    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS)
+    {
+        if (g_gaugeEffectAnim.GetClipCount() > 0)
+        {
+            ID3D11ShaderResourceView* tex = g_gaugeEffectAnim.GetCurrentClipTexture();
+            if (tex)
+            {
+                int rows = g_gaugeEffectAnim.GetSplitY();
+                int columns = g_gaugeEffectAnim.GetSplitX();
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+                if (rows > 0 && columns > 0)
+                {
+                    int currentFrame = g_gaugeEffectAnim.GetCurrentFrame();
+
+                    float effectScale = 1.2f;
+                    float effectWidth = frameWidth * effectScale;
+                    float effectHeight = frameHeight * effectScale;
+
+                    float effectX = gaugeX - (effectWidth - frameWidth) * 0.5f;
+                    float effectY = gaugeY - (effectHeight - frameHeight) * 0.5f;
+
+                    RenderImage(effectX, effectY, effectWidth, effectHeight,
+                        tex, currentFrame, rows, columns,
+                        false, 0.0f, false);
+                }
+            }
+        }
+    }
+
+	// for the filled bar calculation
+    float fillRatio = 0.0f;
+    if (g_player.MAX_GAUGE_POINTS > 0){
+        fillRatio = (float)g_player.gaugePoints /
+            (float)g_player.MAX_GAUGE_POINTS;
+    }   
+
+	// it draws the filled part of the gauge bar
+    //if (fillRatio > 0.0f && g_gaugeBarFilledTexture)
+    //{
+    //    if (fillRatio > 1.0f)
+    //        fillRatio = 1.0f;
+
+    //    // Pulsing when full
+    //    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS)
+    //    {
+    //        float beat = 0.8f + 0.2f * sin(g_gameElapsedTime * 5.0f);
+    //        SetColor(beat, beat, beat, 1.0f);
+    //    }
+    //    else
+    //    {
+    //        SetColor(1, 1, 1, 1);
+    //    }
+
+    //    RenderImageWithCrop( barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio);
+    //}
+
+	// draw the filled part of the gauge bar
+    if (fillRatio > 0.0f && g_gaugeBarFilledTexture) 
+    {
+        if (fillRatio > 1.0f) {
+            fillRatio = 1.0f;
+        }
+       
+        SetColor(1, 1, 1, 1); 
+        RenderImageWithCrop(barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio); 
+    }
+
+	// for the surrounding frame of the gauge bar
+    SetColor(1, 1, 1, 1);
+    if (g_gaugeBarTexture)
+        RenderImage(gaugeX, gaugeY, frameWidth, frameHeight,
+            g_gaugeBarTexture, 0, 1, 1);
+
+    SetColor(1, 1, 1, 1);
 }
+
 
 // for the score UI
 void DrawScoreUI(void)
@@ -459,8 +536,12 @@ void InitGameWorld() {
 
     LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
 
-    // todo: add here the gague bar texture when there is one
-    //LoadTexture(g_pDevice, "asset/UI/gauge_bar.png", &g_gaugeBarTexture);
+	// for the gauge bar 
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame.png", &g_gaugeBarTexture);
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame_background.png", &g_gaugeBarEmptyTexture);
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_filled.png", &g_gaugeBarFilledTexture);
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect_max.png", &g_gaugeFullEffectTexture);
+    g_gaugeEffectAnim.AddClip("GaugeFull", 1, 7, 1, 8, 0.08f, true, g_gaugeFullEffectTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -558,6 +639,14 @@ void UpdateGame(float deltaTime) {
         g_player.gaugePoints = 0;
     }
 
+	// for the gauge effect timer
+    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) 
+    { 
+        g_gaugeEffectAnim.Update(deltaTime);  // update the animation when the gauge bar is full
+    }
+    else { 
+        g_gaugeEffectAnim.Reset(); // Reset animation if not full
+    }
 
     float scaledDeltaTime = deltaTime * timeScale;
 
