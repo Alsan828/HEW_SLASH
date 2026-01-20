@@ -20,6 +20,7 @@ GameplayScene::GameplayScene(SceneManager* manager, int world, int area)
 
 bool GameplayScene::Init()
 {
+	ShowCursor(FALSE);
     g_gameState = STATE_PLAYING;
 
     // generates the map name based on world and stage

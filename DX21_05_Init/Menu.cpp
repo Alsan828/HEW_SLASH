@@ -9,6 +9,7 @@ MenuScene::MenuScene(SceneManager* manager)
 
 bool MenuScene::Init()
 {
+	ShowCursor(TRUE);
 	Audio::PlayBGM(BackgroundMusic::MAIN_MENU, true);
 
 	LoadTexture(g_pDevice, "asset/UI/menu/background.png", &backgroundTexture);

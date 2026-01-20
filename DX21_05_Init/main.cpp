@@ -94,6 +94,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+    case WM_CREATE:
+        ShowCursor(FALSE);
+        break;
+
+    case WM_SETFOCUS:
+        ShowCursor(FALSE);
+        break;
+
+    case WM_KILLFOCUS:
+        ShowCursor(TRUE);
+        break;
+
+    case WM_SETCURSOR:
+		// Don't force the cursor to NULL in the client area.
+		// Cursor visibility is controlled via ShowCursor(TRUE/FALSE) depending on scene.
+        break;
+
     case WM_SIZE: {
         // 窗口尺寸变化时更新全局变量和相机
         g_windowWidth = LOWORD(lParam);
@@ -106,12 +123,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
 
         CleanUpGameWorld();
+        ShowCursor(TRUE);
         PostQuitMessage(0);
         break;
 
     case WM_CLOSE: {
 
         CleanUpGameWorld();
+        ShowCursor(TRUE);
         int res = MessageBoxA(NULL, "Are you sure you want to exit?", "Confirmation", MB_OKCANCEL);
         if (res == IDOK) {
             DestroyWindow(hWnd);

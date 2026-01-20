@@ -15,6 +15,7 @@ TitleScene::TitleScene(SceneManager* manager)
 //it initializes the objects in title
 bool TitleScene::Init() 
 {
+	ShowCursor(TRUE);
     LoadTexture(g_pDevice, "asset/UI/title/cut_sheet.png", &tex);
 
     InitGameWorld();

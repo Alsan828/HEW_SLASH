@@ -11,6 +11,7 @@ PauseScene::PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE)
 
 bool PauseScene::Init()
 {
+	ShowCursor(TRUE);
     LoadTexture(g_pDevice, "asset/UI/pause/background.png", &g_pauseTexture); // Load the pause background texture
 
     LoadTexture(g_pDevice, "asset/UI/pause/pause_black.png", &blackTexture); // so when in pause, I see the stage part transparent
