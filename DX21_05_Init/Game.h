@@ -83,6 +83,7 @@ struct Player {
     float invincibleTimer = 0.0f;     // invincibility timer
     const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
 	float g_gaugeEffectTimer = 0.0f;  // gauge effect timer
+    bool g_gaugeEffectActive = false;
 
 
     // 生命值系统
@@ -367,7 +368,7 @@ void InitGameWorld();
 void DrawGame();
 
 // used for statistics in the result
-void DrawNumber(int number, float x, float y, float size, ID3D11ShaderResourceView* texture);
+void DrawNumber(int number, float x, float y, float width, float height, ID3D11ShaderResourceView* texture);
 void DrawTime(int minutes, int seconds, float x, float y, float size, ID3D11ShaderResourceView* texture);
 
 // Input handling

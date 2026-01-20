@@ -384,7 +384,8 @@ void DrawGaugeUI(void)
     }
 
 	// draw the gauge full effect animation when the gauge is full
-    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS)
+    //if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS)
+    if (g_player.g_gaugeEffectActive)
     {
         if (g_gaugeEffectAnim.GetClipCount() > 0)
         {
@@ -398,12 +399,12 @@ void DrawGaugeUI(void)
                 {
                     int currentFrame = g_gaugeEffectAnim.GetCurrentFrame();
 
-                    float effectScale = 1.2f;
-                    float effectWidth = frameWidth * effectScale;
-                    float effectHeight = frameHeight * effectScale;
+                    //float effectScale = 1.2f;
+                    float effectWidth = frameWidth/* * effectScale*/;
+                    float effectHeight = frameHeight/* * effectScale*/;
 
-                    float effectX = gaugeX - (effectWidth - frameWidth) * 0.5f;
-                    float effectY = gaugeY - (effectHeight - frameHeight) * 0.5f;
+                    float effectX = gaugeX /*- (effectWidth - frameWidth) * 0.5f*/;
+                    float effectY = gaugeY /*- (effectHeight - frameHeight) * 0.5f*/;
 
                     RenderImage(effectX, effectY, effectWidth, effectHeight,
                         tex, currentFrame, rows, columns,
@@ -467,9 +468,10 @@ void DrawScoreUI(void)
     if (!g_uiNumberTexture) return;
 
     // Position on top left, below the timer
-    float scoreX = -0.8f;   // left side in the x axis
-    float scoreY = 0.6f;    // below the timer in the y axis
-    float numberSize = 0.08f; // the size of the number
+    float scoreX = -0.77f;   // left side in the x axis
+    float scoreY = 0.61f;    // below the timer in the y axis
+    float scoreDigitWidth = 0.03f; 
+    float scoreDigitHeight = 0.06f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -486,7 +488,8 @@ void DrawScoreUI(void)
     int liveScore = std::max(0, killPoints - timePenalty - deathPenalty);
 
     // Draw the live score
-    DrawNumber(liveScore, scoreX, scoreY, numberSize, g_numberTexture);
+    //DrawNumber(liveScore, scoreX, scoreY, numberSize, g_numberTexture);
+    DrawNumber(liveScore, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
 }
 
 
@@ -526,7 +529,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
-    LoadTexture(g_pDevice, "asset/UI/time1.png", &g_uiNumberTexture);
+    LoadTexture(g_pDevice, "asset/UI/UI_score＆time.png", &g_uiNumberTexture);
 
     LoadTexture(g_pDevice, "asset/UI/arrow.png", &g_arrowTexture);
     LoadTexture(g_pDevice, "asset/UI/cursor.png", &g_cursorTexture);
@@ -636,16 +639,28 @@ void UpdateGame(float deltaTime) {
     if (!g_player.isInvincible && g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
         g_player.isInvincible = true;
         g_player.invincibleTimer = g_player.INVINCIBLE_DURATION;
+        g_player.g_gaugeEffectActive = true; 
+        g_player.g_gaugeEffectTimer = g_player.INVINCIBLE_DURATION;
         g_player.gaugePoints = 0;
     }
 
 	// for the gauge effect timer
-    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) 
-    { 
-        g_gaugeEffectAnim.Update(deltaTime);  // update the animation when the gauge bar is full
-    }
-    else { 
-        g_gaugeEffectAnim.Reset(); // Reset animation if not full
+    //if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) 
+    //{ 
+    //    g_gaugeEffectAnim.Update(deltaTime);  // update the animation when the gauge bar is full
+    //}
+    //else { 
+    //    g_gaugeEffectAnim.Reset(); // Reset animation if not full
+    //}
+    if (g_player.g_gaugeEffectActive) { 
+        g_gaugeEffectAnim.Update(deltaTime); 
+        g_player.g_gaugeEffectTimer -= deltaTime;
+
+        if (g_player.g_gaugeEffectTimer <= 0.0f) 
+        { 
+            g_player.g_gaugeEffectActive = false; 
+            g_gaugeEffectAnim.Reset(); 
+        } 
     }
 
     float scaledDeltaTime = deltaTime * timeScale;
@@ -1280,16 +1295,16 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
 
     float uiX = -1.0f;
-    float uiY = 0.4f;
-    float uiWidth = 0.6f;
-    float uiHeight = 0.8f;
+    float uiY = 0.35f;
+    float uiWidth = 0.5f;
+    float uiHeight = 0.7f;
     RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
 
     // for the timer counting
-    float timerX = -0.83f;  // position x axis
-    float timerY = 0.77f;   // position y axis
-    float timerDigitWidth = 0.05f;  // width
-    float timerDigitHeight = 0.08f; // height
+    float timerX = -0.77f;  // position x axis
+    float timerY = 0.74f;   // position y axis
+    float timerDigitWidth = 0.03f;  // width
+    float timerDigitHeight = 0.06f; // height
 
     // for the minutes
     int minuteTens = g_gameMinutes / 10;

@@ -87,10 +87,10 @@ void ResultScene::Draw()
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         // for kills
-        DrawNumber(g_gameStats.GetEnemiesKilled(), -0.5f, 0.5f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetEnemiesKilled(), -0.5f, 0.5f, 0.1f, 0.1f, numberTexture);
 
         // for deaths
-        DrawNumber(g_gameStats.GetTotalDeaths(), -0.5f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetTotalDeaths(), -0.5f, 0.1f, 0.1f, 0.1f, numberTexture);
 
         // for time
         int minutes = (int)(g_gameStats.GetTotalTime() / 60.0f);
@@ -98,7 +98,7 @@ void ResultScene::Draw()
         DrawTime(minutes, seconds, -0.5f, 0.3f, 0.1f, numberTexture);
 
         // for the score
-        DrawNumber(g_gameStats.GetTotalScore(), 0.4f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetTotalScore(), 0.4f, 0.1f, 0.1f, 0.1f, numberTexture);
     }
 
     for (const auto& btn : uiButtons)
@@ -106,10 +106,10 @@ void ResultScene::Draw()
 }
 
 
-void DrawNumber(int number, float x, float y, float size, ID3D11ShaderResourceView* texture) {
+void DrawNumber(int number, float x, float y, float width, float height, ID3D11ShaderResourceView* texture) {
     // if number is 0, just draw 0
     if (number == 0) {
-        RenderImage(x, y, size, size, texture, 0, 1, 10, false, 0.0f, false);
+        RenderImage(x, y, width, height, texture, 0, 1, 10, false, 0.0f, false);
         return;
     }
 
@@ -119,18 +119,16 @@ void DrawNumber(int number, float x, float y, float size, ID3D11ShaderResourceVi
         digits.push_back(temp % 10);  // Get last digit
         temp /= 10;                    // Remove last digit
     }
-
-    std::reverse(digits.begin(), digits.end()); // reserve the digit to ge the end
+    std::reverse(digits.begin(), digits.end()); // reverse the digit to get the end
 
     // Draw each digit from left to right
     float digitX = x;  // Start at the X position
     for (int digit : digits) {
         // Draw the digit at current position
-        RenderImage(digitX, y, size, size, texture, digit, 1, 10, false, 0.0f, false);
-
+        RenderImage(digitX, y, width, height, texture, digit, 1, 10, false, 0.0f, false);
         // Move X position to the right for next digit
-        // size * 0.7f so there will be a small gap between digits
-        digitX += size * 0.7f;
+        // width * 0.7f so there will be a small gap between digits
+        digitX += width * 0.7f;
     }
 }
 
