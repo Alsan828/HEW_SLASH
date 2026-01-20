@@ -22,14 +22,16 @@ bool StageSelect2::Init()
     LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_normalsize.png", &arrowTexture);
     LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_bigsize.png", &arrowHoverTexture);
 
-    // add them when I have the actual stage
+    // top row
     uiButtons.emplace_back(-0.65f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-1
-    uiButtons.emplace_back(-0.3f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-2
-    uiButtons.emplace_back(0.06f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 2-3
-    uiButtons.emplace_back(0.43f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 2-4
-    uiButtons.emplace_back(-0.5f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 2-5
-    uiButtons.emplace_back(-0.12f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 2-6
-    uiButtons.emplace_back(0.26f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-7
+    uiButtons.emplace_back(-0.3f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 2-3
+    uiButtons.emplace_back(0.06f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 2-5
+    uiButtons.emplace_back(0.43f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 2-7
+
+    // bottom row
+    uiButtons.emplace_back(-0.5f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-2
+    uiButtons.emplace_back(-0.12f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 2-4
+    uiButtons.emplace_back(0.26f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 2-6
     uiButtons.emplace_back(0.63f, -0.33f, 0.4f, 0.8f, GAMEPLAY, bossButtonTexture, bossButtonHoverTexture);  // go to boss
     for (auto& btn : uiButtons)
     {
@@ -73,8 +75,9 @@ void StageSelect2::Update(float deltaTime)
             //buttons for the areas (stage) ADD LATER
             if (i >= 0 && i < 8)
             {
-                // Go to World2Area1 and to the other onws
-                sceneManager->SwitchToStage(2, i + 1);
+                // Map button index to stage number
+                int stageNumbers[8] = { 1, 3, 5, 7, 2, 4, 6, 8 }; // 8 is boss
+                sceneManager->SwitchToStage(2, stageNumbers[i]);
                 return;
             }
             // left arrow to go to stageselect world1
@@ -123,13 +126,16 @@ void StageSelect2::Draw()
         float numberHeight = 0.05f;
         float spaceBetweenNumbers = 0.045f;     // for the space between the numbers
 
-        DrawAreaNumber(2, 1, -0.69f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-1
-        DrawAreaNumber(2, 2, -0.335f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);   // 2-2
-        DrawAreaNumber(2, 3, 0.0215f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);   // 2-3
-        DrawAreaNumber(2, 4, 0.395f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-4
-        DrawAreaNumber(2, 5, -0.535f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 2-5
-        DrawAreaNumber(2, 6, -0.155f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 2-6	
-        DrawAreaNumber(2, 7, 0.225f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);   // 2-7
+        // top row
+        DrawAreaNumber(2, 1, -0.693f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);     // 2-1
+        DrawAreaNumber(2, 3, -0.343f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-3
+        DrawAreaNumber(2, 5, 0.018f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-5
+        DrawAreaNumber(2, 7, 0.39f,  0.155f, numberWidth, numberHeight, spaceBetweenNumbers);     // 2-7
+
+        // bottom row
+        DrawAreaNumber(2, 2, -0.54f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);   // 2-2
+        DrawAreaNumber(2, 4, -0.16f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);   // 2-4
+        DrawAreaNumber(2, 6, 0.22f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);    // 2-6
     }
 }
 
