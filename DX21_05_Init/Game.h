@@ -6,6 +6,7 @@
 #include <map>
 #include <algorithm>
 #include <cmath>
+#include <string>
 #include "InputSystem.h"
 #include "Render.h"
 #include "Map.h"
@@ -434,20 +435,20 @@ extern MouseIndicatorSystem g_mouseIndicator;
 
 // 音效文件常量
 namespace SoundEffect {
-    const std::string JUMP = "asset/Sounds/jump.wav";
-    const std::string DASH = "asset/Sounds/dash.wav";
-    const std::string CHARGE_START = "asset/Sounds/charge_start.wav";
-    const std::string CHARGE_RELEASE = "asset/Sounds/charge_release.wav";
-    const std::string SHOOT = "asset/Sounds/shoot.wav";
-    const std::string ENEMY_HIT = "asset/Sounds/enemy_hit.wav";
-    const std::string ENEMY_DEATH = "asset/Sounds/enemy_death.wav";
-    const std::string SLOWMO_START = "asset/Sounds/slowmo_start.wav";
-    const std::string SLOWMO_END = "asset/Sounds/slowmo_end.wav";
-    const std::string LEVEL_COMPLETE = "asset/Sounds/level_complete.wav";
-    const std::string UI_HOVER = "asset/Sounds/ui_hover.wav";
-    const std::string UI_CLICK = "asset/Sounds/ui_click.wav";
-    const std::string PAUSE = "asset/Sounds/pause.wav";
-    const std::string RESUME = "asset/Sounds/resume.wav";
+    const std::string JUMP = "asset/SE/p_footstep.wav";
+    const std::string DASH = "asset/SE/slash.wav";
+    const std::string CHARGE_START = "asset/SE/charge.wav";
+    const std::string CHARGE_RELEASE = "asset/SE/slash.wav";
+    const std::string SHOOT = "asset/SE/slash.wav";
+    const std::string ENEMY_HIT = "asset/SE/hit.wav";
+    const std::string ENEMY_DEATH = "asset/SE/damage.wav";
+    const std::string SLOWMO_START = "asset/SE/slowmo_start.wav";
+    const std::string SLOWMO_END = "asset/SE/slowmo_end.wav";
+    const std::string LEVEL_COMPLETE = "asset/SE/level_complete.wav";
+    const std::string UI_HOVER = "asset/SE/ui_hover.wav";
+    const std::string UI_CLICK = "asset/SE/ui_click.wav";
+    const std::string PAUSE = "asset/SE/pause.wav";
+    const std::string RESUME = "asset/SE/resume.wav";
 }
 
 namespace BackgroundMusic {

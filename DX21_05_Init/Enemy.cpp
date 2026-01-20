@@ -1,5 +1,6 @@
 ﻿// Enemy.cpp
 #include "Enemy.h"
+#include "Audio.h"
 #include "Map.h"
 #include "Projectile.h"
 
@@ -475,6 +476,7 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
     }
 
     health -= actualDamage;
+	Audio::PlaySE(SoundEffect::ENEMY_HIT);
     isHit = true;
     hitTimer = HIT_DURATION;
     OnHit(actualDamage);
@@ -507,6 +509,7 @@ void Enemy::OnDeath() {
 
     // 重置动画到第一帧
     anim.Reset();
+	Audio::PlaySE(SoundEffect::ENEMY_DEATH);
 
     // increments the player combo when enemy dies
     //g_player.comboCount++;

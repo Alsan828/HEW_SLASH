@@ -1,4 +1,5 @@
 ﻿#include "Menu.h"
+#include "Audio.h"
 
 MenuScene::MenuScene(SceneManager* manager)
 {
@@ -8,6 +9,7 @@ MenuScene::MenuScene(SceneManager* manager)
 
 bool MenuScene::Init()
 {
+	Audio::PlayBGM(BackgroundMusic::MAIN_MENU, true);
 
 	LoadTexture(g_pDevice, "asset/UI/menu/background.png", &backgroundTexture);
 	

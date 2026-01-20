@@ -1,6 +1,7 @@
-#include "GameplayScene.h"
+﻿#include "GameplayScene.h"
 #include "Game.h"
 #include "Enemy.h"
+#include "Audio.h"
 
 // construct
 GameplayScene::GameplayScene(SceneManager* manager, int world, int area)
@@ -28,6 +29,21 @@ bool GameplayScene::Init()
     g_mapManager.SwitchMap(mapName, -1, -1);
 
     ResetGame();
+
+	if (isBossStage)
+	{
+		Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true);
+	}
+	else
+	{
+		switch (worldNumber)
+		{
+		case 1: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+		case 2: Audio::PlayBGM(BackgroundMusic::LEVEL2, true); break;
+		case 3: Audio::PlayBGM(BackgroundMusic::LEVEL3, true); break;
+		default: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+		}
+	}
 
     // if boss stage, set up the boss
     if (isBossStage) 

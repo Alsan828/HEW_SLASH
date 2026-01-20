@@ -1,4 +1,5 @@
 ﻿#include "Pause.h"
+#include "Audio.h"
 
 // construct
 PauseScene::PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE)
@@ -50,6 +51,7 @@ bool PauseScene::Init()
 
     //uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
+	Audio::PlaySE(SoundEffect::PAUSE);
 
     return true;
 }   
@@ -63,6 +65,7 @@ void PauseScene::Update(float deltaTime)
     {
         if (btn.Process() == UIButtonResult::Clicked)
         {
+			Audio::PlaySE(SoundEffect::UI_CLICK);
             SCENE target = btn.GetTargetScene();
 
             if (target == QUIT_GAME)
@@ -72,6 +75,10 @@ void PauseScene::Update(float deltaTime)
             }
             else
             {
+				if (target == pausedSceneType)
+				{
+					Audio::PlaySE(SoundEffect::RESUME);
+				}
                 sceneManager->SwitchScene(target);
                 return;
             }

@@ -1,5 +1,6 @@
 ﻿#include "Game.h"
 #include "Enemy.h"
+#include "Audio.h"
 
 static void PerformDashEndCircleHitTest();
 
@@ -64,6 +65,17 @@ static void PerformDashHitTest(float testX, float testY) {
             g_player.comboTimer = 5.0f;
 
             float multiplier = enemy->GetDamageMultiplier(dashAngle);
+            // Hit-stop should depend on charge strength, not on invincibility state.
+            if (g_player.hitStopTriggered < 3) {
+                g_player.hitStopTimer = ComputeDashHitStopTime();
+                g_player.hitStopTriggered++;
+                if (!g_player.isInvincible) {
+                    g_camera.Shake(0.02f, 0.05f);
+                    // 可选全局慢动作
+                    // TriggerSlowMotion(0.05f, 0.3f);
+                }
+            }
+
             if (!g_player.isInvincible)// if player is not invincible
             {
                 if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
@@ -74,14 +86,6 @@ static void PerformDashHitTest(float testX, float testY) {
                 }
                 if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
                     g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
-                }
-
-                if (g_player.hitStopTriggered < 3) {
-                    g_camera.Shake(0.02f, 0.05f);
-                    g_player.hitStopTimer = ComputeDashHitStopTime();
-                    g_player.hitStopTriggered++;
-                    // 可选全局慢动作
-                    // TriggerSlowMotion(0.05f, 0.3f);
                 }
             }
  
@@ -128,6 +132,15 @@ static void PerformDashEndCircleHitTest() {
             g_player.comboTimer = 5.0f;
 
             float multiplier = enemy->GetDamageMultiplier(dashAngle);
+            // Hit-stop should depend on charge strength, not on invincibility state.
+            if (g_player.hitStopTriggered < 3) {
+                g_player.hitStopTimer = ComputeDashHitStopTime();
+                g_player.hitStopTriggered++;
+                if (!g_player.isInvincible) {
+                    g_camera.Shake(0.02f, 0.05f);
+                }
+            }
+
             if (!g_player.isInvincible) {
                 if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
                     g_player.gaugePoints += 2;
@@ -137,12 +150,6 @@ static void PerformDashEndCircleHitTest() {
                 }
                 if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
                     g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
-                }
-
-                if (g_player.hitStopTriggered < 3) {
-                    g_camera.Shake(0.02f, 0.05f);
-                    g_player.hitStopTimer = ComputeDashHitStopTime();
-                    g_player.hitStopTriggered++;
                 }
             }
 
@@ -786,6 +793,8 @@ void DashToMouse() {
         return;
     }
 
+	Audio::PlaySE(SoundEffect::DASH);
+
     g_mouseIndicator.showArrow(false);
     // Get mouse world coordinates
     float mouseX, mouseY;
@@ -836,6 +845,7 @@ void StartMouseChargeDash() {
 
     g_mouseIndicator.showArrow(true);
     g_player.isCharging = true;
+	Audio::PlaySE(SoundEffect::CHARGE_START);
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
 
@@ -854,6 +864,7 @@ void ExecuteMouseChargeDash() {
     if (g_player.dashPoints <= 0) return;
 
     g_mouseIndicator.showArrow(false);
+	Audio::PlaySE(SoundEffect::CHARGE_RELEASE);
     // 清除硬直状态以允许新的冲刺
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
@@ -920,6 +931,10 @@ void ExecuteMouseChargeDash() {
             // 短按不保存新的蓄力，保留原来的蓄力
             // 但重置衰减计时器，让保存的蓄力保持更久
             g_player.chargeDecayTimer = g_player.CHARGE_DECAY_TIME;
+
+            // 关键：本次冲刺实际“使用”的是保存蓄力。
+            // 将其写回 chargeTime，保证命中顿刀等效果读取到正确的蓄力强度。
+            g_player.chargeTime = g_player.savedChargeTime;
         }
         else {
             // 没有保存的蓄力，则使用当前短暂的蓄力时间

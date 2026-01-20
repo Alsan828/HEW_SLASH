@@ -1,6 +1,7 @@
 ﻿#include "Render.h"
 #include "Game.h"
 #include "Camera.h"
+#include "Audio.h"
 
 #define _CRT_SECURE_NO_WARNINGS
 #pragma comment (lib, "d3d11.lib")
@@ -42,6 +43,7 @@ ID3D11SamplerState* pSamplerState = nullptr;
 
 HRESULT RendererInit(HWND hwnd) {
 	HRESULT hr = S_OK;
+	Audio::Init();
 
 	// Get actual client area size of window
 	RECT clientRect;
@@ -255,6 +257,7 @@ void RendererDrawB()
 
 void RendererUninit()
 {
+	Audio::Shutdown();
 	// ※DirectX features must be released when the application ends after creation
 	if (g_pDeviceContext) g_pDeviceContext->ClearState();
 	SAFE_RELEASE(g_pPixelShader);

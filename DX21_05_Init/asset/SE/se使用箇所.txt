@@ -1,0 +1,21 @@
+SE
+、斬撃 				slash.wav
+、ダメージ(自分に) 		damage.wav
+、ヒット(敵に) 			hit.wav
+、enemy_beam攻撃、死 		beam.wav
+、enemy mage攻撃 		enemy_attack.wav
+、決定音 			enter.wav
+、ホンキモード発動音 		limitbreak.wav
+
+、ホンキモード中斬撃 		oni_slash.wav
+、足音 				p_footstep.wav
+、足音(敵) 			e_footstep.wav
+、カーソル音 			cursor.wav
+、ボス斬撃 			oni_slash.wav
+、ボス突進 			oni_dash.wav
+、ボスチャージ 			charge.wav
+、ボスダウン 			down.wav
+、ボス撃破 			boss_death.wav
+、ボスレーザー 			laser.wav 
+、ホンキモード終了3秒前		warning.wav
+、弱線攻撃成功			critical.wav
