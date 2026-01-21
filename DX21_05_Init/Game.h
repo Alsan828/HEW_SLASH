@@ -145,10 +145,11 @@ struct Player {
     float dashAftermathTimer = 0.0f;
     const float DASH_AFTERMATH_DURATION = 0.7f;
 
-    // Dash-end slow-motion (real-time): 0.75s at 75% speed, player invincible.
+    // Dash-end slow-motion (real-time): duration also defines post-dash invincibility window.
     bool isInDashEndSlowMo = false;
     float dashEndSlowMoTimer = 0.0f;
-    const float DASH_END_SLOWMO_REALTIME = 0.75f;
+    // Reduced by 1/3: 0.75s -> 0.5s
+    const float DASH_END_SLOWMO_REALTIME = 0.5f;
     const float DASH_END_SLOWMO_FACTOR = 0.35f;
     
     const float AFTERIMAGE_DURATION = 0.35f;
