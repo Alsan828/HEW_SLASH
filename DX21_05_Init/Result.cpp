@@ -1,4 +1,4 @@
-//================================
+﻿//================================
 //      RESULT
 //================================
 
@@ -16,6 +16,9 @@ ResultScene::ResultScene(SceneManager* manager, int completedWorld)
 //it initializes the objects
 bool ResultScene::Init()
 {
+    // Result screen is UI-driven; show mouse cursor.
+    ShowCursor(TRUE);
+
     LoadTexture(g_pDevice, "asset/UI/result/background.png", &backgroundTexture);
     LoadTexture(g_pDevice, "asset/UI/result/normal_score.png", &normalScoreTexture);
 
