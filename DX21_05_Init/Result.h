@@ -18,7 +18,7 @@ private:
     //todo: make also for high score and low sccore texture
 
     ID3D11ShaderResourceView* numberTexture = nullptr;
-
+    ID3D11ShaderResourceView* dotTexture = nullptr;
 
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* titleTexture = nullptr;

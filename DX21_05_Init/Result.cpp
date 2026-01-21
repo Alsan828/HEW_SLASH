@@ -23,6 +23,7 @@ bool ResultScene::Init()
     LoadTexture(g_pDevice, "asset/UI/result/normal_score.png", &normalScoreTexture);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &numberTexture);
+    LoadTexture(g_pDevice, "asset/UI/dot.png", &dotTexture);
 
     LoadTexture(g_pDevice, "asset/UI/result/title_normal.png", &titleTexture); // for the button
     LoadTexture(g_pDevice, "asset/UI/result/title_hover.png", &titleHoverTexture);
@@ -99,6 +100,8 @@ void ResultScene::Draw()
         int minutes = (int)(g_gameStats.GetTotalTime() / 60.0f);
         int seconds = (int)g_gameStats.GetTotalTime() % 60;
         DrawTime(minutes, seconds, -0.6f, 0.25f, 0.1f, numberTexture);
+        // for the dot between minutes and seconds
+        RenderImage(-0.45f, 0.25f, 0.1f, 0.16f, dotTexture, 0, 1, 1);
 
         // for the score
         DrawNumber(g_gameStats.GetTotalScore(), 0.3f, 0.05f, 0.1f, 0.1f, numberTexture);
@@ -143,11 +146,11 @@ void DrawTime(int minutes, int seconds, float x, float y, float size, ID3D11Shad
     digitX += size * 0.7f; // size * 0.7f so there will be a small gap between digits
     // the second digit of minutes
     RenderImage(digitX, y, size, size, texture, minutes % 10, 1, 10, false, 0.0f, false);
-    digitX += size * 1.2f;  // Space for colon between the minutes and the seconds
+    digitX += size * 1.2f; // size * 0.7f so there will be a small gap between digits
 
     // the first digit of seconds 
     RenderImage(digitX, y, size, size, texture, seconds / 10, 1, 10, false, 0.0f, false);
-    digitX += size * 0.9f; // size * 0.7f so there will be a small gap between digits
+    digitX += size * 0.7f; // size * 0.7f so there will be a small gap between digits
     // the second digit of seconds
     RenderImage(digitX, y, size, size, texture, seconds % 10, 1, 10, false, 0.0f, false);
 }
