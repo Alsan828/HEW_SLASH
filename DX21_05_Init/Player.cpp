@@ -865,6 +865,11 @@ void DashToMouse() {
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
 
+    // Face towards dash direction during slash.
+    if (fabsf(dirX) > 1e-4f) {
+        g_player.facingRight = (dirX >= 0.0f);
+    }
+
     // Set dash speed
     g_player.velocityX = dirX * DASH_SPEED;
     g_player.velocityY = dirY * DASH_SPEED;
@@ -1033,6 +1038,11 @@ void ExecuteMouseChargeDash() {
     g_player.dashTimer = DASH_DURATION * durationMultiplier;
     g_player.dashDirectionX = dirX;
     g_player.dashDirectionY = dirY;
+
+    // Face towards dash direction during slash.
+    if (fabsf(dirX) > 1e-4f) {
+        g_player.facingRight = (dirX >= 0.0f);
+    }
 
     // 应用冲刺速度
     g_player.velocityX = dirX * DASH_SPEED * speedMultiplier;

@@ -769,35 +769,38 @@ void UpdateGame(float deltaTime) {
             }
             else if (g_player.isDashing) // 如果玩家正在冲刺
             {
-                int chargeType = g_player.GetChargeLevel();
+                // Slash clip depends on dash direction.
+                // Classify into 4 sectors with 45° boundaries:
+                //   Up:    |dy| dominates and dy > 0  -> Slash2
+                //   Down:  |dy| dominates and dy < 0  -> Slash4
+                //   Side:  otherwise, |dx| dominates -> Slash3
+                //   DiagDown-ish fallback            -> Slash1
+                // Left/right is handled by facing/flip.
+                float dx = g_player.dashDirectionX;
+                float dy = g_player.dashDirectionY;
 
-                if (chargeType == 0) // 斩击1
-                {
-                    if (g_player.anim.GetCurrentClipName() != "Slash1") {
-                        g_player.anim.SetClip("Slash1");
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+                const float DIAG_RATIO = 0.70710678f; // cos(45°)
+                const float adx = fabsf(dx);
+                const float ady = fabsf(dy);
+
+                const char* clip;
+                if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
+                    clip = "Slash2";
                 }
-                else if (chargeType == 1) // 斩击2
-                {
-                    if (g_player.anim.GetCurrentClipName() != "Slash2") {
-                        g_player.anim.SetClip("Slash2");
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+                else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
+                    clip = "Slash4";
                 }
-                else if (chargeType == 2) // 斩击3
-                {
-                    if (g_player.anim.GetCurrentClipName() != "Slash3") {
-                        g_player.anim.SetClip("Slash3");
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+                else if (adx >= ady * DIAG_RATIO) {
+                    clip = "Slash3";
                 }
-                else  // 斩击4
-                {
-                    if (g_player.anim.GetCurrentClipName() != "Slash4") {
-                        g_player.anim.SetClip("Slash4");
-                        g_player.animLockTimer = g_player.animLockDuration;
-                    }
+                else {
+                    // diagonal-ish: choose a dedicated diagonal-down slash
+                    clip = "Slash1";
+                }
+
+                if (g_player.anim.GetCurrentClipName() != clip) {
+                    g_player.anim.SetClip(clip);
+                    g_player.animLockTimer = g_player.animLockDuration;
                 }
             }
             else if (g_player.isWallSliding) {
