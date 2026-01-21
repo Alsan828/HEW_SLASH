@@ -28,6 +28,15 @@ void Camera::Update(float deltaTime) {
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
+    // During charge, keep updating the stored mouse world position so camera bias follows cursor.
+    if (g_player.isCharging) {
+        float mx, my;
+        g_inputSystem.GetMousePosition(mx, my);
+        g_player.mouseTargetX = mx;
+        g_player.mouseTargetY = my;
+        g_player.hasMouseTarget = true;
+    }
+
     // Make the player appear more centered on screen (less bottom-heavy framing)
     // Shift camera target upward a bit in world units.
     const float centerBiasY = 0.12f;
@@ -42,9 +51,37 @@ void Camera::Update(float deltaTime) {
         lookAheadY = g_player.velocityY * 0.2f * m_lookAheadFactor;
     }
 
+    // While charging, slightly bias camera towards mouse direction.
+    // This makes aiming feel better without fully centering on the cursor.
+    float chargeLookX = 0.0f;
+    float chargeLookY = 0.0f;
+    if (g_player.isCharging && g_player.hasMouseTarget) {
+        // The mouse target is stored in world coords.
+        float dxm = g_player.mouseTargetX - playerCenterX;
+        float dym = g_player.mouseTargetY - playerCenterY;
+        float len = sqrtf(dxm * dxm + dym * dym);
+        if (len > 1e-4f) {
+            dxm /= len;
+            dym /= len;
+        }
+
+        // Amount in world units (tuned to be subtle).
+        // Increase a bit with charge time but keep an upper bound.
+        const float baseOffset = 0.10f;
+        const float maxOffset = 0.22f;
+        float t = 0.0f;
+        if (g_player.CHARGE_THRESHOLD_LOW > 1e-4f) {
+            t = std::clamp(g_player.chargeTime / g_player.CHARGE_THRESHOLD_LOW, 0.0f, 1.0f);
+        }
+        float offset = baseOffset + (maxOffset - baseOffset) * t;
+
+        chargeLookX = dxm * offset;
+        chargeLookY = dym * offset;
+    }
+
     // Update target position with look-ahead
-    m_targetX = playerCenterX + lookAheadX;
-    m_targetY = playerCenterY + lookAheadY;
+    m_targetX = playerCenterX + lookAheadX + chargeLookX;
+    m_targetY = playerCenterY + lookAheadY + chargeLookY;
 
     // Calculate distance from current camera position to target
     float dx = m_targetX - m_posX;
