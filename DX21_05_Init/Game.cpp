@@ -235,9 +235,9 @@ void CleanUpGameWorld()
         g_invinciblePlayerSlash2Texture->Release();
         g_invinciblePlayerSlash2Texture = nullptr;
     }
-    if (g_playerSlash3Texture) {
-        g_playerSlash3Texture->Release();
-        g_playerSlash3Texture = nullptr;
+    if (g_invinciblePlayerSlash3Texture) {
+        g_invinciblePlayerSlash3Texture->Release();
+        g_invinciblePlayerSlash3Texture = nullptr;
     }
     if (g_invinciblePlayerSlash4Texture) {
         g_invinciblePlayerSlash4Texture->Release();
