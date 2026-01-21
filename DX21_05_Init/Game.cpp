@@ -1284,11 +1284,11 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     // Draw mouse position indicator (original code)
     float indicatorSize = 0.1f;
-    float cursorWidth = 0.1f;
-    float cursorHeight = 0.15f;
+    float cursorWidth = 0.04f;
+    float cursorHeight = 0.12f;
     auto mousePos = worldToScreen(m_mouseWorldX - indicatorSize / 2, m_mouseWorldY - indicatorSize / 2);
 
-    SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     RenderImage(mousePos.first, mousePos.second, cursorWidth, cursorHeight,
         m_cursorTexture, 0, 1, 1, false, 0);
 
