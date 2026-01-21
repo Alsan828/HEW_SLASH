@@ -40,7 +40,7 @@ bool StageSelect::Init()
 	}
 
 	// right arrow so I can go to stage select world 2
-	uiButtons.emplace_back(0.92f, -0.2f, 0.4f, 0.6f, STAGESELECT2, arrowTexture, arrowHoverTexture);
+	uiButtons.emplace_back(0.9f, 0.0f, 0.4f, 0.6f, STAGESELECT2, arrowTexture, arrowHoverTexture);
 	uiButtons.back().SetHitboxScale(0.4f, 0.6f);
 	uiButtons.back().SetHitboxOffset(-0.04f);
 

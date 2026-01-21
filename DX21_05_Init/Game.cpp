@@ -519,7 +519,7 @@ void InitGameWorld() {
     g_player.anim.AddClip("WallSlide", 0, 0, 1, 1, 0.25f, true, g_playerWallSlideTexture);
     g_player.anim.AddClip("Death", 0, 10, 11, 1, 0.1f, false, g_playerDeathTexture);
 
-    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
@@ -873,7 +873,8 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
 // Helper function: Set color based on tile code
 void SetTileColor(const std::string& tileCode) {
     if (tileCode == "G1") {
-        SetColor(0.4f, 0.8f, 0.3f, 1.0f);
+        //SetColor(0.4f, 0.8f, 0.3f, 1.0f);
+        SetColor(0.7f, 0.7f, 0.7f, 1.0f);
     }
     else if (tileCode == "G2") {
         SetColor(0.6f, 0.4f, 0.2f, 1.0f);
@@ -909,7 +910,7 @@ void SetTileColor(const std::string& tileCode) {
         SetColor(0.5f, 0.5f, 0.5f, 1.0f);
     }
     else {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        SetColor(0.0f, 1.0f, 0.0f, 1.0f);
     }
 }
 void DrawGame() {
