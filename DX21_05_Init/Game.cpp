@@ -160,173 +160,57 @@ void CleanUpGameWorld()
     g_playerAfterImages.clear();
 
     // 释放所有纹理 - 只保留右边纹理
-    if (g_playerTexture) {
-        g_playerTexture->Release();
-        g_playerTexture = nullptr;
-    }
-
+    ReleaseTexture(g_playerTexture);
     // 只保留右边的纹理
-    if (g_playerIdleTexture) {
-        g_playerIdleTexture->Release();
-        g_playerIdleTexture = nullptr;
-    }
-    if (g_playerJumpTexture) {
-        g_playerJumpTexture->Release();
-        g_playerJumpTexture = nullptr;
-    }
-    if (g_playerRunTexture) {
-        g_playerRunTexture->Release();
-        g_playerRunTexture = nullptr;
-    }
-    if (g_playerSlash1Texture) {
-        g_playerSlash1Texture->Release();
-        g_playerSlash1Texture = nullptr;
-    }
-    if (g_playerSlash2Texture) {
-        g_playerSlash2Texture->Release();
-        g_playerSlash2Texture = nullptr;
-    }
-    if (g_playerSlash3Texture) {
-        g_playerSlash3Texture->Release();
-        g_playerSlash3Texture = nullptr;
-    }
-    if (g_playerSlash4Texture) {
-        g_playerSlash4Texture->Release();
-        g_playerSlash4Texture = nullptr;
-    }
-    if (g_playerAirChargeTexture) {
-        g_playerAirChargeTexture->Release();
-        g_playerAirChargeTexture = nullptr;
-    }
-    if (g_playerFallingTexture) {
-        g_playerFallingTexture->Release();
-        g_playerFallingTexture = nullptr;
-    }
-    if (g_playerGroundChargeTexture) {
-        g_playerGroundChargeTexture->Release();
-        g_playerGroundChargeTexture = nullptr;
-    }
-    if (g_playerWallSlideTexture) {
-        g_playerWallSlideTexture->Release();
-        g_playerWallSlideTexture = nullptr;
-    }
-    if (g_playerDeathTexture) {
-        g_playerDeathTexture->Release();
-        g_playerDeathTexture = nullptr;
-    }
+    ReleaseTexture(g_playerIdleTexture);
+    ReleaseTexture(g_playerJumpTexture);
+    ReleaseTexture(g_playerRunTexture);
+    ReleaseTexture(g_playerSlash1Texture);
+    ReleaseTexture(g_playerSlash2Texture);
+    ReleaseTexture(g_playerSlash3Texture);
+    ReleaseTexture(g_playerSlash4Texture);
+    ReleaseTexture(g_playerAirChargeTexture);
+    ReleaseTexture(g_playerFallingTexture);
+    ReleaseTexture(g_playerGroundChargeTexture);
+    ReleaseTexture(g_playerWallSlideTexture);
+    ReleaseTexture(g_playerDeathTexture);
+
     // FOR THE PLAYER WHEN INVINCIBLE
-    if (g_invinciblePlayerIdleTexture) {
-        g_invinciblePlayerIdleTexture->Release();
-        g_invinciblePlayerIdleTexture = nullptr;
-    }
-    if (g_invinciblePlayerJumpTexture) {
-        g_invinciblePlayerJumpTexture->Release();
-        g_invinciblePlayerJumpTexture = nullptr;
-    }
-    if (g_invinciblePlayerRunTexture) {
-        g_invinciblePlayerRunTexture->Release();
-        g_invinciblePlayerRunTexture = nullptr;
-    }
-    if (g_invinciblePlayerSlash1Texture) {
-        g_invinciblePlayerSlash1Texture->Release();
-        g_invinciblePlayerSlash1Texture = nullptr;
-    }
-    if (g_invinciblePlayerSlash2Texture) {
-        g_invinciblePlayerSlash2Texture->Release();
-        g_invinciblePlayerSlash2Texture = nullptr;
-    }
-    if (g_invinciblePlayerSlash3Texture) {
-        g_invinciblePlayerSlash3Texture->Release();
-        g_invinciblePlayerSlash3Texture = nullptr;
-    }
-    if (g_invinciblePlayerSlash4Texture) {
-        g_invinciblePlayerSlash4Texture->Release();
-        g_invinciblePlayerSlash4Texture = nullptr;
-    }
-    if (g_invinciblePlayerAirChargeTexture) {
-        g_invinciblePlayerAirChargeTexture->Release();
-        g_invinciblePlayerAirChargeTexture = nullptr;
-    }
-    if (g_invinciblePlayerFallingTexture) {
-        g_invinciblePlayerFallingTexture->Release();
-        g_invinciblePlayerFallingTexture = nullptr;
-    }
-    if (g_invinciblePlayerGroundChargeTexture) {
-        g_invinciblePlayerGroundChargeTexture->Release();
-        g_invinciblePlayerGroundChargeTexture = nullptr;
-    }
-    if (g_invinciblePlayerWallSlideTexture) {
-        g_invinciblePlayerWallSlideTexture->Release();
-        g_invinciblePlayerWallSlideTexture = nullptr;
-    }
+    ReleaseTexture(g_invinciblePlayerIdleTexture);
+    ReleaseTexture(g_invinciblePlayerJumpTexture);
+    ReleaseTexture(g_invinciblePlayerRunTexture);
+    ReleaseTexture(g_invinciblePlayerSlash1Texture);
+    ReleaseTexture(g_invinciblePlayerSlash2Texture);
+    ReleaseTexture(g_invinciblePlayerSlash3Texture);
+    ReleaseTexture(g_invinciblePlayerSlash4Texture);
+    ReleaseTexture(g_invinciblePlayerAirChargeTexture);
+    ReleaseTexture(g_invinciblePlayerFallingTexture);
+    ReleaseTexture(g_invinciblePlayerGroundChargeTexture);
+    ReleaseTexture(g_invinciblePlayerWallSlideTexture);
 
+    ReleaseTexture(g_groundTexture);
+    ReleaseTexture(g_backgroundTexture1);
+    ReleaseTexture(g_dashEffectTexture);
+    ReleaseTexture(g_chargeEffectTexture);
 
-    if (g_groundTexture) {
-        g_groundTexture->Release();
-        g_groundTexture = nullptr;
-    }
-    if (g_backgroundTexture1) {
-        g_backgroundTexture1->Release();
-        g_backgroundTexture1 = nullptr;
-    }
-    if (g_dashEffectTexture) {
-        g_dashEffectTexture->Release();
-        g_dashEffectTexture = nullptr;
-    }
-    if (g_chargeEffectTexture) {
-        g_chargeEffectTexture->Release();
-        g_chargeEffectTexture = nullptr;
-    }
-    //解放击中特效纹理
-    if (g_hitEffectTexture) {
-        g_hitEffectTexture->Release();
-        g_hitEffectTexture = nullptr;
-    }
-    if (g_numberTexture) {
-        g_numberTexture->Release();
-        g_numberTexture = nullptr;
-    }
-    if (g_uiNumberTexture) {
-        g_uiNumberTexture->Release();
-        g_uiNumberTexture = nullptr;
-    }
-    if (g_arrowTexture) {
-        g_arrowTexture->Release();
-        g_arrowTexture = nullptr;
-    }
-    if (g_cursorTexture) {
-        g_cursorTexture->Release();
-        g_cursorTexture = nullptr;
-    }
+    // 解放击中特效纹理
+    ReleaseTexture(g_hitEffectTexture);
+    ReleaseTexture(g_numberTexture);
+    ReleaseTexture(g_uiNumberTexture);
+    ReleaseTexture(g_arrowTexture);
+    ReleaseTexture(g_cursorTexture);
 
     // for the combo texture
-    if (g_comboNumberTexture) {
-        g_comboNumberTexture->Release();
-        g_comboNumberTexture = nullptr;
-    }
-    if (g_comboXTexture) {
-        g_comboXTexture->Release();
-        g_comboXTexture = nullptr;
-    }
+    ReleaseTexture(g_comboNumberTexture);
+    ReleaseTexture(g_comboXTexture);
 
-    //for the gague bar when there is one
-    if (g_gaugeBarTexture) {
-        g_gaugeBarTexture->Release();
-        g_gaugeBarTexture = nullptr;
-    }
-    if (g_gaugeBarEmptyTexture) {
-        g_gaugeBarEmptyTexture->Release();
-        g_gaugeBarEmptyTexture = nullptr;
-    }
-    if (g_gaugeBarFilledTexture) {
-        g_gaugeBarFilledTexture->Release();
-        g_gaugeBarFilledTexture = nullptr;
-    }
-    if(g_gaugeFullEffectTexture) {
-        g_gaugeFullEffectTexture->Release();
-        g_gaugeFullEffectTexture = nullptr;
-	}
+    // for the gauge bar when there is one
+    ReleaseTexture(g_gaugeBarTexture);
+    ReleaseTexture(g_gaugeBarEmptyTexture);
+    ReleaseTexture(g_gaugeBarFilledTexture);
+    ReleaseTexture(g_gaugeFullEffectTexture);
 
+    ReleaseTexture(g_bossHealthBarTexture);
 }
 
 // Improved collision detection function
@@ -1203,16 +1087,8 @@ void DrawGame() {
         // 如果facingRight为false（面向左），水平翻转
         bool flipHorizontal = !g_player.facingRight;
 
-        // Set color based on invincibility state
-        if (g_player.isInvincible) {
-            // Yellow when invincible
-            SetColor(1.0f, 1.0f, 0.0f, 1.0f);
-        }
-        else {
-            // Normal white
-            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        }
 
+        //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderImage(playerPos.first - offsetX, playerPos.second - offsetY, width, height,
             currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
 

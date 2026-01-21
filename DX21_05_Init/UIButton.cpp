@@ -22,37 +22,6 @@ UIButton::UIButton(float centerX, float centerY,float w, float h, SCENE scene, I
 
 UIButtonResult UIButton::Process()
 {
-
-    //if (!s_wasMouseDownInitialized)
-    //{
-    //    s_wasMouseDown = false;
-    //    s_wasMouseDownInitialized = true;
-    //}
-    //// point to the mouse
-    //POINT mouse = g_inputSystem.GetRawMousePosition();
-    //float mx = (mouse.x / (float)g_windowWidth) * 2.0f - 1.0f;
-    //float my = 1.0f - (mouse.y / (float)g_windowHeight) * 2.0f;
-    //// click detection 
-    //bool downNow = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
-    //bool justClicked = downNow && !s_wasMouseDown;
-    //s_wasMouseDown = downNow;
-
-    //// hovering test (for when the mouse is on top) with customizable hitbox
-    //float hitWidth = width * hitboxScaleWidth;
-    //float hitHeight = height * hitboxScaleHeight;
-    //float centerY = y - hitboxOffsetY;
-
-    //float l = x - hitWidth * 0.5f, r = x + hitWidth * 0.5f;
-    //float t = centerY - hitHeight * 0.5f, b = centerY + hitHeight * 0.5f;
-    //isHovered = (mx >= l && mx <= r && my >= t && my <= b);
-
-    //if (isHovered && justClicked) {
-    //    return UIButtonResult::Clicked;
-    //}
-    //if (isHovered) {
-    //    return UIButtonResult::Hovered;
-    //}
-    //return UIButtonResult::None;
     if (!g_wasMouseDownInitialized)
     {
         g_wasMouseDown = false;
@@ -71,13 +40,13 @@ UIButtonResult UIButton::Process()
     float hitWidth = width * hitboxScaleWidth;
     float hitHeight = height * hitboxScaleHeight;
     float centerY = y - hitboxOffsetY;
-    float l = x - hitWidth * 0.5f;
-    float r = x + hitWidth * 0.5f;
-    float t = centerY - hitHeight * 0.5f;
-    float b = centerY + hitHeight * 0.5f;
+    float left = x - hitWidth * 0.5f;
+    float right = x + hitWidth * 0.5f;
+    float top = centerY - hitHeight * 0.5f;
+    float bottom = centerY + hitHeight * 0.5f;
 
     // if the mouse is inside the hovered area (inside the button hitbox)
-    bool hoveredNow = (mx >= l && mx <= r && my >= t && my <= b);
+    bool hoveredNow = (mx >= left && mx <= right && my >= top && my <= bottom);
 
     // the result when clicking or hovering
     UIButtonResult result = UIButtonResult::None;

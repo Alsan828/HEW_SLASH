@@ -101,7 +101,7 @@ void ResultScene::Draw()
         DrawTime(minutes, seconds, -0.6f, 0.25f, 0.1f, numberTexture);
 
         // for the score
-        DrawNumber(g_gameStats.GetTotalScore(), 0.5f, 0.05f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetTotalScore(), 0.3f, 0.05f, 0.1f, 0.1f, numberTexture);
     }
 
     for (const auto& btn : uiButtons)
@@ -140,7 +140,7 @@ void DrawTime(int minutes, int seconds, float x, float y, float size, ID3D11Shad
 
     //  the first digit of minutes
     RenderImage(digitX, y, size, size, texture, minutes / 10, 1, 10, false, 0.0f, false);
-    digitX += size * 0.9f; // size * 0.7f so there will be a small gap between digits
+    digitX += size * 0.7f; // size * 0.7f so there will be a small gap between digits
     // the second digit of minutes
     RenderImage(digitX, y, size, size, texture, minutes % 10, 1, 10, false, 0.0f, false);
     digitX += size * 1.2f;  // Space for colon between the minutes and the seconds
