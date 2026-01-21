@@ -341,6 +341,7 @@ extern ID3D11ShaderResourceView* g_playerFallingTexture;  // 通用下落纹理
 extern ID3D11ShaderResourceView* g_playerGroundChargeTexture; // 通用地面蓄力纹理
 extern ID3D11ShaderResourceView* g_playerWallSlideTexture; // 通用地面蓄力纹理
 extern ID3D11ShaderResourceView* g_groundTexture;
+extern ID3D11ShaderResourceView* g_bossHealthBarTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
 extern ID3D11ShaderResourceView* g_backgroundTexture2;
 extern ID3D11ShaderResourceView* g_backgroundTexture3;

@@ -219,11 +219,11 @@ void GameplayScene::RenderBossHealthBar()
     // for around the hp bar color
     SetColor(0.1f, 0.1f, 0.1f, 0.9f);
     RenderImage(barX - 0.01f, barY - 0.01f, barWidth + 0.02f, barHeight + 0.02f,
-        g_groundTexture, 0, 1, 1);
+        g_bossHealthBarTexture, 0, 1, 1);
 
     // for when the the hp bar is not full
     SetColor(0.3f, 0.1f, 0.1f, 0.8f);
-    RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
+    RenderImage(barX, barY, barWidth, barHeight, g_bossHealthBarTexture, 0, 1, 1);
 
     // Calculate health
     float healthRatio = m_boss->GetHealth() / m_boss->GetMaxHealth();
@@ -240,7 +240,7 @@ void GameplayScene::RenderBossHealthBar()
     }
 
     // Draw filled HP bar
-    RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_groundTexture, 0, 1, 1);
+    RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_bossHealthBarTexture, 0, 1, 1);
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 

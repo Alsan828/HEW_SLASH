@@ -25,6 +25,7 @@ ID3D11ShaderResourceView* g_playerFallingTexture = nullptr;  // 通用下落纹�
 ID3D11ShaderResourceView* g_playerGroundChargeTexture = nullptr; // 通用地面蓄力纹理
 ID3D11ShaderResourceView* g_playerWallSlideTexture = nullptr; 
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
+ID3D11ShaderResourceView* g_bossHealthBarTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture2 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture3 = nullptr;

@@ -520,6 +520,7 @@ void InitGameWorld() {
     g_player.anim.AddClip("Death", 0, 10, 11, 1, 0.1f, false, g_playerDeathTexture);
 
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
