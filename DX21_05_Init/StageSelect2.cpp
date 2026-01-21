@@ -40,13 +40,13 @@ bool StageSelect2::Init()
     }
 
     // left arrow so I can go to stage select world 1
-    uiButtons.emplace_back(-0.92f, -0.2f, 0.4f, 0.6f, STAGESELECT, arrowTexture, arrowHoverTexture);
+    uiButtons.emplace_back(-0.905f, 0.0f, 0.4f, 0.6f, STAGESELECT, arrowTexture, arrowHoverTexture);
     uiButtons.back().SetHitboxScale(0.4f, 0.6f);
     uiButtons.back().SetHitboxOffset(-0.04f);
 	uiButtons.back().SetRotation(-180.0f); // rotate to pointing to the left
 
     // right arrow so I can go to stage select world 3
-    uiButtons.emplace_back(0.92f, -0.2f, 0.4f, 0.6f, STAGESELECT3, arrowTexture, arrowHoverTexture);
+    uiButtons.emplace_back(0.9f, 0.0f, 0.4f, 0.6f, STAGESELECT3, arrowTexture, arrowHoverTexture);
     uiButtons.back().SetHitboxScale(0.4f, 0.6f);
     uiButtons.back().SetHitboxOffset(-0.04f);
 
