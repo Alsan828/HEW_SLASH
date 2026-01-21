@@ -66,7 +66,7 @@ struct Player {
     // 死亡状态相关
     bool isDead = false;
     float deathTimer = 0.0f;
-    const float DEATH_RESPAWN_TIME = 3.0f;  // 3秒后复活
+    const float DEATH_RESPAWN_TIME = 1.0f;  // 3秒后复活
     int deathCount = 0;  // 死亡计数（可选）
 
     // for the combo UI of the player when attacking
