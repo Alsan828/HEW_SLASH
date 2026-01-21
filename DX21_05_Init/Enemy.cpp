@@ -472,7 +472,13 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
     );
 
     if (isCritical) {
+        // Slightly stronger shake on weak-point/critical hit
+        g_camera.Shake(0.08f, 0.6f);
         SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.5f);
+    }
+    else {
+        // Subtle shake on normal hit
+        g_camera.Shake(0.05f, 0.5f);
     }
 
     health -= actualDamage;

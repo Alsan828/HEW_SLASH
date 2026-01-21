@@ -612,6 +612,10 @@ void OnPlayerDeath() {
     g_player.deathTimer = g_player.DEATH_RESPAWN_TIME;
     g_player.deathCount++;
 
+    // Small camera shake on player getting hit/death.
+    // Keep it subtle to avoid nausea.
+    g_camera.Shake(0.015f, 0.08f);
+
     // Track death
     g_gameStats.IncrementDeaths();
 
