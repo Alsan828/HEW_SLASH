@@ -198,6 +198,12 @@ void ResultScene::Uninit()
         continueHoverTexture = nullptr;
     }
 
+    if (dotTexture)
+    {
+        dotTexture->Release();
+        dotTexture = nullptr;
+    }
+
     uiButtons.clear();
     g_mouseIndicator.Cleanup();
 }
