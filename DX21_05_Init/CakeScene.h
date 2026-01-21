@@ -11,6 +11,12 @@ class CakeScene : public SceneBase
 private:
     SceneManager* sceneManager;
 
+    //ID3D11ShaderResourceView* cakeTexture = nullptr;
+    //ID3D11ShaderResourceView* plateTexture = nullptr;
+    //bool isCakeCut = false; // to check if I cut the cake or not
+    //bool isPlateShown = false;
+    //float cutTimer = 0.0f;
+
 public:
     CakeScene(SceneManager* manager);
 
