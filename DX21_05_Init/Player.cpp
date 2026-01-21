@@ -21,6 +21,8 @@ static float ComputeDashHitStopTime()
     }
 
     float hitStop = BASE_HITSTOP + static_cast<float>(chargeLevel) * EXTRA_PER_LEVEL;
+    // Requested: increase hit-stop time after hitting an enemy to 1.5x.
+    hitStop *= 1.5f;
     return std::min(hitStop, MAX_HITSTOP);
 }
 
@@ -660,7 +662,22 @@ void UpdateDash(float deltaTime) {
             g_player.isInvincible = true;
             g_player.invincibleTimer = std::max(g_player.invincibleTimer, 0.2f);
 
+            // Requested: after dash ends, enter a real-time 0.75s slow-motion at 75% speed.
+            // Player is invincible during this time.
+            g_player.isInDashEndSlowMo = true;
+            g_player.dashEndSlowMoTimer = g_player.DASH_END_SLOWMO_REALTIME;
+            g_player.invincibleTimer = std::max(g_player.invincibleTimer, g_player.DASH_END_SLOWMO_REALTIME);
+
             EnterDashAftermath(); // Enter aftermath when dash ends
+        }
+    }
+
+    // Update dash-end slow motion timer in real time (unscaled).
+    if (g_player.isInDashEndSlowMo) {
+        g_player.dashEndSlowMoTimer -= deltaTime;
+        if (g_player.dashEndSlowMoTimer <= 0.0f) {
+            g_player.isInDashEndSlowMo = false;
+            g_player.dashEndSlowMoTimer = 0.0f;
         }
     }
 
@@ -711,6 +728,11 @@ void MovePlayerLeft() {
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
     }
+    // Also break dash-end slow motion on movement.
+    if (g_player.isInDashEndSlowMo) {
+        g_player.isInDashEndSlowMo = false;
+        g_player.dashEndSlowMoTimer = 0.0f;
+    }
 
     g_player.velocityX = -MOVE_SPEED * g_player.GetMoveSpeedMultiplier();
     g_player.isMoving = true;
@@ -730,6 +752,11 @@ void MovePlayerRight() {
     // 如果在硬直中，移动会中断它
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
+    }
+    // Also break dash-end slow motion on movement.
+    if (g_player.isInDashEndSlowMo) {
+        g_player.isInDashEndSlowMo = false;
+        g_player.dashEndSlowMoTimer = 0.0f;
     }
 
     g_player.velocityX = MOVE_SPEED * g_player.GetMoveSpeedMultiplier();
@@ -868,6 +895,12 @@ void ExecuteMouseChargeDash() {
     // 清除硬直状态以允许新的冲刺
     if (g_player.isInDashAftermath) {
         g_player.isInDashAftermath = false;
+    }
+
+    // Starting a dash should interrupt dash-end slow motion.
+    if (g_player.isInDashEndSlowMo) {
+        g_player.isInDashEndSlowMo = false;
+        g_player.dashEndSlowMoTimer = 0.0f;
     }
 
     g_player.hitEnemies.clear();

@@ -601,11 +601,14 @@ void UpdateGame(float deltaTime) {
         }
     }
 
-    // Apply time scaling effect (priority: slow motion > charge effect)
+    // Apply time scaling effect (priority: global slow motion > dash-end slow motion > charge effect)
     float timeScale = 1.0f;
     if (g_isSlowMotion) {
         timeScale = g_slowMoFactor; // Use slow motion factor
 
+    }
+    else if (g_player.isInDashEndSlowMo) {
+        timeScale = g_player.DASH_END_SLOWMO_FACTOR;
     }
     else if (g_player.isCharging) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
@@ -687,13 +690,28 @@ void UpdateGame(float deltaTime) {
     s_prevPlayerX = g_player.posX;
     s_prevPlayerY = g_player.posY;
 
-    // Afterimages only during accelerated state (per design)
-    bool shouldSpawnAfterImage = g_player.isAccelerated && !g_player.isDead;
-    if (shouldSpawnAfterImage && !g_player.isDead) {
-        g_player.afterImageSpawnTimer -= scaledDeltaTime;
-        if (g_player.afterImageSpawnTimer <= 0.0f) {
-            SpawnPlayerAfterImage();
-            g_player.afterImageSpawnTimer = g_player.afterImageSpawnInterval;
+    // Afterimages:
+    // - Always during dash.
+    // - Also during accelerated state (combo) while moving/running.
+    // - When not accelerated, dash afterimages spawn at half rate (interval doubled).
+    bool shouldSpawnAfterImage = !g_player.isDead && (g_player.isDashing || g_player.isAccelerated);
+    if (shouldSpawnAfterImage) {
+        float interval = g_player.afterImageSpawnInterval;
+        // Only slow down afterimage rate for non-accelerated dash.
+        if (g_player.isDashing && !g_player.isAccelerated) {
+            interval *= 2.0f;
+        }
+
+        // If we're only accelerated (not dashing), require actual movement.
+        if (!g_player.isDashing && g_player.isAccelerated && !g_player.isMoving) {
+            g_player.afterImageSpawnTimer = 0.0f;
+        }
+        else {
+            g_player.afterImageSpawnTimer -= scaledDeltaTime;
+            if (g_player.afterImageSpawnTimer <= 0.0f) {
+                SpawnPlayerAfterImage();
+                g_player.afterImageSpawnTimer = interval;
+            }
         }
     }
     else {
@@ -1205,6 +1223,14 @@ void HandleInput() {
         g_player.isMoving = true;
         g_player.facingRight = true;
         moving = true;
+    }
+
+    // Requested: movement should interrupt dash-end slow motion.
+    // Note: movement input is handled here directly (not always via MovePlayerLeft/Right),
+    // so break the state at the input level.
+    if (moving && g_player.isInDashEndSlowMo) {
+        g_player.isInDashEndSlowMo = false;
+        g_player.dashEndSlowMoTimer = 0.0f;
     }
 
     if (!moving && !g_player.isDashing) {

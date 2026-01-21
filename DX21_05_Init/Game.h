@@ -45,7 +45,7 @@ const float JUMP_FORCE = 0.045f;
 // Normal state move speed now is 0.8x of the previous speed.
 const float MOVE_SPEED = 0.008f; 
 const float DASH_SPEED = 0.05f;      // Base dash speed (halved)
-const float DASH_DURATION = 0.11f;   // Base dash duration
+const float DASH_DURATION = 0.16f;   // Base dash duration
 const float DASH_COOLDOWN = 0.0f;    // Dash cooldown time
 
 // Acceleration (combo) state
@@ -144,6 +144,12 @@ struct Player {
     bool isInDashAftermath = false;
     float dashAftermathTimer = 0.0f;
     const float DASH_AFTERMATH_DURATION = 0.7f;
+
+    // Dash-end slow-motion (real-time): 0.75s at 75% speed, player invincible.
+    bool isInDashEndSlowMo = false;
+    float dashEndSlowMoTimer = 0.0f;
+    const float DASH_END_SLOWMO_REALTIME = 0.75f;
+    const float DASH_END_SLOWMO_FACTOR = 0.35f;
     
     const float AFTERIMAGE_DURATION = 0.35f;
 
