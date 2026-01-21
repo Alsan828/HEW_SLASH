@@ -214,7 +214,51 @@ void CleanUpGameWorld()
         g_playerDeathTexture->Release();
         g_playerDeathTexture = nullptr;
     }
-
+    // FOR THE PLAYER WHEN INVINCIBLE
+    if (g_invinciblePlayerIdleTexture) {
+        g_invinciblePlayerIdleTexture->Release();
+        g_invinciblePlayerIdleTexture = nullptr;
+    }
+    if (g_invinciblePlayerJumpTexture) {
+        g_invinciblePlayerJumpTexture->Release();
+        g_invinciblePlayerJumpTexture = nullptr;
+    }
+    if (g_invinciblePlayerRunTexture) {
+        g_invinciblePlayerRunTexture->Release();
+        g_invinciblePlayerRunTexture = nullptr;
+    }
+    if (g_invinciblePlayerSlash1Texture) {
+        g_invinciblePlayerSlash1Texture->Release();
+        g_invinciblePlayerSlash1Texture = nullptr;
+    }
+    if (g_invinciblePlayerSlash2Texture) {
+        g_invinciblePlayerSlash2Texture->Release();
+        g_invinciblePlayerSlash2Texture = nullptr;
+    }
+    if (g_playerSlash3Texture) {
+        g_playerSlash3Texture->Release();
+        g_playerSlash3Texture = nullptr;
+    }
+    if (g_invinciblePlayerSlash4Texture) {
+        g_invinciblePlayerSlash4Texture->Release();
+        g_invinciblePlayerSlash4Texture = nullptr;
+    }
+    if (g_invinciblePlayerAirChargeTexture) {
+        g_invinciblePlayerAirChargeTexture->Release();
+        g_invinciblePlayerAirChargeTexture = nullptr;
+    }
+    if (g_invinciblePlayerFallingTexture) {
+        g_invinciblePlayerFallingTexture->Release();
+        g_invinciblePlayerFallingTexture = nullptr;
+    }
+    if (g_invinciblePlayerGroundChargeTexture) {
+        g_invinciblePlayerGroundChargeTexture->Release();
+        g_invinciblePlayerGroundChargeTexture = nullptr;
+    }
+    if (g_invinciblePlayerWallSlideTexture) {
+        g_invinciblePlayerWallSlideTexture->Release();
+        g_invinciblePlayerWallSlideTexture = nullptr;
+    }
 
 
     if (g_groundTexture) {
@@ -491,7 +535,7 @@ void DrawScoreUI(void)
 void InitGameWorld() {
     g_projectileManager.LoadTextures(g_pDevice);
 
-    // 只加载右边的纹理
+    // FOR THE PLAYER
     LoadTexture(g_pDevice, "asset/character/idle_right.png", &g_playerIdleTexture);
     LoadTexture(g_pDevice, "asset/character/jump_right.png", &g_playerJumpTexture);
     LoadTexture(g_pDevice, "asset/character/run_right.png", &g_playerRunTexture);
@@ -504,7 +548,6 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeTexture);
     LoadTexture(g_pDevice, "asset/character/wall_slide_right.png", &g_playerWallSlideTexture);
     LoadTexture(g_pDevice, "asset/character/death_right.png", &g_playerDeathTexture);
-
     // 为动画剪辑添加通用名称（不再区分左右）
     g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
     g_player.anim.AddClip("Jump", 0, 10, 11, 1, 0.06f, false, g_playerJumpTexture);
@@ -518,6 +561,33 @@ void InitGameWorld() {
     g_player.anim.AddClip("GroundCharge", 0, 0, 1, 1, 0.25f, true, g_playerGroundChargeTexture);
     g_player.anim.AddClip("WallSlide", 0, 0, 1, 1, 0.25f, true, g_playerWallSlideTexture);
     g_player.anim.AddClip("Death", 0, 10, 11, 1, 0.1f, false, g_playerDeathTexture);
+
+
+    // FOR THE PLAYER WHEN INVINCIBLE
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_idle_right.png", &g_invinciblePlayerIdleTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_jump_right.png", &g_invinciblePlayerJumpTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_run_right.png", &g_invinciblePlayerRunTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right1.png", &g_invinciblePlayerSlash1Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right2.png", &g_invinciblePlayerSlash2Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right3.png", &g_invinciblePlayerSlash3Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right4.png", &g_invinciblePlayerSlash4Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_air_charge_right.png", &g_invinciblePlayerAirChargeTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_falling_right.png", &g_invinciblePlayerFallingTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_ground_charge_right.png", &g_invinciblePlayerGroundChargeTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_wall_slide_right.png", &g_invinciblePlayerWallSlideTexture);
+    // 为动画剪辑添加通用名称（不再区分左右）
+    g_player.anim.AddClip("InvincibleIdle", 0, 3, 4, 1, 0.25f, true, g_invinciblePlayerIdleTexture);
+    g_player.anim.AddClip("InvincibleJump", 0, 10, 11, 1, 0.06f, false, g_invinciblePlayerJumpTexture);
+    g_player.anim.AddClip("InvincibleRun", 0, 3, 4, 1, 0.1f, true, g_invinciblePlayerRunTexture);
+    g_player.anim.AddClip("InvincibleSlash1", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash1Texture);
+    g_player.anim.AddClip("InvincibleSlash2", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash2Texture);
+    g_player.anim.AddClip("InvincibleSlash3", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash3Texture);
+    g_player.anim.AddClip("InvincibleSlash4", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash4Texture);
+    g_player.anim.AddClip("InvincibleAirCharge", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerAirChargeTexture);
+    g_player.anim.AddClip("InvincibleFalling", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerFallingTexture);
+    g_player.anim.AddClip("InvincibleGroundCharge", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerGroundChargeTexture);
+    g_player.anim.AddClip("InvincibleWallSlide", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerWallSlideTexture);
+
 
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
@@ -643,13 +713,6 @@ void UpdateGame(float deltaTime) {
     }
 
 	// for the gauge effect timer
-    //if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) 
-    //{ 
-    //    g_gaugeEffectAnim.Update(deltaTime);  // update the animation when the gauge bar is full
-    //}
-    //else { 
-    //    g_gaugeEffectAnim.Reset(); // Reset animation if not full
-    //}
     if (g_player.g_gaugeEffectActive) { 
         g_gaugeEffectAnim.Update(deltaTime); 
         g_player.g_gaugeEffectTimer -= deltaTime;
@@ -746,94 +809,183 @@ void UpdateGame(float deltaTime) {
         // 在UpdateGame函数中修改动画设置部分
         if (g_player.animLockTimer <= 0.0f)
         {
-            if (g_player.isDead) // for when dying
+            // Check if player is invincible to determine which animation set to use
+            if (g_player.isInvincible)
             {
-                if (g_player.anim.GetCurrentClipName() != "Death") {
-                    g_player.anim.SetClip("Death");
-                }
-            }
-
-            else if (g_player.isCharging) // 如果玩家正在蓄力
-            {
-                if (!g_player.isOnGround) // 如果玩家在空中蓄力
+                // INVINCIBLE ANIMATIONS
+                if (g_player.isDead)
                 {
-                    if (g_player.anim.GetCurrentClipName() != "AirCharge") {
-                        g_player.anim.SetClip("AirCharge");
+                    // Death animation stays normal (no invincible death texture)
+                    if (g_player.anim.GetCurrentClipName() != "Death") {
+                        g_player.anim.SetClip("Death");
                     }
                 }
-                else // 如果玩家在地面蓄力
+                else if (g_player.isCharging && !g_player.isOnGround)
                 {
-                    if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
-                        g_player.anim.SetClip("GroundCharge");
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleAirCharge") {
+                        g_player.anim.SetClip("InvincibleAirCharge");
+                    }
+                }
+                else if (g_player.isCharging)
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleGroundCharge") {
+                        g_player.anim.SetClip("InvincibleGroundCharge");
+                    }
+                }
+                else if (g_player.isDashing)
+                {
+                    // Determine slash direction
+                    float dx = g_player.dashDirectionX;
+                    float dy = g_player.dashDirectionY;
+
+                    const float DIAG_RATIO = 0.70710678f;
+                    const float adx = fabsf(dx);
+                    const float ady = fabsf(dy);
+
+                    const char* clip;
+                    if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "InvincibleSlash2";  // Up
+                    }
+                    else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "InvincibleSlash4";  // Down
+                    }
+                    else if (adx >= ady * DIAG_RATIO) {
+                        clip = "InvincibleSlash3";  // Side
+                    }
+                    else {
+                        clip = "InvincibleSlash1";  // Diagonal
+                    }
+
+                    if (g_player.anim.GetCurrentClipName() != clip) {
+                        g_player.anim.SetClip(clip);
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (g_player.isWallSliding)
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleWallSlide") {
+                        g_player.anim.SetClip("InvincibleWallSlide");
+                    }
+                }
+                else if (!g_player.isOnGround)
+                {
+                    if (g_player.velocityY < 0.0f) // Falling
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "InvincibleFalling") {
+                            g_player.anim.SetClip("InvincibleFalling");
+                        }
+                    }
+                    else // Jumping
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "InvincibleJump") {
+                            g_player.anim.SetClip("InvincibleJump");
+                        }
+                    }
+                }
+                else if (g_player.isMoving)
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleRun") {
+                        g_player.anim.SetClip("InvincibleRun");
+                    }
+                }
+                else // Idle
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleIdle") {
+                        g_player.anim.SetClip("InvincibleIdle");
                     }
                 }
             }
-            else if (g_player.isDashing) // 如果玩家正在冲刺
+            else
             {
-                // Slash clip depends on dash direction.
-                // Classify into 4 sectors with 45° boundaries:
-                //   Up:    |dy| dominates and dy > 0  -> Slash2
-                //   Down:  |dy| dominates and dy < 0  -> Slash4
-                //   Side:  otherwise, |dx| dominates -> Slash3
-                //   DiagDown-ish fallback            -> Slash1
-                // Left/right is handled by facing/flip.
-                float dx = g_player.dashDirectionX;
-                float dy = g_player.dashDirectionY;
-
-                const float DIAG_RATIO = 0.70710678f; // cos(45°)
-                const float adx = fabsf(dx);
-                const float ady = fabsf(dy);
-
-                const char* clip;
-                if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
-                    clip = "Slash2";
-                }
-                else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
-                    clip = "Slash4";
-                }
-                else if (adx >= ady * DIAG_RATIO) {
-                    clip = "Slash3";
-                }
-                else {
-                    // diagonal-ish: choose a dedicated diagonal-down slash
-                    clip = "Slash1";
-                }
-
-                if (g_player.anim.GetCurrentClipName() != clip) {
-                    g_player.anim.SetClip(clip);
-                    g_player.animLockTimer = g_player.animLockDuration;
-                }
-            }
-            else if (g_player.isWallSliding) {
-                if (g_player.anim.GetCurrentClipName() != "WallSlide") {
-                    g_player.anim.SetClip("WallSlide");
-                }
-            }
-            else if (!g_player.isOnGround) // 玩家不在地面上
-            {
-                if (g_player.velocityY < 0.0f) // 下落
+                if (g_player.isDead) // for when dying
                 {
-                    if (g_player.anim.GetCurrentClipName() != "Falling") {
-                        g_player.anim.SetClip("Falling");
+                    if (g_player.anim.GetCurrentClipName() != "Death") {
+                        g_player.anim.SetClip("Death");
                     }
                 }
-                else // 跳跃
+
+                else if (g_player.isCharging) // 如果玩家正在蓄力
                 {
-                    if (g_player.anim.GetCurrentClipName() != "Jump") {
-                        g_player.anim.SetClip("Jump");
+                    if (!g_player.isOnGround) // 如果玩家在空中蓄力
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "AirCharge") {
+                            g_player.anim.SetClip("AirCharge");
+                        }
+                    }
+                    else // 如果玩家在地面蓄力
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
+                            g_player.anim.SetClip("GroundCharge");
+                        }
                     }
                 }
-            }
-            else if (g_player.isMoving) // 玩家在移动
-            {
-                if (g_player.anim.GetCurrentClipName() != "Run") {
-                    g_player.anim.SetClip("Run");
+                else if (g_player.isDashing) // 如果玩家正在冲刺
+                {
+                    // Slash clip depends on dash direction.
+                    // Classify into 4 sectors with 45° boundaries:
+                    //   Up:    |dy| dominates and dy > 0  -> Slash2
+                    //   Down:  |dy| dominates and dy < 0  -> Slash4
+                    //   Side:  otherwise, |dx| dominates -> Slash3
+                    //   DiagDown-ish fallback            -> Slash1
+                    // Left/right is handled by facing/flip.
+                    float dx = g_player.dashDirectionX;
+                    float dy = g_player.dashDirectionY;
+
+                    const float DIAG_RATIO = 0.70710678f; // cos(45°)
+                    const float adx = fabsf(dx);
+                    const float ady = fabsf(dy);
+
+                    const char* clip;
+                    if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "Slash2";
+                    }
+                    else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "Slash4";
+                    }
+                    else if (adx >= ady * DIAG_RATIO) {
+                        clip = "Slash3";
+                    }
+                    else {
+                        // diagonal-ish: choose a dedicated diagonal-down slash
+                        clip = "Slash1";
+                    }
+
+                    if (g_player.anim.GetCurrentClipName() != clip) {
+                        g_player.anim.SetClip(clip);
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
                 }
-            }
-            else // 玩家站立
-            {
-                if (g_player.anim.GetCurrentClipName() != "Idle") {
-                    g_player.anim.SetClip("Idle");
+                else if (g_player.isWallSliding) {
+                    if (g_player.anim.GetCurrentClipName() != "WallSlide") {
+                        g_player.anim.SetClip("WallSlide");
+                    }
+                }
+                else if (!g_player.isOnGround) // 玩家不在地面上
+                {
+                    if (g_player.velocityY < 0.0f) // 下落
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "Falling") {
+                            g_player.anim.SetClip("Falling");
+                        }
+                    }
+                    else // 跳跃
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "Jump") {
+                            g_player.anim.SetClip("Jump");
+                        }
+                    }
+                }
+                else if (g_player.isMoving) // 玩家在移动
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Run") {
+                        g_player.anim.SetClip("Run");
+                    }
+                }
+                else // 玩家站立
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Idle") {
+                        g_player.anim.SetClip("Idle");
+                    }
                 }
             }
         }
@@ -1473,30 +1625,6 @@ void GameStatistics::CalculateFinalScore() {
     int deathPenalty = penalizableDeaths * 5;
 
     totalScore = std::max(0, killPoints + timeBonus - deathPenalty);
-
-    // the debug
- /*   char debugMsg[512];
-    sprintf_s(debugMsg,
-        "=== SCORE CALCULATION ===\n"
-        "Enemies Killed: %d (normal)\n"
-        "Weak Point Kills: %d\n"
-        "Total Deaths: %d\n"
-        "Total Time: %.2f seconds\n"
-        "---\n"
-        "Kill Points: (%d * 10) + (%d * 30) = %d\n"
-        "Time Bonus: max(0, 60 - %.2f) = %d\n"
-        "Death Penalty: %d * 5 = %d\n"
-        "---\n"
-        "Final Score: (%d * %d) - %d = %d\n"
-        "========================\n",
-        enemiesKilled, weakPointKills,
-        totalDeaths, totalTime,
-        killPoints,
-        timePenalty,
-        deathPenalty,
-        killPoints, timePenalty, deathPenalty, totalScore
-    );
-    OutputDebugStringA(debugMsg);*/
 }
 
 void GameStatistics::AddScore(int points) {

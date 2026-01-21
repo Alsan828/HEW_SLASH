@@ -24,6 +24,19 @@ ID3D11ShaderResourceView* g_playerAirChargeTexture = nullptr; // 通用空中蓄
 ID3D11ShaderResourceView* g_playerFallingTexture = nullptr;  // 通用下落纹理
 ID3D11ShaderResourceView* g_playerGroundChargeTexture = nullptr; // 通用地面蓄力纹理
 ID3D11ShaderResourceView* g_playerWallSlideTexture = nullptr; 
+// for the character when invincible
+ID3D11ShaderResourceView* g_invinciblePlayerIdleTexture = nullptr;    // 通用站立纹理
+ID3D11ShaderResourceView* g_invinciblePlayerJumpTexture = nullptr;   // 通用跳跃纹理
+ID3D11ShaderResourceView* g_invinciblePlayerRunTexture = nullptr;     // 通用奔跑纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash1Texture = nullptr; // 通用斩击1纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash2Texture = nullptr; // 通用斩击2纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash3Texture = nullptr; // 通用斩击3纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash4Texture = nullptr; // 通用斩击4纹理
+ID3D11ShaderResourceView* g_invinciblePlayerAirChargeTexture = nullptr; // 通用空中蓄力纹理
+ID3D11ShaderResourceView* g_invinciblePlayerFallingTexture = nullptr;  // 通用下落纹理
+ID3D11ShaderResourceView* g_invinciblePlayerGroundChargeTexture = nullptr; // 通用地面蓄力纹理
+ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture = nullptr; // 通用地面蓄力纹理
+
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_bossHealthBarTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;

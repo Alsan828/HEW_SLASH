@@ -17,6 +17,7 @@
 #include "Pause.h"
 #include "Projectile.h"
 #include "Enemy.h"
+#include "Texture1.h"
 
 class ProjectileManager;
 
@@ -340,6 +341,20 @@ extern ID3D11ShaderResourceView* g_playerAirChargeTexture; // 通用空中蓄力
 extern ID3D11ShaderResourceView* g_playerFallingTexture;  // 通用下落纹理
 extern ID3D11ShaderResourceView* g_playerGroundChargeTexture; // 通用地面蓄力纹理
 extern ID3D11ShaderResourceView* g_playerWallSlideTexture; // 通用地面蓄力纹理
+// for the character when invincible
+extern ID3D11ShaderResourceView* g_invinciblePlayerIdleTexture;    // 通用站立纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerJumpTexture;   // 通用跳跃纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerRunTexture;     // 通用奔跑纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash1Texture; // 通用斩击1纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash2Texture; // 通用斩击2纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash3Texture; // 通用斩击3纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash4Texture; // 通用斩击4纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerAirChargeTexture; // 通用空中蓄力纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerFallingTexture;  // 通用下落纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerGroundChargeTexture; // 通用地面蓄力纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture; // 通用地面蓄力纹理
+
+
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_bossHealthBarTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
