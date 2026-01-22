@@ -518,11 +518,34 @@ void Enemy::OnDeath() {
 	Audio::PlaySE(SoundEffect::ENEMY_DEATH);
 
     // increments the player combo when enemy dies
-    //g_player.comboCount++;
-    //g_player.comboTimer = 0.0f; // it resets the timer
+    g_player.comboCount++;
+    g_player.comboTimer = 5.0f; // it resets the timer
 
     //OnEnemyDefeated();
+    g_gameStats.UpdateMaxCombo(g_player.comboCount);
+    //eraee later
+    char debugMsg[256];
+    sprintf_s(debugMsg, "=== ENEMY KILLED ===\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Current Combo: %d\n", g_player.comboCount);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Max Combo: %d\n", g_gameStats.GetMaxCombo());
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Weak Spot Kill: %s\n", weakSpotDeath ? "YES" : "NO");
+    OutputDebugStringA(debugMsg);
+
     OnEnemyDefeated(weakSpotDeath);
+    //erase later
+    sprintf_s(debugMsg, "Total Enemy Points: %d\n", g_gameStats.GetTotalEnemyPoints());
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Current Area Points: %d\n", g_gameStats.GetCurrentAreaEnemyPoints());
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Total Kills: %d (Normal: %d, Weak: %d)\n",
+        g_gameStats.GetEnemiesKilled() + g_gameStats.GetWeakPointKills(),
+        g_gameStats.GetEnemiesKilled(),
+        g_gameStats.GetWeakPointKills());
+    OutputDebugStringA(debugMsg);
+    OutputDebugStringA("===================\n\n");
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {

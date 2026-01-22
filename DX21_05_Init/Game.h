@@ -255,6 +255,10 @@ private:
     int totalScore = 0;
     int penalizableDeaths = 0;  // deaths happens when I have points
 
+    int maxCombo = 0;           // Track maximum combo reached
+    int currentAreaEnemyPoints = 0;  // Points from current area
+    int totalEnemyPoints = 0;   // Total accumulated enemy points
+
 public:
    // no need construct now bc I initialied the variables above
 
@@ -283,6 +287,13 @@ public:
     int GetTotalDeaths() const { return totalDeaths; }
     float GetTotalTime() const { return totalTime; }
     int GetTotalScore() const { return totalScore; }
+
+    void UpdateMaxCombo(int combo);
+    void ResetAreaProgress();  // Call when player dies
+    int GetMaxCombo() const { return maxCombo; }
+    int GetCurrentAreaEnemyPoints() const { return currentAreaEnemyPoints; }
+    int GetTotalEnemyPoints() const { return totalEnemyPoints; }
+    void AddEnemyPoints(int points);  // Add points for killing enemies
 };
 extern GameStatistics g_gameStats;
 
@@ -356,6 +367,7 @@ extern ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture; // 通用�
 
 
 extern ID3D11ShaderResourceView* g_groundTexture;
+extern ID3D11ShaderResourceView* g_oneWayPlatformTexture;
 extern ID3D11ShaderResourceView* g_bossHealthBarTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
 extern ID3D11ShaderResourceView* g_backgroundTexture2;

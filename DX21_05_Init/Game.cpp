@@ -189,6 +189,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_invinciblePlayerWallSlideTexture);
 
     ReleaseTexture(g_groundTexture);
+    ReleaseTexture(g_oneWayPlatformTexture);
     ReleaseTexture(g_backgroundTexture1);
     ReleaseTexture(g_dashEffectTexture);
     ReleaseTexture(g_chargeEffectTexture);
@@ -393,25 +394,41 @@ void DrawGaugeUI(void)
 // for the score UI
 void DrawScoreUI(void)
 {
+    //if (!g_uiNumberTexture) return;
+
+    //// Position on top left, below the timer
+    //float scoreX = -0.77f;   // left side in the x axis
+    //float scoreY = 0.61f;    // below the timer in the y axis
+    //float scoreDigitWidth = 0.03f; 
+    //float scoreDigitHeight = 0.06f;
+
+    //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    //// for getting score after killing 
+    //int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
+
+    //int deathPenalty = g_gameStats.GetPenalizableDeaths() * 5;
+
+    //int liveScore = std::max(0, killPoints - deathPenalty);
+
+    //// Draw the live score
+    //DrawNumber(liveScore, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
+
     if (!g_uiNumberTexture) return;
 
     // Position on top left, below the timer
-    float scoreX = -0.77f;   // left side in the x axis
-    float scoreY = 0.61f;    // below the timer in the y axis
-    float scoreDigitWidth = 0.03f; 
+    float scoreX = -0.77f;
+    float scoreY = 0.61f;
+    float scoreDigitWidth = 0.03f;
     float scoreDigitHeight = 0.06f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // for getting score after killing 
-    int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
+    // NEW: During gameplay, only show enemy points (not final calculated score)
+    int enemyPoints = g_gameStats.GetTotalEnemyPoints();
 
-    int deathPenalty = g_gameStats.GetPenalizableDeaths() * 5;
-
-    int liveScore = std::max(0, killPoints - deathPenalty);
-
-    // Draw the live score
-    DrawNumber(liveScore, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
+    // Draw the enemy points
+    DrawNumber(enemyPoints, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
 }
 
 
@@ -474,6 +491,7 @@ void InitGameWorld() {
 
 
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformwood.png", &g_oneWayPlatformTexture);
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
@@ -573,6 +591,7 @@ void UpdateGame(float deltaTime) {
             g_player.comboCount = 0;
             g_player.comboTimer = 0.0f;
         }
+        g_gameStats.UpdateMaxCombo(g_player.comboCount);
     }
 
     // Acceleration state: active only when comboCount > threshold
@@ -900,7 +919,7 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
         return g_backgroundTexture3;
     }
     else if (tileCode == "OP") {
-        return g_playerJumpTexture;
+        return g_oneWayPlatformTexture;
     }
     else {
         return g_groundTexture;
@@ -945,6 +964,9 @@ void SetTileColor(const std::string& tileCode) {
     }
     else if (tileCode == "D2") {
         SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+    }
+    else if (tileCode == "OP") {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
     else {
         SetColor(0.0f, 1.0f, 0.0f, 1.0f);
@@ -1011,7 +1033,26 @@ void DrawGame() {
             std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
-            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
+            //RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
+           
+            // for one-way platforms - render smaller to match collision with character. might change later
+            if (tile.tileInfo.code == "OP") {
+                // scale the texture to match the collision (0.1f / 0.15f = 0.67)
+                float renderScale = 0.67f;  // Adjust this to match your collision size
+                float renderWidth = tile.width; // no change
+                float renderHeight = tile.height * renderScale;
+
+                // Center the smaller sprite on the tile position
+                float offsetX = (tile.width - renderWidth) * 0.5f;
+                float offsetY = (tile.height - renderHeight) * 0.5f;
+
+                RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
+                    renderWidth, renderHeight, texture, 0, 1, 1);
+            }
+            else {
+                // Normal rendering for all other tiles
+                RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
+            }
         }
 
         // Draw foreground layer tiles
@@ -1465,21 +1506,66 @@ void GameStatistics::Reset() {
     totalDeaths = 0;
     totalTime = 0.0f;
     totalScore = 0;
+    penalizableDeaths = 0;
+
+    maxCombo = 0;
+    currentAreaEnemyPoints = 0;
+    totalEnemyPoints = 0;
 }
 
 // Increment kill counter
 void GameStatistics::IncrementKills() {
     enemiesKilled++;
+    AddEnemyPoints(10);
 }
 
 // Increment weak point kill counter
 void GameStatistics::IncrementWeakPointKills() {
     weakPointKills++;
+    AddEnemyPoints(30);
 }
 
 // Increment death counter
 void GameStatistics::IncrementDeaths() {
     totalDeaths++;
+
+    //erase later
+    char debugMsg[256];
+    sprintf_s(debugMsg, "\n*** PLAYER DIED ***\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Total Deaths: %d\n", totalDeaths);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Lost Area Points: %d\n", currentAreaEnemyPoints);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Lost Max Combo: %d\n", maxCombo);
+    OutputDebugStringA(debugMsg);
+
+    ResetAreaProgress();
+
+    // erase later
+    sprintf_s(debugMsg, "Remaining Total Points: %d\n", totalEnemyPoints);
+    OutputDebugStringA(debugMsg);
+    OutputDebugStringA("*******************\n\n");
+
+}
+
+// for updating the maximum combo
+void GameStatistics::UpdateMaxCombo(int combo) {
+    if (combo > maxCombo) {
+        maxCombo = combo;
+    }
+}
+//  when player dies, resets the area progress
+void GameStatistics::ResetAreaProgress() {
+    totalEnemyPoints -= currentAreaEnemyPoints; // Subtract current area points from total
+    currentAreaEnemyPoints = 0; // Reset current area progress
+    maxCombo = 0;  // Reset max combo on death
+}
+
+
+void GameStatistics::AddEnemyPoints(int points) {
+    currentAreaEnemyPoints += points;
+    totalEnemyPoints += points;
 }
 
 // Update total time
@@ -1490,16 +1576,81 @@ void GameStatistics::UpdateTime(float time) {
 // Calculate the final score based on kills, time, and deaths
 void GameStatistics::CalculateFinalScore() {
     // the kill points: normal kills = 10, weak point kills = 30
-    int killPoints = (enemiesKilled * 10) + (weakPointKills * 30);
+    //int killPoints = (enemiesKilled * 10) + (weakPointKills * 30);
 
-    // the time bonus. 0 is the minimum
-    int timeBonus = std::max(0, 60 - static_cast<int>(totalTime));
+    //// the time bonus. 0 is the minimum
+    //int timeBonus = std::max(0, 60 - static_cast<int>(totalTime));
 
-    int scoreBeforePenalty = killPoints + timeBonus;
+    //int scoreBeforePenalty = killPoints + timeBonus;
 
-    int deathPenalty = penalizableDeaths * 5;
+    //int deathPenalty = penalizableDeaths * 5;
 
-    totalScore = std::max(0, killPoints + timeBonus - deathPenalty);
+    //totalScore = std::max(0, killPoints + timeBonus - deathPenalty);
+
+    int comboMultiplier = std::max(1, maxCombo);  // Minimum combo is 1
+
+    // Convert time to 4-digit number (total seconds)
+    int timeInSeconds = static_cast<int>(totalTime);
+
+    // Cap deaths at 50 for penalty calculation
+    int cappedDeaths = std::min(50, totalDeaths);
+    int deathPenalty = cappedDeaths * 50;
+
+    // Calculate base score
+    int baseScore = totalEnemyPoints * comboMultiplier;
+
+    // Calculate penalty
+    int penalty = timeInSeconds + deathPenalty;
+
+    // Final score with 1.5x multiplier
+    totalScore = static_cast<int>((baseScore - penalty) * 1.5f);
+
+    // Ensure score doesn't go negative
+    totalScore = std::max(0, totalScore);
+
+    // erase later
+    char debugMsg[512];
+    sprintf_s(debugMsg, "\n========== FINAL SCORE CALCULATION ==========\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Total Enemy Points: %d\n", totalEnemyPoints);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Max Combo Reached: %d\n", maxCombo);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Combo Multiplier: %d\n", comboMultiplier);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Base Score (Points × Combo): %d × %d = %d\n",
+        totalEnemyPoints, comboMultiplier, baseScore);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\nPenalties:\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Time: %d seconds\n", timeInSeconds);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Deaths: %d (capped at 50: %d)\n", totalDeaths, cappedDeaths);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Death Penalty: %d × 50 = %d\n", cappedDeaths, deathPenalty);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Total Penalty: %d + %d = %d\n",
+        timeInSeconds, deathPenalty, penalty);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\nFinal Calculation:\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  (%d - %d) × 1.5 = %.1f\n",
+        baseScore, penalty, (baseScore - penalty) * 1.5f);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\n>>> FINAL SCORE: %d <<<\n", totalScore);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\nStatistics Summary:\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Enemies Killed: %d\n", enemiesKilled);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Weak Point Kills: %d\n", weakPointKills);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Total Deaths: %d\n", totalDeaths);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "  Time: %.1f seconds\n", totalTime);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "=============================================\n\n");
+    OutputDebugStringA(debugMsg);
 }
 
 void GameStatistics::AddScore(int points) {

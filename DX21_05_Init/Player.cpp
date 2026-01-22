@@ -67,6 +67,8 @@ static void PerformDashHitTest(float testX, float testY) {
             g_player.comboCount++;
             g_player.comboTimer = 5.0f;
 
+            g_gameStats.UpdateMaxCombo(g_player.comboCount);// added january 22nd
+
             float multiplier = enemy->GetDamageMultiplier(dashAngle);
             // Hit-stop should depend on charge strength, not on invincibility state.
             if (g_player.hitStopTriggered < 3) {
@@ -133,6 +135,8 @@ static void PerformDashEndCircleHitTest() {
         if (dx * dx + dy * dy <= radiusSq) {
             g_player.comboCount++;
             g_player.comboTimer = 5.0f;
+
+            g_gameStats.UpdateMaxCombo(g_player.comboCount); // added january 22nd
 
             float multiplier = enemy->GetDamageMultiplier(dashAngle);
             // Hit-stop should depend on charge strength, not on invincibility state.
@@ -566,6 +570,10 @@ void UpdatePlayerPhysics(float deltaTime) {
     if (g_player.posY < -4.0f) {
         g_gameStats.IncrementDeaths();
 
+        // Reset combo on death
+        g_player.comboCount = 0;
+        g_player.comboTimer = 0.0f;
+
         // only counts deaths if the player has points
         int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
         if (killPoints > 0) {
@@ -619,6 +627,9 @@ void OnPlayerDeath() {
 
     // Track death
     g_gameStats.IncrementDeaths();
+
+    g_player.comboCount = 0;
+    g_player.comboTimer = 0.0f;
 
     // only count deaths if the player has points
     int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
