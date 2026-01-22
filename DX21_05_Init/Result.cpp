@@ -67,8 +67,6 @@ void ResultScene::Update(float deltaTime)
             return;
         }
     }
-
-
 }
 
 //it draws the objects
@@ -87,31 +85,12 @@ void ResultScene::Draw()
     }
 
     // Draw statistics numbers
-    //if (numberTexture) {
-    //    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-    //    // for kills
-    //    DrawNumber(g_gameStats.GetEnemiesKilled(), -0.6f, 0.45f, 0.1f, 0.1f, numberTexture);
-
-    //    // for deaths
-    //    DrawNumber(g_gameStats.GetTotalDeaths(), -0.6f, 0.05f, 0.1f, 0.1f, numberTexture);
-
-    //    // for time
-    //    int minutes = (int)(g_gameStats.GetTotalTime() / 60.0f);
-    //    int seconds = (int)g_gameStats.GetTotalTime() % 60;
-    //    DrawTime(minutes, seconds, -0.6f, 0.25f, 0.1f, numberTexture);
-    //    // for the dot between minutes and seconds
-    //    RenderImage(-0.45f, 0.25f, 0.1f, 0.16f, dotTexture, 0, 1, 1);
-
-    //    // for the score
-    //    DrawNumber(g_gameStats.GetTotalScore(), 0.3f, 0.05f, 0.1f, 0.1f, numberTexture);
-    //}
-    // Draw statistics numbers
     if (numberTexture) {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         // for kills
-        DrawNumber(g_gameStats.GetEnemiesKilled(), -0.6f, 0.45f, 0.1f, 0.1f, numberTexture);
+        int totalKills = g_gameStats.GetEnemiesKilled() + g_gameStats.GetWeakPointKills();
+        DrawNumber(totalKills, -0.6f, 0.45f, 0.1f, 0.1f, numberTexture);
 
         // for deaths
         DrawNumber(g_gameStats.GetTotalDeaths(), -0.6f, 0.05f, 0.1f, 0.1f, numberTexture);
@@ -152,8 +131,7 @@ void DrawNumber(int number, float x, float y, float width, float height, ID3D11S
         // Draw the digit at current position
         RenderImage(digitX, y, width, height, texture, digit, 1, 10, false, 0.0f, false);
         // Move X position to the right for next digit
-        // width * 0.7f so there will be a small gap between digits
-        digitX += width * 0.7f;
+        digitX += width * 0.7f; // size 0.7f so there will be a small gap between digits
     }
 }
 
@@ -178,50 +156,19 @@ void DrawTime(int minutes, int seconds, float x, float y, float size, ID3D11Shad
 //it erases the objects
 void ResultScene::Uninit()
 {
-    if (backgroundTexture)
-    {
-        backgroundTexture->Release();
-        backgroundTexture = nullptr;
-    }
+    ReleaseTexture(backgroundTexture);
 
-    if (normalScoreTexture)
-    {
-        normalScoreTexture->Release();
-        normalScoreTexture = nullptr;
-    }
+    ReleaseTexture(normalScoreTexture);
 
-    if (numberTexture) {
-        numberTexture->Release();
-        numberTexture = nullptr;
-    }
+    ReleaseTexture(numberTexture);
 
-    if (titleTexture)
-    {
-        titleTexture->Release();
-        titleTexture = nullptr;
-    }
-    if (titleHoverTexture)
-    {
-        titleHoverTexture->Release();
-        titleHoverTexture = nullptr;
-    }
+    ReleaseTexture(titleTexture);
+    ReleaseTexture(titleHoverTexture);
 
-    if (continueTexture)
-    {
-        continueTexture->Release();
-        continueTexture = nullptr;
-    }
-    if (continueHoverTexture)
-    {
-        continueHoverTexture->Release();
-        continueHoverTexture = nullptr;
-    }
+    ReleaseTexture(continueTexture);
+    ReleaseTexture(continueHoverTexture);
 
-    if (dotTexture)
-    {
-        dotTexture->Release();
-        dotTexture = nullptr;
-    }
+    ReleaseTexture(dotTexture);
 
     uiButtons.clear();
     g_mouseIndicator.Cleanup();

@@ -256,8 +256,19 @@ private:
     int penalizableDeaths = 0;  // deaths happens when I have points
 
     int maxCombo = 0;           // Track maximum combo reached
+    int currentMaxCombo = 0;
     int currentAreaEnemyPoints = 0;  // Points from current area
     int totalEnemyPoints = 0;   // Total accumulated enemy points
+
+    // resets when the player dies
+    int currentScore = 0;                
+    int currentKills = 0;
+    int currentWeakKills = 0;
+
+    // used for the final result
+    int lifetimeEnemyPoints = 0;  
+    int lifetimeKills = 0;        
+    int lifetimeWeakKills = 0;
 
 public:
    // no need construct now bc I initialied the variables above
@@ -287,6 +298,9 @@ public:
     int GetTotalDeaths() const { return totalDeaths; }
     float GetTotalTime() const { return totalTime; }
     int GetTotalScore() const { return totalScore; }
+    int GetLifetimeEnemyPoints() const { return lifetimeEnemyPoints; }
+    int GetLifetimeKills() const { return lifetimeKills; }
+    int GetLifetimeWeakKills() const { return lifetimeWeakKills; }
 
     void UpdateMaxCombo(int combo);
     void ResetAreaProgress();  // Call when player dies
@@ -294,6 +308,8 @@ public:
     int GetCurrentAreaEnemyPoints() const { return currentAreaEnemyPoints; }
     int GetTotalEnemyPoints() const { return totalEnemyPoints; }
     void AddEnemyPoints(int points);  // Add points for killing enemies
+
+    void ResetCurrentStats(); // to reset the dtats when I die
 };
 extern GameStatistics g_gameStats;
 

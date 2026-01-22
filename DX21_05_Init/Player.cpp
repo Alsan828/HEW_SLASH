@@ -64,10 +64,10 @@ static void PerformDashHitTest(float testX, float testY) {
         if (CheckCollision(testX + offsetX, testY + offsetY, playerWidth, playerHeight,
             enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
 
-            g_player.comboCount++;
-            g_player.comboTimer = 5.0f;
+            //g_player.comboCount++;
+            //g_player.comboTimer = 5.0f;
 
-            g_gameStats.UpdateMaxCombo(g_player.comboCount);// added january 22nd
+            //g_gameStats.UpdateMaxCombo(g_player.comboCount);// added january 22nd
 
             float multiplier = enemy->GetDamageMultiplier(dashAngle);
             // Hit-stop should depend on charge strength, not on invincibility state.
@@ -133,10 +133,10 @@ static void PerformDashEndCircleHitTest() {
         float dx = enemyCenterX - endCenterX;
         float dy = enemyCenterY - endCenterY;
         if (dx * dx + dy * dy <= radiusSq) {
-            g_player.comboCount++;
-            g_player.comboTimer = 5.0f;
+            //g_player.comboCount++;
+            //g_player.comboTimer = 5.0f;
 
-            g_gameStats.UpdateMaxCombo(g_player.comboCount); // added january 22nd
+            //g_gameStats.UpdateMaxCombo(g_player.comboCount); // added january 22nd
 
             float multiplier = enemy->GetDamageMultiplier(dashAngle);
             // Hit-stop should depend on charge strength, not on invincibility state.
@@ -213,10 +213,10 @@ void UpdatePlayerPhysics(float deltaTime) {
 
             // 墙壁滑行时水平速度逐渐减小
             if (g_player.velocityX > 0) {
-                g_player.velocityX = std::max(0.0f, g_player.velocityX - 0.1f);
+                g_player.velocityX = std::max<float>(0.0f, g_player.velocityX - 0.1f);
             }
             else if (g_player.velocityX < 0) {
-                g_player.velocityX = std::min(0.0f, g_player.velocityX + 0.1f);
+                g_player.velocityX = std::min<float>(0.0f, g_player.velocityX + 0.1f);
             }
         }
         else {
@@ -637,6 +637,8 @@ void OnPlayerDeath() {
         g_gameStats.IncrementPenalizableDeaths();
     }
 
+    g_gameStats.ResetCurrentStats();
+
     // Stop all player actions
     g_player.isMoving = false;
     g_player.isDashing = false;
@@ -690,7 +692,7 @@ void UpdateDash(float deltaTime) {
 
             // Brief invincibility window after dash ends
             g_player.isInvincible = true;
-            g_player.invincibleTimer = std::max(g_player.invincibleTimer, 0.2f);
+            g_player.invincibleTimer = std::max<float>(g_player.invincibleTimer, 0.2f);
 
             // Requested: after dash ends, enter a real-time 0.75s slow-motion at 75% speed.
             // Player is invincible during this time.
@@ -1166,15 +1168,38 @@ void OnEnemyDefeated() {
 }
 
 void OnEnemyDefeated(bool wasWeakPointKill) {
-    // for 30 points kill
+    //// for 30 points kill
+    //if (wasWeakPointKill) {
+    //    g_gameStats.IncrementWeakPointKills();
+    //}
+    //else { // for 10 points kill
+    //    g_gameStats.IncrementKills();
+    //}
+
+    //if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
+    //    g_player.dashPoints++;
+    //}
+
+    //g_player.comboCount++;
+    //g_player.comboTimer = g_player.COMBO_RESET_TIME;  // Reset to 2.0f
+
+    // Track kills for statistics
     if (wasWeakPointKill) {
-        g_gameStats.IncrementWeakPointKills();
+        g_gameStats.IncrementWeakPointKills();  // 30 points
+        g_gameStats.AddScore(30);           // ← make sure this exists and adds 30
+        printf("[POINTS] Weak kill +30 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
     }
-    else { // for 10 points kill
-        g_gameStats.IncrementKills();
+    else {
+        g_gameStats.IncrementKills();  // 10 points
     }
 
+    // Restore dash point
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
+        g_gameStats.AddScore(10);           // ← this line must exist and must be 10
+        printf("[POINTS] Normal kill +10 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
     }
+
+    g_player.comboCount++;
+    g_player.comboTimer = 5.0f;
 }

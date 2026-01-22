@@ -1511,17 +1511,27 @@ void GameStatistics::Reset() {
     maxCombo = 0;
     currentAreaEnemyPoints = 0;
     totalEnemyPoints = 0;
+
+    ResetCurrentStats();
+
+    lifetimeEnemyPoints = 0;
+    lifetimeKills = 0;
+    lifetimeWeakKills = 0;
 }
 
 // Increment kill counter
 void GameStatistics::IncrementKills() {
     enemiesKilled++;
+    currentKills++;
+    lifetimeKills++;
     AddEnemyPoints(10);
 }
 
 // Increment weak point kill counter
 void GameStatistics::IncrementWeakPointKills() {
     weakPointKills++;
+    currentWeakKills++;
+    lifetimeWeakKills++;
     AddEnemyPoints(30);
 }
 
@@ -1554,18 +1564,24 @@ void GameStatistics::UpdateMaxCombo(int combo) {
     if (combo > maxCombo) {
         maxCombo = combo;
     }
+    if (combo > currentMaxCombo) {
+        currentMaxCombo = combo; // current max combo
+    }
 }
 //  when player dies, resets the area progress
 void GameStatistics::ResetAreaProgress() {
-    totalEnemyPoints -= currentAreaEnemyPoints; // Subtract current area points from total
+    //totalEnemyPoints -= currentAreaEnemyPoints; // Subtract current area points from total
     currentAreaEnemyPoints = 0; // Reset current area progress
-    maxCombo = 0;  // Reset max combo on death
+    //maxCombo = 0;  // Reset max combo on death
+    currentMaxCombo = 0;
 }
 
 
 void GameStatistics::AddEnemyPoints(int points) {
     currentAreaEnemyPoints += points;
     totalEnemyPoints += points;
+    currentScore += points;
+    lifetimeEnemyPoints += points;
 }
 
 // Update total time
@@ -1575,35 +1591,26 @@ void GameStatistics::UpdateTime(float time) {
 
 // Calculate the final score based on kills, time, and deaths
 void GameStatistics::CalculateFinalScore() {
-    // the kill points: normal kills = 10, weak point kills = 30
-    //int killPoints = (enemiesKilled * 10) + (weakPointKills * 30);
-
-    //// the time bonus. 0 is the minimum
-    //int timeBonus = std::max(0, 60 - static_cast<int>(totalTime));
-
-    //int scoreBeforePenalty = killPoints + timeBonus;
-
-    //int deathPenalty = penalizableDeaths * 5;
-
-    //totalScore = std::max(0, killPoints + timeBonus - deathPenalty);
-
     int comboMultiplier = std::max(1, maxCombo);  // Minimum combo is 1
 
     // Convert time to 4-digit number (total seconds)
-    int timeInSeconds = static_cast<int>(totalTime);
+    //int timeInSeconds = static_cast<int>(totalTime);
+    int minutes = static_cast<int>(totalTime) / 60;
+    int seconds = static_cast<int>(totalTime) % 60;
+    int timeInMMSS = (minutes * 100) + seconds;  // MMSS format
 
     // Cap deaths at 50 for penalty calculation
     int cappedDeaths = std::min(50, totalDeaths);
     int deathPenalty = cappedDeaths * 50;
 
     // Calculate base score
-    int baseScore = totalEnemyPoints * comboMultiplier;
+    int baseScore = lifetimeEnemyPoints * comboMultiplier;
 
     // Calculate penalty
-    int penalty = timeInSeconds + deathPenalty;
+    int penalty = timeInMMSS + deathPenalty;
 
-    // Final score with 1.5x multiplier
-    totalScore = static_cast<int>((baseScore - penalty) * 1.5f);
+    int penaltyMultiplied = static_cast<int>(penalty * 1.5f); // so it gives me an integrer number
+    totalScore = baseScore - penaltyMultiplied;
 
     // Ensure score doesn't go negative
     totalScore = std::max(0, totalScore);
@@ -1612,42 +1619,45 @@ void GameStatistics::CalculateFinalScore() {
     char debugMsg[512];
     sprintf_s(debugMsg, "\n========== FINAL SCORE CALCULATION ==========\n");
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "Total Enemy Points: %d\n", totalEnemyPoints);
+    sprintf_s(debugMsg, "Formula: (points × combo) - ((time + deaths×50) × 1.5)\n");
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "Max Combo Reached: %d\n", maxCombo);
+    sprintf_s(debugMsg, "\nValues:\n");
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "Combo Multiplier: %d\n", comboMultiplier);
+    sprintf_s(debugMsg, " Total Enemy Points: %d\n", totalEnemyPoints);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "Base Score (Points × Combo): %d × %d = %d\n",
+    sprintf_s(debugMsg, " Max Combo (lifetime): %d\n", maxCombo);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Time: %d:%02d (MMSS: %04d)\n", minutes, seconds, timeInMMSS);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Deaths: %d (capped: %d)\n", totalDeaths, cappedDeaths);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\nCalculation:\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Base Score: %d × %d = %d\n",
         totalEnemyPoints, comboMultiplier, baseScore);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "\nPenalties:\n");
+    sprintf_s(debugMsg, " Death Penalty: %d × 50 = %d\n",
+        cappedDeaths, deathPenalty);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Time: %d seconds\n", timeInSeconds);
+    sprintf_s(debugMsg, " Total Penalty Before ×1.5: %d + %d = %d\n",
+        timeInMMSS, deathPenalty, penalty);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Deaths: %d (capped at 50: %d)\n", totalDeaths, cappedDeaths);
+    sprintf_s(debugMsg, " Penalty After ×1.5: %d\n", penaltyMultiplied);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Death Penalty: %d × 50 = %d\n", cappedDeaths, deathPenalty);
-    OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Total Penalty: %d + %d = %d\n",
-        timeInSeconds, deathPenalty, penalty);
-    OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "\nFinal Calculation:\n");
-    OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  (%d - %d) × 1.5 = %.1f\n",
-        baseScore, penalty, (baseScore - penalty) * 1.5f);
+    sprintf_s(debugMsg, " Final: %d - %d = %d\n",
+        baseScore, penaltyMultiplied, totalScore);
     OutputDebugStringA(debugMsg);
     sprintf_s(debugMsg, "\n>>> FINAL SCORE: %d <<<\n", totalScore);
     OutputDebugStringA(debugMsg);
     sprintf_s(debugMsg, "\nStatistics Summary:\n");
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Enemies Killed: %d\n", enemiesKilled);
+    sprintf_s(debugMsg, " Enemies Killed: %d\n", enemiesKilled);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Weak Point Kills: %d\n", weakPointKills);
+    sprintf_s(debugMsg, " Weak Point Kills: %d\n", weakPointKills);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Total Deaths: %d\n", totalDeaths);
+    sprintf_s(debugMsg, " Total Deaths: %d\n", totalDeaths);
     OutputDebugStringA(debugMsg);
-    sprintf_s(debugMsg, "  Time: %.1f seconds\n", totalTime);
+    sprintf_s(debugMsg, " Time: %d:%02d (%.1f seconds)\n", minutes, seconds, totalTime);
     OutputDebugStringA(debugMsg);
     sprintf_s(debugMsg, "=============================================\n\n");
     OutputDebugStringA(debugMsg);
@@ -1658,4 +1668,12 @@ void GameStatistics::AddScore(int points) {
     if (totalScore < 0) {
         totalScore = 0; // so there will not be negative score
     }
+}
+
+void GameStatistics::ResetCurrentStats() {
+    currentScore = 0;
+    currentKills = 0;
+    currentWeakKills = 0;
+    currentAreaEnemyPoints = 0;
+    //totalEnemyPoints = 0;
 }
