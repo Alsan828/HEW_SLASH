@@ -501,8 +501,8 @@ namespace SoundEffect {
     const std::string SLOWMO_START = "asset/SE/slowmo_start.wav";
     const std::string SLOWMO_END = "asset/SE/slowmo_end.wav";
     const std::string LEVEL_COMPLETE = "asset/SE/level_complete.wav";
-    const std::string UI_HOVER = "asset/SE/ui_hover.wav";
-    const std::string UI_CLICK = "asset/SE/ui_click.wav";
+    const std::string UI_HOVER = "asset/SE/cursor.wav";
+    const std::string UI_CLICK = "asset/SE/enter.wav";
     const std::string PAUSE = "asset/SE/pause.wav";
     const std::string RESUME = "asset/SE/resume.wav";
 }
