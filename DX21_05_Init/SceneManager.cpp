@@ -80,6 +80,9 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
             g_gameStats.Reset();
+            g_gameElapsedTime = 0.0f;
+            g_gameMinutes = 0;
+            g_gameSeconds = 0;
             comingFromStageSelect = false;
         }
 
@@ -110,6 +113,9 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
             g_gameStats.Reset();
+            g_gameElapsedTime = 0.0f;
+            g_gameMinutes = 0;
+            g_gameSeconds = 0;
             comingFromStageSelect = false;
         }
         currentScene = new CakeScene(this);
@@ -126,6 +132,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
                 previousScene = nullptr;
             }
         }
+
         currentScene = new MenuScene(this); // for the prototype stage
         return currentScene->Init();
         break;

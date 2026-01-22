@@ -282,7 +282,7 @@ public:
     void IncrementDeaths();
 
     // Update time
-    void UpdateTime(float time);
+    void UpdateTime(float ime);
 
     // Calculate final score
     void CalculateFinalScore();
@@ -401,6 +401,9 @@ extern ID3D11ShaderResourceView* g_gaugeBarTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarEmptyTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarFilledTexture;
 extern ID3D11ShaderResourceView* g_gaugeFullEffectTexture;
+
+extern ID3D11ShaderResourceView* g_attackCountTestTexture;
+
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
