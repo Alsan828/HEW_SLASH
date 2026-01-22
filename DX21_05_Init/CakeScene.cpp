@@ -98,23 +98,22 @@ CutDirection CakeScene::DetermineCutDirection()
         float velX = g_player.velocityX;
         float velY = g_player.velocityY;
 
-        // calculate angle of movement in radians
+        // atan2f calculate angle of movement in radians
         float angle = atan2f(velY, velX);
         float angleDegrees = angle * 180.0f / 3.14159f; // it converts radians to degrees 
         if (angleDegrees < 0) angleDegrees += 360.0f;    // normalize the angle bwteeen 0 and 360 of range
 
-
         // Determine cut based on dash direction (8 directions)
-        if ((angleDegrees >= 337.5f || angleDegrees < 22.5f) ||
-            (angleDegrees >= 157.5f && angleDegrees < 202.5f)) {
+        if ((angleDegrees >= bottomRightPartMax || angleDegrees < rightPartMax) ||
+            (angleDegrees >= topLeftPartMax && angleDegrees < leftPartMax)) {
             return HORIZONTAL_CUT; // cuts horizontally
         }
-        else if ((angleDegrees >= 67.5f && angleDegrees < 112.5f) ||
-            (angleDegrees >= 247.5f && angleDegrees < 292.5f)) {
+        else if ((angleDegrees >= topRightPartMax && angleDegrees < topMiddlePartMax) ||
+            (angleDegrees >= bottomLeftPartMax && angleDegrees < bottomMiddlePartMax)) {
             return VERTICAL_CUT; // cut vertically
         }
-        else if ((angleDegrees >= 22.5f && angleDegrees < 67.5f) ||
-            (angleDegrees >= 202.5f && angleDegrees < 247.5f)) {
+        else if ((angleDegrees >= rightPartMax && angleDegrees < topRightPartMax) ||
+            (angleDegrees >= leftPartMax && angleDegrees < bottomLeftPartMax)) {
             return DIAGONAL_FROM_BOTTOM_CUT; // diagonal cut from top left to bottom right or viceversa
         }
         else {

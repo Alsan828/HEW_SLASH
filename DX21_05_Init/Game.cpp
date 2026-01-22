@@ -211,6 +211,8 @@ void CleanUpGameWorld()
     ReleaseTexture(g_gaugeBarFilledTexture);
     ReleaseTexture(g_gaugeFullEffectTexture);
 
+    ReleaseTexture(g_attackCountTestTexture);
+
     ReleaseTexture(g_bossHealthBarTexture);
 }
 
@@ -394,26 +396,6 @@ void DrawGaugeUI(void)
 // for the score UI
 void DrawScoreUI(void)
 {
-    //if (!g_uiNumberTexture) return;
-
-    //// Position on top left, below the timer
-    //float scoreX = -0.77f;   // left side in the x axis
-    //float scoreY = 0.61f;    // below the timer in the y axis
-    //float scoreDigitWidth = 0.03f; 
-    //float scoreDigitHeight = 0.06f;
-
-    //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-    //// for getting score after killing 
-    //int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
-
-    //int deathPenalty = g_gameStats.GetPenalizableDeaths() * 5;
-
-    //int liveScore = std::max(0, killPoints - deathPenalty);
-
-    //// Draw the live score
-    //DrawNumber(liveScore, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
-
     if (!g_uiNumberTexture) return;
 
     // Position on top left, below the timer
@@ -424,8 +406,7 @@ void DrawScoreUI(void)
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // NEW: During gameplay, only show enemy points (not final calculated score)
-    int enemyPoints = g_gameStats.GetTotalEnemyPoints();
+    int enemyPoints = g_gameStats.GetTotalEnemyPoints(); // show enemy points
 
     // Draw the enemy points
     DrawNumber(enemyPoints, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
@@ -512,6 +493,10 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_filled.png", &g_gaugeBarFilledTexture);
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect_max.png", &g_gaugeFullEffectTexture);
     g_gaugeEffectAnim.AddClip("GaugeFull", 1, 7, 1, 8, 0.08f, true, g_gaugeFullEffectTexture);
+
+
+    LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_attackCountTestTexture);
+    //g_player.anim.AddClip("AttackCount", 2, 0, 1, 3, 0.08f, false, g_attackCountTestTexture);
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -1035,14 +1020,14 @@ void DrawGame() {
             SetTileColor(tile.tileInfo.code);
             //RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
            
-            // for one-way platforms - render smaller to match collision with character. might change later
+            // for one way platforms. they will be a bit smaller to match collision with character. might change later
             if (tile.tileInfo.code == "OP") {
-                // scale the texture to match the collision (0.1f / 0.15f = 0.67)
+                // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
                 float renderScale = 0.67f;  // Adjust this to match your collision size
                 float renderWidth = tile.width; // no change
                 float renderHeight = tile.height * renderScale;
 
-                // Center the smaller sprite on the tile position
+                // center the smaller sprite on the tile position
                 float offsetX = (tile.width - renderWidth) * 0.5f;
                 float offsetY = (tile.height - renderHeight) * 0.5f;
 
@@ -1134,6 +1119,50 @@ void DrawGame() {
             currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
 
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Reset color after being invincible
+
+
+
+
+        // for the attack count 
+        
+        //// Position top left of the player
+        //float countWidth = 0.1f;   
+        //float countHeight = 0.15f; 
+        //float offsetCountX = -0.08f;  // hozirontal
+        //float offsetCountY = PLAYER_HEIGHT /*+ 0.01f*/; // vertical
+
+        //float countXPos = g_player.posX + offsetCountX;
+        //float countYPos = g_player.posY + offsetCountY;
+
+        //auto countScreenPos = worldToScreen(countXPos, countYPos);
+
+        //int frameIndexC = 0;
+        //if (g_player.dashPoints == 3) {
+        //    frameIndexC = 0;  // Show 3 triangles
+        //}
+        //else if (g_player.dashPoints == 2) {
+        //    frameIndexC = 1;  // Show 2 triangles
+        //}
+        //else {
+        //    frameIndexC = 2;  // Show 1 triangle (for dashPoints 1 or 0)
+        //}
+
+        //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        //RenderImage(countScreenPos.first, countScreenPos.second,
+        //    countWidth, countHeight,
+        //    g_attackCountTestTexture, 0, 1, 3);
+
+        //RenderImage(countScreenPos.first + 0.2f, countScreenPos.second,
+        //    countWidth, countHeight,
+        //    g_attackCountTestTexture, 1, 1, 3);
+
+        //RenderImage(countScreenPos.first + 0.4f, countScreenPos.second,
+        //    countWidth, countHeight,
+        //    g_attackCountTestTexture, 2, 1, 3);
+
+
+
+
     }
     else {
         // Death animation
@@ -1386,7 +1415,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     // [G] mode value (0/1)
     RenderNumber(g_noGravityAftermathMode ? 1 : 0, toggleX + toggleDigitW * 1.4f, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
 
-
+    
     float uiX = -1.0f;
     float uiY = 0.35f;
     float uiWidth = 0.5f;
