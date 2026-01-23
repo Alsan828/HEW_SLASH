@@ -3,7 +3,8 @@
 #include "SceneManager.h"
 #include "Render.h"
 
-
+// scoped enum. better to use it for ui buttons so there will no be conflicts with the names in the code
+// I will have to write UIButtonResult::None ...
 enum class UIButtonResult
 {
     None,     // default

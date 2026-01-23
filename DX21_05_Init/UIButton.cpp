@@ -30,13 +30,13 @@ UIButtonResult UIButton::Process()
 
     // point to the mouse
     POINT mouse = g_inputSystem.GetRawMousePosition();
-    float mx = (mouse.x / (float)g_windowWidth) * 2.0f - 1.0f;
-    float my = 1.0f - (mouse.y / (float)g_windowHeight) * 2.0f;
+    float mouseX = (mouse.x / (float)g_windowWidth) * 2.0f - 1.0f;
+    float mouseY = 1.0f - (mouse.y / (float)g_windowHeight) * 2.0f;
 
     // click detection 
     bool downNow = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
 
-    // Calculate the hitbox / hover
+    // Calculate the hitbox (for when hover)
     float hitWidth = width * hitboxScaleWidth;
     float hitHeight = height * hitboxScaleHeight;
     float centerY = y - hitboxOffsetY;
@@ -46,7 +46,7 @@ UIButtonResult UIButton::Process()
     float bottom = centerY + hitHeight * 0.5f;
 
     // if the mouse is inside the hovered area (inside the button hitbox)
-    bool hoveredNow = (mx >= left && mx <= right && my >= top && my <= bottom);
+    bool hoveredNow = (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom);
 
     // the result when clicking or hovering
     UIButtonResult result = UIButtonResult::None;
@@ -81,7 +81,7 @@ void UIButton::Draw(float baseAlpha) const
     if (isHovered && hoverTexture) {
         tex = hoverTexture;  // Switch to hover texture
     }
-    // set the color with no transparency
+
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     //RenderImage(x - width * 0.5f, y - height * 0.5f, width, height, tex, 0, 1, 1);
 
