@@ -245,6 +245,28 @@ bool SceneManager::SwitchToStage(int world, int stage)
     return SwitchScene(GAMEPLAY);
 }
 
+SCENE SceneManager::GetStageSelectForCurrentStage()
+{
+    int stage = currentStageInfo.GetWorld();
+
+    if (stage == 1)
+    {
+        return STAGESELECT;
+    }
+    else if (stage == 2)
+    {
+        return STAGESELECT2;
+    }
+    else if (stage == 3)
+    {
+        return STAGESELECT3;
+    }
+    else
+    {
+        return STAGESELECT;  // default to stage1
+    }
+}
+
 //for updating 
 void SceneManager::Update(float deltaTime) 
 {

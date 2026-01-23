@@ -90,19 +90,19 @@ void ResultScene::Draw()
 
         // for kills
         int totalKills = g_gameStats.GetEnemiesKilled() + g_gameStats.GetWeakPointKills();
-        DrawNumber(totalKills, -0.6f, 0.45f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(totalKills, -0.55f, 0.47f, 0.1f, 0.1f, numberTexture);
 
         // for deaths
-        DrawNumber(g_gameStats.GetTotalDeaths(), -0.6f, 0.05f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetTotalDeaths(), -0.55f, 0.07f, 0.1f, 0.1f, numberTexture);
 
         // for time
         int minutes = (int)(g_gameStats.GetTotalTime() / 60.0f);
         int seconds = (int)g_gameStats.GetTotalTime() % 60;
-        DrawTime(minutes, seconds, -0.6f, 0.25f, 0.1f, numberTexture);
-        RenderImage(-0.45f, 0.25f, 0.1f, 0.16f, dotTexture, 0, 1, 1);
+        DrawTime(minutes, seconds, -0.55f, 0.27f, 0.1f, numberTexture);
+        RenderImage(-0.4f, 0.27f, 0.1f, 0.16f, dotTexture, 0, 1, 1);
 
         // show the final calculated score
-        DrawNumber(g_gameStats.GetTotalScore(), 0.3f, 0.05f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetTotalScore(), 0.3f, 0.07f, 0.1f, 0.1f, numberTexture);
     }
 
     for (const auto& btn : uiButtons)

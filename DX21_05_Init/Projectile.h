@@ -13,7 +13,8 @@ enum class ProjectileType {
     MAGIC_MISSILE,  // 魔法飞弹 - 跟踪敌人
     LIGHTNING,      // 闪祦E- 瞬间脕E?
     POISON_DART,    // 毒丒 - 持续伤害
-    HOLY_BOLT       // 圣光箭 - 对亡灵特效
+    HOLY_BOLT,       // 圣光箭 - 对亡灵特效
+    BULLET
 };
 
 // 射弹效果结构
@@ -107,6 +108,7 @@ public:
     void CreateLightningStrike(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
     void CreatePoisonDart(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
     void CreateHolyBolt(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
+    void CreateBullet(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
     ID3D11ShaderResourceView* GetTextureForType(ProjectileType type);
     void LoadTextures(ID3D11Device* device);
 
@@ -116,6 +118,7 @@ private:
 
     // 射弹纹纴E
     ID3D11ShaderResourceView* fireballTexture = nullptr;
+    ID3D11ShaderResourceView* bulletTexture = nullptr;
     ID3D11ShaderResourceView* iceShardTexture = nullptr;
     ID3D11ShaderResourceView* magicMissileTexture = nullptr;
     ID3D11ShaderResourceView* lightningTexture = nullptr;

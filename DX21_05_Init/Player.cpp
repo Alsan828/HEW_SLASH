@@ -1157,36 +1157,17 @@ bool ConsumeDashPoint() {
     return false;
 }
 
-// Restore point on enemy defeat (reserved interface)
+// get kills on enemy defeat
 void OnEnemyDefeated() {
     // Track kill for statistics
     g_gameStats.IncrementKills();
-
-   /* if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
-        g_player.dashPoints++;
-    }*/
 }
 
 void OnEnemyDefeated(bool wasWeakPointKill) {
-    //// for 30 points kill
-    //if (wasWeakPointKill) {
-    //    g_gameStats.IncrementWeakPointKills();
-    //}
-    //else { // for 10 points kill
-    //    g_gameStats.IncrementKills();
-    //}
-
-    //if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
-    //    g_player.dashPoints++;
-    //}
-
-    //g_player.comboCount++;
-    //g_player.comboTimer = g_player.COMBO_RESET_TIME;  // Reset to 2.0f
-
     // Track kills for statistics
     if (wasWeakPointKill) {
         g_gameStats.IncrementWeakPointKills();  // 30 points
-        g_gameStats.AddScore(30);           // ← make sure this exists and adds 30
+        g_gameStats.AddScore(30); 
         printf("[POINTS] Weak kill +30 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
     }
     else {
@@ -1196,7 +1177,7 @@ void OnEnemyDefeated(bool wasWeakPointKill) {
     // Restore dash point
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
-        g_gameStats.AddScore(10);           // ← this line must exist and must be 10
+        g_gameStats.AddScore(10); 
         printf("[POINTS] Normal kill +10 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
     }
 

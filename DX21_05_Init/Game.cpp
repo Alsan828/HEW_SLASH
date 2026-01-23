@@ -231,37 +231,37 @@ void DrawComboUI(void)
         return;
     }
 
-    float comboX = 0.6f;   // right side
-    float comboY = 0.7f;   // top side
+    float comboX = 0.4f;   // right side
+    float comboY = 0.5f;   // top side
 
-    // change the size of it
-    float xWidth = 0.15f;   // Width of the "X" symbol
-    float xHeight = 0.15f;  // Height of the "X" symbol
-    float numberWidth = 0.1f;   // Width of the number
-    float numberHeight = 0.1f;  // Height of the number
-    float spaceBetweenDigits = 0.1f;
-
-    float pixelX = (SCREEN_WIDTH * 0.5f) - 120.0f;
-    float pixelY = (SCREEN_HEIGHT * 0.5f) - 40.0f;
+    // modify the size of it
+    float xWidth = 0.45f;   // Width of the "X" symbol
+    float xHeight = 0.5f;  // Height of the "X" symbol
+    float xYaxis = 0.45f; // change the y axis of the X symbol
+    float digitWidth = 0.15f;   // Width of the number
+    float digitHeight = 0.35f;
+    float digitYaxis = 0.55f;
+    float spaceBetweenDigits = 0.12f;
+    float spaceBetweenXandDigit = 0.08f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Draw the "X" symbol
-    RenderImage(comboX, comboY, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
+    RenderImage(comboX, xYaxis, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
 
     char buffer[32];
-    sprintf_s(buffer, "%d", g_player.comboCount);
+    sprintf_s(buffer, "%d", g_player.comboCount); // it converts the number into digits
 
-    float numberXaxis = comboX + numberWidth + 0.02f; // for the first number x axis position
+    float digitXaxis = comboX + (xWidth * 0.5f) + spaceBetweenXandDigit; // for the first number x axis position 
 
     // Draw combo number
     for (int i = 0; buffer[i] != '\0'; i++)
     {
         int digit = buffer[i] - '0';  // 1 for frame 1, 2 for frame 2, 3 for frame 3, etc etc
-        RenderImage(numberXaxis, comboY, numberWidth, numberHeight,
-            pTextureNum, digit, 1, 10);
+        RenderImage(digitXaxis, digitYaxis, digitWidth, digitHeight,
+            g_comboNumberTexture, digit, 1, 10);
 
-        numberXaxis += spaceBetweenDigits;  // Move to next digit position
+        digitXaxis += spaceBetweenDigits; // Move to next digit position
     }
 
     // Combo remaining-time bar (under the combo UI)
@@ -274,16 +274,16 @@ void DrawComboUI(void)
 
     float barWidth = 0.28f;
     float barHeight = 0.025f;
-    float barX = comboX + 0.02f;
-    float barY = comboY - 0.12f;
+    float barX = comboX + 0.2f;
+    float barY = comboY - 0.02f;
 
     // background
     SetColor(0.05f, 0.05f, 0.05f, 0.75f);
-    RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
+    RenderImage(barX, barY, barWidth, barHeight, g_bossHealthBarTexture, 0, 1, 1);
 
     // fill
-    SetColor(1.0f, 0.85f, 0.2f, 0.95f);
-    RenderImage(barX - (barWidth * (1.0f - ratio) * 0.5f), barY, barWidth * ratio, barHeight, g_groundTexture, 0, 1, 1);
+    SetColor(1.0f, 0.0f, 0.0f, 0.95f);
+    RenderImage(barX - (barWidth * (1.0f - ratio) * 0.5f), barY, barWidth * ratio, barHeight, g_bossHealthBarTexture, 0, 1, 1);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -494,9 +494,8 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect_max.png", &g_gaugeFullEffectTexture);
     g_gaugeEffectAnim.AddClip("GaugeFull", 1, 7, 1, 8, 0.08f, true, g_gaugeFullEffectTexture);
 
-
     LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_attackCountTestTexture);
-    //g_player.anim.AddClip("AttackCount", 2, 0, 1, 3, 0.08f, false, g_attackCountTestTexture);
+
 
     InitEnemies();
     g_mapManager.InitializeMaps();

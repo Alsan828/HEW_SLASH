@@ -1896,11 +1896,13 @@ void BeamEnemy::OnDeath() {
 
 void BeamEnemy::CreateDeathExplosion() {
     // Damages other enemies but not the player
+    // the center position of this beam enemy
     float centerX = posX + width * 0.5f;
     float centerY = posY + height * 0.5f;
 
+    // the explosion is really big like a big circle OLD VERSION
     // Damage nearby enemies
-    for (auto& enemy : g_enemies) {
+    /*for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive() || enemy == this) continue;
 
         float dx = enemy->GetX() + enemy->GetWidth() * 0.5f - centerX;
@@ -1909,6 +1911,43 @@ void BeamEnemy::CreateDeathExplosion() {
 
         if (distance <= deathExplosionRadius) {
             float angle = atan2(dy, dx);
+            enemy->TakeDamage((int)deathExplosionDamage, angle);
+        }
+    }*/
+
+    // with this the explosion is like "+" which is the laser shape when the beam enemy is killed
+    for (auto& enemy : g_enemies) {
+        if (!enemy->IsAlive() || enemy == this) continue;
+
+        // calculates the center position of the enemies
+        float enemyCenterX = enemy->GetX() + enemy->GetWidth() * 0.5f;
+        float enemyCenterY = enemy->GetY() + enemy->GetHeight() * 0.5f;
+
+        // for the horizontal and vertical distances between the two centers (the center is the beam enemy)
+        // fabs so the value is always positive
+        float distanceX = fabs(enemyCenterX - centerX);
+        float distanceY = fabs(enemyCenterY - centerY);
+
+        bool hitHorizontal = false;
+        bool hitVertical = false;
+
+        // Check horizontal beam (left and right line)
+        if (distanceY < beamHitboxWidth && distanceX < deathExplosionRadius) {
+            hitHorizontal = true;
+        }
+
+        // Check vertical beam (up and down line)
+        if (distanceX < beamHitboxWidth && distanceY < deathExplosionRadius) {
+            hitVertical = true;
+        }
+
+        // Hit if touching either line
+        bool hit = (hitHorizontal || hitVertical);
+
+        if (hit) {
+            float dx = enemyCenterX - centerX;
+            float dy = enemyCenterY - centerY;
+            float angle = atan2(dy, dx); // calculates the angle in radians  from one point to another from the beam enemy when hitting other enemies
             enemy->TakeDamage((int)deathExplosionDamage, angle);
         }
     }

@@ -42,7 +42,7 @@ bool PauseScene::Init()
     uiButtons.back().SetHitboxScale(0.35f, 0.1f);
     uiButtons.back().SetHitboxOffset(-0.03f);
 
-    uiButtons.emplace_back(0.50f, -0.65f, 1.0f, 1.5f, STAGESELECT, selectTexture, selectHoverTexture);
+    uiButtons.emplace_back(0.50f, -0.65f, 1.0f, 1.5f, sceneManager->GetStageSelectForCurrentStage()/*STAGESELECT*/, selectTexture, selectHoverTexture);
     uiButtons.back().SetHitboxScale(0.7f, 0.1f);
     uiButtons.back().SetHitboxOffset(-0.0f);
 
