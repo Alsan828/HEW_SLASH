@@ -472,7 +472,7 @@ void InitGameWorld() {
 
 
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
-    LoadTexture(g_pDevice, "asset/platform/platformwood.png", &g_oneWayPlatformTexture);
+    LoadTexture(g_pDevice, "asset/platform/platform_pass.png", &g_oneWayPlatformTexture);
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
