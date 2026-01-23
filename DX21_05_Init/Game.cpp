@@ -231,7 +231,7 @@ void DrawComboUI(void)
         return;
     }
 
-    float comboX = 0.4f;   // right side
+    float comboX = 0.3f/*0.4f*/;   // right side
     float comboY = 0.5f;   // top side
 
     // modify the size of it
