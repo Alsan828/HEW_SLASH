@@ -2,18 +2,6 @@
 #include "TitleScene.h"
 
 #include "GameplayScene.h" 
-
-
-//#include "Stage.h"
-//#include "Stage2.h"
-//#include "Stage3.h"
-//#include "Stage4.h"
-//#include "Stage5.h"
-//#include "Stage6.h"
-//#include "Stage7.h"
-//#include "BossScene.h"
-
-
 #include "CakeScene.h"
 #include "Menu.h"
 #include "HowToPlay.h"

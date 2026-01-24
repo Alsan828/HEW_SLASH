@@ -189,6 +189,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_invinciblePlayerWallSlideTexture);
 
     ReleaseTexture(g_groundTexture);
+    ReleaseTexture(g_goalTexture);
     ReleaseTexture(g_oneWayPlatformTexture);
     ReleaseTexture(g_backgroundTexture1);
     ReleaseTexture(g_dashEffectTexture);
@@ -472,6 +473,7 @@ void InitGameWorld() {
 
 
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/goal.png", &g_goalTexture);
     LoadTexture(g_pDevice, "asset/platform/platform_pass4.png", &g_oneWayPlatformTexture);
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
@@ -896,8 +898,8 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
         return g_groundTexture;
     }
     else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT" || tileCode == "D4" || tileCode == "D5" || tileCode == "D6" || tileCode == "D7" || tileCode == "DB" ||
-             tileCode == "21" || tileCode == "21" || tileCode == "23" || tileCode == "24" || tileCode == "25" || tileCode == "26" || tileCode == "27") {
-        return g_groundTexture;
+             tileCode == "21" || tileCode == "22" || tileCode == "23" || tileCode == "24" || tileCode == "25" || tileCode == "26" || tileCode == "27") {
+        return g_goalTexture;
     }
     else if (tileCode == "D1" || tileCode == "D2") {
         return g_backgroundTexture3;
@@ -953,7 +955,7 @@ void SetTileColor(const std::string& tileCode) {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
     else {
-        SetColor(0.0f, 1.0f, 0.0f, 1.0f);
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
 void DrawGame() {
@@ -1026,9 +1028,25 @@ void DrawGame() {
                 float renderWidth = tile.width; // no change
                 float renderHeight = tile.height * renderScale;
 
-                // center the smaller sprite on the tile position
+                // center the sprite on the tile position
                 float offsetX = (tile.width - renderWidth) * 0.5f;
                 float offsetY = (tile.height - renderHeight) * 0.5f;
+
+                RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
+                    renderWidth, renderHeight, texture, 0, 1, 1);
+            }
+            // for the goal
+            else if (tile.tileInfo.code == "DF" || tile.tileInfo.code == "DI" || tile.tileInfo.code == "DT" || tile.tileInfo.code == "D4" || tile.tileInfo.code == "D5" || 
+                     tile.tileInfo.code == "D6" || tile.tileInfo.code == "D7" || tile.tileInfo.code == "DB" || tile.tileInfo.code == "21" || tile.tileInfo.code == "22" || 
+                     tile.tileInfo.code == "23" || tile.tileInfo.code == "24" || tile.tileInfo.code == "25" || tile.tileInfo.code == "26" || tile.tileInfo.code == "27") {
+                // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
+                float renderScale = 2.0f;  // Adjust this to match your collision size
+                float renderWidth = tile.width; // no change
+                float renderHeight = tile.height * renderScale;
+
+                // center the sprite on the tile position
+                float offsetX = (tile.width - renderWidth) * 0.5f;
+                float offsetY = (tile.height - renderHeight) * 0.1f;
 
                 RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
                     renderWidth, renderHeight, texture, 0, 1, 1);
