@@ -142,6 +142,16 @@ void Map::InitializeTileDictionary() {
         {"27", {"27", "door", "World2Area7", false, false, true, false}},
         //{"B2", {"B2", "door", "boss2", false, false, true, false}}, // for the boss of world 2
 
+        //Portal Types for World3 (stage3)
+        {"31", {"31", "door", "World3Area1", false, false, true, false}},
+        {"32", {"32", "door", "World3Area2", false, false, true, false}},
+        {"33", {"33", "door", "World3Area3", false, false, true, false}},
+        {"34", {"34", "door", "World3Area4", false, false, true, false}},
+        {"35", {"35", "door", "World3Area5", false, false, true, false}},
+        {"36", {"36", "door", "World3Area6", false, false, true, false}},
+        {"37", {"37", "door", "World3Area7", false, false, true, false}},
+        // maybe add boss stage too
+
         // Portal Types for Word3 (stage3). add them later
 
         // Spawn point types
@@ -181,6 +191,14 @@ const std::unordered_map<std::string, std::string>& Map::GetPortalTargetMapLooku
         {"World2Area5", "World2Area5"},
         {"World2Area6", "World2Area6"},
         {"World2Area7", "World2Area7"},
+
+        {"World3Area1", "World3Area1"},
+        {"World3Area2", "World3Area2"},
+        {"World3Area3", "World3Area3"},
+        {"World3Area4", "World3Area4"},
+        {"World3Area5", "World3Area5"},
+        {"World3Area6", "World3Area6"},
+        {"World3Area7", "World3Area7"},
     };
     return lookup;
 }

@@ -400,10 +400,10 @@ void DrawScoreUI(void)
     if (!g_uiNumberTexture) return;
 
     // Position on top left, below the timer
-    float scoreX = -0.77f;
-    float scoreY = 0.61f;
+    float scoreX = -0.768f;
+    float scoreY = 0.66f;
     float scoreDigitWidth = 0.03f;
-    float scoreDigitHeight = 0.06f;
+    float scoreDigitHeight = 0.07f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -898,7 +898,8 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
         return g_groundTexture;
     }
     else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT" || tileCode == "D4" || tileCode == "D5" || tileCode == "D6" || tileCode == "D7" || tileCode == "DB" ||
-             tileCode == "21" || tileCode == "22" || tileCode == "23" || tileCode == "24" || tileCode == "25" || tileCode == "26" || tileCode == "27") {
+             tileCode == "21" || tileCode == "22" || tileCode == "23" || tileCode == "24" || tileCode == "25" || tileCode == "26" || tileCode == "27" ||
+             tileCode == "31" || tileCode == "32" || tileCode == "33" || tileCode == "34" || tileCode == "35" || tileCode == "36" || tileCode == "37") {
         return g_goalTexture;
     }
     else if (tileCode == "D1" || tileCode == "D2") {
@@ -1038,7 +1039,9 @@ void DrawGame() {
             // for the goal
             else if (tile.tileInfo.code == "DF" || tile.tileInfo.code == "DI" || tile.tileInfo.code == "DT" || tile.tileInfo.code == "D4" || tile.tileInfo.code == "D5" || 
                      tile.tileInfo.code == "D6" || tile.tileInfo.code == "D7" || tile.tileInfo.code == "DB" || tile.tileInfo.code == "21" || tile.tileInfo.code == "22" || 
-                     tile.tileInfo.code == "23" || tile.tileInfo.code == "24" || tile.tileInfo.code == "25" || tile.tileInfo.code == "26" || tile.tileInfo.code == "27") {
+                     tile.tileInfo.code == "23" || tile.tileInfo.code == "24" || tile.tileInfo.code == "25" || tile.tileInfo.code == "26" || tile.tileInfo.code == "27" ||
+                     tile.tileInfo.code == "31" || tile.tileInfo.code == "32" || tile.tileInfo.code == "33" || tile.tileInfo.code == "34" || tile.tileInfo.code == "35" ||
+                     tile.tileInfo.code == "36" || tile.tileInfo.code == "37") {
                 // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
                 float renderScale = 2.0f;  // Adjust this to match your collision size
                 float renderWidth = tile.width; // no change
@@ -1434,28 +1437,29 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     
     float uiX = -1.0f;
-    float uiY = 0.35f;
+    float uiY = 0.25f;
     float uiWidth = 0.5f;
-    float uiHeight = 0.7f;
+    float uiHeight = 1.0f;
     RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
 
     // for the timer counting
-    float timerX = -0.77f;  // position x axis
-    float timerY = 0.74f;   // position y axis
+    float timerX = -0.768f;  // position x axis
+    float timerY = 0.78f;   // position y axis
     float timerDigitWidth = 0.03f;  // width
-    float timerDigitHeight = 0.06f; // height
+    float timerDigitHeight = 0.07f; // height
 
     // for the minutes
     int minuteTens = g_gameMinutes / 10;
     int minuteOnes = g_gameMinutes % 10;
     RenderNumber(minuteTens, timerX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
-    RenderNumber(minuteOnes, timerX + timerDigitWidth * 1.2f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(minuteOnes, timerX + timerDigitWidth * 0.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     // for the seconds
     int secondTens = g_gameSeconds / 10;
     int secondOnes = g_gameSeconds % 10;
-    RenderNumber(secondTens, timerX + timerDigitWidth * 2.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
-    RenderNumber(secondOnes, timerX + timerDigitWidth * 4.0f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    float secondsStartX = timerX + timerDigitWidth * 2.2f;
+    RenderNumber(secondTens, secondsStartX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(secondOnes, secondsStartX + timerDigitWidth * 0.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     //SetColor(1.0f, 1.0f, 1.0f, 1.0f); 
 

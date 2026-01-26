@@ -33,9 +33,9 @@ void StageInfo::GenerateMapName()
         else if (m_world == 2) {
             m_mapName = "boss";   // for world 2 Boss.
         }
-        //else if (m_world == 3) {
-        //    m_mapName = "boss3";   // for world 3 Boss. add it when there is one
-        //}
+        else if (m_world == 3) {
+            m_mapName = "boss";   // for world 3 Boss. add it when there is one
+        }
     }
     else {
         // for normal areas

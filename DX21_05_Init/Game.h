@@ -421,6 +421,7 @@ extern int g_gameSeconds;
 
 // added november 27th for the pause 
 extern ID3D11ShaderResourceView* g_pauseTexture;
+extern ID3D11ShaderResourceView* g_paddingTitleAnim;
 
 // Game initialization
 void InitGameWorld();
