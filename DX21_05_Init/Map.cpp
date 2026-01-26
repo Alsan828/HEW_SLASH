@@ -158,8 +158,15 @@ void Map::InitializeTileDictionary() {
         {"S2", {"S2", "spawn", "secondary", false, true, false, false}},
 
         // Decoration types (optional)
-        {"D1", {"D1", "decoration", "tree", false, false, false, false}},
-        {"D2", {"D2", "decoration", "rock", false, false, false, false}}
+        {"B1", {"B1", "decoration", "signWASD", false, false, false, false}},
+        {"B2", {"B2", "decoration", "signS", false, false, false, false}},
+        {"B3", {"B3", "decoration", "signRight", false, false, false, false}},
+        {"B4", {"B4", "decoration", "signRelease", false, false, false, false}},
+        {"B5", {"B5", "decoration", "signRed", false, false, false, false}},
+        {"B6", {"B6", "decoration", "signPink", false, false, false, false}},
+        {"B7", {"B7", "decoration", "signLongClick", false, false, false, false}},
+        {"B8", {"B8", "decoration", "signClick", false, false, false, false}},
+        {"B9", {"B9", "decoration", "signESC", false, false, false, false}}
     };
 }
 
