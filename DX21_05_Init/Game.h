@@ -84,6 +84,11 @@ struct Player {
     bool isInvincible = false;        // invincibility state
     float invincibleTimer = 0.0f;     // invincibility timer
     const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
+
+    // Invincibility source control:
+    // true  -> invincible granted by full gauge / combo reward, use Invincible* animation set
+    // false -> invincible granted by dash/slash window, do NOT switch animation set
+    bool isGaugeInvincible = false;
 	float g_gaugeEffectTimer = 0.0f;  // gauge effect timer
     bool g_gaugeEffectActive = false;
 
@@ -415,6 +420,8 @@ private:
     float m_width = 0.04f;
     float m_height = 0.12f;
     bool m_visible = true;
+    float m_offsetX = 0.0f;
+    float m_offsetY = 0.0f;
 
 public:
     void Initialize(ID3D11ShaderResourceView* texture);
@@ -424,6 +431,11 @@ public:
 };
 
 extern GameCursor g_gameCursor;
+
+// Simple cursor mode control:
+// - enabled: show in-game cursor, hide OS cursor
+// - disabled: hide in-game cursor, show OS cursor
+void SetInGameCursorEnabled(bool enabled);
 
 // 在Game.h的全局变量部分添加
 extern float g_slowMoTimer;      // 时间减慢计时器

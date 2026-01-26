@@ -65,6 +65,10 @@ GameCursor g_gameCursor;
 
 void GameCursor::Initialize(ID3D11ShaderResourceView* texture) {
     m_texture = texture;
+    // Match the historical cursor placement used by MouseIndicatorSystem.
+    // The cursor texture is drawn with its top-left at the mouse world position.
+    m_offsetX = -m_width * 0.5f;
+    m_offsetY = -m_height * 0.5f;
 }
 
 void GameCursor::Render(float cameraX, float cameraY) {
@@ -77,9 +81,23 @@ void GameCursor::Render(float cameraX, float cameraY) {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    auto pos = worldToScreen(mouseX, mouseY);
+    auto pos = worldToScreen(mouseX + m_offsetX, mouseY + m_offsetY);
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     RenderImage(pos.first, pos.second, m_width, m_height, m_texture, 0, 1, 1, false, 0.0f);
+}
+
+void SetInGameCursorEnabled(bool enabled)
+{
+    g_gameCursor.SetVisible(enabled);
+
+    // Keep ShowCursor counter stable: call until the desired visibility is reached.
+    const bool showOsCursor = !enabled;
+    if (showOsCursor) {
+        while (ShowCursor(TRUE) < 0) {}
+    }
+    else {
+        while (ShowCursor(FALSE) >= 0) {}
+    }
 }
 
 // ...existing code...
@@ -172,6 +190,7 @@ void ResetGame() {
     // Reset gauge bar
     g_player.gaugePoints = 0;
     g_player.isInvincible = false;
+    g_player.isGaugeInvincible = false;
     g_player.invincibleTimer = 0.0f;
 
     g_gameState = STATE_PLAYING;
@@ -616,6 +635,7 @@ void UpdateGame(float deltaTime) {
         g_player.invincibleTimer -= deltaTime;
         if (g_player.invincibleTimer <= 0.0f) {
             g_player.isInvincible = false;
+            g_player.isGaugeInvincible = false;
             g_player.invincibleTimer = 0.0f;
         }
     }
@@ -623,6 +643,7 @@ void UpdateGame(float deltaTime) {
     // Auto-activate invincibility when gauge is full
     if (!g_player.isInvincible && g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
         g_player.isInvincible = true;
+        g_player.isGaugeInvincible = true;
         g_player.invincibleTimer = g_player.INVINCIBLE_DURATION;
         g_player.g_gaugeEffectActive = true; 
         g_player.g_gaugeEffectTimer = g_player.INVINCIBLE_DURATION;
@@ -726,8 +747,9 @@ void UpdateGame(float deltaTime) {
         // 在UpdateGame函数中修改动画设置部分
         if (g_player.animLockTimer <= 0.0f)
         {
-            // Check if player is invincible to determine which animation set to use
-            if (g_player.isInvincible)
+            // Only use invincible animation set during gauge-based invincibility.
+            // Dash/slash post-invincibility should not override current animation.
+            if (g_player.isInvincible && g_player.isGaugeInvincible)
             {
                 // INVINCIBLE ANIMATIONS
                 if (g_player.isDead)
@@ -1240,9 +1262,6 @@ void DrawGame() {
     DrawComboUI();
     DrawGaugeUI();
     DrawScoreUI();
-
-    // Always draw the in-game cursor (game start -> game end)
-    g_gameCursor.Render(g_camera.GetX(), g_camera.GetY());
     
 }
 void HandleInput() {
@@ -1578,6 +1597,10 @@ void MouseIndicatorSystem::Cleanup() {
 }
 
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {
+
+    // Legacy API: cursor visibility is now controlled by the global in-game cursor.
+    // Keep this so existing scene code doesn't need to manage cursor visibility.
+    SetInGameCursorEnabled(i);
 }
 
 

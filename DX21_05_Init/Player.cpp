@@ -81,12 +81,11 @@ static void PerformDashHitTest(float testX, float testY) {
                 }
             }
 
-            if (!g_player.isInvincible)// if player is not invincible
-            {
-                if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+            if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                if (multiplier > 1.5f) {
                     g_player.gaugePoints += 2;
                 }
-                else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                else {
                     g_player.gaugePoints += 1;
                 }
                 if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
@@ -148,11 +147,11 @@ static void PerformDashEndCircleHitTest() {
                 }
             }
 
-            if (!g_player.isInvincible) {
-                if (multiplier > 1.5f && g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+            if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                if (multiplier > 1.5f) {
                     g_player.gaugePoints += 2;
                 }
-                else if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                else {
                     g_player.gaugePoints += 1;
                 }
                 if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
@@ -647,6 +646,9 @@ void OnPlayerDeath() {
     g_player.isDead = true;
     g_player.deathTimer = g_player.DEATH_RESPAWN_TIME;
     g_player.deathCount++;
+
+    // Clear gauge-invincibility flag so invincible animation set does not persist.
+    g_player.isGaugeInvincible = false;
 
     // Small camera shake on player getting hit/death.
     // Keep it subtle to avoid nausea.

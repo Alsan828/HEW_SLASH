@@ -53,7 +53,7 @@ bool StageSelect::Init()
 	uiButtons.back().SetHitboxOffset(-0.06f);
 
 	//uiButtons.clear();
-	g_mouseIndicator.ShowMouseIndicator(false);
+
 
 	return true;
 }

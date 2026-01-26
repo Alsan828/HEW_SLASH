@@ -55,10 +55,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
         hInstance,
         NULL);
 
-    SetGameWindowHandle(hWnd);
-
     // Initialize DirectX before entering game loop
     RendererInit(hWnd);    // 初始化音频系统
+    SetGameWindowHandle(hWnd);
+    SetInGameCursorEnabled(true);
     //InitGameWorld();
     sceneManager.Init(TITLE); // start with title
 
@@ -97,15 +97,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_CREATE:
-        ShowCursor(FALSE);
         break;
 
     case WM_SETFOCUS:
-        ShowCursor(FALSE);
         break;
 
     case WM_KILLFOCUS:
-        ShowCursor(TRUE);
         break;
 
     case WM_SETCURSOR:
@@ -125,14 +122,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
 
         CleanUpGameWorld();
-        ShowCursor(TRUE);
+        SetInGameCursorEnabled(false);
         PostQuitMessage(0);
         break;
 
     case WM_CLOSE: {
 
         CleanUpGameWorld();
-        ShowCursor(TRUE);
+        SetInGameCursorEnabled(false);
         int res = MessageBoxA(NULL, "Are you sure you want to exit?", "Confirmation", MB_OKCANCEL);
         if (res == IDOK) {
             DestroyWindow(hWnd);

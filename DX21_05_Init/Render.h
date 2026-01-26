@@ -82,3 +82,7 @@ void RenderImageWithCrop(float posX, float posY, float width, float height,
 	ID3D11ShaderResourceView* textureSRV, float fillRatio);
 
 void SetColor(float r, float g, float b, float a); // added november 12th
+
+// Called after the scene has rendered, before Present().
+// Intended for always-on overlay elements (e.g., the global in-game cursor).
+void RenderOverlay();

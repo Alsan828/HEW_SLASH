@@ -15,7 +15,7 @@ TitleScene::TitleScene(SceneManager* manager)
 //it initializes the objects in title
 bool TitleScene::Init() 
 {
-	ShowCursor(TRUE);
+	SetInGameCursorEnabled(true);
     LoadTexture(g_pDevice, "asset/UI/title/UI_title_background_animation_v8.png", &tex);
     LoadTexture(g_pDevice, "asset/UI/title/padding_animation.png", &g_paddingTitleAnim);
 
@@ -29,7 +29,7 @@ bool TitleScene::Init()
     paddingTitleAnim.SetClip("paddingAnimation");
 
     uiButtons.clear();
-    g_mouseIndicator.ShowMouseIndicator(false);
+
        
     return true;
 }

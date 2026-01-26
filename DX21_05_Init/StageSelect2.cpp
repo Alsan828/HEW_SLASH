@@ -1,4 +1,4 @@
-#include "StageSelect2.h"
+﻿#include "StageSelect2.h"
 
 
 StageSelect2::StageSelect2(SceneManager* manager, SCENE returnTo)
@@ -57,7 +57,6 @@ bool StageSelect2::Init()
     uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // change this values if needed depending on the size of the button
     uiButtons.back().SetHitboxOffset(-0.06f);
 
-    g_mouseIndicator.ShowMouseIndicator(false);
     return true;
 }
 

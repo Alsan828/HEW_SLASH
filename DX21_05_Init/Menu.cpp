@@ -9,7 +9,7 @@ MenuScene::MenuScene(SceneManager* manager)
 
 bool MenuScene::Init()
 {
-	ShowCursor(TRUE);
+	SetInGameCursorEnabled(true);
 	Audio::PlayBGM(BackgroundMusic::MAIN_MENU, true);
 
 	LoadTexture(g_pDevice, "asset/UI/menu/background.png", &backgroundTexture);
@@ -43,7 +43,6 @@ bool MenuScene::Init()
 	paddingTitleAnim.SetClip("paddingAnimation");
 
 	//uiButtons.clear();
-	g_mouseIndicator.ShowMouseIndicator(false);
 
 	return true;
 }

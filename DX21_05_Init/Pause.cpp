@@ -11,7 +11,7 @@ PauseScene::PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE)
 
 bool PauseScene::Init()
 {
-	ShowCursor(TRUE);
+	SetInGameCursorEnabled(true);
     LoadTexture(g_pDevice, "asset/UI/pause/background.png", &g_pauseTexture); // Load the pause background texture
 
     LoadTexture(g_pDevice, "asset/UI/pause/pause_black.png", &blackTexture); // so when in pause, I see the stage part transparent
@@ -50,8 +50,8 @@ bool PauseScene::Init()
     uiButtons.back().SetHitboxScale(0.38f, 0.1f);
     uiButtons.back().SetHitboxOffset(-0.03f);
 
+
     //uiButtons.clear();
-    g_mouseIndicator.ShowMouseIndicator(false);
 	Audio::PlaySE(SoundEffect::PAUSE);
 
     return true;

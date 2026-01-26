@@ -1,4 +1,4 @@
-#include "HowToPlay.h"
+﻿#include "HowToPlay.h"
 
 
 HowToPlayScene::HowToPlayScene(SceneManager* manager, SCENE returnTo)
@@ -20,7 +20,7 @@ bool HowToPlayScene::Init()
 
 
 	//uiButtons.clear();
-	g_mouseIndicator.ShowMouseIndicator(false);
+
 
 	return true;
 }

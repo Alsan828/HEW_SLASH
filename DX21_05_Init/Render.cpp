@@ -250,9 +250,22 @@ void RendererDrawF()
 
 void RendererDrawB()
 {
+    RenderOverlay();
 	// Switch double buffer and update screen
 	g_pSwapChain->Present(0, 0);
 
+}
+
+void RenderOverlay()
+{
+    // Render the custom cursor on top of everything.
+    // In gameplay we want it to be camera-aware; in other scenes it should behave like UI.
+    if (g_gameState == STATE_PLAYING) {
+        g_gameCursor.Render(g_camera.GetX(), g_camera.GetY());
+    }
+    else {
+        g_gameCursor.Render(0.0f, 0.0f);
+    }
 }
 
 void RendererUninit()
