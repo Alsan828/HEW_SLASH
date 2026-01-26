@@ -403,11 +403,23 @@ extern ID3D11ShaderResourceView* g_gaugeBarEmptyTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarFilledTexture;
 extern ID3D11ShaderResourceView* g_gaugeFullEffectTexture;
 
+extern ID3D11ShaderResourceView* g_signWASDTexture;
+extern ID3D11ShaderResourceView* g_signSTexture;
+extern ID3D11ShaderResourceView* g_signReleaseTexture;
+extern ID3D11ShaderResourceView* g_signRedTexture;
+extern ID3D11ShaderResourceView* g_signPinkTexture;
+extern ID3D11ShaderResourceView* g_signLongClickTexture;
+extern ID3D11ShaderResourceView* g_signESCTexture;
+extern ID3D11ShaderResourceView* g_signRightTexture;
+extern ID3D11ShaderResourceView* g_signClickTexture;
+
+
 extern ID3D11ShaderResourceView* g_attackCountTestTexture;
 
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
+extern Animation signAnim;
 
 // 在Game.h的全局变量部分添加
 extern float g_slowMoTimer;      // 时间减慢计时器

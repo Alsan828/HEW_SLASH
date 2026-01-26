@@ -58,6 +58,17 @@ ID3D11ShaderResourceView* g_gaugeBarEmptyTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarFilledTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeFullEffectTexture = nullptr;
 
+ID3D11ShaderResourceView* g_signWASDTexture = nullptr;
+ID3D11ShaderResourceView* g_signSTexture = nullptr;
+ID3D11ShaderResourceView* g_signReleaseTexture = nullptr;
+ID3D11ShaderResourceView* g_signRedTexture = nullptr;
+ID3D11ShaderResourceView* g_signPinkTexture = nullptr;
+ID3D11ShaderResourceView* g_signLongClickTexture = nullptr;
+ID3D11ShaderResourceView* g_signESCTexture = nullptr;
+ID3D11ShaderResourceView* g_signRightTexture = nullptr;
+ID3D11ShaderResourceView* g_signClickTexture = nullptr;
+Animation signAnim;
+
 ID3D11ShaderResourceView* g_attackCountTestTexture = nullptr;
 
 InputSystem g_inputSystem;
