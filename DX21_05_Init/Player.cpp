@@ -1188,6 +1188,11 @@ void UpdateDashPoints(float deltaTime) {
 
 // Consume dash point
 bool ConsumeDashPoint() {
+    // During gauge-based invincibility, dashes/slashes are free (no point consumption).
+    if (g_player.isInvincible && g_player.isGaugeInvincible) {
+        return true;
+    }
+
     if (g_player.dashPoints > 0) {
         g_player.dashPoints--;
         return true;

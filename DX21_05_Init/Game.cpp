@@ -1315,8 +1315,8 @@ void HandleInput() {
     bool isMouseLeftReleased = g_inputSystem.IsMouseLeftReleased();
 
     // Charge-dash input mode (VK_T):
-    // - false (default): if a saved charge exists, mouse press dashes immediately.
-    // - true: always dash on release even if a saved charge exists.
+    // - true (default): always dash on release even if a saved charge exists.
+    // - false: if a saved charge exists, mouse press dashes immediately.
     if (g_inputSystem.IsTogglePressed(VK_T)) {
         g_releaseDashChargeMode = !g_releaseDashChargeMode;
     }
@@ -1535,10 +1535,17 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
             float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f + centerOffsetY;
             float arrowWidth = 0.15f;
 
-            // Get charge time
+            // Get effective charge time for arrow preview.
+            // When chaining (short hold) and a saved charge exists, the dash will actually use the saved charge.
+            // So the arrow must preview that saved charge, otherwise it looks too short on the second dash.
             float chargeTime = 0.0f;
             if (g_player.isCharging) {
-                chargeTime = g_player.chargeTime;
+                const bool willChainSavedCharge =
+                    g_releaseDashChargeMode &&
+                    g_player.hasSavedCharge &&
+                    (g_player.chargeTime < g_player.CHARGE_THRESHOLD_LOW);
+
+                chargeTime = willChainSavedCharge ? g_player.savedChargeTime : g_player.chargeTime;
             }
             else if (g_player.hasSavedCharge) {
                 chargeTime = g_player.savedChargeTime;
@@ -1546,6 +1553,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
             // Calculate smooth charge ratio (0.0 to 1.0)
             float chargeRatio = chargeTime / g_player.MAX_CHARGE_TIME;
+            chargeRatio = std::clamp(chargeRatio, 0.0f, 1.0f);
 
             // Smoothly interpolate speed multiplier from 1.0 to 2.0 based on charge
             float minSpeedMultiplier = 1.0f;
