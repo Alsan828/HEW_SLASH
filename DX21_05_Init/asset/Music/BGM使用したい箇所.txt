@@ -1,0 +1,4 @@
+Red-Eyes 		ボス戦
+Ride_out 		ステージ1
+Nightmare-Assemblage 	ステージ2
+planetarium_garden 	ステージ3
