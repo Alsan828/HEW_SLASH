@@ -37,6 +37,10 @@ ID3D11ShaderResourceView* g_beamEnemyPreDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_beamEnemyDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_beamEnemyPostDeathTexture = nullptr;
 
+ID3D11ShaderResourceView* g_bossIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_bossAttackTexture = nullptr;
+ID3D11ShaderResourceView* g_bossDeathTexture = nullptr;
+
 namespace {
     struct ThrownEnemyState {
         Enemy* enemy = nullptr;
