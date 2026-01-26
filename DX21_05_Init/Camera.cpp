@@ -66,9 +66,10 @@ void Camera::Update(float deltaTime) {
         }
 
         // Amount in world units (tuned to be subtle).
-        // Increase a bit with charge time but keep an upper bound.
-        const float baseOffset = 0.10f;
-        const float maxOffset = 0.22f;
+        // Increase with charge time but keep an upper bound.
+        // Requested: double the camera offset while charging.
+        const float baseOffset = 0.20f;
+        const float maxOffset = 0.44f;
         float t = 0.0f;
         if (g_player.CHARGE_THRESHOLD_LOW > 1e-4f) {
             t = std::clamp(g_player.chargeTime / g_player.CHARGE_THRESHOLD_LOW, 0.0f, 1.0f);

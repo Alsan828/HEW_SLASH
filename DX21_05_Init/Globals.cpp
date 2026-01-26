@@ -6,7 +6,7 @@ MapManager g_mapManager;
 ProjectileManager& g_projectileManager = ProjectileManager::GetInstance();
 Player g_player;
 
-bool g_releaseDashChargeMode = false;
+bool g_releaseDashChargeMode = true;
 bool g_noGravityAftermathMode = false;
 ID3D11ShaderResourceView* g_playerTexture = nullptr; // maybe we wont use this
 
