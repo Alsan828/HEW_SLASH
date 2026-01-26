@@ -1151,6 +1151,14 @@ void UpdateDashPoints(float deltaTime) {
     constexpr float DASH_POINT_RECOVER_DELAY = 0.3f;
     constexpr float DASH_POINT_RECOVER_INTERVAL = 0.2f;
 
+    // 关键修复：短按冲刺时很容易出现“落地但仍处于冲刺/蓄力相关状态”，
+    // 这会让地面回复逻辑在冲刺期间也持续积累定时器，导致点数看起来一直在回复。
+    // 因此在任何冲刺相关阶段，禁止回复并重置计时器。
+    if (g_player.isDashing || g_player.isCharging || g_player.isInDashAftermath || g_player.isInDashEndSlowMo) {
+        g_player.dashPointRecoverTimer = 0.0f;
+        return;
+    }
+
     if (!g_player.isOnGround || g_player.dashPoints >= g_player.MAX_DASH_POINTS) {
         g_player.dashPointRecoverTimer = 0.0f;
         return;
