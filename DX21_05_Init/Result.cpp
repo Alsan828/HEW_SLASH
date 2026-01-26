@@ -42,6 +42,10 @@ bool ResultScene::Init()
     {
         m_nextScene = MENU;  // if you compelte world3 you go to menu as default
     }
+    else
+    {
+        m_nextScene = MENU;  // default to menu scene
+    }
 
     LoadTexture(g_pDevice, "asset/UI/result/next_normal.png", &continueTexture); // for the button
     LoadTexture(g_pDevice, "asset/UI/result/next_hover.png", &continueHoverTexture);

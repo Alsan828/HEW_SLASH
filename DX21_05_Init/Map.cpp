@@ -131,7 +131,7 @@ void Map::InitializeTileDictionary() {
         {"D7", {"D7", "door", "World1Area7", false, false, true, false}},
         {"DB", {"DB", "door", "boss", false, false, true, false}}, // boss door
 
-        // Portal/door types for World2 (stage2) -> next area
+        // portal types for World2 (stage2)
         {"21", {"21", "door", "World2Area1", false, false, true, false}},
         {"22", {"22", "door", "World2Area2", false, false, true, false}},
         {"23", {"23", "door", "World2Area3", false, false, true, false}},
@@ -141,7 +141,7 @@ void Map::InitializeTileDictionary() {
         {"27", {"27", "door", "World2Area7", false, false, true, false}},
         //{"B2", {"B2", "door", "boss2", false, false, true, false}}, // for the boss of world 2
 
-        // Portal/door types for World3 (stage3) -> next area
+        // portal types for World3 (stage3)
         {"31", {"31", "door", "World3Area1", false, false, true, false}},
         {"32", {"32", "door", "World3Area2", false, false, true, false}},
         {"33", {"33", "door", "World3Area3", false, false, true, false}},
@@ -150,8 +150,6 @@ void Map::InitializeTileDictionary() {
         {"36", {"36", "door", "World3Area6", false, false, true, false}},
         {"37", {"37", "door", "World3Area7", false, false, true, false}},
         // maybe add boss stage too
-
-        // Portal Types for Word3 (stage3). add them later
 
         // Spawn point types
         {"S1", {"S1", "spawn", "default", false, true, false, false}},
