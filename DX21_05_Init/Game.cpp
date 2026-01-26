@@ -241,6 +241,16 @@ void CleanUpGameWorld()
     ReleaseTexture(g_dashEffectTexture);
     ReleaseTexture(g_chargeEffectTexture);
 
+    ReleaseTexture(g_signWASDTexture);
+    ReleaseTexture(g_signSTexture);
+    ReleaseTexture(g_signRedTexture);
+    ReleaseTexture(g_signPinkTexture);
+    ReleaseTexture(g_signLongClickTexture);
+    ReleaseTexture(g_signClickTexture);
+    ReleaseTexture(g_signReleaseTexture);
+    ReleaseTexture(g_signRightTexture);
+    ReleaseTexture(g_signESCTexture);
+
     // 解放击中特效纹理
     ReleaseTexture(g_hitEffectTexture);
     ReleaseTexture(g_numberTexture);
@@ -524,6 +534,26 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
+    // for the signs
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_wasd.png", &g_signWASDTexture);
+    signAnim.AddClip("SignWASD", 0, 3, 1, 4, 0.2f, true, g_signWASDTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_s.png", &g_signSTexture);
+    signAnim.AddClip("SignS", 0, 3, 1, 4, 0.2f, true, g_signSTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_right.png", &g_signRightTexture);
+    signAnim.AddClip("SignRight", 0, 4, 1, 5, 0.08f, true, g_signRightTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_release.png", &g_signReleaseTexture);
+    signAnim.AddClip("SignRelease", 0, 3, 1, 4, 0.1f, true, g_signReleaseTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_red_is_safe_seriously_it_really_is.png", &g_signRedTexture);
+    signAnim.AddClip("SignRed", 0, 3, 1, 4, 0.2f, true, g_signRedTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_pink.png", &g_signPinkTexture);
+    signAnim.AddClip("SignPink", 0, 3, 1, 4, 0.2f, true, g_signPinkTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_long_click.png", &g_signLongClickTexture);
+    signAnim.AddClip("SignLongClick", 0, 3, 1, 4, 0.2f, true, g_signLongClickTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_esc.png", &g_signESCTexture);
+    signAnim.AddClip("SignESC", 0, 3, 1, 4, 0.2f, true, g_signESCTexture);
+    LoadTexture(g_pDevice, "asset/UI/sign/sign_click.png", &g_signClickTexture);
+    signAnim.AddClip("SignClick", 0, 3, 1, 4, 0.2f, true, g_signClickTexture);
+
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
     LoadTexture(g_pDevice, "asset/UI/UI_score＆time.png", &g_uiNumberTexture);
 
@@ -572,6 +602,8 @@ void UpdateGame(float deltaTime) {
 
     // Update audio manager
     g_gameTimer.Tick(); // added december 3rd
+
+    signAnim.Update(deltaTime);
 
     // added december 4th
     g_gameElapsedTime += deltaTime;
@@ -954,8 +986,32 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
              tileCode == "31" || tileCode == "32" || tileCode == "33" || tileCode == "34" || tileCode == "35" || tileCode == "36" || tileCode == "37") {
         return g_goalTexture;
     }
-    else if (tileCode == "D1" || tileCode == "D2") {
-        return g_backgroundTexture3;
+    else if (tileCode == "B1") {
+        return g_signWASDTexture;
+    }
+    else if (tileCode == "B2") {
+        return g_signSTexture;
+    }
+    else if (tileCode == "B3") {
+        return g_signRightTexture;
+    }
+    else if (tileCode == "B4") {
+        return g_signReleaseTexture;
+    }
+    else if (tileCode == "B5") {
+        return g_signRedTexture;
+    }
+    else if (tileCode == "B6") {
+        return g_signPinkTexture;
+    }
+    else if (tileCode == "B7") {
+        return g_signLongClickTexture;
+    }
+    else if (tileCode == "B8") {
+        return g_signClickTexture;
+    }
+    else if (tileCode == "B9") {
+        return g_signESCTexture;
     }
     else if (tileCode == "OP") {
         return g_oneWayPlatformTexture;
@@ -997,9 +1053,6 @@ void SetTileColor(const std::string& tileCode) {
     }
     else if (tileCode == "PT") {
         SetColor(0.8f, 0.3f, 0.8f, 1.0f);
-    }
-    else if (tileCode == "D1") {
-        SetColor(0.2f, 0.5f, 0.1f, 1.0f);
     }
     else if (tileCode == "D2") {
         SetColor(0.5f, 0.5f, 0.5f, 1.0f);
@@ -1070,6 +1123,8 @@ void DrawGame() {
         for (const auto& tile : mgTiles) {
             if (tile.tileInfo.code == "00") continue;
             std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
+
+
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
             //RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
@@ -1105,6 +1160,45 @@ void DrawGame() {
 
                 RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
                     renderWidth, renderHeight, texture, 0, 1, 1);
+            }
+            // for the animation of the signs
+            else if (tile.tileInfo.code == "B1" || tile.tileInfo.code == "B2" || tile.tileInfo.code == "B3" || tile.tileInfo.code == "B4" || tile.tileInfo.code == "B5" ||
+                     tile.tileInfo.code == "B6" || tile.tileInfo.code == "B7" || tile.tileInfo.code == "B8" || tile.tileInfo.code == "B9") {
+               
+                // for getting the right texture depending on the sign
+                ID3D11ShaderResourceView* signTexture = signAnim.GetCurrentClipTexture();
+                int numFrames = 4; // default if 4 frames
+
+                if (tile.tileInfo.code == "B1") signTexture = g_signWASDTexture;
+                else if (tile.tileInfo.code == "B2") signTexture = g_signSTexture;
+                else if (tile.tileInfo.code == "B3") {
+                    signTexture = g_signRightTexture;
+                    numFrames = 5; // only this sign is 5 frames instead of 4
+                }
+                else if (tile.tileInfo.code == "B4") signTexture = g_signReleaseTexture;
+                else if (tile.tileInfo.code == "B5") signTexture = g_signRedTexture;
+                else if (tile.tileInfo.code == "B6") signTexture = g_signPinkTexture;
+                else if (tile.tileInfo.code == "B7") signTexture = g_signLongClickTexture;
+                else if (tile.tileInfo.code == "B8") signTexture = g_signClickTexture;
+                else if (tile.tileInfo.code == "B9") signTexture = g_signESCTexture;
+
+                /*if (signTexture) {
+                    RenderImage(screenPos.first, screenPos.second, tile.width, tile.height * 2.0f,
+                        signTexture,
+                        signAnim.GetCurrentFrame(),
+                        signAnim.GetSplitX(),
+                        signAnim.GetSplitY());
+                }*/
+                if (signTexture) {
+                    // calculate the frames
+                    int currentFrame = signAnim.GetCurrentFrame() % numFrames;
+
+                    RenderImage(screenPos.first, screenPos.second, tile.width, tile.height * 2.0f, // *2.0f so it will be the correct size for the sign (twice as a big ad the actual tile)
+                        signTexture,
+                        currentFrame,
+                        signAnim.GetSplitX(),
+                        numFrames);
+                }
             }
             else {
                 // Normal rendering for all other tiles
