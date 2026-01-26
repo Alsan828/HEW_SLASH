@@ -145,6 +145,15 @@ public:
     void CreateWorld2Area7Map();
     //void CreateBoss2Map();
 
+    void CreateWorld3Area1Map();
+    void CreateWorld3Area2Map();
+    void CreateWorld3Area3Map();
+    void CreateWorld3Area4Map();
+    void CreateWorld3Area5Map();
+    void CreateWorld3Area6Map();
+    void CreateWorld3Area7Map();
+    //void CreateBoss3Map();
+
     // Map clearing methods
     void ClearLayer(MapLayer layer);
     void ClearAll();
