@@ -545,14 +545,18 @@ void UpdatePlayerPhysics(float deltaTime) {
             portalWidth, portalHeight,
             targetMap, portalId, linkedSpawnId)) {
 
+            //if (targetMap == "boss") {
+            //    // it goes to boss stage (World 1, Stage 8)
+            //    sceneManager.SwitchToStage(1, 8);
+            //    portalCooldown = 1.0f;
+            //}
             if (targetMap == "boss") {
-                // it goes to boss of world1
-                //sceneManager.SwitchScene(BOSS);
-                
-                // it goes to boss stage (World 1, Stage 8)
-                sceneManager.SwitchToStage(1, 8);
+                int stage = sceneManager.GetCurrentStageInfo().GetWorld();
+                sceneManager.SwitchToStage(stage, 8);   // it goes to the boss stage of that stage (world)
                 portalCooldown = 1.0f;
+                return;
             }
+
 
 			else {
 				// Default door behavior: go to next stage (except boss door).

@@ -108,6 +108,9 @@ void GameplayScene::UpdateBossLogic(float deltaTime)
         //else if (worldNumber == 3) {  
         //    sceneManager->SwitchScene(CAKE);
         //}
+        char dbg[256];
+        sprintf_s(dbg, "BOSS DEAD: world=%d, area=%d\n", worldNumber, areaNumber);
+        OutputDebugStringA(dbg);
 
         sceneManager->SwitchScene(CAKE);
 
