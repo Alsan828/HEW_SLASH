@@ -177,13 +177,18 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_before.png", &g_beamEnemyPreDeathTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack.png", &g_beamEnemyDeathTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_after.png", &g_beamEnemyPostDeathTexture);
+
+    // Boss 敌人纹理（请替换为你自己的资源路径）
+    LoadTexture(g_pDevice, "asset/boss/boss_idle.png", &g_bossIdleTexture);
+    LoadTexture(g_pDevice, "asset/boss/boss_attack.png", &g_bossAttackTexture);
+    LoadTexture(g_pDevice, "asset/boss/boss_death.png", &g_bossDeathTexture);
 }
 
 // ========== BlindEyeEnemy ==========
 BlindEyeEnemy::BlindEyeEnemy(float x, float y)
     : Enemy(x, y, 100.0f) {
     // 盲眼敌人不追人，巡逻逻辑自己处理转向，不需要朝向冷却
-    useTurnCooldown = false;
+    useTurnCooldown = false;]
     detectionRange = 0.0f;
     loseSightRange = 0.0f;
 
@@ -730,7 +735,7 @@ void Enemy::UpdateAI(float deltaTime) {
 void Enemy::PatrolBehavior(float deltaTime) {
     patrolTimer += deltaTime;
 
-    // 每2秒检查是否需要改变方向
+    // 每2秒检查一次是否需要改变方向
     if (patrolTimer >= 2.0f) {
         if (posX <= patrolMinX) {
             patrolDirection = 1.0f;  // 向右走
@@ -1487,27 +1492,108 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
     SetMaxHealth(500000.0f); 
     SetHealth(500000.0f);
 
-    width = PLAYER_WIDTH * 3.0f;
-    height = PLAYER_HEIGHT * 3.0f;
-    scale = 5.0f;  // Even bigger sprite
+    // Keep collision box from base Enemy; adjust only visual scale
+    scale = 2.0f;  // Visual: 2x player size by default
     moveSpeed = MOVE_SPEED * 0.3f;  // Slower movement
 
 
     // Boss has different damage multipliers (harder to damage from front)
 
 
-    // also add animations, etc....
+    // Set up boss-specific animations using your textures
+    anim.ClearClips();
+    // Adjust split and timing to match your sprite sheets
+    // idle: rows=1, columns=4 (example)
+    anim.AddClip("idle",   0, 3, 4, 1, 0.18f, true,  g_bossIdleTexture);
+    // attack: rows=1, columns=4 (example)
+    anim.AddClip("attack", 0, 3, 4, 1, 0.12f, false, g_bossAttackTexture);
+    // death: rows=1, columns=5 (example)
+    anim.AddClip("death",  0, 4, 5, 1, 0.08f, false, g_bossDeathTexture);
+    anim.SetClip("idle");
 }
 
 void BossEnemy::Update(float deltaTime, MapManager* mapManager)
 {
-    // write here the update code regardsing the boss 
+    // Handle death state
+    if (isDying) {
+        anim.Update(deltaTime);
+        if (anim.IsFinished()) {
+            markedForDeletion = true;
+        }
+        return;
+    }
 
+    if (!isAlive) {
+        OnDeath();
+        return;
+    }
+
+    // Phase change example
     float healthPercent = health / maxHealth;
     if (healthPercent < 0.3f && phase == 1) {
         phase = 2;
-        moveSpeed *= 1.5f;  // Faster in phase 2
+        moveSpeed *= 1.5f;
     }
+
+    // Update facing towards player (no cooldown)
+    float dxFace = g_player.posX - posX;
+    if (dxFace != 0) facingRight = (dxFace > 0);
+
+    // State machine
+    stateTimer += deltaTime;
+    switch (bossState) {
+    case BOSS_IDLE:
+        // Choose between dash or slash after a short idle
+        if (stateTimer >= 1.0f) {
+            if ((rand() % 2) == 0) EnterState(BOSS_DASH_CHARGE);
+            else EnterState(BOSS_SLASH_CHARGE);
+        }
+        break;
+    case BOSS_DASH_CHARGE:
+        UpdateDashCharge(deltaTime);
+        break;
+    case BOSS_DASH_MOVING:
+        UpdateDashMoving(deltaTime, mapManager);
+        break;
+    case BOSS_DASH_AFTER:
+        UpdateDashAfter(deltaTime);
+        break;
+    case BOSS_SLASH_CHARGE:
+        UpdateSlashCharge(deltaTime);
+        break;
+    case BOSS_SLASH_ACTIVE:
+        UpdateSlashActive(deltaTime);
+        break;
+    case BOSS_DOWN_BEFORE:
+        UpdateDownBefore(deltaTime);
+        break;
+    case BOSS_DOWN:
+        UpdateDown(deltaTime);
+        break;
+    case BOSS_DOWN_AFTER:
+        UpdateDownAfter(deltaTime);
+        break;
+    }
+
+    // Gravity and movement like base Enemy
+    velocityY += GRAVITY * deltaTime * 60.0f;
+
+    float oldX = posX;
+    float oldY = posY;
+
+    posX += velocityX * deltaTime * 60.0f;
+    if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
+        posX = oldX;
+        velocityX = 0.0f;
+    }
+
+    posY += velocityY * deltaTime * 60.0f;
+    if (CheckVerticalCollision(mapManager, oldX, oldY)) {
+        posY = oldY;
+        velocityY = 0.0f;
+    }
+
+    anim.Update(deltaTime);
 }
 void BossEnemy::ChaseBehavior(float deltaTime) {
     float dx = g_player.posX - posX;
@@ -1542,6 +1628,172 @@ void BossEnemy::OnDeath() {
     // Boss death - maybe trigger cutscene or level completion
 }
 
+// Boss takes damage: mitigate during DOWN and change weakline after N hits
+void BossEnemy::TakeDamage(int damage, float attackAngle) {
+    if (!isAlive) return;
+
+    float multiplier = GetDamageMultiplier(attackAngle);
+    int actualDamage = (int)(damage * multiplier);
+
+    // During down: reduced damage and cannot die
+    if (bossState == BOSS_DOWN) {
+        actualDamage = std::max(1, actualDamage / 4); // reduce
+        inDownImmortal = true;
+    }
+
+    DamageNumberManager::AddDamageNumber(posX + width * 0.5f, posY + height, actualDamage, multiplier > 1.5f);
+
+    health -= actualDamage;
+    isHit = true;
+    hitTimer = HIT_DURATION;
+
+    hitsTaken++;
+    if (bossState != BOSS_DOWN && (hitsTaken >= 15 || multiplier > 1.5f)) {
+        // Enter down sequence
+        hitsTaken = 0;
+        EnterState(BOSS_DOWN_BEFORE);
+    }
+
+    if (health <= 0) {
+        if (inDownImmortal) {
+            // Clamp to small positive HP during down
+            health = std::max(1.0f, health);
+        } else {
+            health = 0;
+            OnDeath();
+        }
+    }
+}
+
+// ===== Boss helpers =====
+void BossEnemy::EnterState(BossState s) {
+    bossState = s;
+    stateTimer = 0.0f;
+    switch (s) {
+    case BOSS_IDLE:
+        anim.SetClip("idle");
+        velocityX = 0.0f;
+        break;
+    case BOSS_DASH_CHARGE:
+        anim.SetClip("attack"); // reuse attack texture for charge visual
+        velocityX = 0.0f;
+        break;
+    case BOSS_DASH_MOVING:
+        anim.SetClip("attack");
+        break;
+    case BOSS_DASH_AFTER:
+        anim.SetClip("idle");
+        velocityX = 0.0f;
+        break;
+    case BOSS_SLASH_CHARGE:
+        anim.SetClip("attack");
+        velocityX = 0.0f;
+        break;
+    case BOSS_SLASH_ACTIVE:
+        anim.SetClip("attack");
+        break;
+    case BOSS_DOWN_BEFORE:
+        anim.SetClip("idle");
+        velocityX = 0.0f;
+        break;
+    case BOSS_DOWN:
+        anim.SetClip("idle");
+        velocityX = 0.0f;
+        inDownImmortal = true;
+        break;
+    case BOSS_DOWN_AFTER:
+        anim.SetClip("idle");
+        velocityX = 0.0f;
+        inDownImmortal = false;
+        break;
+    }
+}
+
+void BossEnemy::UpdateDashCharge(float dt) {
+    if (stateTimer >= chargeDuration) {
+        EnterState(BOSS_DASH_MOVING);
+        // Move quickly towards player
+        float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
+        velocityX = dir * moveSpeed * 3.0f;
+    }
+}
+
+void BossEnemy::UpdateDashMoving(float dt, MapManager* mapManager) {
+    // When close to player or after a short time, finish dash
+    float dx = fabs(g_player.posX - posX);
+    if (dx < 0.3f || stateTimer > 0.8f) {
+        EnterState(BOSS_DASH_AFTER);
+        velocityX = 0.0f;
+    }
+}
+
+void BossEnemy::UpdateDashAfter(float dt) {
+    if (stateTimer >= dashAfterDuration) {
+        EnterState(BOSS_IDLE);
+    }
+}
+
+void BossEnemy::UpdateSlashCharge(float dt) {
+    if (stateTimer >= chargeDuration) {
+        EnterState(BOSS_SLASH_ACTIVE);
+    }
+}
+
+void BossEnemy::UpdateSlashActive(float dt) {
+    // 3-frame window equivalent ~ 0.05s*3 assuming 60fps
+    float window = slashActiveFrames * (1.0f / 60.0f) * 3.0f;
+    if (stateTimer <= window) {
+        // Simple hitbox in front of boss; kill player if touching
+        float range = 0.5f;
+        float hx = facingRight ? (posX + width) : (posX - range);
+        float hw = range;
+        float hy = posY;
+        float hh = height;
+        if (CheckCollision(hx, hy, hw, hh, g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT) && !g_player.isInvincible) {
+            g_player.health = 0.0f;
+            OnPlayerDeath();
+        }
+    }
+    if (stateTimer >= 0.6f) { // end slash
+        EnterState(BOSS_IDLE);
+    }
+}
+
+void BossEnemy::UpdateDownBefore(float dt) {
+    if (stateTimer >= 0.5f) {
+        EnterState(BOSS_DOWN);
+        RecomputeWeakMultipliers();
+    }
+}
+
+void BossEnemy::UpdateDown(float dt) {
+    if (stateTimer >= downDuration) {
+        EnterState(BOSS_DOWN_AFTER);
+    }
+}
+
+void BossEnemy::UpdateDownAfter(float dt) {
+    if (stateTimer >= 0.5f) {
+        EnterState(BOSS_IDLE);
+    }
+}
+
+void BossEnemy::RecomputeWeakMultipliers() {
+    // Cycle weak direction to simulate changing weakline
+    weakCycleIndex = (weakCycleIndex + 1) % 4;
+    // Reset all to 1.0
+    SetDamageMultiplier(DIR_FRONT, 1.0f);
+    SetDamageMultiplier(DIR_BACK, 1.0f);
+    SetDamageMultiplier(DIR_UP, 1.0f);
+    SetDamageMultiplier(DIR_DOWN, 1.0f);
+    // Make one direction very weak each time
+    switch (weakCycleIndex) {
+    case 0: SetDamageMultiplier(DIR_FRONT, 2.0f); break;
+    case 1: SetDamageMultiplier(DIR_BACK, 2.0f); break;
+    case 2: SetDamageMultiplier(DIR_UP, 2.0f); break;
+    case 3: SetDamageMultiplier(DIR_DOWN, 2.0f); break;
+    }
+}
 
 // SquareEnemy implementation - stationary enemy
 SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 100.0f) {
@@ -2031,6 +2283,9 @@ void RenderEnemies(const Camera& camera) {
         }
         else if (dynamic_cast<SquareEnemy*>(enemy)) {
             texture = g_squareEnemyIdleTexture;
+        }
+        else if (dynamic_cast<BossEnemy*>(enemy)) {
+            texture = g_bossIdleTexture;
         }
 
         enemy->Render(texture, camera); // 传递相机参数

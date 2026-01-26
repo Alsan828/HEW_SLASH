@@ -164,6 +164,8 @@ public:
     void SetPosition(float x, float y) { posX = x; posY = y; }
     void SetVelocity(float vx, float vy) { velocityX = vx; velocityY = vy; }
     void SetFacingRight(bool right) { facingRight = right; }
+    // Visual-only scaling (does not change collision box)
+    void SetScale(float s) { scale = s; }
 
     Animation anim;  // 动画系统
 
@@ -394,6 +396,7 @@ class BossEnemy : public Enemy
 public:
     BossEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
+    virtual void TakeDamage(int damage, float attackAngle) override;
 
 protected:
     virtual void ChaseBehavior(float deltaTime) override;
@@ -408,6 +411,43 @@ private:
     float specialAttackCooldown = 5.0f;
     float currentSpecialCooldown = 0.0f;
     int phase = 1;  // Boss phases
+
+    // Spec-driven boss behavior
+    enum BossState {
+        BOSS_IDLE,
+        BOSS_DASH_CHARGE,
+        BOSS_DASH_MOVING,
+        BOSS_DASH_AFTER,
+        BOSS_SLASH_CHARGE,
+        BOSS_SLASH_ACTIVE,
+        BOSS_DOWN_BEFORE,
+        BOSS_DOWN,
+        BOSS_DOWN_AFTER
+    };
+
+    BossState bossState = BOSS_IDLE;
+    float stateTimer = 0.0f;
+    int hitsTaken = 0;               // total hits received
+    bool inDownImmortal = false;     // cannot die during down
+    int weakCycleIndex = 0;          // weakline direction cycle
+
+    // Tunable timings
+    float chargeDuration = 3.0f;     // charge
+    float dashAfterDuration = 3.0f;  // aftermath
+    float slashActiveFrames = 3.0f;  // 3 frames window
+    float downDuration = 10.0f;      // down time
+
+    // Helpers
+    void EnterState(BossState s);
+    void UpdateDashCharge(float dt);
+    void UpdateDashMoving(float dt, MapManager* mapManager);
+    void UpdateDashAfter(float dt);
+    void UpdateSlashCharge(float dt);
+    void UpdateSlashActive(float dt);
+    void UpdateDownBefore(float dt);
+    void UpdateDown(float dt);
+    void UpdateDownAfter(float dt);
+    void RecomputeWeakMultipliers();
 };
 
 
