@@ -321,10 +321,15 @@ extern GameStatistics g_gameStats;
 struct HitEffectInstance {
     float x = 0.0f;
     float y = 0.0f;
+    float scale = 1.0f;
     float timer = 0.0f;
     float frameTime = 0.04f;
     int frame = 0;
     bool active = false;
+    int rows = 1;
+    int columns = 1;
+    int frameCount = 1;
+    ID3D11ShaderResourceView* texture = nullptr;
 };
 
 void SpawnWeakPointHitEffect(float worldX, float worldY);

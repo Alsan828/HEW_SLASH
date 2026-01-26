@@ -427,7 +427,12 @@ bool Map::CheckPortalCollision(float x, float y, float width, float height,
             // Door sprite is 1x2. Treat portal collision as 2 tiles tall,
             // centered one tile higher than the base tile.
             float portalX = tile.posX;
-            float portalY = tile.posY + (tile.height * 0.5f);
+            // Move portal collision down by half a tile.
+            // Original portal collision was centered 0.5 tile above the base tile (posY + 0.5h).
+            // To move it DOWN by 0.5 tile, shift center by +0.5h -> posY + 1.0h.
+            // If your world Y axis is inverted (down is negative), this will appear reversed.
+            // In that case, use posY + 0.0h for down shift.
+            float portalY = tile.posY + (tile.height * 0.0f);
             float portalW = tile.width;
             float portalH = tile.height * 2.0f;
 

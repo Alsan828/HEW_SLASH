@@ -19,9 +19,11 @@ int g_shootSoundId = -1;
 int g_slowMoTimerSoundId = -1;
 
 static std::vector<HitEffectInstance> g_weakPointHitEffects;
-static constexpr int WEAKPOINT_HIT_EFFECT_FRAMES = 8;
-static constexpr int WEAKPOINT_HIT_EFFECT_COLUMNS = 4;
-static constexpr int WEAKPOINT_HIT_EFFECT_ROWS = 2;
+static constexpr int WEAKPOINT_HIT_EFFECT_FRAMES = 3;
+static constexpr int WEAKPOINT_HIT_EFFECT_COLUMNS = 3;
+static constexpr int WEAKPOINT_HIT_EFFECT_ROWS = 1;
+
+static ID3D11ShaderResourceView* g_slashFlashTextures[4] = { nullptr, nullptr, nullptr, nullptr };
 
 struct AfterImageInstance {
     float x;
@@ -43,15 +45,46 @@ GameStatistics g_gameStats;
 Animation g_gaugeEffectAnim;
 
 void SpawnWeakPointHitEffect(float worldX, float worldY) {
-    if (!g_hitEffectTexture) return;
+    // Prefer new slash flash textures; fallback to old single texture if needed.
+    ID3D11ShaderResourceView* chosen = nullptr;
+    int availableCount = 0;
+    ID3D11ShaderResourceView* available[4] = { nullptr,nullptr,nullptr,nullptr };
+
+    for (auto* t : g_slashFlashTextures) {
+        if (t) available[availableCount++] = t;
+    }
+
+    if (availableCount > 0) {
+        chosen = available[rand() % availableCount];
+    }
+    else {
+        chosen = g_hitEffectTexture;
+    }
+
+    if (!chosen) return;
 
     HitEffectInstance e;
     e.x = worldX;
     e.y = worldY;
+    // Weak-point slash flash should be more visible than a normal hit.
+    e.scale = (chosen == g_hitEffectTexture) ? 1.0f : 2.0f;
     e.timer = 0.0f;
     e.frameTime = 0.08f;
     e.frame = 0;
     e.active = true;
+    e.texture = chosen;
+
+    // Some textures are sprite-sheets (slash flash), others are single images (legacy hit).
+    if (chosen == g_hitEffectTexture) {
+        e.rows = 1;
+        e.columns = 1;
+        e.frameCount = 1;
+    }
+    else {
+        e.rows = WEAKPOINT_HIT_EFFECT_ROWS;
+        e.columns = WEAKPOINT_HIT_EFFECT_COLUMNS;
+        e.frameCount = WEAKPOINT_HIT_EFFECT_FRAMES;
+    }
     g_weakPointHitEffects.push_back(e);
 }
 
@@ -253,6 +286,9 @@ void CleanUpGameWorld()
 
     // 解放击中特效纹理
     ReleaseTexture(g_hitEffectTexture);
+    for (auto& t : g_slashFlashTextures) {
+        ReleaseTexture(t);
+    }
     ReleaseTexture(g_numberTexture);
     ReleaseTexture(g_uiNumberTexture);
     ReleaseTexture(g_arrowTexture);
@@ -565,6 +601,11 @@ void InitGameWorld() {
 
     LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
 
+    LoadTexture(g_pDevice, "asset/effect/slash_flash1.png", &g_slashFlashTextures[0]);
+    LoadTexture(g_pDevice, "asset/effect/slash_flash2.png", &g_slashFlashTextures[1]);
+    LoadTexture(g_pDevice, "asset/effect/slash_flash3.png", &g_slashFlashTextures[2]);
+    LoadTexture(g_pDevice, "asset/effect/slash_flash4.png", &g_slashFlashTextures[3]);
+
 	// for the gauge bar 
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame.png", &g_gaugeBarTexture);
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame_background.png", &g_gaugeBarEmptyTexture);
@@ -760,7 +801,7 @@ void UpdateGame(float deltaTime) {
             it->frame++;
         }
 
-        if (it->frame >= WEAKPOINT_HIT_EFFECT_FRAMES) {
+        if (it->frame >= it->frameCount) {
             it = g_weakPointHitEffects.erase(it);
         }
         else {
@@ -1089,16 +1130,20 @@ void DrawGame() {
     }
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    if (g_hitEffectTexture) {
-        for (const auto& e : g_weakPointHitEffects) {
-            if (!e.active) continue;
-            std::pair<float, float> screenPos = worldToScreen(e.x, e.y);
-            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-            float size = 0.25f * 1.5f;
-            RenderImage(screenPos.first - size * 0.5f, screenPos.second - size * 0.5f,
-                size, size, g_hitEffectTexture,
-                e.frame, WEAKPOINT_HIT_EFFECT_ROWS, WEAKPOINT_HIT_EFFECT_COLUMNS);
-        }
+    for (const auto& e : g_weakPointHitEffects) {
+        if (!e.active) continue;
+        if (!e.texture) continue;
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        float size = 0.25f * 1.5f * e.scale;
+
+        // Hit effects are stored in WORLD coordinates, but `RenderImage` draws in SCREEN coordinates.
+        // Convert to screen space before rendering, otherwise the effect appears offset by camera.
+        // Disable culling here because culling uses world-space camera checks.
+        auto p = worldToScreen(e.x - size * 0.5f, e.y - size * 0.5f);
+        RenderImage(p.first, p.second,
+            size, size, e.texture,
+            e.frame, e.rows, e.columns,
+            false);
     }
 
     // Background disabled temporarily for debugging visibility

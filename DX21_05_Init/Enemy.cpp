@@ -471,10 +471,14 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
         isCritical
     );
 
+    // Always spawn hit effect on any successful hit.
+    // Use a stable hit anchor (same convention as damage numbers): X=center, Y=top.
+    // Slightly offset down so the flash appears on the body rather than above the head.
+    SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.85f);
+
     if (isCritical) {
         // Slightly stronger shake on weak-point/critical hit
         g_camera.Shake(0.08f, 0.6f);
-        SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.5f);
     }
     else {
         // Subtle shake on normal hit

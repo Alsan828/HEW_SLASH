@@ -453,8 +453,9 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	float frameHeight = 1.0f / rows;
 
 	// Calculate current frame position in sprite sheet
-	int row = frameIndex / columns;
+	// rows = vertical count, columns = horizontal count
 	int col = frameIndex % columns;
+	int row = frameIndex / columns;
 
 	// Calculate texture coordinate range for current frame
 	float u0 = col * frameWidth;       // Left boundary
