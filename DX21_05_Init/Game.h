@@ -502,7 +502,7 @@ void CheckDashAttack();
 
 
 // 在Game.h中添加这些变量声明
-class MouseIndicatorSystem {
+class MouseIndicatorSystem  {
 private:
     float m_mouseWorldX, m_mouseWorldY;
     float m_arrowAngle;

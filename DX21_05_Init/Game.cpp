@@ -627,8 +627,10 @@ void UpdateGame(float deltaTime) {
         g_gameStats.UpdateMaxCombo(g_player.comboCount);
     }
 
-    // Acceleration state: active only when comboCount > threshold
-    g_player.isAccelerated = (g_player.comboCount > ACCEL_COMBO_THRESHOLD);
+    // Acceleration state:
+    // - active when comboCount > threshold
+    // - also active during gauge-based invincibility (gauge/full-gauge reward during kill streak)
+    g_player.isAccelerated = (g_player.comboCount > ACCEL_COMBO_THRESHOLD) || (g_player.isInvincible && g_player.isGaugeInvincible);
 
     // for updating the invincibility timer
     if (g_player.isInvincible) {

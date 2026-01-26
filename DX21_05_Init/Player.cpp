@@ -34,8 +34,9 @@ static void PerformDashHitTest(float testX, float testY) {
 
     // 冲刺斩击的“攻击判定”不应该等同于冲刺时的“受击判定”(当前物理碰撞盒被缩小到 1/4)。
     // 这里单独放大命中检测盒，避免高速擦肩而过。
-    // Requested: slightly increase slash width.
-    constexpr float DASH_ATTACK_HITBOX_SCALE = 0.75f;
+    // Requested: increase slash width.
+    constexpr float DASH_ATTACK_HITBOX_SCALE_X = 1.35f;
+    constexpr float DASH_ATTACK_HITBOX_SCALE_Y = 0.85f;
 
     float playerWidth = PLAYER_WIDTH;
     float playerHeight = PLAYER_HEIGHT;
@@ -43,8 +44,8 @@ static void PerformDashHitTest(float testX, float testY) {
     float offsetY = 0.0f;
 
     if (g_player.isDashing) {
-        playerWidth = PLAYER_WIDTH * DASH_ATTACK_HITBOX_SCALE;
-        playerHeight = PLAYER_HEIGHT * DASH_ATTACK_HITBOX_SCALE;
+        playerWidth = PLAYER_WIDTH * DASH_ATTACK_HITBOX_SCALE_X;
+        playerHeight = PLAYER_HEIGHT * DASH_ATTACK_HITBOX_SCALE_Y;
         offsetX = (PLAYER_WIDTH - playerWidth) * 0.5f;
         offsetY = (PLAYER_HEIGHT - playerHeight) * 0.5f;
     }
