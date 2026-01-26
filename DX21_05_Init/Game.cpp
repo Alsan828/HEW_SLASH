@@ -55,6 +55,33 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
     g_weakPointHitEffects.push_back(e);
 }
 
+HWND g_gameHwnd = nullptr;
+
+void SetGameWindowHandle(HWND hwnd) {
+    g_gameHwnd = hwnd;
+}
+
+GameCursor g_gameCursor;
+
+void GameCursor::Initialize(ID3D11ShaderResourceView* texture) {
+    m_texture = texture;
+}
+
+void GameCursor::Render(float cameraX, float cameraY) {
+    if (!m_visible || !m_texture) return;
+
+    float mouseX, mouseY;
+    g_inputSystem.GetMousePosition(mouseX, mouseY);
+
+    auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
+        return { worldX - cameraX, worldY - cameraY };
+        };
+
+    auto pos = worldToScreen(mouseX, mouseY);
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    RenderImage(pos.first, pos.second, m_width, m_height, m_texture, 0, 1, 1, false, 0.0f);
+}
+
 // ...existing code...
 
 static void SpawnPlayerAfterImage() {
@@ -543,6 +570,7 @@ void InitGameWorld() {
     InitEnemies();
     g_mapManager.InitializeMaps();
     g_mouseIndicator.Initialize();
+    g_gameCursor.Initialize(g_cursorTexture);
 
     g_camera.SetSmoothness(camera_Smoothness);
     g_camera.SetLookAhead(camera_LookAhead);
@@ -1092,6 +1120,9 @@ void DrawGame() {
     DrawComboUI();
     DrawGaugeUI();
     DrawScoreUI();
+
+    // Always draw the in-game cursor (game start -> game end)
+    g_gameCursor.Render(g_camera.GetX(), g_camera.GetY());
     
 }
 void HandleInput() {
@@ -1282,15 +1313,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    // Draw mouse position indicator (original code)
-    float indicatorSize = 0.1f;
-    float cursorWidth = 0.04f;
-    float cursorHeight = 0.12f;
-    auto mousePos = worldToScreen(m_mouseWorldX - indicatorSize / 2, m_mouseWorldY - indicatorSize / 2);
-
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    RenderImage(mousePos.first, mousePos.second, cursorWidth, cursorHeight,
-        m_cursorTexture, 0, 1, 1, false, 0);
+    // Mouse cursor is rendered by `g_gameCursor` globally.
 
     // Fixed display of dash points in top right corner of screen
     float dashPointsX = 0.9f; // Right side of screen

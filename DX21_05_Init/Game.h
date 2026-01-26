@@ -361,6 +361,22 @@ extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
 
+class GameCursor {
+private:
+    ID3D11ShaderResourceView* m_texture = nullptr;
+    float m_width = 0.04f;
+    float m_height = 0.12f;
+    bool m_visible = true;
+
+public:
+    void Initialize(ID3D11ShaderResourceView* texture);
+    void SetVisible(bool visible) { m_visible = visible; }
+    bool IsVisible() const { return m_visible; }
+    void Render(float cameraX, float cameraY);
+};
+
+extern GameCursor g_gameCursor;
+
 // 在Game.h的全局变量部分添加
 extern float g_slowMoTimer;      // 时间减慢计时器
 extern float g_slowMoFactor;     // 时间减慢倍率
@@ -376,6 +392,9 @@ extern ID3D11ShaderResourceView* g_pauseTexture;
 
 // Game initialization
 void InitGameWorld();
+
+// Provide the game window handle so mouse->client conversion is correct.
+void SetGameWindowHandle(HWND hwnd);
 // Drawing function
 void DrawGame();
 

@@ -113,13 +113,17 @@ void InputSystem::UpdateMouseState() {
 void InputSystem::GetMousePosition(float& worldX, float& worldY) const {
     // 将屏幕坐标转换为世界坐标
     // 这里需要根据你的渲染系统调整转换逻辑
-    HWND hwnd = GetForegroundWindow();
+    extern HWND g_gameHwnd;
+    HWND hwnd = g_gameHwnd ? g_gameHwnd : GetForegroundWindow();
     RECT clientRect;
     GetClientRect(hwnd, &clientRect);
 
+    POINT clientPos = m_mousePos;
+    ScreenToClient(hwnd, &clientPos);
+
     // 将鼠标坐标归一化到 [-1, 1] 范围
-    float screenX = (2.0f * m_mousePos.x / clientRect.right) - 1.0f;
-    float screenY = 1.0f - (2.0f * m_mousePos.y / clientRect.bottom);
+    float screenX = (2.0f * clientPos.x / clientRect.right) - 1.0f;
+    float screenY = 1.0f - (2.0f * clientPos.y / clientRect.bottom);
 
     // 转换为世界坐标（考虑相机偏移）
     worldX = screenX + g_camera.GetX();

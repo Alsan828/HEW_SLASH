@@ -55,6 +55,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
         hInstance,
         NULL);
 
+    SetGameWindowHandle(hWnd);
+
     // Initialize DirectX before entering game loop
     RendererInit(hWnd);    // 初始化音频系统
     //InitGameWorld();
