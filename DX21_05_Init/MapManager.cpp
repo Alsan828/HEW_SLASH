@@ -223,6 +223,42 @@ void MapManager::InitializeMaps() {
     world2Area7Map.CreateWorld2Area7Map();
     AddMap(world2Area7Map);
 
+    // FOR STAGE3
+    // create the world3 area1
+    Map world3Area1Map("World3Area1", 0.15f, 0.15f);
+    world3Area1Map.CreateWorld3Area1Map();
+    AddMap(world3Area1Map);
+
+    // create the world3 area3
+    Map world3Area2Map("World3Area2", 0.15f, 0.15f);
+    world3Area2Map.CreateWorld3Area2Map();
+    AddMap(world3Area2Map);
+
+    // create the world3 area3
+    Map world3Area3Map("World3Area3", 0.15f, 0.15f);
+    world3Area3Map.CreateWorld3Area3Map();
+    AddMap(world3Area3Map);
+
+    // create the world3 area4
+    Map world3Area4Map("World3Area4", 0.15f, 0.15f);
+    world3Area4Map.CreateWorld3Area4Map();
+    AddMap(world3Area4Map);
+
+    // create the world3 area5
+    Map world3Area5Map("World3Area5", 0.15f, 0.15f);
+    world3Area5Map.CreateWorld3Area5Map();
+    AddMap(world3Area5Map);
+
+    // create the world3 area6
+    Map world3Area6Map("World3Area6", 0.15f, 0.15f);
+    world3Area6Map.CreateWorld3Area6Map();
+    AddMap(world3Area6Map);
+
+    // create the world3 area7
+    Map world3Area7Map("World3Area7", 0.15f, 0.15f);
+    world3Area7Map.CreateWorld3Area7Map();
+    AddMap(world3Area7Map);
+
     // Set initial current map to test map
     m_currentMap = GetMap("World1Area1");
 
