@@ -65,6 +65,8 @@ GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;
 
 ID3D11ShaderResourceView* g_pauseTexture = nullptr; // added for pause overlay
+ID3D11ShaderResourceView* g_paddingTitleAnim = nullptr; // added for pause overlay
+Animation paddingTitleAnim;
 
  float camera_Smoothness = 0.02f;//0.02f
  float camera_LookAhead = 0.6f;//0.6f

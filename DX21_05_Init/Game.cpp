@@ -400,10 +400,10 @@ void DrawScoreUI(void)
     if (!g_uiNumberTexture) return;
 
     // Position on top left, below the timer
-    float scoreX = -0.77f;
-    float scoreY = 0.61f;
+    float scoreX = -0.768f;
+    float scoreY = 0.66f;
     float scoreDigitWidth = 0.03f;
-    float scoreDigitHeight = 0.06f;
+    float scoreDigitHeight = 0.07f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -1434,28 +1434,29 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
     
     float uiX = -1.0f;
-    float uiY = 0.35f;
+    float uiY = 0.25f;
     float uiWidth = 0.5f;
-    float uiHeight = 0.7f;
+    float uiHeight = 1.0f;
     RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
 
     // for the timer counting
-    float timerX = -0.77f;  // position x axis
-    float timerY = 0.74f;   // position y axis
+    float timerX = -0.768f;  // position x axis
+    float timerY = 0.78f;   // position y axis
     float timerDigitWidth = 0.03f;  // width
-    float timerDigitHeight = 0.06f; // height
+    float timerDigitHeight = 0.07f; // height
 
     // for the minutes
     int minuteTens = g_gameMinutes / 10;
     int minuteOnes = g_gameMinutes % 10;
     RenderNumber(minuteTens, timerX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
-    RenderNumber(minuteOnes, timerX + timerDigitWidth * 1.2f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(minuteOnes, timerX + timerDigitWidth * 0.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     // for the seconds
     int secondTens = g_gameSeconds / 10;
     int secondOnes = g_gameSeconds % 10;
-    RenderNumber(secondTens, timerX + timerDigitWidth * 2.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
-    RenderNumber(secondOnes, timerX + timerDigitWidth * 4.0f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    float secondsStartX = timerX + timerDigitWidth * 2.2f;
+    RenderNumber(secondTens, secondsStartX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(secondOnes, secondsStartX + timerDigitWidth * 0.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     //SetColor(1.0f, 1.0f, 1.0f, 1.0f); 
 
