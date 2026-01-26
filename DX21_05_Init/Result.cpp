@@ -23,6 +23,7 @@ bool ResultScene::Init()
     LoadTexture(g_pDevice, "asset/UI/result/normal_score.png", &normalScoreTexture);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &numberTexture);
+    LoadTexture(g_pDevice, "asset/UI/dot.png", &dotTexture);
 
     LoadTexture(g_pDevice, "asset/UI/result/title_normal.png", &titleTexture); // for the button
     LoadTexture(g_pDevice, "asset/UI/result/title_hover.png", &titleHoverTexture);
@@ -66,8 +67,6 @@ void ResultScene::Update(float deltaTime)
             return;
         }
     }
-
-
 }
 
 //it draws the objects
@@ -90,18 +89,20 @@ void ResultScene::Draw()
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         // for kills
-        DrawNumber(g_gameStats.GetEnemiesKilled(), -0.5f, 0.5f, 0.1f, 0.1f, numberTexture);
+        int totalKills = g_gameStats.GetEnemiesKilled() + g_gameStats.GetWeakPointKills();
+        DrawNumber(totalKills, -0.55f, 0.47f, 0.1f, 0.1f, numberTexture);
 
         // for deaths
-        DrawNumber(g_gameStats.GetTotalDeaths(), -0.5f, 0.1f, 0.1f, 0.1f, numberTexture);
+        DrawNumber(g_gameStats.GetTotalDeaths(), -0.55f, 0.07f, 0.1f, 0.1f, numberTexture);
 
         // for time
         int minutes = (int)(g_gameStats.GetTotalTime() / 60.0f);
         int seconds = (int)g_gameStats.GetTotalTime() % 60;
-        DrawTime(minutes, seconds, -0.5f, 0.3f, 0.1f, numberTexture);
+        DrawTime(minutes, seconds, -0.55f, 0.27f, 0.1f, numberTexture);
+        RenderImage(-0.4f, 0.27f, 0.1f, 0.16f, dotTexture, 0, 1, 1);
 
-        // for the score
-        DrawNumber(g_gameStats.GetTotalScore(), 0.4f, 0.1f, 0.1f, 0.1f, numberTexture);
+        // show the final calculated score
+        DrawNumber(g_gameStats.GetTotalScore(), 0.3f, 0.07f, 0.1f, 0.1f, numberTexture);
     }
 
     for (const auto& btn : uiButtons)
@@ -130,8 +131,7 @@ void DrawNumber(int number, float x, float y, float width, float height, ID3D11S
         // Draw the digit at current position
         RenderImage(digitX, y, width, height, texture, digit, 1, 10, false, 0.0f, false);
         // Move X position to the right for next digit
-        // width * 0.7f so there will be a small gap between digits
-        digitX += width * 0.7f;
+        digitX += width * 0.7f; // size 0.7f so there will be a small gap between digits
     }
 }
 
@@ -140,14 +140,14 @@ void DrawTime(int minutes, int seconds, float x, float y, float size, ID3D11Shad
 
     //  the first digit of minutes
     RenderImage(digitX, y, size, size, texture, minutes / 10, 1, 10, false, 0.0f, false);
-    digitX += size * 0.9f; // size * 0.7f so there will be a small gap between digits
+    digitX += size * 0.7f; // size * 0.7f so there will be a small gap between digits
     // the second digit of minutes
     RenderImage(digitX, y, size, size, texture, minutes % 10, 1, 10, false, 0.0f, false);
-    digitX += size * 1.2f;  // Space for colon between the minutes and the seconds
+    digitX += size * 1.2f; // size * 0.7f so there will be a small gap between digits
 
     // the first digit of seconds 
     RenderImage(digitX, y, size, size, texture, seconds / 10, 1, 10, false, 0.0f, false);
-    digitX += size * 0.9f; // size * 0.7f so there will be a small gap between digits
+    digitX += size * 0.7f; // size * 0.7f so there will be a small gap between digits
     // the second digit of seconds
     RenderImage(digitX, y, size, size, texture, seconds % 10, 1, 10, false, 0.0f, false);
 }
@@ -156,44 +156,19 @@ void DrawTime(int minutes, int seconds, float x, float y, float size, ID3D11Shad
 //it erases the objects
 void ResultScene::Uninit()
 {
-    if (backgroundTexture)
-    {
-        backgroundTexture->Release();
-        backgroundTexture = nullptr;
-    }
+    ReleaseTexture(backgroundTexture);
 
-    if (normalScoreTexture)
-    {
-        normalScoreTexture->Release();
-        normalScoreTexture = nullptr;
-    }
+    ReleaseTexture(normalScoreTexture);
 
-    if (numberTexture) {
-        numberTexture->Release();
-        numberTexture = nullptr;
-    }
+    ReleaseTexture(numberTexture);
 
-    if (titleTexture)
-    {
-        titleTexture->Release();
-        titleTexture = nullptr;
-    }
-    if (titleHoverTexture)
-    {
-        titleHoverTexture->Release();
-        titleHoverTexture = nullptr;
-    }
+    ReleaseTexture(titleTexture);
+    ReleaseTexture(titleHoverTexture);
 
-    if (continueTexture)
-    {
-        continueTexture->Release();
-        continueTexture = nullptr;
-    }
-    if (continueHoverTexture)
-    {
-        continueHoverTexture->Release();
-        continueHoverTexture = nullptr;
-    }
+    ReleaseTexture(continueTexture);
+    ReleaseTexture(continueHoverTexture);
+
+    ReleaseTexture(dotTexture);
 
     uiButtons.clear();
     g_mouseIndicator.Cleanup();

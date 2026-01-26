@@ -16,12 +16,17 @@ TitleScene::TitleScene(SceneManager* manager)
 bool TitleScene::Init() 
 {
 	ShowCursor(TRUE);
-    LoadTexture(g_pDevice, "asset/UI/title/cut_sheet.png", &tex);
+    LoadTexture(g_pDevice, "asset/UI/title/UI_title_background_animation_v8.png", &tex);
+    LoadTexture(g_pDevice, "asset/UI/title/padding_animation.png", &g_paddingTitleAnim);
 
     InitGameWorld();
-    m_titleAnim.AddClip("titleScene",0,8,1,9, 0.06f, false, tex); // 0.06s per frame. lower number is faster
+    m_titleAnim.AddClip("titleScene",0,13,1,14, 0.08f, false, tex); // 0.06s per frame. lower number is faster
 	m_titleAnim.SetClip("titleScene");
 	m_titleAnim.Pause(); // start paused, will play when mouse is clicked
+
+   
+    paddingTitleAnim.AddClip("padddingAnimation", 0, 13, 1, 14, 0.09f, true, g_paddingTitleAnim);
+    paddingTitleAnim.SetClip("paddingAnimation");
 
     uiButtons.clear();
     g_mouseIndicator.ShowMouseIndicator(false);
@@ -41,6 +46,7 @@ void TitleScene::Update(float deltaTime)
     }
 
     m_titleAnim.Update(deltaTime);
+    paddingTitleAnim.Update(deltaTime);
 
     // switch as soon as the animation finishes
     if (m_playing && m_titleAnim.IsFinished()) 
@@ -63,6 +69,15 @@ void TitleScene::Draw()
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, tex, m_titleAnim.GetCurrentFrame(), m_titleAnim.GetSplitX(), m_titleAnim.GetSplitY());
     }
+
+    ID3D11ShaderResourceView* paddingTex = paddingTitleAnim.GetCurrentClipTexture();
+    if (paddingTex) {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, paddingTex,
+           paddingTitleAnim.GetCurrentFrame(),
+           paddingTitleAnim.GetSplitX(),
+           paddingTitleAnim.GetSplitY());
+    }
 }
 
 //it erases the objects in title
@@ -74,8 +89,15 @@ void TitleScene::Uninit()
         tex = nullptr;
     }
 
+    if (g_paddingTitleAnim)
+    {
+        g_paddingTitleAnim->Release();
+        g_paddingTitleAnim = nullptr;
+    }
+
     // clean up the texture for the animation
     m_titleAnim.ClearClips();
+    paddingTitleAnim.ClearClips();
 
     // clean up the buttons
     uiButtons.clear();

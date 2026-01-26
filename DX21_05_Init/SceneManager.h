@@ -57,4 +57,5 @@ public:
     void SetOriginalPausedScene(SCENE scene) { originalPausedScene = scene; }
 
     StageInfo GetCurrentStageInfo() const { return currentStageInfo; } //new test
+    SCENE GetStageSelectForCurrentStage();
 };

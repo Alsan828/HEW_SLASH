@@ -19,10 +19,10 @@ private:
 
     // added december 1st
     std::vector<UIButton> uiButtons;
-    //ID3D11ShaderResourceView* buttonTexture = nullptr;      
-    //ID3D11ShaderResourceView* buttonHoverTexture = nullptr; 
-    //ID3D11ShaderResourceView* bossButtonTexture = nullptr;
-    //ID3D11ShaderResourceView* bossButtonHoverTexture = nullptr;
+    ID3D11ShaderResourceView* buttonTexture = nullptr;      
+    ID3D11ShaderResourceView* buttonHoverTexture = nullptr; 
+    ID3D11ShaderResourceView* bossButtonTexture = nullptr;
+    ID3D11ShaderResourceView* bossButtonHoverTexture = nullptr;
 
     ID3D11ShaderResourceView* backTexture = nullptr;
     ID3D11ShaderResourceView* backHoverTexture = nullptr;

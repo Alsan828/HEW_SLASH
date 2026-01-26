@@ -24,7 +24,23 @@ ID3D11ShaderResourceView* g_playerAirChargeTexture = nullptr; // 通用空中蓄
 ID3D11ShaderResourceView* g_playerFallingTexture = nullptr;  // 通用下落纹理
 ID3D11ShaderResourceView* g_playerGroundChargeTexture = nullptr; // 通用地面蓄力纹理
 ID3D11ShaderResourceView* g_playerWallSlideTexture = nullptr; 
+// for the character when invincible
+ID3D11ShaderResourceView* g_invinciblePlayerIdleTexture = nullptr;    // 通用站立纹理
+ID3D11ShaderResourceView* g_invinciblePlayerJumpTexture = nullptr;   // 通用跳跃纹理
+ID3D11ShaderResourceView* g_invinciblePlayerRunTexture = nullptr;     // 通用奔跑纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash1Texture = nullptr; // 通用斩击1纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash2Texture = nullptr; // 通用斩击2纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash3Texture = nullptr; // 通用斩击3纹理
+ID3D11ShaderResourceView* g_invinciblePlayerSlash4Texture = nullptr; // 通用斩击4纹理
+ID3D11ShaderResourceView* g_invinciblePlayerAirChargeTexture = nullptr; // 通用空中蓄力纹理
+ID3D11ShaderResourceView* g_invinciblePlayerFallingTexture = nullptr;  // 通用下落纹理
+ID3D11ShaderResourceView* g_invinciblePlayerGroundChargeTexture = nullptr; // 通用地面蓄力纹理
+ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture = nullptr; // 通用地面蓄力纹理
+
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
+ID3D11ShaderResourceView* g_goalTexture = nullptr;
+ID3D11ShaderResourceView* g_oneWayPlatformTexture = nullptr;
+ID3D11ShaderResourceView* g_bossHealthBarTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture2 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture3 = nullptr;
@@ -41,11 +57,16 @@ ID3D11ShaderResourceView* g_gaugeBarTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarEmptyTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarFilledTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeFullEffectTexture = nullptr;
+
+ID3D11ShaderResourceView* g_attackCountTestTexture = nullptr;
+
 InputSystem g_inputSystem;
 GameTimer g_gameTimer;
 GameState g_gameState = STATE_PLAYING;
 
 ID3D11ShaderResourceView* g_pauseTexture = nullptr; // added for pause overlay
+ID3D11ShaderResourceView* g_paddingTitleAnim = nullptr; // added for pause overlay
+Animation paddingTitleAnim;
 
  float camera_Smoothness = 0.02f;//0.02f
  float camera_LookAhead = 0.6f;//0.6f

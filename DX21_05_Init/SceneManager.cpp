@@ -2,18 +2,6 @@
 #include "TitleScene.h"
 
 #include "GameplayScene.h" 
-
-
-//#include "Stage.h"
-//#include "Stage2.h"
-//#include "Stage3.h"
-//#include "Stage4.h"
-//#include "Stage5.h"
-//#include "Stage6.h"
-//#include "Stage7.h"
-//#include "BossScene.h"
-
-
 #include "CakeScene.h"
 #include "Menu.h"
 #include "HowToPlay.h"
@@ -80,6 +68,9 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
             g_gameStats.Reset();
+            g_gameElapsedTime = 0.0f;
+            g_gameMinutes = 0;
+            g_gameSeconds = 0;
             comingFromStageSelect = false;
         }
 
@@ -110,6 +101,9 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_player.isInvincible = false;
             g_player.invincibleTimer = 0.0f;
             g_gameStats.Reset();
+            g_gameElapsedTime = 0.0f;
+            g_gameMinutes = 0;
+            g_gameSeconds = 0;
             comingFromStageSelect = false;
         }
         currentScene = new CakeScene(this);
@@ -126,6 +120,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
                 previousScene = nullptr;
             }
         }
+
         currentScene = new MenuScene(this); // for the prototype stage
         return currentScene->Init();
         break;
@@ -236,6 +231,28 @@ bool SceneManager::SwitchToStage(int world, int stage)
 {
     currentStageInfo = StageInfo(world, stage);
     return SwitchScene(GAMEPLAY);
+}
+
+SCENE SceneManager::GetStageSelectForCurrentStage()
+{
+    int stage = currentStageInfo.GetWorld();
+
+    if (stage == 1)
+    {
+        return STAGESELECT;
+    }
+    else if (stage == 2)
+    {
+        return STAGESELECT2;
+    }
+    else if (stage == 3)
+    {
+        return STAGESELECT3;
+    }
+    else
+    {
+        return STAGESELECT;  // default to stage1
+    }
 }
 
 //for updating 

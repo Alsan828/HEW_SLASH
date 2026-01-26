@@ -9,36 +9,36 @@ class SpatialGrid;
 struct GridCell;
 // Tile information using string-based representation
 struct TileInfo {
-    std::string code;      // Two-character code, e.g., "G1", "E1", "PF"
-    std::string type;      // Type name: ground, wall, enemy, portal, etc.
-    std::string subtype;   // Subtype: forest, ice, enemy1, etc.
-    bool isSolid;          // Whether the tile is solid (collidable)
-    bool isSpawn;          // Whether the tile is a spawn point
-    bool isPortal;         // Whether the tile is a portal
-    bool isEnemy;          // Whether the tile represents an enemy spawn
+    std::string code = " ";      // Two-character code, e.g., "G1", "E1", "PF"
+    std::string type = " ";      // Type name: ground, wall, enemy, portal, etc.
+    std::string subtype = " ";   // Subtype: forest, ice, enemy1, etc.
+    bool isSolid = false;          // Whether the tile is solid (collidable)
+    bool isSpawn = false;          // Whether the tile is a spawn point
+    bool isPortal = false;         // Whether the tile is a portal
+    bool isEnemy = false;          // Whether the tile represents an enemy spawn
 };
 
 // Map tile structure containing position, size, and tile properties
 struct MapTile {
-    float posX, posY;      // Tile position coordinates
-    float width, height;   // Tile dimensions
+    float posX = 0.0f, posY = 0.0f;      // Tile position coordinates
+    float width = 0.0f, height = 0.0f;   // Tile dimensions
     TileInfo tileInfo;     // Tile properties using TileInfo instead of TileType
-    std::string targetMap; // Target map for portal tiles
-    int linkedSpawnId;     // Associated spawn point ID
+    std::string targetMap = " "; // Target map for portal tiles
+    int linkedSpawnId = -1;     // Associated spawn point ID
 };
 
 // Player spawn point information
 struct SpawnPoint {
-    float posX, posY;      // Spawn position coordinates
-    int id;                // Unique spawn point identifier
-    std::string name;      // Descriptive name for the spawn point
+    float posX = 0.0f, posY = 0.0f;      // Spawn position coordinates
+    int id = 0;                // Unique spawn point identifier
+    std::string name = " ";      // Descriptive name for the spawn point
 };
 
 // Enemy spawn information
 struct EnemySpawnInfo {
     float posX = 0.0f;
     float posY = 0.0f;      // Enemy spawn position
-    std::string enemyType; // Enemy type code: "E1", "E2", "E3", etc.
+    std::string enemyType = " "; // Enemy type code: "E1", "E2", "E3", etc.
     int enemySubtype = 1;      // Enemy subtype identifier
 };
 
@@ -144,6 +144,15 @@ public:
     void CreateWorld2Area6Map();
     void CreateWorld2Area7Map();
     //void CreateBoss2Map();
+
+    void CreateWorld3Area1Map();
+    void CreateWorld3Area2Map();
+    void CreateWorld3Area3Map();
+    void CreateWorld3Area4Map();
+    void CreateWorld3Area5Map();
+    void CreateWorld3Area6Map();
+    void CreateWorld3Area7Map();
+    //void CreateBoss3Map();
 
     // Map clearing methods
     void ClearLayer(MapLayer layer);

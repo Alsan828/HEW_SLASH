@@ -388,6 +388,7 @@ ID3D11ShaderResourceView* ProjectileManager::GetTextureForType(ProjectileType ty
     case ProjectileType::LIGHTNING: return lightningTexture;
     case ProjectileType::POISON_DART: return poisonDartTexture;
     case ProjectileType::HOLY_BOLT: return holyBoltTexture;
+    case ProjectileType::BULLET: return bulletTexture;
     default: return fireballTexture;
     }
 }
@@ -470,6 +471,7 @@ void ProjectileManager::ClearAll() {
 void ProjectileManager::LoadTextures(ID3D11Device* device) {
     // Load various projectile textures
     LoadTexture(device, "asset/enemy/enemy_005_thorn/enemy_005_thorn_Pbullet_right.png", &fireballTexture);
+    LoadTexture(device, "asset/enemy/enemy_003_fort/enemy_003_fort_bullet.png", &bulletTexture);
     LoadTexture(device, "asset/Projectile_IceShard.png", &iceShardTexture);
 
 }
@@ -482,6 +484,15 @@ void ProjectileManager::CreateFireball(float startX, float startY, float targetX
     effect.areaRadius = 0.3f;
 
     AddProjectile(ProjectileType::FIREBALL, startX, startY, targetX, targetY, 0.2f, effect, fromPlayer);
+}
+
+void ProjectileManager::CreateBullet(float startX, float startY, float targetX, float targetY, bool fromPlayer) {
+    ProjectileEffect effect;
+    effect.damage = 100000.0f;
+    effect.burnDamage = 5.0f;
+    effect.areaRadius = 0.3f;
+
+    AddProjectile(ProjectileType::BULLET, startX, startY, targetX, targetY, 0.2f, effect, fromPlayer);
 }
 
 void ProjectileManager::CreateIceShard(float startX, float startY, float targetX, float targetY, bool fromPlayer) {

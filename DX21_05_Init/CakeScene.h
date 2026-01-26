@@ -34,6 +34,29 @@ private:
     float cakeHeight = 0.4f;
 
     CutDirection cutDirection;
+
+
+    // FOR THE CAKE WHEN CUTTING IT IN 8 SLICES
+    float HALF_SLICE_DEG = 22.5f; // bc its 45 divided by 2
+    // 45 bc there are 8 slices. divide 360 which is an entire cirlce by 8 and thats why you get 45
+
+    float RIGHT = 0.0f;
+    float TOP_RIGHT = 45.0f;
+    float TOP = 90.0f;
+    float TOP_LEFT = 135.0f;
+    float LEFT = 180.0f;
+    float BOTTOM_LEFT = 225.0f;
+    float BOTTOM = 270.0f;
+    float BOTTOM_RIGHT = 315.0f;
+
+    float rightPartMax = RIGHT + HALF_SLICE_DEG;               // 22.5
+    float topRightPartMax = TOP_RIGHT + HALF_SLICE_DEG;        // 67.5
+    float topMiddlePartMax = TOP + HALF_SLICE_DEG;             // 112.5
+    float topLeftPartMax = TOP_LEFT + HALF_SLICE_DEG;          // 157.5
+    float leftPartMax = LEFT + HALF_SLICE_DEG;                 // 202.5
+    float bottomLeftPartMax = BOTTOM_LEFT + HALF_SLICE_DEG;    // 247.5
+    float bottomMiddlePartMax = BOTTOM + HALF_SLICE_DEG;       // 292.5
+    float bottomRightPartMax = BOTTOM_RIGHT + HALF_SLICE_DEG;  // 337.5
  
 
 public:

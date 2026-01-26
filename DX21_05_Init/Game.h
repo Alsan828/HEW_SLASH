@@ -17,6 +17,7 @@
 #include "Pause.h"
 #include "Projectile.h"
 #include "Enemy.h"
+#include "Texture1.h"
 
 class ProjectileManager;
 
@@ -254,6 +255,21 @@ private:
     int totalScore = 0;
     int penalizableDeaths = 0;  // deaths happens when I have points
 
+    int maxCombo = 0;           // Track maximum combo reached
+    int currentMaxCombo = 0;
+    int currentAreaEnemyPoints = 0;  // Points from current area
+    int totalEnemyPoints = 0;   // Total accumulated enemy points
+
+    // resets when the player dies
+    int currentScore = 0;                
+    int currentKills = 0;
+    int currentWeakKills = 0;
+
+    // used for the final result
+    int lifetimeEnemyPoints = 0;  
+    int lifetimeKills = 0;        
+    int lifetimeWeakKills = 0;
+
 public:
    // no need construct now bc I initialied the variables above
 
@@ -266,7 +282,7 @@ public:
     void IncrementDeaths();
 
     // Update time
-    void UpdateTime(float time);
+    void UpdateTime(float ime);
 
     // Calculate final score
     void CalculateFinalScore();
@@ -282,6 +298,18 @@ public:
     int GetTotalDeaths() const { return totalDeaths; }
     float GetTotalTime() const { return totalTime; }
     int GetTotalScore() const { return totalScore; }
+    int GetLifetimeEnemyPoints() const { return lifetimeEnemyPoints; }
+    int GetLifetimeKills() const { return lifetimeKills; }
+    int GetLifetimeWeakKills() const { return lifetimeWeakKills; }
+
+    void UpdateMaxCombo(int combo);
+    void ResetAreaProgress();  // Call when player dies
+    int GetMaxCombo() const { return maxCombo; }
+    int GetCurrentAreaEnemyPoints() const { return currentAreaEnemyPoints; }
+    int GetTotalEnemyPoints() const { return totalEnemyPoints; }
+    void AddEnemyPoints(int points);  // Add points for killing enemies
+
+    void ResetCurrentStats(); // to reset the dtats when I die
 };
 extern GameStatistics g_gameStats;
 
@@ -340,7 +368,24 @@ extern ID3D11ShaderResourceView* g_playerAirChargeTexture; // 通用空中蓄力
 extern ID3D11ShaderResourceView* g_playerFallingTexture;  // 通用下落纹理
 extern ID3D11ShaderResourceView* g_playerGroundChargeTexture; // 通用地面蓄力纹理
 extern ID3D11ShaderResourceView* g_playerWallSlideTexture; // 通用地面蓄力纹理
+// for the character when invincible
+extern ID3D11ShaderResourceView* g_invinciblePlayerIdleTexture;    // 通用站立纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerJumpTexture;   // 通用跳跃纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerRunTexture;     // 通用奔跑纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash1Texture; // 通用斩击1纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash2Texture; // 通用斩击2纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash3Texture; // 通用斩击3纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerSlash4Texture; // 通用斩击4纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerAirChargeTexture; // 通用空中蓄力纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerFallingTexture;  // 通用下落纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerGroundChargeTexture; // 通用地面蓄力纹理
+extern ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture; // 通用地面蓄力纹理
+
+
 extern ID3D11ShaderResourceView* g_groundTexture;
+extern ID3D11ShaderResourceView* g_goalTexture;
+extern ID3D11ShaderResourceView* g_oneWayPlatformTexture;
+extern ID3D11ShaderResourceView* g_bossHealthBarTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
 extern ID3D11ShaderResourceView* g_backgroundTexture2;
 extern ID3D11ShaderResourceView* g_backgroundTexture3;
@@ -357,6 +402,9 @@ extern ID3D11ShaderResourceView* g_gaugeBarTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarEmptyTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarFilledTexture;
 extern ID3D11ShaderResourceView* g_gaugeFullEffectTexture;
+
+extern ID3D11ShaderResourceView* g_attackCountTestTexture;
+
 extern InputSystem g_inputSystem;
 extern GameTimer g_gameTimer;
 extern GameState g_gameState;
@@ -389,6 +437,7 @@ extern int g_gameSeconds;
 
 // added november 27th for the pause 
 extern ID3D11ShaderResourceView* g_pauseTexture;
+extern ID3D11ShaderResourceView* g_paddingTitleAnim;
 
 // Game initialization
 void InitGameWorld();
@@ -476,8 +525,8 @@ namespace SoundEffect {
     const std::string SLOWMO_START = "asset/SE/slowmo_start.wav";
     const std::string SLOWMO_END = "asset/SE/slowmo_end.wav";
     const std::string LEVEL_COMPLETE = "asset/SE/level_complete.wav";
-    const std::string UI_HOVER = "asset/SE/ui_hover.wav";
-    const std::string UI_CLICK = "asset/SE/ui_click.wav";
+    const std::string UI_HOVER = "asset/SE/cursor.wav";
+    const std::string UI_CLICK = "asset/SE/enter.wav";
     const std::string PAUSE = "asset/SE/pause.wav";
     const std::string RESUME = "asset/SE/resume.wav";
 }

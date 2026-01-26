@@ -13,33 +13,35 @@ bool StageSelect3::Init()
 {
     LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_background.png", &backgroundTexture);      // abckground texture
 
-    // for test now change it later
-    //LoadTexture(g_pDevice, "asset/UI/button_normal.png", &buttonTexture); // for the buttons
-   // LoadTexture(g_pDevice, "asset/UI/button_hover.png", &buttonHoverTexture);
-    //LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_Boss_nomalsize.png", &bossButtonTexture);
-    //LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_Boss_bigsize.png", &bossButtonHoverTexture);
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_stage_nomalsize.png", &buttonTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_stage_bigsize.png", &buttonHoverTexture);
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_Boss_nomalsize.png", &bossButtonTexture);
+    LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_Boss_bigsize.png", &bossButtonHoverTexture);
 
     // for the arrow to go to next stageselect screens
     LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_normalsize.png", &arrowTexture);
     LoadTexture(g_pDevice, "asset/UI/stage_select/StageSelect_next_bigsize.png", &arrowHoverTexture);
 
     // add them when I have the actual stage
-    //uiButtons.emplace_back(-0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-1
-    //uiButtons.emplace_back(-0.25f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-2
-    //uiButtons.emplace_back(0.15f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-3
-    //uiButtons.emplace_back(0.65f, 0.1f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // 2-4
-    //uiButtons.emplace_back(-0.65f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-5
-    //uiButtons.emplace_back(-0.25f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // 2-6
-    //uiButtons.emplace_back(0.15f, -0.5f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // 2-7
-    //uiButtons.emplace_back(0.63f, -0.33f, 0.4f, 0.8f, GAMEPLAY, bossButtonTexture, bossButtonHoverTexture);  // go to boss
-    //for (auto& btn : uiButtons)
-    //{
-    //    btn.SetHitboxScale(0.7f, 0.2f);
-    //    btn.SetHitboxOffset(-0.05f);
-    //}
+    // top row
+    uiButtons.emplace_back(-0.65f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 3-1
+    uiButtons.emplace_back(-0.3f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 3-3
+    uiButtons.emplace_back(0.06f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 3-5
+    uiButtons.emplace_back(0.43f, 0.15f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);   // go to 3-7
+
+    // bottom row
+    uiButtons.emplace_back(-0.5f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 3-2
+    uiButtons.emplace_back(-0.12f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture); // go to 3-4
+    uiButtons.emplace_back(0.26f, -0.33f, 0.4f, 0.8f, GAMEPLAY, buttonTexture, buttonHoverTexture);  // go to 3-6
+    uiButtons.emplace_back(0.63f, -0.33f, 0.4f, 0.8f, GAMEPLAY, bossButtonTexture, bossButtonHoverTexture);  // go to boss
+    for (auto& btn : uiButtons)
+    {
+        btn.SetHitboxScale(0.7f, 0.2f);
+        btn.SetHitboxOffset(-0.05f);
+    }
 
     // left arrow so I can go to stage select world 2
-    uiButtons.emplace_back(-0.92f, -0.2f, 0.4f, 0.6f, STAGESELECT2, arrowTexture, arrowHoverTexture);
+    uiButtons.emplace_back(-0.905f, 0.0f, 0.4f, 0.6f, STAGESELECT2, arrowTexture, arrowHoverTexture);
     uiButtons.back().SetHitboxScale(0.4f, 0.6f);
     uiButtons.back().SetHitboxOffset(-0.04f);
     uiButtons.back().SetRotation(180.0f); // rotate to pointing to the left
@@ -66,15 +68,16 @@ void StageSelect3::Update(float deltaTime)
     {
         if (uiButtons[i].Process() == UIButtonResult::Clicked)
         {
-            // for the areas (stages) ADD LATER
-            //if (i >= 0 && i < 8)
-            //{
-            //    // Go to World3Area1, and to the other ones
-            //    sceneManager->SwitchToStage(3, i + 1);
-            //    return;
-            //}
-            // left arrow to go to stageselect world2
-            if (i == 0) // change to i = 8 later when there are areas (stages)
+            // the first 8 buttons are for the stage
+            if (i >= 0 && i < 8)
+            {
+                int stageNumbers[8] = { 1, 3, 5, 7, 2, 4, 6, 8 }; // 8 is the boss
+                sceneManager->SwitchToStage(3, stageNumbers[i]);
+
+                return;
+            }
+            // for the right arrow
+            else if (i == 8)
             {
                 sceneManager->SwitchScene(STAGESELECT2);
                 return;
@@ -104,22 +107,22 @@ void StageSelect3::Draw()
         btn.Draw(0.65f);
 
 
-    //if (g_numberTexture)
-    //{
-    //    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    if (g_numberTexture)
+    {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    //    float numberWidth = 0.03f;
-    //    float numberHeight = 0.05f;
-    //    float spaceBetweenNumbers = 0.06f;     // for the space between the numbers
+        float numberWidth = 0.03f;
+        float numberHeight = 0.05f;
+        float spaceBetweenNumbers = 0.045f;     // for the space between the numbers
 
-    //    DrawAreaNumber(1, 1, -0.7f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-1
-    //    DrawAreaNumber(1, 2, -0.35f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-2
-    //    DrawAreaNumber(1, 3, 0.01f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-3
-    //    DrawAreaNumber(1, 4, 0.38f, 0.16f, numberWidth, numberHeight, spaceBetweenNumbers);    // 1-4
-    //    DrawAreaNumber(1, 5, -0.55f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-5
-    //    DrawAreaNumber(1, 6, -0.17f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);  // 1-6	
-    //    DrawAreaNumber(1, 7, 0.21f, -0.32f, numberWidth, numberHeight, spaceBetweenNumbers);   // 1-7
-    //}
+        DrawAreaNumber(3, 1, -0.693f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);  // 3-1    1
+        DrawAreaNumber(3, 3, -0.343f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);  // 3-2    3
+        DrawAreaNumber(3, 5, 0.018f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);   // 3-3    5
+        DrawAreaNumber(3, 7, 0.39f, 0.155f, numberWidth, numberHeight, spaceBetweenNumbers);    // 3-4    7
+        DrawAreaNumber(3, 2, -0.54f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);  // 3-5    2
+        DrawAreaNumber(3, 4, -0.16f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);  // 3-6	  4
+        DrawAreaNumber(3, 6, 0.22f, -0.325f, numberWidth, numberHeight, spaceBetweenNumbers);   // 3-7    6
+    }
 }
 
 void StageSelect3::DrawAreaNumber(int world, int stage, float x, float y, float width, float height, float space)
@@ -139,7 +142,7 @@ void StageSelect3::Uninit()
         backgroundTexture->Release();
         backgroundTexture = nullptr;
     }
- /*   if (buttonTexture)
+    if (buttonTexture)
     {
         buttonTexture->Release();
         buttonTexture = nullptr;
@@ -158,7 +161,7 @@ void StageSelect3::Uninit()
     {
         bossButtonHoverTexture->Release();
         bossButtonHoverTexture = nullptr;
-    }*/
+    }
 
     if (backTexture)
     {

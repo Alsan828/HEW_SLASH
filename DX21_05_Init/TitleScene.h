@@ -28,7 +28,6 @@ private:
     Animation m_titleAnim;
     bool m_playing = false;
 
-
     std::vector<UIButton> uiButtons;
 
 public:
@@ -40,5 +39,6 @@ public:
     void Uninit() override;
 };
 
+extern Animation paddingTitleAnim;
 extern InputSystem g_inputSystem;   // use the global input system
 extern ID3D11Device* g_pDevice;     // device for texture loading

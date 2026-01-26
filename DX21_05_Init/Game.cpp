@@ -187,129 +187,61 @@ void CleanUpGameWorld()
     g_playerAfterImages.clear();
 
     // 释放所有纹理 - 只保留右边纹理
-    if (g_playerTexture) {
-        g_playerTexture->Release();
-        g_playerTexture = nullptr;
-    }
-
+    ReleaseTexture(g_playerTexture);
     // 只保留右边的纹理
-    if (g_playerIdleTexture) {
-        g_playerIdleTexture->Release();
-        g_playerIdleTexture = nullptr;
-    }
-    if (g_playerJumpTexture) {
-        g_playerJumpTexture->Release();
-        g_playerJumpTexture = nullptr;
-    }
-    if (g_playerRunTexture) {
-        g_playerRunTexture->Release();
-        g_playerRunTexture = nullptr;
-    }
-    if (g_playerSlash1Texture) {
-        g_playerSlash1Texture->Release();
-        g_playerSlash1Texture = nullptr;
-    }
-    if (g_playerSlash2Texture) {
-        g_playerSlash2Texture->Release();
-        g_playerSlash2Texture = nullptr;
-    }
-    if (g_playerSlash3Texture) {
-        g_playerSlash3Texture->Release();
-        g_playerSlash3Texture = nullptr;
-    }
-    if (g_playerSlash4Texture) {
-        g_playerSlash4Texture->Release();
-        g_playerSlash4Texture = nullptr;
-    }
-    if (g_playerAirChargeTexture) {
-        g_playerAirChargeTexture->Release();
-        g_playerAirChargeTexture = nullptr;
-    }
-    if (g_playerFallingTexture) {
-        g_playerFallingTexture->Release();
-        g_playerFallingTexture = nullptr;
-    }
-    if (g_playerGroundChargeTexture) {
-        g_playerGroundChargeTexture->Release();
-        g_playerGroundChargeTexture = nullptr;
-    }
-    if (g_playerWallSlideTexture) {
-        g_playerWallSlideTexture->Release();
-        g_playerWallSlideTexture = nullptr;
-    }
-    if (g_playerDeathTexture) {
-        g_playerDeathTexture->Release();
-        g_playerDeathTexture = nullptr;
-    }
+    ReleaseTexture(g_playerIdleTexture);
+    ReleaseTexture(g_playerJumpTexture);
+    ReleaseTexture(g_playerRunTexture);
+    ReleaseTexture(g_playerSlash1Texture);
+    ReleaseTexture(g_playerSlash2Texture);
+    ReleaseTexture(g_playerSlash3Texture);
+    ReleaseTexture(g_playerSlash4Texture);
+    ReleaseTexture(g_playerAirChargeTexture);
+    ReleaseTexture(g_playerFallingTexture);
+    ReleaseTexture(g_playerGroundChargeTexture);
+    ReleaseTexture(g_playerWallSlideTexture);
+    ReleaseTexture(g_playerDeathTexture);
 
+    // FOR THE PLAYER WHEN INVINCIBLE
+    ReleaseTexture(g_invinciblePlayerIdleTexture);
+    ReleaseTexture(g_invinciblePlayerJumpTexture);
+    ReleaseTexture(g_invinciblePlayerRunTexture);
+    ReleaseTexture(g_invinciblePlayerSlash1Texture);
+    ReleaseTexture(g_invinciblePlayerSlash2Texture);
+    ReleaseTexture(g_invinciblePlayerSlash3Texture);
+    ReleaseTexture(g_invinciblePlayerSlash4Texture);
+    ReleaseTexture(g_invinciblePlayerAirChargeTexture);
+    ReleaseTexture(g_invinciblePlayerFallingTexture);
+    ReleaseTexture(g_invinciblePlayerGroundChargeTexture);
+    ReleaseTexture(g_invinciblePlayerWallSlideTexture);
 
+    ReleaseTexture(g_groundTexture);
+    ReleaseTexture(g_goalTexture);
+    ReleaseTexture(g_oneWayPlatformTexture);
+    ReleaseTexture(g_backgroundTexture1);
+    ReleaseTexture(g_dashEffectTexture);
+    ReleaseTexture(g_chargeEffectTexture);
 
-    if (g_groundTexture) {
-        g_groundTexture->Release();
-        g_groundTexture = nullptr;
-    }
-    if (g_backgroundTexture1) {
-        g_backgroundTexture1->Release();
-        g_backgroundTexture1 = nullptr;
-    }
-    if (g_dashEffectTexture) {
-        g_dashEffectTexture->Release();
-        g_dashEffectTexture = nullptr;
-    }
-    if (g_chargeEffectTexture) {
-        g_chargeEffectTexture->Release();
-        g_chargeEffectTexture = nullptr;
-    }
-    //解放击中特效纹理
-    if (g_hitEffectTexture) {
-        g_hitEffectTexture->Release();
-        g_hitEffectTexture = nullptr;
-    }
-    if (g_numberTexture) {
-        g_numberTexture->Release();
-        g_numberTexture = nullptr;
-    }
-    if (g_uiNumberTexture) {
-        g_uiNumberTexture->Release();
-        g_uiNumberTexture = nullptr;
-    }
-    if (g_arrowTexture) {
-        g_arrowTexture->Release();
-        g_arrowTexture = nullptr;
-    }
-    if (g_cursorTexture) {
-        g_cursorTexture->Release();
-        g_cursorTexture = nullptr;
-    }
+    // 解放击中特效纹理
+    ReleaseTexture(g_hitEffectTexture);
+    ReleaseTexture(g_numberTexture);
+    ReleaseTexture(g_uiNumberTexture);
+    ReleaseTexture(g_arrowTexture);
+    ReleaseTexture(g_cursorTexture);
 
     // for the combo texture
-    if (g_comboNumberTexture) {
-        g_comboNumberTexture->Release();
-        g_comboNumberTexture = nullptr;
-    }
-    if (g_comboXTexture) {
-        g_comboXTexture->Release();
-        g_comboXTexture = nullptr;
-    }
+    ReleaseTexture(g_comboNumberTexture);
+    ReleaseTexture(g_comboXTexture);
 
-    //for the gague bar when there is one
-    if (g_gaugeBarTexture) {
-        g_gaugeBarTexture->Release();
-        g_gaugeBarTexture = nullptr;
-    }
-    if (g_gaugeBarEmptyTexture) {
-        g_gaugeBarEmptyTexture->Release();
-        g_gaugeBarEmptyTexture = nullptr;
-    }
-    if (g_gaugeBarFilledTexture) {
-        g_gaugeBarFilledTexture->Release();
-        g_gaugeBarFilledTexture = nullptr;
-    }
-    if(g_gaugeFullEffectTexture) {
-        g_gaugeFullEffectTexture->Release();
-        g_gaugeFullEffectTexture = nullptr;
-	}
+    // for the gauge bar when there is one
+    ReleaseTexture(g_gaugeBarTexture);
+    ReleaseTexture(g_gaugeBarEmptyTexture);
+    ReleaseTexture(g_gaugeBarFilledTexture);
+    ReleaseTexture(g_gaugeFullEffectTexture);
 
+    ReleaseTexture(g_attackCountTestTexture);
+
+    ReleaseTexture(g_bossHealthBarTexture);
 }
 
 // Improved collision detection function
@@ -327,37 +259,37 @@ void DrawComboUI(void)
         return;
     }
 
-    float comboX = 0.6f;   // right side
-    float comboY = 0.7f;   // top side
+    float comboX = 0.3f/*0.4f*/;   // right side
+    float comboY = 0.5f;   // top side
 
-    // change the size of it
-    float xWidth = 0.15f;   // Width of the "X" symbol
-    float xHeight = 0.15f;  // Height of the "X" symbol
-    float numberWidth = 0.1f;   // Width of the number
-    float numberHeight = 0.1f;  // Height of the number
-    float spaceBetweenDigits = 0.1f;
-
-    float pixelX = (SCREEN_WIDTH * 0.5f) - 120.0f;
-    float pixelY = (SCREEN_HEIGHT * 0.5f) - 40.0f;
+    // modify the size of it
+    float xWidth = 0.45f;   // Width of the "X" symbol
+    float xHeight = 0.5f;  // Height of the "X" symbol
+    float xYaxis = 0.45f; // change the y axis of the X symbol
+    float digitWidth = 0.15f;   // Width of the number
+    float digitHeight = 0.35f;
+    float digitYaxis = 0.55f;
+    float spaceBetweenDigits = 0.12f;
+    float spaceBetweenXandDigit = 0.08f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Draw the "X" symbol
-    RenderImage(comboX, comboY, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
+    RenderImage(comboX, xYaxis, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
 
     char buffer[32];
-    sprintf_s(buffer, "%d", g_player.comboCount);
+    sprintf_s(buffer, "%d", g_player.comboCount); // it converts the number into digits
 
-    float numberXaxis = comboX + numberWidth + 0.02f; // for the first number x axis position
+    float digitXaxis = comboX + (xWidth * 0.5f) + spaceBetweenXandDigit; // for the first number x axis position 
 
     // Draw combo number
     for (int i = 0; buffer[i] != '\0'; i++)
     {
         int digit = buffer[i] - '0';  // 1 for frame 1, 2 for frame 2, 3 for frame 3, etc etc
-        RenderImage(numberXaxis, comboY, numberWidth, numberHeight,
-            pTextureNum, digit, 1, 10);
+        RenderImage(digitXaxis, digitYaxis, digitWidth, digitHeight,
+            g_comboNumberTexture, digit, 1, 10);
 
-        numberXaxis += spaceBetweenDigits;  // Move to next digit position
+        digitXaxis += spaceBetweenDigits; // Move to next digit position
     }
 
     // Combo remaining-time bar (under the combo UI)
@@ -370,16 +302,16 @@ void DrawComboUI(void)
 
     float barWidth = 0.28f;
     float barHeight = 0.025f;
-    float barX = comboX + 0.02f;
-    float barY = comboY - 0.12f;
+    float barX = comboX + 0.2f;
+    float barY = comboY - 0.02f;
 
     // background
     SetColor(0.05f, 0.05f, 0.05f, 0.75f);
-    RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
+    RenderImage(barX, barY, barWidth, barHeight, g_bossHealthBarTexture, 0, 1, 1);
 
     // fill
-    SetColor(1.0f, 0.85f, 0.2f, 0.95f);
-    RenderImage(barX - (barWidth * (1.0f - ratio) * 0.5f), barY, barWidth * ratio, barHeight, g_groundTexture, 0, 1, 1);
+    SetColor(1.0f, 0.0f, 0.0f, 0.95f);
+    RenderImage(barX - (barWidth * (1.0f - ratio) * 0.5f), barY, barWidth * ratio, barHeight, g_bossHealthBarTexture, 0, 1, 1);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -495,22 +427,17 @@ void DrawScoreUI(void)
     if (!g_uiNumberTexture) return;
 
     // Position on top left, below the timer
-    float scoreX = -0.77f;   // left side in the x axis
-    float scoreY = 0.61f;    // below the timer in the y axis
-    float scoreDigitWidth = 0.03f; 
-    float scoreDigitHeight = 0.06f;
+    float scoreX = -0.768f;
+    float scoreY = 0.66f;
+    float scoreDigitWidth = 0.03f;
+    float scoreDigitHeight = 0.07f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // for getting score after killing 
-    int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
+    int enemyPoints = g_gameStats.GetTotalEnemyPoints(); // show enemy points
 
-    int deathPenalty = g_gameStats.GetPenalizableDeaths() * 5;
-
-    int liveScore = std::max(0, killPoints - deathPenalty);
-
-    // Draw the live score
-    DrawNumber(liveScore, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
+    // Draw the enemy points
+    DrawNumber(enemyPoints, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
 }
 
 
@@ -518,7 +445,7 @@ void DrawScoreUI(void)
 void InitGameWorld() {
     g_projectileManager.LoadTextures(g_pDevice);
 
-    // 只加载右边的纹理
+    // FOR THE PLAYER
     LoadTexture(g_pDevice, "asset/character/idle_right.png", &g_playerIdleTexture);
     LoadTexture(g_pDevice, "asset/character/jump_right.png", &g_playerJumpTexture);
     LoadTexture(g_pDevice, "asset/character/run_right.png", &g_playerRunTexture);
@@ -531,7 +458,6 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeTexture);
     LoadTexture(g_pDevice, "asset/character/wall_slide_right.png", &g_playerWallSlideTexture);
     LoadTexture(g_pDevice, "asset/character/death_right.png", &g_playerDeathTexture);
-
     // 为动画剪辑添加通用名称（不再区分左右）
     g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
     g_player.anim.AddClip("Jump", 0, 10, 11, 1, 0.06f, false, g_playerJumpTexture);
@@ -546,7 +472,37 @@ void InitGameWorld() {
     g_player.anim.AddClip("WallSlide", 0, 0, 1, 1, 0.25f, true, g_playerWallSlideTexture);
     g_player.anim.AddClip("Death", 0, 10, 11, 1, 0.1f, false, g_playerDeathTexture);
 
-    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_groundTexture);
+
+    // FOR THE PLAYER WHEN INVINCIBLE
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_idle_right.png", &g_invinciblePlayerIdleTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_jump_right.png", &g_invinciblePlayerJumpTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_run_right.png", &g_invinciblePlayerRunTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right1.png", &g_invinciblePlayerSlash1Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right2.png", &g_invinciblePlayerSlash2Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right3.png", &g_invinciblePlayerSlash3Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_slash_right4.png", &g_invinciblePlayerSlash4Texture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_air_charge_right.png", &g_invinciblePlayerAirChargeTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_falling_right.png", &g_invinciblePlayerFallingTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_ground_charge_right.png", &g_invinciblePlayerGroundChargeTexture);
+    LoadTexture(g_pDevice, "asset/character_invincible/lb_wall_slide_right.png", &g_invinciblePlayerWallSlideTexture);
+    // 为动画剪辑添加通用名称（不再区分左右）
+    g_player.anim.AddClip("InvincibleIdle", 0, 3, 4, 1, 0.25f, true, g_invinciblePlayerIdleTexture);
+    g_player.anim.AddClip("InvincibleJump", 0, 10, 11, 1, 0.06f, false, g_invinciblePlayerJumpTexture);
+    g_player.anim.AddClip("InvincibleRun", 0, 3, 4, 1, 0.1f, true, g_invinciblePlayerRunTexture);
+    g_player.anim.AddClip("InvincibleSlash1", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash1Texture);
+    g_player.anim.AddClip("InvincibleSlash2", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash2Texture);
+    g_player.anim.AddClip("InvincibleSlash3", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash3Texture);
+    g_player.anim.AddClip("InvincibleSlash4", 0, 3, 4, 1, 0.06f, false, g_invinciblePlayerSlash4Texture);
+    g_player.anim.AddClip("InvincibleAirCharge", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerAirChargeTexture);
+    g_player.anim.AddClip("InvincibleFalling", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerFallingTexture);
+    g_player.anim.AddClip("InvincibleGroundCharge", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerGroundChargeTexture);
+    g_player.anim.AddClip("InvincibleWallSlide", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerWallSlideTexture);
+
+
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/goal.png", &g_goalTexture);
+    LoadTexture(g_pDevice, "asset/platform/platform_pass4.png", &g_oneWayPlatformTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
@@ -566,6 +522,9 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_filled.png", &g_gaugeBarFilledTexture);
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect_max.png", &g_gaugeFullEffectTexture);
     g_gaugeEffectAnim.AddClip("GaugeFull", 1, 7, 1, 8, 0.08f, true, g_gaugeFullEffectTexture);
+
+    LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_attackCountTestTexture);
+
 
     InitEnemies();
     g_mapManager.InitializeMaps();
@@ -646,6 +605,7 @@ void UpdateGame(float deltaTime) {
             g_player.comboCount = 0;
             g_player.comboTimer = 0.0f;
         }
+        g_gameStats.UpdateMaxCombo(g_player.comboCount);
     }
 
     // Acceleration state: active only when comboCount > threshold
@@ -670,13 +630,6 @@ void UpdateGame(float deltaTime) {
     }
 
 	// for the gauge effect timer
-    //if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) 
-    //{ 
-    //    g_gaugeEffectAnim.Update(deltaTime);  // update the animation when the gauge bar is full
-    //}
-    //else { 
-    //    g_gaugeEffectAnim.Reset(); // Reset animation if not full
-    //}
     if (g_player.g_gaugeEffectActive) { 
         g_gaugeEffectAnim.Update(deltaTime); 
         g_player.g_gaugeEffectTimer -= deltaTime;
@@ -773,94 +726,183 @@ void UpdateGame(float deltaTime) {
         // 在UpdateGame函数中修改动画设置部分
         if (g_player.animLockTimer <= 0.0f)
         {
-            if (g_player.isDead) // for when dying
+            // Check if player is invincible to determine which animation set to use
+            if (g_player.isInvincible)
             {
-                if (g_player.anim.GetCurrentClipName() != "Death") {
-                    g_player.anim.SetClip("Death");
-                }
-            }
-
-            else if (g_player.isCharging) // 如果玩家正在蓄力
-            {
-                if (!g_player.isOnGround) // 如果玩家在空中蓄力
+                // INVINCIBLE ANIMATIONS
+                if (g_player.isDead)
                 {
-                    if (g_player.anim.GetCurrentClipName() != "AirCharge") {
-                        g_player.anim.SetClip("AirCharge");
+                    // Death animation stays normal (no invincible death texture)
+                    if (g_player.anim.GetCurrentClipName() != "Death") {
+                        g_player.anim.SetClip("Death");
                     }
                 }
-                else // 如果玩家在地面蓄力
+                else if (g_player.isCharging && !g_player.isOnGround)
                 {
-                    if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
-                        g_player.anim.SetClip("GroundCharge");
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleAirCharge") {
+                        g_player.anim.SetClip("InvincibleAirCharge");
+                    }
+                }
+                else if (g_player.isCharging)
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleGroundCharge") {
+                        g_player.anim.SetClip("InvincibleGroundCharge");
+                    }
+                }
+                else if (g_player.isDashing)
+                {
+                    // Determine slash direction
+                    float dx = g_player.dashDirectionX;
+                    float dy = g_player.dashDirectionY;
+
+                    const float DIAG_RATIO = 0.70710678f;
+                    const float adx = fabsf(dx);
+                    const float ady = fabsf(dy);
+
+                    const char* clip;
+                    if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "InvincibleSlash2";  // Up
+                    }
+                    else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "InvincibleSlash4";  // Down
+                    }
+                    else if (adx >= ady * DIAG_RATIO) {
+                        clip = "InvincibleSlash3";  // Side
+                    }
+                    else {
+                        clip = "InvincibleSlash1";  // Diagonal
+                    }
+
+                    if (g_player.anim.GetCurrentClipName() != clip) {
+                        g_player.anim.SetClip(clip);
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
+                }
+                else if (g_player.isWallSliding)
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleWallSlide") {
+                        g_player.anim.SetClip("InvincibleWallSlide");
+                    }
+                }
+                else if (!g_player.isOnGround)
+                {
+                    if (g_player.velocityY < 0.0f) // Falling
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "InvincibleFalling") {
+                            g_player.anim.SetClip("InvincibleFalling");
+                        }
+                    }
+                    else // Jumping
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "InvincibleJump") {
+                            g_player.anim.SetClip("InvincibleJump");
+                        }
+                    }
+                }
+                else if (g_player.isMoving)
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleRun") {
+                        g_player.anim.SetClip("InvincibleRun");
+                    }
+                }
+                else // Idle
+                {
+                    if (g_player.anim.GetCurrentClipName() != "InvincibleIdle") {
+                        g_player.anim.SetClip("InvincibleIdle");
                     }
                 }
             }
-            else if (g_player.isDashing) // 如果玩家正在冲刺
+            else
             {
-                // Slash clip depends on dash direction.
-                // Classify into 4 sectors with 45° boundaries:
-                //   Up:    |dy| dominates and dy > 0  -> Slash2
-                //   Down:  |dy| dominates and dy < 0  -> Slash4
-                //   Side:  otherwise, |dx| dominates -> Slash3
-                //   DiagDown-ish fallback            -> Slash1
-                // Left/right is handled by facing/flip.
-                float dx = g_player.dashDirectionX;
-                float dy = g_player.dashDirectionY;
-
-                const float DIAG_RATIO = 0.70710678f; // cos(45°)
-                const float adx = fabsf(dx);
-                const float ady = fabsf(dy);
-
-                const char* clip;
-                if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
-                    clip = "Slash2";
-                }
-                else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
-                    clip = "Slash4";
-                }
-                else if (adx >= ady * DIAG_RATIO) {
-                    clip = "Slash3";
-                }
-                else {
-                    // diagonal-ish: choose a dedicated diagonal-down slash
-                    clip = "Slash1";
-                }
-
-                if (g_player.anim.GetCurrentClipName() != clip) {
-                    g_player.anim.SetClip(clip);
-                    g_player.animLockTimer = g_player.animLockDuration;
-                }
-            }
-            else if (g_player.isWallSliding) {
-                if (g_player.anim.GetCurrentClipName() != "WallSlide") {
-                    g_player.anim.SetClip("WallSlide");
-                }
-            }
-            else if (!g_player.isOnGround) // 玩家不在地面上
-            {
-                if (g_player.velocityY < 0.0f) // 下落
+                if (g_player.isDead) // for when dying
                 {
-                    if (g_player.anim.GetCurrentClipName() != "Falling") {
-                        g_player.anim.SetClip("Falling");
+                    if (g_player.anim.GetCurrentClipName() != "Death") {
+                        g_player.anim.SetClip("Death");
                     }
                 }
-                else // 跳跃
+
+                else if (g_player.isCharging) // 如果玩家正在蓄力
                 {
-                    if (g_player.anim.GetCurrentClipName() != "Jump") {
-                        g_player.anim.SetClip("Jump");
+                    if (!g_player.isOnGround) // 如果玩家在空中蓄力
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "AirCharge") {
+                            g_player.anim.SetClip("AirCharge");
+                        }
+                    }
+                    else // 如果玩家在地面蓄力
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
+                            g_player.anim.SetClip("GroundCharge");
+                        }
                     }
                 }
-            }
-            else if (g_player.isMoving) // 玩家在移动
-            {
-                if (g_player.anim.GetCurrentClipName() != "Run") {
-                    g_player.anim.SetClip("Run");
+                else if (g_player.isDashing) // 如果玩家正在冲刺
+                {
+                    // Slash clip depends on dash direction.
+                    // Classify into 4 sectors with 45° boundaries:
+                    //   Up:    |dy| dominates and dy > 0  -> Slash2
+                    //   Down:  |dy| dominates and dy < 0  -> Slash4
+                    //   Side:  otherwise, |dx| dominates -> Slash3
+                    //   DiagDown-ish fallback            -> Slash1
+                    // Left/right is handled by facing/flip.
+                    float dx = g_player.dashDirectionX;
+                    float dy = g_player.dashDirectionY;
+
+                    const float DIAG_RATIO = 0.70710678f; // cos(45°)
+                    const float adx = fabsf(dx);
+                    const float ady = fabsf(dy);
+
+                    const char* clip;
+                    if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "Slash2";
+                    }
+                    else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
+                        clip = "Slash4";
+                    }
+                    else if (adx >= ady * DIAG_RATIO) {
+                        clip = "Slash3";
+                    }
+                    else {
+                        // diagonal-ish: choose a dedicated diagonal-down slash
+                        clip = "Slash1";
+                    }
+
+                    if (g_player.anim.GetCurrentClipName() != clip) {
+                        g_player.anim.SetClip(clip);
+                        g_player.animLockTimer = g_player.animLockDuration;
+                    }
                 }
-            }
-            else // 玩家站立
-            {
-                if (g_player.anim.GetCurrentClipName() != "Idle") {
-                    g_player.anim.SetClip("Idle");
+                else if (g_player.isWallSliding) {
+                    if (g_player.anim.GetCurrentClipName() != "WallSlide") {
+                        g_player.anim.SetClip("WallSlide");
+                    }
+                }
+                else if (!g_player.isOnGround) // 玩家不在地面上
+                {
+                    if (g_player.velocityY < 0.0f) // 下落
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "Falling") {
+                            g_player.anim.SetClip("Falling");
+                        }
+                    }
+                    else // 跳跃
+                    {
+                        if (g_player.anim.GetCurrentClipName() != "Jump") {
+                            g_player.anim.SetClip("Jump");
+                        }
+                    }
+                }
+                else if (g_player.isMoving) // 玩家在移动
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Run") {
+                        g_player.anim.SetClip("Run");
+                    }
+                }
+                else // 玩家站立
+                {
+                    if (g_player.anim.GetCurrentClipName() != "Idle") {
+                        g_player.anim.SetClip("Idle");
+                    }
                 }
             }
         }
@@ -884,14 +926,15 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
         return g_groundTexture;
     }
     else if (tileCode == "DF" || tileCode == "DI" || tileCode == "DT" || tileCode == "D4" || tileCode == "D5" || tileCode == "D6" || tileCode == "D7" || tileCode == "DB" ||
-             tileCode == "21" || tileCode == "21" || tileCode == "23" || tileCode == "24" || tileCode == "25" || tileCode == "26" || tileCode == "27") {
-        return g_groundTexture;
+             tileCode == "21" || tileCode == "22" || tileCode == "23" || tileCode == "24" || tileCode == "25" || tileCode == "26" || tileCode == "27" ||
+             tileCode == "31" || tileCode == "32" || tileCode == "33" || tileCode == "34" || tileCode == "35" || tileCode == "36" || tileCode == "37") {
+        return g_goalTexture;
     }
     else if (tileCode == "D1" || tileCode == "D2") {
         return g_backgroundTexture3;
     }
     else if (tileCode == "OP") {
-        return g_playerJumpTexture;
+        return g_oneWayPlatformTexture;
     }
     else {
         return g_groundTexture;
@@ -901,7 +944,8 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
 // Helper function: Set color based on tile code
 void SetTileColor(const std::string& tileCode) {
     if (tileCode == "G1") {
-        SetColor(0.4f, 0.8f, 0.3f, 1.0f);
+        //SetColor(0.4f, 0.8f, 0.3f, 1.0f);
+        SetColor(0.7f, 0.7f, 0.7f, 1.0f);
     }
     else if (tileCode == "G2") {
         SetColor(0.6f, 0.4f, 0.2f, 1.0f);
@@ -935,6 +979,9 @@ void SetTileColor(const std::string& tileCode) {
     }
     else if (tileCode == "D2") {
         SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+    }
+    else if (tileCode == "OP") {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
     else {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1001,7 +1048,44 @@ void DrawGame() {
             std::pair<float, float> screenPos = worldToScreen(tile.posX, tile.posY);
             ID3D11ShaderResourceView* texture = GetTextureForTile(tile.tileInfo.code);
             SetTileColor(tile.tileInfo.code);
-            RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
+            //RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
+           
+            // for one way platforms. they will be a bit smaller to match collision with character. might change later
+            if (tile.tileInfo.code == "OP") {
+                // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
+                float renderScale = 0.67f;  // Adjust this to match your collision size
+                float renderWidth = tile.width; // no change
+                float renderHeight = tile.height * renderScale;
+
+                // center the sprite on the tile position
+                float offsetX = (tile.width - renderWidth) * 0.5f;
+                float offsetY = (tile.height - renderHeight) * 0.5f;
+
+                RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
+                    renderWidth, renderHeight, texture, 0, 1, 1);
+            }
+            // for the goal
+            else if (tile.tileInfo.code == "DF" || tile.tileInfo.code == "DI" || tile.tileInfo.code == "DT" || tile.tileInfo.code == "D4" || tile.tileInfo.code == "D5" || 
+                     tile.tileInfo.code == "D6" || tile.tileInfo.code == "D7" || tile.tileInfo.code == "DB" || tile.tileInfo.code == "21" || tile.tileInfo.code == "22" || 
+                     tile.tileInfo.code == "23" || tile.tileInfo.code == "24" || tile.tileInfo.code == "25" || tile.tileInfo.code == "26" || tile.tileInfo.code == "27" ||
+                     tile.tileInfo.code == "31" || tile.tileInfo.code == "32" || tile.tileInfo.code == "33" || tile.tileInfo.code == "34" || tile.tileInfo.code == "35" ||
+                     tile.tileInfo.code == "36" || tile.tileInfo.code == "37") {
+                // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
+                float renderScale = 2.0f;  // Adjust this to match your collision size
+                float renderWidth = tile.width; // no change
+                float renderHeight = tile.height * renderScale;
+
+                // center the sprite on the tile position
+                float offsetX = (tile.width - renderWidth) * 0.5f;
+                float offsetY = (tile.height - renderHeight) * 0.1f;
+
+                RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
+                    renderWidth, renderHeight, texture, 0, 1, 1);
+            }
+            else {
+                // Normal rendering for all other tiles
+                RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
+            }
         }
 
         // Draw foreground layer tiles
@@ -1077,20 +1161,56 @@ void DrawGame() {
         // 如果facingRight为false（面向左），水平翻转
         bool flipHorizontal = !g_player.facingRight;
 
-        // Set color based on invincibility state
-        if (g_player.isInvincible) {
-            // Yellow when invincible
-            SetColor(1.0f, 1.0f, 0.0f, 1.0f);
-        }
-        else {
-            // Normal white
-            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        }
 
+        //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderImage(playerPos.first - offsetX, playerPos.second - offsetY, width, height,
             currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
 
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Reset color after being invincible
+
+
+
+
+        // for the attack count 
+        
+        //// Position top left of the player
+        //float countWidth = 0.1f;   
+        //float countHeight = 0.15f; 
+        //float offsetCountX = -0.08f;  // hozirontal
+        //float offsetCountY = PLAYER_HEIGHT /*+ 0.01f*/; // vertical
+
+        //float countXPos = g_player.posX + offsetCountX;
+        //float countYPos = g_player.posY + offsetCountY;
+
+        //auto countScreenPos = worldToScreen(countXPos, countYPos);
+
+        //int frameIndexC = 0;
+        //if (g_player.dashPoints == 3) {
+        //    frameIndexC = 0;  // Show 3 triangles
+        //}
+        //else if (g_player.dashPoints == 2) {
+        //    frameIndexC = 1;  // Show 2 triangles
+        //}
+        //else {
+        //    frameIndexC = 2;  // Show 1 triangle (for dashPoints 1 or 0)
+        //}
+
+        //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        //RenderImage(countScreenPos.first, countScreenPos.second,
+        //    countWidth, countHeight,
+        //    g_attackCountTestTexture, 0, 1, 3);
+
+        //RenderImage(countScreenPos.first + 0.2f, countScreenPos.second,
+        //    countWidth, countHeight,
+        //    g_attackCountTestTexture, 1, 1, 3);
+
+        //RenderImage(countScreenPos.first + 0.4f, countScreenPos.second,
+        //    countWidth, countHeight,
+        //    g_attackCountTestTexture, 2, 1, 3);
+
+
+
+
     }
     else {
         // Death animation
@@ -1313,6 +1433,14 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
         return { worldX - cameraX, worldY - cameraY };
         };
 
+    // Draw mouse position indicator
+    float cursorWidth = 0.04f;
+    float cursorHeight = 0.12f;
+    auto mousePos = worldToScreen(m_mouseWorldX - cursorWidth / 2, m_mouseWorldY - cursorHeight / 2);
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    RenderImage(mousePos.first, mousePos.second, cursorWidth, cursorHeight,
+        m_cursorTexture, 0, 1, 1, false, 0);
     // Mouse cursor is rendered by `g_gameCursor` globally.
 
     // Fixed display of dash points in top right corner of screen
@@ -1339,30 +1467,31 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     // [G] mode value (0/1)
     RenderNumber(g_noGravityAftermathMode ? 1 : 0, toggleX + toggleDigitW * 1.4f, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
 
-
+    
     float uiX = -1.0f;
-    float uiY = 0.35f;
+    float uiY = 0.25f;
     float uiWidth = 0.5f;
-    float uiHeight = 0.7f;
+    float uiHeight = 1.0f;
     RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
 
     // for the timer counting
-    float timerX = -0.77f;  // position x axis
-    float timerY = 0.74f;   // position y axis
+    float timerX = -0.768f;  // position x axis
+    float timerY = 0.78f;   // position y axis
     float timerDigitWidth = 0.03f;  // width
-    float timerDigitHeight = 0.06f; // height
+    float timerDigitHeight = 0.07f; // height
 
     // for the minutes
     int minuteTens = g_gameMinutes / 10;
     int minuteOnes = g_gameMinutes % 10;
     RenderNumber(minuteTens, timerX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
-    RenderNumber(minuteOnes, timerX + timerDigitWidth * 1.2f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(minuteOnes, timerX + timerDigitWidth * 0.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     // for the seconds
     int secondTens = g_gameSeconds / 10;
     int secondOnes = g_gameSeconds % 10;
-    RenderNumber(secondTens, timerX + timerDigitWidth * 2.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
-    RenderNumber(secondOnes, timerX + timerDigitWidth * 4.0f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    float secondsStartX = timerX + timerDigitWidth * 2.2f;
+    RenderNumber(secondTens, secondsStartX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
+    RenderNumber(secondOnes, secondsStartX + timerDigitWidth * 0.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
     //SetColor(1.0f, 1.0f, 1.0f, 1.0f); 
 
@@ -1459,21 +1588,82 @@ void GameStatistics::Reset() {
     totalDeaths = 0;
     totalTime = 0.0f;
     totalScore = 0;
+    penalizableDeaths = 0;
+
+    maxCombo = 0;
+    currentAreaEnemyPoints = 0;
+    totalEnemyPoints = 0;
+
+    ResetCurrentStats();
+
+    lifetimeEnemyPoints = 0;
+    lifetimeKills = 0;
+    lifetimeWeakKills = 0;
 }
 
 // Increment kill counter
 void GameStatistics::IncrementKills() {
     enemiesKilled++;
+    currentKills++;
+    lifetimeKills++;
+    AddEnemyPoints(10);
 }
 
 // Increment weak point kill counter
 void GameStatistics::IncrementWeakPointKills() {
     weakPointKills++;
+    currentWeakKills++;
+    lifetimeWeakKills++;
+    AddEnemyPoints(30);
 }
 
 // Increment death counter
 void GameStatistics::IncrementDeaths() {
     totalDeaths++;
+
+    //erase later
+    char debugMsg[256];
+    sprintf_s(debugMsg, "\n*** PLAYER DIED ***\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Total Deaths: %d\n", totalDeaths);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Lost Area Points: %d\n", currentAreaEnemyPoints);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Lost Max Combo: %d\n", maxCombo);
+    OutputDebugStringA(debugMsg);
+
+    ResetAreaProgress();
+
+    // erase later
+    sprintf_s(debugMsg, "Remaining Total Points: %d\n", totalEnemyPoints);
+    OutputDebugStringA(debugMsg);
+    OutputDebugStringA("*******************\n\n");
+
+}
+
+// for updating the maximum combo
+void GameStatistics::UpdateMaxCombo(int combo) {
+    if (combo > maxCombo) {
+        maxCombo = combo;
+    }
+    if (combo > currentMaxCombo) {
+        currentMaxCombo = combo; // current max combo
+    }
+}
+//  when player dies, resets the area progress
+void GameStatistics::ResetAreaProgress() {
+    //totalEnemyPoints -= currentAreaEnemyPoints; // Subtract current area points from total
+    currentAreaEnemyPoints = 0; // Reset current area progress
+    //maxCombo = 0;  // Reset max combo on death
+    currentMaxCombo = 0;
+}
+
+
+void GameStatistics::AddEnemyPoints(int points) {
+    currentAreaEnemyPoints += points;
+    totalEnemyPoints += points;
+    currentScore += points;
+    lifetimeEnemyPoints += points;
 }
 
 // Update total time
@@ -1483,41 +1673,76 @@ void GameStatistics::UpdateTime(float time) {
 
 // Calculate the final score based on kills, time, and deaths
 void GameStatistics::CalculateFinalScore() {
-    // the kill points: normal kills = 10, weak point kills = 30
-    int killPoints = (enemiesKilled * 10) + (weakPointKills * 30);
+    int comboMultiplier = std::max(1, maxCombo);  // Minimum combo is 1
 
-    // the time bonus. 0 is the minimum
-    int timeBonus = std::max(0, 60 - static_cast<int>(totalTime));
+    // Convert time to 4-digit number (total seconds)
+    //int timeInSeconds = static_cast<int>(totalTime);
+    int minutes = static_cast<int>(totalTime) / 60;
+    int seconds = static_cast<int>(totalTime) % 60;
+    int timeInMMSS = (minutes * 100) + seconds;  // MMSS format
 
-    int scoreBeforePenalty = killPoints + timeBonus;
+    // Cap deaths at 50 for penalty calculation
+    int cappedDeaths = std::min(50, totalDeaths);
+    int deathPenalty = cappedDeaths * 50;
 
-    int deathPenalty = penalizableDeaths * 5;
+    // Calculate base score
+    int baseScore = lifetimeEnemyPoints * comboMultiplier;
 
-    totalScore = std::max(0, killPoints + timeBonus - deathPenalty);
+    // Calculate penalty
+    int penalty = timeInMMSS + deathPenalty;
 
-    // the debug
- /*   char debugMsg[512];
-    sprintf_s(debugMsg,
-        "=== SCORE CALCULATION ===\n"
-        "Enemies Killed: %d (normal)\n"
-        "Weak Point Kills: %d\n"
-        "Total Deaths: %d\n"
-        "Total Time: %.2f seconds\n"
-        "---\n"
-        "Kill Points: (%d * 10) + (%d * 30) = %d\n"
-        "Time Bonus: max(0, 60 - %.2f) = %d\n"
-        "Death Penalty: %d * 5 = %d\n"
-        "---\n"
-        "Final Score: (%d * %d) - %d = %d\n"
-        "========================\n",
-        enemiesKilled, weakPointKills,
-        totalDeaths, totalTime,
-        killPoints,
-        timePenalty,
-        deathPenalty,
-        killPoints, timePenalty, deathPenalty, totalScore
-    );
-    OutputDebugStringA(debugMsg);*/
+    int penaltyMultiplied = static_cast<int>(penalty * 1.5f); // so it gives me an integrer number
+    totalScore = baseScore - penaltyMultiplied;
+
+    // Ensure score doesn't go negative
+    totalScore = std::max(0, totalScore);
+
+    // erase later
+    char debugMsg[512];
+    sprintf_s(debugMsg, "\n========== FINAL SCORE CALCULATION ==========\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "Formula: (points × combo) - ((time + deaths×50) × 1.5)\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\nValues:\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Total Enemy Points: %d\n", totalEnemyPoints);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Max Combo (lifetime): %d\n", maxCombo);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Time: %d:%02d (MMSS: %04d)\n", minutes, seconds, timeInMMSS);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Deaths: %d (capped: %d)\n", totalDeaths, cappedDeaths);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\nCalculation:\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Base Score: %d × %d = %d\n",
+        totalEnemyPoints, comboMultiplier, baseScore);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Death Penalty: %d × 50 = %d\n",
+        cappedDeaths, deathPenalty);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Total Penalty Before ×1.5: %d + %d = %d\n",
+        timeInMMSS, deathPenalty, penalty);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Penalty After ×1.5: %d\n", penaltyMultiplied);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Final: %d - %d = %d\n",
+        baseScore, penaltyMultiplied, totalScore);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\n>>> FINAL SCORE: %d <<<\n", totalScore);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "\nStatistics Summary:\n");
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Enemies Killed: %d\n", enemiesKilled);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Weak Point Kills: %d\n", weakPointKills);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Total Deaths: %d\n", totalDeaths);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, " Time: %d:%02d (%.1f seconds)\n", minutes, seconds, totalTime);
+    OutputDebugStringA(debugMsg);
+    sprintf_s(debugMsg, "=============================================\n\n");
+    OutputDebugStringA(debugMsg);
 }
 
 void GameStatistics::AddScore(int points) {
@@ -1525,4 +1750,12 @@ void GameStatistics::AddScore(int points) {
     if (totalScore < 0) {
         totalScore = 0; // so there will not be negative score
     }
+}
+
+void GameStatistics::ResetCurrentStats() {
+    currentScore = 0;
+    currentKills = 0;
+    currentWeakKills = 0;
+    currentAreaEnemyPoints = 0;
+    //totalEnemyPoints = 0;
 }

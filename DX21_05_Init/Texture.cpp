@@ -65,3 +65,11 @@ HRESULT LoadTexture(ID3D11Device* device, const char* filename, ID3D11ShaderReso
     return S_OK;
 }
 
+// to release the textures
+void ReleaseTexture(ID3D11ShaderResourceView*& texture)
+{
+    if (texture) {
+        texture->Release();
+        texture = nullptr;
+    }
+}

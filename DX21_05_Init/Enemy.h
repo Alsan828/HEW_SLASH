@@ -447,14 +447,14 @@ private:
         BEAM_POST_ATTACK
     };
 
-    void CheckBeamDamage();
-    void CreateDeathExplosion();
+    void CheckBeamDamage(); // damages the player
+    void CreateDeathExplosion(); // Damages other enemies but not the player
 
     // Beam parameters - separate horizontal and vertical!
     float beamHitboxWidth = 0.1f;        // make it wider as you want
     float beamHorizontalLength = 0.8f;    // make it lager horiontally
     float beamVerticalLength = 0.86f;      // make it larger vertically
-    float deathExplosionRadius = 1.5f;    
+    float deathExplosionRadius = 0.75f;    
     float deathExplosionDamage = 100000.0f; // change this as you want
 
     // Attack state machine

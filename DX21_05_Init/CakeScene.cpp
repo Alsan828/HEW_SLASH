@@ -37,37 +37,55 @@ bool CakeScene::Init()
 // for checking if the player hit the cake or not
 bool CakeScene::CheckPlayerAttackHitsCake()
 {
-    // if player is not attacking not dashing dont no anything
+    // if player is not attacking nor dashing dont do anything
     if (!g_player.isAttacking && !g_player.isDashing) {
         return false;
     }
 
     // for the player attack hitbox with the cake
-    float cutRange = 0.4f;  // used for how far is the player from the cake to cut it
-    // for the current position of the player
-    float playerCenterX = g_player.posX;
-    float playerCenterY = g_player.posY;
+    float cutRange = 0.4f;  // to check how far is the player from the cake to cut it
 
-    // Determine attack position based on the players facing direction
-    float attackX = playerCenterX;
-    if (g_player.facingRight) {
-        attackX += cutRange;
+    // for the current position of the player. /2 so we know the actual center
+    float playerCenterX = g_player.posX + PLAYER_WIDTH / 2;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT / 2;
+
+    // Determine attack position at the center of the player
+    float playerAttackX = playerCenterX;
+    float playerAttackY = playerCenterY;
+
+    if (g_player.isAttacking) { // if facing right
+        // For normal attacks, only extend in facing direction
+        if (g_player.facingRight) {
+            playerAttackX += cutRange;
+        }
+        else { // if facing left
+            playerAttackX -= cutRange;
+        }
     }
-    else { // if facing left
-        attackX -= cutRange;
+    else if (g_player.isDashing) { // if the player is dashing
+        float velX = g_player.velocityX; // horzontal velocity
+        float velY = g_player.velocityY; // vertical velocity
+
+        // for checking the lengh of the vector.
+        // for example: is I move 3 units to the right and 4 up, we use pytagorean method which will be sqtr((3*3) + (4*4))
+        float magnitude = sqrtf((velX * velX) + (velY * velY));
+
+        if (magnitude > 0.001f) {
+            playerAttackX += (velX / magnitude) * cutRange;
+            playerAttackY += (velY / magnitude) * cutRange;
+        }
     }
 
-    // cake center position
-    float cakeCenterX = cakeX + cakeWidth / 2;
+    // cake center position. /2 so we know the actual center
+    float cakeCenterX = cakeX + cakeWidth / 2; 
     float cakeCenterY = cakeY + cakeHeight / 2;
 
-    // Check collision between the player attack for cutting the cake and the actual cake
-    float distX = abs(attackX - cakeCenterX);
-    float distY = abs(playerCenterY - cakeCenterY);
+    // Check collision. use absolute value to get always positive distance
+    float distanceX = abs(playerAttackX - cakeCenterX); // horizontal distance
+    float distanceY = abs(playerAttackY - cakeCenterY); // vertical distance
 
-    // for checking if the attack is close enough to cut the cake
-    // it has to be within the cakes width and height
-    bool hit = (distX < (cakeWidth / 2 + cutRange) && distY < (cakeHeight / 2 + 0.3f));
+    // Hitbox matches cake size exactly
+    bool hit = (distanceX < cakeWidth / 2 && distanceY < cakeHeight / 2);
 
     return hit;
 }
@@ -80,23 +98,22 @@ CutDirection CakeScene::DetermineCutDirection()
         float velX = g_player.velocityX;
         float velY = g_player.velocityY;
 
-        // calculate angle of movement in radians
+        // atan2f calculate angle of movement in radians
         float angle = atan2f(velY, velX);
         float angleDegrees = angle * 180.0f / 3.14159f; // it converts radians to degrees 
         if (angleDegrees < 0) angleDegrees += 360.0f;    // normalize the angle bwteeen 0 and 360 of range
 
-
         // Determine cut based on dash direction (8 directions)
-        if ((angleDegrees >= 337.5f || angleDegrees < 22.5f) ||
-            (angleDegrees >= 157.5f && angleDegrees < 202.5f)) {
+        if ((angleDegrees >= bottomRightPartMax || angleDegrees < rightPartMax) ||
+            (angleDegrees >= topLeftPartMax && angleDegrees < leftPartMax)) {
             return HORIZONTAL_CUT; // cuts horizontally
         }
-        else if ((angleDegrees >= 67.5f && angleDegrees < 112.5f) ||
-            (angleDegrees >= 247.5f && angleDegrees < 292.5f)) {
+        else if ((angleDegrees >= topRightPartMax && angleDegrees < topMiddlePartMax) ||
+            (angleDegrees >= bottomLeftPartMax && angleDegrees < bottomMiddlePartMax)) {
             return VERTICAL_CUT; // cut vertically
         }
-        else if ((angleDegrees >= 22.5f && angleDegrees < 67.5f) ||
-            (angleDegrees >= 202.5f && angleDegrees < 247.5f)) {
+        else if ((angleDegrees >= rightPartMax && angleDegrees < topRightPartMax) ||
+            (angleDegrees >= leftPartMax && angleDegrees < bottomLeftPartMax)) {
             return DIAGONAL_FROM_BOTTOM_CUT; // diagonal cut from top left to bottom right or viceversa
         }
         else {
@@ -295,9 +312,7 @@ void CakeScene::Draw()
         DrawGame();
     }
 
-    // if the plates is shown, dont draw the drawgame()
-    
-    // draw cake sequence
+    // if the plate if shown, draw cake sequence
     DrawCakeSequence();
 }
 
