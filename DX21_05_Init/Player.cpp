@@ -554,10 +554,37 @@ void UpdatePlayerPhysics(float deltaTime) {
                 portalCooldown = 1.0f;
             }
 
-            else {
-                g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
-                portalCooldown = 1.0f;
-            }
+			else {
+				// Default door behavior: go to next stage (except boss door).
+				const std::string currentMapName = g_mapManager.GetCurrentMapName();
+				int world = 0;
+				int stage = 0;
+
+				if (currentMapName.rfind("World", 0) == 0) {
+					const size_t worldStart = 5;
+					const size_t areaPos = currentMapName.find("Area", worldStart);
+					if (areaPos != std::string::npos) {
+						try {
+							world = std::stoi(currentMapName.substr(worldStart, areaPos - worldStart));
+							stage = std::stoi(currentMapName.substr(areaPos + 4));
+						}
+						catch (...) {
+							world = 0;
+							stage = 0;
+						}
+					}
+				}
+
+				if (world > 0 && stage > 0) {
+					sceneManager.SwitchToStage(world, stage + 1);
+				}
+				else {
+					// Fallback to old behavior
+					g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
+				}
+
+				portalCooldown = 1.0f;
+			}
         }
     }
 

@@ -121,17 +121,17 @@ void Map::InitializeTileDictionary() {
         {"E8", {"E8", "enemy", "thrower", false, false, false, true}},
         {"E9", {"E9", "enemy", "blind_eye", false, false, false, true}},
 
-        // Portal types
+        // Portal/door types
+        // Default behavior: all non-boss doors go to the next area.
         {"DF", {"DF", "door", "World1Area2", false, false, true, false}},
         {"DI", {"DI", "door", "World1Area3", false, false, true, false}},
-        {"DT", {"DT", "door", "World1Area1", false, false, true, false}},
         {"D4", {"D4", "door", "World1Area4", false, false, true, false}},
         {"D5", {"D5", "door", "World1Area5", false, false, true, false}},
         {"D6", {"D6", "door", "World1Area6", false, false, true, false}},
         {"D7", {"D7", "door", "World1Area7", false, false, true, false}},
-        {"DB", {"DB", "door", "boss", false, false, true, false}}, // for the boss of world 1
+        {"DB", {"DB", "door", "boss", false, false, true, false}}, // boss door
 
-        //Portal Types for World2 (stage2)
+        // Portal/door types for World2 (stage2) -> next area
         {"21", {"21", "door", "World2Area1", false, false, true, false}},
         {"22", {"22", "door", "World2Area2", false, false, true, false}},
         {"23", {"23", "door", "World2Area3", false, false, true, false}},
@@ -141,7 +141,7 @@ void Map::InitializeTileDictionary() {
         {"27", {"27", "door", "World2Area7", false, false, true, false}},
         //{"B2", {"B2", "door", "boss2", false, false, true, false}}, // for the boss of world 2
 
-        //Portal Types for World3 (stage3)
+        // Portal/door types for World3 (stage3) -> next area
         {"31", {"31", "door", "World3Area1", false, false, true, false}},
         {"32", {"32", "door", "World3Area2", false, false, true, false}},
         {"33", {"33", "door", "World3Area3", false, false, true, false}},
@@ -198,6 +198,14 @@ const std::unordered_map<std::string, std::string>& Map::GetPortalTargetMapLooku
         {"World3Area5", "World3Area5"},
         {"World3Area6", "World3Area6"},
         {"World3Area7", "World3Area7"},
+
+        // Door codes -> next stage (except boss door)
+        {"World1Area2", "World1Area2"},
+        {"World1Area3", "World1Area3"},
+        {"World1Area4", "World1Area4"},
+        {"World1Area5", "World1Area5"},
+        {"World1Area6", "World1Area6"},
+        {"World1Area7", "World1Area7"},
     };
     return lookup;
 }
@@ -409,8 +417,15 @@ bool Map::CheckPortalCollision(float x, float y, float width, float height,
     // 回退到原始方法
     for (const auto& tile : m_midgroundTiles) {
         if (tile.tileInfo.isPortal) {
+            // Door sprite is 1x2. Treat portal collision as 2 tiles tall,
+            // centered one tile higher than the base tile.
+            float portalX = tile.posX;
+            float portalY = tile.posY + (tile.height * 0.5f);
+            float portalW = tile.width;
+            float portalH = tile.height * 2.0f;
+
             if (CheckCollision(x, y, width, height,
-                tile.posX, tile.posY, tile.width, tile.height)) {
+                portalX, portalY, portalW, portalH)) {
                 targetMap = tile.targetMap;
                 portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
                 linkedSpawnId = tile.linkedSpawnId;
