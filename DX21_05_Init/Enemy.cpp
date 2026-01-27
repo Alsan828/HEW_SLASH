@@ -525,7 +525,7 @@ void Enemy::OnDeath() {
     //g_player.comboCount++;
     //g_player.comboTimer = 5.0f; // it resets the timer
 
-    OnEnemyDefeated(weakSpotDeath);
+    OnEnemyDefeated(weakSpotDeath, posX + width * 0.5f, posY + height * 0.5f);
     //erase later
     char debugMsg[256];
     sprintf_s(debugMsg, "Total Enemy Points: %d\n", g_gameStats.GetTotalEnemyPoints());

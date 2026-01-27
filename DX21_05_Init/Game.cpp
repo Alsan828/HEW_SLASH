@@ -188,6 +188,11 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
 
 HWND g_gameHwnd = nullptr;
 
+// Slash-count follower spawn request (set on enemy kill)
+float g_slashCountSpawnX = 0.0f;
+float g_slashCountSpawnY = 0.0f;
+bool g_slashCountSpawnPending = false;
+
 void SetGameWindowHandle(HWND hwnd) {
     g_gameHwnd = hwnd;
 }
@@ -705,9 +710,9 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/combo/combo_number.png", &g_comboNumberTexture);
     LoadTexture(g_pDevice, "asset/UI/combo/combo_X.png", &g_comboXTexture);
 
-    // Slash-count UI (follows player): 1x4 spritesheet, looping
-    LoadTexture(g_pDevice, "asset/UI/slash_count.png", &g_slashCountTexture);
-    g_slashCountAnim.AddClip("SlashCount", 0, 3, 1, 4, 0.1f, true, g_slashCountTexture);
+    // Dash/slash-count UI (follows player): attack_count.png is a 1x3 sheet
+    LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_slashCountTexture);
+    g_slashCountAnim.AddClip("SlashCount", 0, 2, 1, 3, 0.12f, true, g_slashCountTexture);
     g_slashCountAnim.SetClip("SlashCount");
 
     LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
@@ -1318,33 +1323,96 @@ void DrawGame() {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    // Draw slash-count icons (behind player): follow player slightly up-left.
+    // Draw slash-count icons (behind player): 3 independent followers.
     // Hide during gauge-based invincibility.
     if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_slashCountTexture) {
         const int count = std::clamp(g_player.dashPoints, 0, g_player.MAX_DASH_POINTS);
         if (count > 0) {
+            struct Follower {
+                float x = 0.0f;
+                float y = 0.0f;
+                bool init = false;
+            };
+
+            static Follower s_follow[3];
+
             // Sprite size in world units
             const float iconW = 0.065f;
             const float iconH = 0.065f;
-            const float spacing = iconW * 0.75f;
+            const float spacing = iconW * 0.60f;
 
-            // Anchor: behind & above player
-            float baseX = g_player.posX - iconW * 0.4f;
-            float baseY = g_player.posY + PLAYER_HEIGHT * 0.85f;
+            // Target anchor: one grid tile behind player (respect facing)
+            const float behind = GRID_WIDTH;
+            const float baseTargetX = g_player.posX + (g_player.facingRight ? -behind : behind);
+            const float baseTargetY = g_player.posY + PLAYER_HEIGHT * 0.55f;
 
-            int frame = g_slashCountAnim.GetCurrentFrame() % 4;
+            // Per-icon offsets (so they don't overlap and are not aligned)
+            const float xDir = g_player.facingRight ? -1.0f : 1.0f; // extend further behind
+            const float xOffset[3] = { 0.0f, spacing * xDir, spacing * 2.0f * xDir };
+            const float yOffset[3] = { -iconH * 0.18f, 0.0f, iconH * 0.18f };
+            const float rotOffset[3] = { -0.08f, 0.0f, 0.08f };
+
+            const float dt = std::clamp(g_gameTimer.GetDeltaTime(), 0.0f, 0.033f);
+
+            // Consume spawn request: only affect the newly-restored indicator (the last one)
+            if (g_slashCountSpawnPending) {
+                int spawnIndex = std::clamp(g_player.dashPoints - 1, 0, g_player.MAX_DASH_POINTS - 1);
+                s_follow[spawnIndex].x = g_slashCountSpawnX;
+                s_follow[spawnIndex].y = g_slashCountSpawnY;
+                s_follow[spawnIndex].init = true;
+                g_slashCountSpawnPending = false;
+            }
+
+            int frame = g_slashCountAnim.GetCurrentFrame() % 3;
             for (int i = 0; i < count; ++i) {
-                auto p = worldToScreen(baseX + i * spacing, baseY);
+                Follower& f = s_follow[i];
+
+                const float targetX = baseTargetX + xOffset[i];
+                const float targetY = baseTargetY + yOffset[i];
+
+                if (!f.init) {
+                    f.x = targetX;
+                    f.y = targetY;
+                    f.init = true;
+                }
+
+                const float dx = targetX - f.x;
+                const float dy = targetY - f.y;
+                const float dist = sqrtf(dx * dx + dy * dy);
+
+                // Adaptive follow per-indicator: farther = faster
+                const float tauNear = 0.024f;
+                const float tauFar = 0.0012f;
+                const float dist01 = std::clamp(dist / (GRID_WIDTH * 2.0f), 0.0f, 1.0f);
+                const float tau = tauNear + (tauFar - tauNear) * dist01;
+                float a = (tau <= 1e-6f) ? 1.0f : (dt / (tau + dt));
+                a = std::clamp(a, 0.0f, 0.45f);
+
+                f.x += dx * a;
+                f.y += dy * a;
+
+                if (dist < 0.0025f) {
+                    f.x = targetX;
+                    f.y = targetY;
+                }
+
+                auto p = worldToScreen(f.x, f.y);
                 SetColor(1.0f, 1.0f, 1.0f, 1.0f);
                 RenderImage(p.first, p.second, iconW, iconH,
                     g_slashCountTexture,
                     frame,
                     1,
-                    4,
+                    3,
                     false,
-                    0.0f,
+                    rotOffset[i],
                     false);
             }
+
+            // When points are missing, reset hidden followers so they don't "jump" when re-shown.
+            for (int i = count; i < 3; ++i) {
+                s_follow[i].init = false;
+            }
+
             SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
     }

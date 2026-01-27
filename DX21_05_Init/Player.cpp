@@ -1227,7 +1227,7 @@ void OnEnemyDefeated() {
     g_gameStats.IncrementKills();
 }
 
-void OnEnemyDefeated(bool wasWeakPointKill) {
+void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY) {
     // Track kills for statistics
     if (wasWeakPointKill) {
         g_gameStats.IncrementWeakPointKills();  // 30 points
@@ -1241,8 +1241,18 @@ void OnEnemyDefeated(bool wasWeakPointKill) {
     // Restore dash point
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
-        g_gameStats.AddScore(10); 
+        g_gameStats.AddScore(10);
         printf("[POINTS] Normal kill +10 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
+
+        // Spawn indicator at enemy death position instead of popping in at the player.
+        // The slash-count UI uses internal static smoothing state inside DrawGame().
+        // We "teleport" its current position to the death location, so it flies back to the player anchor.
+        extern float g_slashCountSpawnX;
+        extern float g_slashCountSpawnY;
+        extern bool g_slashCountSpawnPending;
+        g_slashCountSpawnX = enemyWorldX;
+        g_slashCountSpawnY = enemyWorldY;
+        g_slashCountSpawnPending = true;
     }
 
     g_player.comboCount++;

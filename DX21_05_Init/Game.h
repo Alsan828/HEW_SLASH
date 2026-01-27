@@ -33,6 +33,11 @@ class Enemy;
 extern ID3D11ShaderResourceView* g_slashCountTexture;
 extern Animation g_slashCountAnim;
 
+// When a dash point is restored on enemy death, spawn the follower indicator from that world position.
+extern float g_slashCountSpawnX;
+extern float g_slashCountSpawnY;
+extern bool g_slashCountSpawnPending;
+
 // Game state enumeration
 enum GameState {
     STATE_PLAYING,
@@ -537,7 +542,7 @@ void UpdatePlayerDeath(float deltaTime);
 void UpdateDash(float deltaTime);
 void UpdatePlayerPhysics(float deltaTime);
 void OnEnemyDefeated();
-void OnEnemyDefeated(bool wasWeakPointKill);
+void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY);
 bool ConsumeDashPoint();
 void UpdateDashPoints(float deltaTime);
 void UpdateDashAftermath(float deltaTime);
