@@ -2000,10 +2000,10 @@ BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     // for the animation
     anim.AddClip("idle", 0, 2, 1, 3, 0.25f, true, g_beamEnemyIdleTexture);
     anim.AddClip("pre_attack", 0, 3, 1, 4, 0.8f, false, g_beamEnemyPreAttackTexture);
-    anim.AddClip("attack", 0, 3, 1, 4, 0.1f, false, g_beamEnemyAttackTexture);
+    anim.AddClip("attack", 0, 3, 1, 4, 0.06f, true, g_beamEnemyAttackTexture);
     anim.AddClip("post_attack", 0, 2, 1, 3, 0.15f, false, g_beamEnemyPostAttackTexture);
     anim.AddClip("pre_death", 0, 5, 1, 6, 0.15f, false, g_beamEnemyPreDeathTexture);
-    anim.AddClip("death", 0, 2, 1, 3, 0.1f, false, g_beamEnemyDeathTexture);
+    anim.AddClip("death", 0, 5, 1, 6, 0.06f, false, g_beamEnemyDeathTexture);
     anim.AddClip("post_death", 0, 2, 1, 3, 0.15f, false, g_beamEnemyPostDeathTexture);
 
     anim.SetClip("idle");
