@@ -45,6 +45,9 @@ namespace
 	// Cache for preloaded sound effects
 	std::unordered_map<std::string, SoundData> g_soundCache;
 
+	// so it tracks the current bgm
+	std::string g_currentBGM = "";
+
 	// Helper function to load WAV file
 	bool LoadWavFile(const std::string& filePath, std::vector<BYTE>& audioData, WAVEFORMATEX& waveFormat)
 	{
@@ -199,7 +202,13 @@ namespace Audio
 	{
 		if (!g_inited) Init();
 
+		// dont restart the bgm is its playing the current bgm I want
+		if (g_currentBGM == filePath && g_bgmVoice != nullptr)
+			return;
+
 		StopBGM();
+
+		g_currentBGM = filePath;
 
 		// Load the BGM file
 		WAVEFORMATEX waveFormat = {};
@@ -234,6 +243,7 @@ namespace Audio
 			g_bgmVoice = nullptr;
 		}
 		g_bgmData.clear();
+		g_currentBGM = "";
 	}
 
 	void PauseBGM()
@@ -304,3 +314,4 @@ namespace Audio
 		sourceVoice->Start(0);
 	}
 }
+
