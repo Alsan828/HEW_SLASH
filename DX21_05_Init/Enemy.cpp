@@ -1419,40 +1419,6 @@ void BombEnemy::Explode() {
     CreateProjectiles();
 }
 
-//void BombEnemy::CreateProjectiles() {
-//    // 获取ProjectileManager实例
-//    ProjectileManager& projectileManager = ProjectileManager::GetInstance();
-//
-//    // 创建火球效果配置
-//    ProjectileEffect fireballEffect;
-//    fireballEffect.damage = 30.0f;  // 基础伤害
-//    fireballEffect.burnDamage = 5.0f;  // 燃烧伤害
-//    fireballEffect.areaRadius = 0.3f;  // 爆炸半径
-//    fireballEffect.pierce = false;  // 不穿透
-//
-//    float projectileSpeed = 3.0f;  // 射弹速度
-//
-//    // 向左发射火球
-//    projectileManager.CreateFireball(
-//        posX,  // 起始X
-//        posY + height * 0.5f,  // 从敌人中心高度发射
-//        posX - 10.0f,  // 左侧远处位置
-//        posY + height * 0.5f,  // 水平方向
-//        true  // 来自玩家
-//    );
-//
-//    // 向右发射火球
-//    projectileManager.CreateFireball(
-//        posX,  // 起始X
-//        posY + height * 0.5f,  // 从敌人中心高度发射
-//        posX + 10.0f,  // 右侧远处位置
-//        posY + height * 0.5f,  // 水平方向
-//        true  // 来自玩家
-//    );
-//
-//    // 可以在这里添加粒子效果
-//    // CreateParticleEffect(posX, posY, "explosion");
-//}
 // so the enemy throw projectiles in 8 directions 
 void BombEnemy::CreateProjectiles() {
     // Get ProjectileManager instance
