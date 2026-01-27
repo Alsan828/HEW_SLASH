@@ -1312,7 +1312,7 @@ void FastEnemy::DashAttack() {
 }
 
 // BombEnemy实现
-BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 120.0f) {
+BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 60000.0f) {
     useTurnCooldown = false;
     // 炸弹敌人：顶部和底部10倍伤害，其他方向减少伤害
     SetDamageMultiplier(DIR_UP, 10.0f);
@@ -1494,11 +1494,11 @@ void BombEnemy::CreateProjectiles() {
 }
 
 
-BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
+BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 10000000.0f)
 {
     useTurnCooldown = false;
-    SetMaxHealth(500000.0f); 
-    SetHealth(500000.0f);
+    SetMaxHealth(10000000.0f); 
+    SetHealth(10000000.0f);
 
     // Boss: collision box and sprite are both 3x
     // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
@@ -1523,7 +1523,7 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
 	anim.AddClip("dash_over", 0, 3, 4, 1, 0.06f, false, g_bossDashOverTexture);
 
     // 充能/蓄力（保持原有）
-    anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, false, g_bossChargeStage1Texture);
+    anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, true, g_bossChargeStage1Texture);
     anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.08f, false, g_bossChargeStage2Texture);
 
     // 新增：slash 准备与激活，来自你提供的两张图
@@ -1533,7 +1533,7 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
     anim.AddClip("slash_active", 7, 0, 8, 1, 0.05f, false, g_bossSlashActiveTexture);
 
     // death: 5帧示例
-    anim.AddClip("death",  0, 4, 5, 1, 0.08f, false, g_bossDeathTexture);
+    anim.AddClip("death",  0, 14, 15, 1, 0.08f, false, g_bossDeathTexture);
 
     anim.SetClip("idle");
 }
@@ -1844,7 +1844,7 @@ void BossEnemy::RecomputeWeakMultipliers() {
 }
 
 // SquareEnemy implementation - stationary enemy
-SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 100.0f) {
+SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 30000.0f) {
     useTurnCooldown = false;
     // Square enemy: takes normal damage from all directions
     SetDamageMultiplier(DIR_FRONT, 1.0f);
@@ -1950,7 +1950,7 @@ void SquareEnemy::OnDeath() {
 }
 
 
-BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 150.0f) {
+BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 90000.0f) {
     // Weak points: Vertical and Horizontal lines (like a cross)
     SetDamageMultiplier(DIR_UP, 8.0f);
     SetDamageMultiplier(DIR_DOWN, 8.0f);
