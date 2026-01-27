@@ -589,10 +589,10 @@ namespace SoundEffect {
 
 namespace BackgroundMusic {
     const std::string MAIN_MENU = "asset/Music/main_menu.wav";
-    const std::string LEVEL1 = "asset/Music/level1.wav";
+    const std::string LEVEL1 = "asset/Music/Ride_out.wav";
     const std::string LEVEL2 = "asset/Music/level2.wav";
     const std::string LEVEL3 = "asset/Music/level3.wav";
-    const std::string BOSS_BATTLE = "asset/Music/boss_battle.wav";
+    const std::string BOSS_BATTLE = "asset/Music/0194_Red-Eyes.wav";
     const std::string GAME_OVER = "asset/Music/game_over.wav";
     const std::string VICTORY = "asset/Music/victory.wav";
 }
