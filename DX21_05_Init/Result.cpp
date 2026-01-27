@@ -49,23 +49,29 @@ void ResultScene::Update(float deltaTime)
     {
         if (btn.Process() == UIButtonResult::Clicked)
         {
-            if (m_completedWorld == 1)
-            {
-                sceneManager->SwitchScene(STAGESELECT2); // if you complete world1 you go to world2
-                //sceneManager->SwitchToStage(2,1); // if you want to go directly to stage 2-1
-            }
-            else if (m_completedWorld == 2)
-            {
-                sceneManager->SwitchScene(STAGESELECT3); // Cif you completr world2 you go to world3
-                //sceneManager->SwitchToStage(3,1); // if you want to go directly to stage 3-1
-            }
-            else if (m_completedWorld == 3)
-            {
-                sceneManager->SwitchScene(MENU); // if you compelte world3 you go to menu as default
-                //sceneManager->SwitchToStage(1,1); // if you want to go directly to stage 1-1
-            }
+            SCENE targetScene = btn.GetTargetScene();
 
-            //sceneManager->SwitchScene(btn.GetTargetScene());
+            // if i click on title, it goes to title
+            if (targetScene == TITLE)
+            {
+                sceneManager->SwitchScene(TITLE);
+            }
+            // if I cllick on next stage it goes to next stage select
+            else
+            {
+                if (m_completedWorld == 1)
+                {
+                    sceneManager->SwitchScene(STAGESELECT2);
+                }
+                else if (m_completedWorld == 2)
+                {
+                    sceneManager->SwitchScene(STAGESELECT3);
+                }
+                else if (m_completedWorld == 3)
+                {
+                    sceneManager->SwitchScene(MENU);
+                }
+            }
             return;
         }
     }
