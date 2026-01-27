@@ -45,6 +45,13 @@ HRESULT RendererInit(HWND hwnd) {
 	HRESULT hr = S_OK;
 	Audio::Init();
 
+	// only preload the most used SE in the game (like player and enemies SEs)
+	Audio::PreloadSE(SoundEffect::ENEMY_HIT);
+	Audio::PreloadSE(SoundEffect::ENEMY_DEATH);
+	Audio::PreloadSE(SoundEffect::DASH);
+	Audio::PreloadSE(SoundEffect::SHOOT);
+	Audio::PreloadSE(SoundEffect::JUMP);
+
 	// Get actual client area size of window
 	RECT clientRect;
 	GetClientRect(hwnd, &clientRect);
