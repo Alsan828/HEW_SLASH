@@ -286,7 +286,7 @@ private:
     int lifetimeWeakKills = 0;
 
 public:
-   // no need construct now bc I initialied the variables above
+   // no need construct now bc I initialed the variables above
 
     // Reset all statistics
     void Reset();
@@ -605,3 +605,14 @@ namespace BackgroundMusic {
     const std::string GAME_OVER = "asset/Music/game_over.wav";
     const std::string VICTORY = "asset/Music/victory.wav";
 }
+
+// boss animation textures
+extern ID3D11ShaderResourceView* g_bossIdleTexture;
+extern ID3D11ShaderResourceView* g_bossAttackTexture;
+extern ID3D11ShaderResourceView* g_bossDeathTexture;
+extern ID3D11ShaderResourceView* g_bossChargeStage1Texture;
+extern ID3D11ShaderResourceView* g_bossChargeStage2Texture;
+extern ID3D11ShaderResourceView* g_bossDashTexture;
+extern ID3D11ShaderResourceView* g_bossDashOverTexture;
+extern ID3D11ShaderResourceView* g_bossSlashPrepTexture;
+extern ID3D11ShaderResourceView* g_bossSlashActiveTexture;

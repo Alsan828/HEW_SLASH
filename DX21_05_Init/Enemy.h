@@ -397,6 +397,7 @@ public:
     BossEnemy(float x, float y);
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
     virtual void TakeDamage(int damage, float attackAngle) override;
+    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
 
 protected:
     virtual void ChaseBehavior(float deltaTime) override;
