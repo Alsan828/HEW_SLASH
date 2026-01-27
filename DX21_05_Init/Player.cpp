@@ -769,6 +769,7 @@ void UpdateDash(float deltaTime) {
 
     // Charge logic should be independent of aftermath state
     if (g_player.isCharging) {
+        const float prevChargeTime = g_player.chargeTime;
         g_player.chargeTime += deltaTime * g_player.GetChargeSpeedMultiplier();
 
         // Allow charging during stun, but charge time cannot be too long
@@ -779,6 +780,11 @@ void UpdateDash(float deltaTime) {
             }
             ExecuteMouseChargeDash();*/
             g_player.chargeTime = g_player.MAX_CHARGE_TIME; // it caps to max charge time and it doesnt release it unless you stop clicking
+        }
+
+        // Play charge SE when reaching max (once per charge)
+        if (prevChargeTime < g_player.MAX_CHARGE_TIME && g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
+            Audio::PlaySE(SoundEffect::CHARGE_START);
         }
     }
 
@@ -955,7 +961,6 @@ void StartMouseChargeDash() {
 
     g_mouseIndicator.showArrow(true);
     g_player.isCharging = true;
-	Audio::PlaySE(SoundEffect::CHARGE_START);
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
 

@@ -818,7 +818,14 @@ void UpdateGame(float deltaTime) {
 
     // for updating the invincibility timer
     if (g_player.isInvincible) {
+        const float prevInvTime = g_player.invincibleTimer;
         g_player.invincibleTimer -= deltaTime;
+
+        // Gauge invincibility: 1-second warning (play once)
+        if (g_player.isGaugeInvincible && prevInvTime > 1.0f && g_player.invincibleTimer <= 1.0f) {
+            Audio::PlaySE(SoundEffect::INVINCIBLE_WARNING);
+        }
+
         if (g_player.invincibleTimer <= 0.0f) {
             g_player.isInvincible = false;
             g_player.isGaugeInvincible = false;
@@ -834,6 +841,8 @@ void UpdateGame(float deltaTime) {
         g_player.g_gaugeEffectActive = true; 
         g_player.g_gaugeEffectTimer = g_player.INVINCIBLE_DURATION;
         g_player.gaugePoints = 0;
+
+        Audio::PlaySE(SoundEffect::LIMITBREAK, 2.0f);
     }
 
 	// for the gauge effect timer

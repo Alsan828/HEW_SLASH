@@ -581,6 +581,10 @@ namespace SoundEffect {
     const std::string UI_CLICK = "asset/SE/enter.wav";
     const std::string PAUSE = "asset/SE/pause.wav";
     const std::string RESUME = "asset/SE/resume.wav";
+
+    // Gauge / limitbreak
+    const std::string LIMITBREAK = "asset/SE/limitbreak.wav";
+    const std::string INVINCIBLE_WARNING = "asset/SE/invincible_warning.wav";
 }
 
 namespace BackgroundMusic {
