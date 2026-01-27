@@ -1795,7 +1795,7 @@ void GameStatistics::IncrementDeaths() {
 
     //erase later
     char debugMsg[256];
-    sprintf_s(debugMsg, "\n*** PLAYER DIED ***\n");
+    sprintf_s(debugMsg, "\n====== PLAYER DIED ======\n");
     OutputDebugStringA(debugMsg);
     sprintf_s(debugMsg, "Total Deaths: %d\n", totalDeaths);
     OutputDebugStringA(debugMsg);
@@ -1809,7 +1809,7 @@ void GameStatistics::IncrementDeaths() {
     // erase later
     sprintf_s(debugMsg, "Remaining Total Points: %d\n", totalEnemyPoints);
     OutputDebugStringA(debugMsg);
-    OutputDebugStringA("*******************\n\n");
+    OutputDebugStringA("==========================\n\n");
 
 }
 
