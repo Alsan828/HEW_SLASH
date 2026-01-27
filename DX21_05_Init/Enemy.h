@@ -418,6 +418,9 @@ private:
         BOSS_DASH_CHARGE,
         BOSS_DASH_MOVING,
         BOSS_DASH_AFTER,
+        BOSS_LEAP_CHARGE,
+        BOSS_LEAP_MOVING,
+        BOSS_LEAP_AFTER,
         BOSS_SLASH_CHARGE,
         BOSS_SLASH_ACTIVE,
         BOSS_DOWN_BEFORE,
@@ -432,16 +435,31 @@ private:
     int weakCycleIndex = 0;          // weakline direction cycle
 
     // Tunable timings
-    float chargeDuration = 3.0f;     // charge
-    float dashAfterDuration = 3.0f;  // aftermath
+    float chargeDuration = 1.5f;     // faster charge
+    float dashAfterDuration = 1.5f;  // faster recovery after dash
     float slashActiveFrames = 3.0f;  // 3 frames window
-    float downDuration = 10.0f;      // down time
+    float downDuration = 6.0f;       // shorter down time
+
+    // Dash tuning
+    float dashSpeedMultiplier = 9.0f;   // even faster dash
+    float dashMaxDuration = 4.0f;       // allow dash for longer time (approx half-map in many setups)
+    float dashStopDistance = 0.1f;      // stop only when extremely close to player
+    int dashLevel = 1;                  // dash level (affects speed)
+
+    // Leap (jump + dash) tuning
+    float leapChargeDuration = 1.0f;      // charge before leap
+    float leapInitialVy = -6.0f;          // upward velocity (negative = up)
+    float leapDashSpeedMultiplier = 5.0f; // faster horizontal dash while airborne
+    float leapAirDuration = 1.2f;         // max air time for leap
 
     // Helpers
     void EnterState(BossState s);
     void UpdateDashCharge(float dt);
     void UpdateDashMoving(float dt, MapManager* mapManager);
     void UpdateDashAfter(float dt);
+    void UpdateLeapCharge(float dt);
+    void UpdateLeapMoving(float dt, MapManager* mapManager);
+    void UpdateLeapAfter(float dt);
     void UpdateSlashCharge(float dt);
     void UpdateSlashActive(float dt);
     void UpdateDownBefore(float dt);

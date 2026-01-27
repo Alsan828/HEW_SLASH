@@ -40,6 +40,15 @@ ID3D11ShaderResourceView* g_beamEnemyPostDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_bossIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_bossAttackTexture = nullptr;
 ID3D11ShaderResourceView* g_bossDeathTexture = nullptr;
+// New: boss dash texture (2 frames)
+ID3D11ShaderResourceView* g_bossDashTexture = nullptr;
+// New: boss charge textures (image1 -> charge stage A, image2 -> charge stage B)
+ID3D11ShaderResourceView* g_bossChargeStage1Texture = nullptr;
+ID3D11ShaderResourceView* g_bossChargeStage2Texture = nullptr;
+
+// 新增：两张slash动作图（请按你的实际文件路径命名）
+ID3D11ShaderResourceView* g_bossSlashPrepTexture = nullptr;   // 图片5（4帧，右到左）
+ID3D11ShaderResourceView* g_bossSlashActiveTexture = nullptr; // 图片6（8帧，右到左）
 
 namespace {
     struct ThrownEnemyState {
@@ -182,14 +191,21 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/boss/boss_idle.png", &g_bossIdleTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_attack.png", &g_bossAttackTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_death.png", &g_bossDeathTexture);
+    // Load boss charge textures (provide correct file paths for your images)
+    LoadTexture(g_pDevice, "asset/boss/boss_charge_stage1.png", &g_bossChargeStage1Texture);
+    LoadTexture(g_pDevice, "asset/boss/boss_charge_stage2.png", &g_bossChargeStage2Texture);
+    // Load boss dash (2 frames) sprite
+    LoadTexture(g_pDevice, "asset/boss/boss_dash.png", &g_bossDashTexture);
+    LoadTexture(g_pDevice, "asset/boss/boss_slash_prep.png", &g_bossSlashPrepTexture);
+    LoadTexture(g_pDevice, "asset/boss/boss_slash_active.png", &g_bossSlashActiveTexture);
 }
 
 // ========== BlindEyeEnemy ==========
 BlindEyeEnemy::BlindEyeEnemy(float x, float y)
     : Enemy(x, y, 100.0f) {
     // 盲眼敌人不追人，巡逻逻辑自己处理转向，不需要朝向冷却
-    useTurnCooldown = false;]
-    detectionRange = 0.0f;
+    useTurnCooldown = false;  
+detectionRange = 0.0f;
     loseSightRange = 0.0f;
 
     anim.ClearClips();
@@ -1488,27 +1504,32 @@ void BombEnemy::CreateProjectiles() {
 BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
 {
     useTurnCooldown = false;
-    // change these variables as you want. this is just for the test of the testboss
     SetMaxHealth(500000.0f); 
     SetHealth(500000.0f);
 
-    // Keep collision box from base Enemy; adjust only visual scale
-    scale = 2.0f;  // Visual: 2x player size by default
-    moveSpeed = MOVE_SPEED * 0.3f;  // Slower movement
+    scale = 2.0f;
+    moveSpeed = MOVE_SPEED * 0.3f;
 
-
-    // Boss has different damage multipliers (harder to damage from front)
-
-
-    // Set up boss-specific animations using your textures
     anim.ClearClips();
-    // Adjust split and timing to match your sprite sheets
-    // idle: rows=1, columns=4 (example)
-    anim.AddClip("idle",   0, 3, 4, 1, 0.18f, true,  g_bossIdleTexture);
-    // attack: rows=1, columns=4 (example)
-    anim.AddClip("attack", 0, 3, 4, 1, 0.12f, false, g_bossAttackTexture);
-    // death: rows=1, columns=5 (example)
+    // idle: 4列1行，按需调整
+    anim.AddClip("idle",   0, 3, 4, 1, 0.12f, true,  g_bossIdleTexture);
+
+    // dash: 2帧（按你的图），左右不翻转由渲染控制
+    anim.AddClip("dash", 0, 1, 2, 1, 0.05f, true, g_bossDashTexture);
+
+    // 充能/蓄力（保持原有）
+    anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, false, g_bossChargeStage1Texture);
+    anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.08f, false, g_bossChargeStage2Texture);
+
+    // 新增：slash 准备与激活，来自你提供的两张图
+    // 图片5：4帧，从右到左播放 => start=3, end=0, splitX=4, splitY=1
+    anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, false, g_bossSlashPrepTexture);
+    // 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
+    anim.AddClip("slash_active", 7, 0, 8, 1, 0.05f, false, g_bossSlashActiveTexture);
+
+    // death: 5帧示例
     anim.AddClip("death",  0, 4, 5, 1, 0.08f, false, g_bossDeathTexture);
+
     anim.SetClip("idle");
 }
 
@@ -1543,20 +1564,33 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
     stateTimer += deltaTime;
     switch (bossState) {
     case BOSS_IDLE:
-        // Choose between dash or slash after a short idle
+        // Choose between dash or slash only (leap disabled)
         if (stateTimer >= 1.0f) {
-            if ((rand() % 2) == 0) EnterState(BOSS_DASH_CHARGE);
+            int r = rand() % 2;
+            if (r == 0) EnterState(BOSS_DASH_CHARGE);
             else EnterState(BOSS_SLASH_CHARGE);
         }
         break;
     case BOSS_DASH_CHARGE:
         UpdateDashCharge(deltaTime);
         break;
+    case BOSS_LEAP_CHARGE:
+        // Leap disabled: redirect to dash
+        EnterState(BOSS_DASH_CHARGE);
+        break;
     case BOSS_DASH_MOVING:
         UpdateDashMoving(deltaTime, mapManager);
         break;
+    case BOSS_LEAP_MOVING:
+        // Leap disabled: finish immediately
+        EnterState(BOSS_DASH_AFTER);
+        break;
     case BOSS_DASH_AFTER:
         UpdateDashAfter(deltaTime);
+        break;
+    case BOSS_LEAP_AFTER:
+        // Leap disabled: back to idle
+        EnterState(BOSS_IDLE);
         break;
     case BOSS_SLASH_CHARGE:
         UpdateSlashCharge(deltaTime);
@@ -1575,24 +1609,28 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
         break;
     }
 
-    // Gravity and movement like base Enemy
-    velocityY += GRAVITY * deltaTime * 60.0f;
+    // During leap moving, motion and gravity are handled in UpdateLeapMoving.
+    // Skipping base movement here prevents double-integration which can cause disappearing.
+    if (bossState != BOSS_LEAP_MOVING) {
+        // Gravity and movement like base Enemy
+        velocityY += GRAVITY * deltaTime * 60.0f;
 
-    float oldX = posX;
-    float oldY = posY;
+        float oldX = posX;
+        float oldY = posY;
 
-    posX += velocityX * deltaTime * 60.0f;
-    if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
-        posX = oldX;
-        velocityX = 0.0f;
+        posX += velocityX * deltaTime * 60.0f;
+        if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
+            posX = oldX;
+            velocityX = 0.0f;
+        }
+
+        posY += velocityY * deltaTime * 60.0f;
+        if (CheckVerticalCollision(mapManager, oldX, oldY)) {
+            posY = oldY;
+            velocityY = 0.0f;
+        }
     }
-
-    posY += velocityY * deltaTime * 60.0f;
-    if (CheckVerticalCollision(mapManager, oldX, oldY)) {
-        posY = oldY;
-        velocityY = 0.0f;
-    }
-
+    
     anim.Update(deltaTime);
 }
 void BossEnemy::ChaseBehavior(float deltaTime) {
@@ -1675,22 +1713,39 @@ void BossEnemy::EnterState(BossState s) {
         velocityX = 0.0f;
         break;
     case BOSS_DASH_CHARGE:
-        anim.SetClip("attack"); // reuse attack texture for charge visual
+        // Start charge animation using stage1
+        if (anim.GetCurrentClipName() != "charge_stage1") {
+            anim.SetClip("charge_stage1");
+        }
         velocityX = 0.0f;
         break;
     case BOSS_DASH_MOVING:
-        anim.SetClip("attack");
+        anim.SetClip("dash");
+        break;
+    case BOSS_LEAP_CHARGE:
+        // Leap disabled: treat as dash charge
+        if (anim.GetCurrentClipName() != "charge_stage1") {
+            anim.SetClip("charge_stage1");
+        }
+        velocityX = 0.0f;
+        bossState = BOSS_DASH_CHARGE;
+        break;
+    case BOSS_LEAP_MOVING:
+        // Leap disabled: treat as dash after
+        anim.SetClip("idle");
+        velocityX = 0.0f;
+        bossState = BOSS_DASH_AFTER;
         break;
     case BOSS_DASH_AFTER:
         anim.SetClip("idle");
         velocityX = 0.0f;
         break;
     case BOSS_SLASH_CHARGE:
-        anim.SetClip("attack");
+        anim.SetClip("slash_prep");
         velocityX = 0.0f;
         break;
     case BOSS_SLASH_ACTIVE:
-        anim.SetClip("attack");
+        anim.SetClip("slash_active");
         break;
     case BOSS_DOWN_BEFORE:
         anim.SetClip("idle");
@@ -1710,18 +1765,74 @@ void BossEnemy::EnterState(BossState s) {
 }
 
 void BossEnemy::UpdateDashCharge(float dt) {
+    // While charging, advance animation from stage1 to stage2 midway
+    float half = chargeDuration * 0.5f;
+    if (stateTimer >= half && anim.GetCurrentClipName() == std::string("charge_stage1")) {
+        anim.SetClip("charge_stage2");
+    }
     if (stateTimer >= chargeDuration) {
         EnterState(BOSS_DASH_MOVING);
         // Move quickly towards player
         float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
-        velocityX = dir * moveSpeed * 3.0f;
+        float dashMul = dashSpeedMultiplier * (1.0f + 0.25f * (dashLevel - 1));
+        velocityX = dir * moveSpeed * dashMul;
+    }
+}
+
+void BossEnemy::UpdateLeapCharge(float dt) {
+    // After short charge, leap upward and start air dash toward player
+    if (stateTimer >= leapChargeDuration) {
+        float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
+        velocityY = leapInitialVy;               // jump up
+        velocityX = dir * moveSpeed * 0.5f;      // small initial horizontal impulse
+        EnterState(BOSS_LEAP_MOVING);
+    }
+}
+
+void BossEnemy::UpdateLeapMoving(float dt, MapManager* mapManager) {
+    // Airborne: dash horizontally toward player while gravity applies
+    float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
+    float dashMul = leapDashSpeedMultiplier * (1.0f + 0.25f * (dashLevel - 1));
+    velocityX = dir * moveSpeed * dashMul;
+
+    // Gravity update similar to base
+    velocityY += GRAVITY * dt * 60.0f;
+
+    // Integrate with collisions to detect landing
+    float oldX = posX;
+    float oldY = posY;
+    posX += velocityX * dt * 60.0f;
+    if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
+        posX = oldX;
+        velocityX = 0.0f;
+    }
+
+    posY += velocityY * dt * 60.0f;
+    if (CheckVerticalCollision(mapManager, oldX, oldY)) {
+        // Landed
+        posY = oldY;
+        velocityY = 0.0f;
+        EnterState(BOSS_LEAP_AFTER);
+        return;
+    }
+
+    // Failsafe: end after max air duration
+    if (stateTimer >= leapAirDuration) {
+        EnterState(BOSS_LEAP_AFTER);
+    }
+}
+
+void BossEnemy::UpdateLeapAfter(float dt) {
+    // Short recovery then back to idle
+    if (stateTimer >= dashAfterDuration) {
+        EnterState(BOSS_IDLE);
     }
 }
 
 void BossEnemy::UpdateDashMoving(float dt, MapManager* mapManager) {
     // When close to player or after a short time, finish dash
     float dx = fabs(g_player.posX - posX);
-    if (dx < 0.3f || stateTimer > 0.8f) {
+    if (dx < dashStopDistance || stateTimer > dashMaxDuration) {
         EnterState(BOSS_DASH_AFTER);
         velocityX = 0.0f;
     }
@@ -1734,14 +1845,15 @@ void BossEnemy::UpdateDashAfter(float dt) {
 }
 
 void BossEnemy::UpdateSlashCharge(float dt) {
-    if (stateTimer >= chargeDuration) {
+    // After prep animation or charge duration, enter active slash
+    if (stateTimer >= chargeDuration || anim.IsFinished()) {
         EnterState(BOSS_SLASH_ACTIVE);
     }
 }
 
 void BossEnemy::UpdateSlashActive(float dt) {
-    // 3-frame window equivalent ~ 0.05s*3 assuming 60fps
-    float window = slashActiveFrames * (1.0f / 60.0f) * 3.0f;
+    // Effective hit window for the first ~5 frames of the 8-frame sheet
+    float window = 5.0f * 0.08f; // matches anim.AddClip("slash_active", ..., frameTime=0.08f)
     if (stateTimer <= window) {
         // Simple hitbox in front of boss; kill player if touching
         float range = 0.5f;
@@ -1754,7 +1866,8 @@ void BossEnemy::UpdateSlashActive(float dt) {
             OnPlayerDeath();
         }
     }
-    if (stateTimer >= 0.6f) { // end slash
+    // End slash when clip finishes or after ~0.7s
+    if (anim.IsFinished() || stateTimer >= 0.7f) {
         EnterState(BOSS_IDLE);
     }
 }
@@ -1812,7 +1925,7 @@ SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 100.0f) {
     height = PLAYER_HEIGHT * 1.0f;
     moveSpeed = 0.0f;  // Doesn't move
     detectionRange = 0.0f;  // Doesn't chase
-    attackRange = 0.0f;  // Contact damage only
+    attackRange =  0.0f;  // Contact damage only
 
     // Add animations (adjust frame counts based on your sprites)
     anim.AddClip("idle", 0, 7, 1, 8, 0.15f, true, g_squareEnemyIdleTexture);
