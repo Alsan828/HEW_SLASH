@@ -81,7 +81,7 @@ struct Player {
 
     // for the gauge bar system
     int gaugePoints = 0;              // current gauge points
-    const int MAX_GAUGE_POINTS = 10;  // maximum gauge points
+    const int MAX_GAUGE_POINTS = 1;  // maximum gauge points
     bool isInvincible = false;        // invincibility state
     float invincibleTimer = 0.0f;     // invincibility timer
     const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
