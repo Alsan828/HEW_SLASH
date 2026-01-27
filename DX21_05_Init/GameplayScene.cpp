@@ -51,12 +51,15 @@ bool GameplayScene::Init()
     {
         m_boss = nullptr;
 
-        // this is temporary for the testboss which is a normal enemy we have already
-        if (!g_enemies.empty()) 
-        {
-            m_boss = g_enemies[0]; // make the boss to be the enemy
+        // 在当前敌人列表中查找 BossEnemy
+        for (auto* e : g_enemies) {
+            if (dynamic_cast<BossEnemy*>(e) != nullptr) {
+                m_boss = e;
+                break;
+            }
+        }
 
-            // this is just for a test so the current enemy has a lot of hp so i can test the boss hp
+        if (m_boss) {
             m_boss->SetMaxHealth(500000.0f);
             m_boss->SetHealth(500000.0f);
         }
