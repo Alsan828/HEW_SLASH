@@ -19,6 +19,8 @@ private:
     bool m_checkpoint1Reached;  // for when the hp bar has reached 2/3 of it
     bool m_checkpoint2Reached;  // for when the hp bar has reached 1/3 of it
 
+    StageInfo stageInfo;
+
 public:
     GameplayScene(SceneManager* manager, int world, int area);
 

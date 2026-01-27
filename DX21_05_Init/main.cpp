@@ -59,7 +59,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
     RendererInit(hWnd);    // 初始化音频系统
     SetGameWindowHandle(hWnd);
     SetInGameCursorEnabled(true);
-    //InitGameWorld();
+
+    InitGameWorld();
     sceneManager.Init(TITLE); // start with title
 
     MSG msg;
@@ -84,6 +85,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
         }
     }
 
+    CleanUpGameWorld();
     // Clean up DirectX resources
     RendererUninit();
 

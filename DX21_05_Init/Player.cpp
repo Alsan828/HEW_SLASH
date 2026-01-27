@@ -545,14 +545,27 @@ void UpdatePlayerPhysics(float deltaTime) {
             portalWidth, portalHeight,
             targetMap, portalId, linkedSpawnId)) {
 
+            // to save the combo after switching areas
+            int savedCombo = g_player.comboCount;
+            float savedTimer = g_player.comboTimer;
+
+            //if (targetMap == "boss") {
+            //    // it goes to boss stage (World 1, Stage 8)
+            //    sceneManager.SwitchToStage(1, 8);
+            //    portalCooldown = 1.0f;
+            //}
             if (targetMap == "boss") {
-                // it goes to boss of world1
-                //sceneManager.SwitchScene(BOSS);
-                
-                // it goes to boss stage (World 1, Stage 8)
-                sceneManager.SwitchToStage(1, 8);
+                int stage = sceneManager.GetCurrentStageInfo().GetWorld();
+                sceneManager.SwitchToStage(stage, 8);   // it goes to the boss stage of that stage (world)
+
+                //to restore the combo after switching
+                g_player.comboCount = savedCombo;
+                g_player.comboTimer = savedTimer;
+
                 portalCooldown = 1.0f;
+                return;
             }
+
 
 			else {
 				// Default door behavior: go to next stage (except boss door).
@@ -582,6 +595,9 @@ void UpdatePlayerPhysics(float deltaTime) {
 					// Fallback to old behavior
 					g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
 				}
+                //to restore the combo after switching
+                g_player.comboCount = savedCombo;
+                g_player.comboTimer = savedTimer;
 
 				portalCooldown = 1.0f;
 			}

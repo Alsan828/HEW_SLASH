@@ -1665,6 +1665,7 @@ void HandleInput() {
         if (currentScene == GAMEPLAY || currentScene == CAKE) // the areas and the cake scene
         {
             sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
+            Audio::PauseBGM();
         }
 
         // if you press P or Esc key again you can go back to the stage (you can use the mouse and click the continue button
@@ -1674,6 +1675,7 @@ void HandleInput() {
             if (previousScene == GAMEPLAY || previousScene == CAKE) // the areas and the cake scene
             {
                 sceneManager.SwitchScene(previousScene);
+                Audio::ResumeBGM();
             }
         }
     }
@@ -2025,7 +2027,7 @@ void GameStatistics::IncrementDeaths() {
 
     //erase later
     char debugMsg[256];
-    sprintf_s(debugMsg, "\n*** PLAYER DIED ***\n");
+    sprintf_s(debugMsg, "\n====== PLAYER DIED ======\n");
     OutputDebugStringA(debugMsg);
     sprintf_s(debugMsg, "Total Deaths: %d\n", totalDeaths);
     OutputDebugStringA(debugMsg);
@@ -2039,7 +2041,7 @@ void GameStatistics::IncrementDeaths() {
     // erase later
     sprintf_s(debugMsg, "Remaining Total Points: %d\n", totalEnemyPoints);
     OutputDebugStringA(debugMsg);
-    OutputDebugStringA("*******************\n\n");
+    OutputDebugStringA("==========================\n\n");
 
 }
 

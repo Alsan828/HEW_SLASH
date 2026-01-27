@@ -19,7 +19,7 @@ bool TitleScene::Init()
     LoadTexture(g_pDevice, "asset/UI/title/UI_title_background_animation_v8.png", &tex);
     LoadTexture(g_pDevice, "asset/UI/title/padding_animation.png", &g_paddingTitleAnim);
 
-    InitGameWorld();
+    //InitGameWorld(); // I added this in the main.cpp
     m_titleAnim.AddClip("titleScene",0,13,1,14, 0.08f, false, tex); // 0.06s per frame. lower number is faster
 	m_titleAnim.SetClip("titleScene");
 	m_titleAnim.Pause(); // start paused, will play when mouse is clicked

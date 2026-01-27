@@ -30,23 +30,6 @@ bool ResultScene::Init()
     uiButtons.back().SetHitboxScale(0.45f, 0.1f);  // change this values if needed depending on the size of the button
     uiButtons.back().SetHitboxOffset(0.02f);
 
-    if (m_completedWorld == 1)
-    {
-        m_nextScene = STAGESELECT2;  // if you complete world1 you go to world12
-    }
-    else if (m_completedWorld == 2)
-    {
-        m_nextScene = STAGESELECT3;  // Cif you completr world2 you go to world3
-    }
-    else if (m_completedWorld == 3)
-    {
-        m_nextScene = MENU;  // if you compelte world3 you go to menu as default
-    }
-    else
-    {
-        m_nextScene = MENU;  // default to menu scene
-    }
-
     LoadTexture(g_pDevice, "asset/UI/result/next_normal.png", &continueTexture); // for the button
     LoadTexture(g_pDevice, "asset/UI/result/next_hover.png", &continueHoverTexture);
     uiButtons.emplace_back(0.3f, -0.8f, 0.6f, 1.0f, m_nextScene/*MENU*/, continueTexture, continueHoverTexture); //todo: change MENU to next world when there is one
@@ -66,7 +49,29 @@ void ResultScene::Update(float deltaTime)
     {
         if (btn.Process() == UIButtonResult::Clicked)
         {
-            sceneManager->SwitchScene(btn.GetTargetScene());
+            SCENE targetScene = btn.GetTargetScene();
+
+            // if i click on title, it goes to title
+            if (targetScene == TITLE)
+            {
+                sceneManager->SwitchScene(TITLE);
+            }
+            // if I cllick on next stage it goes to next stage select
+            else
+            {
+                if (m_completedWorld == 1)
+                {
+                    sceneManager->SwitchScene(STAGESELECT2);
+                }
+                else if (m_completedWorld == 2)
+                {
+                    sceneManager->SwitchScene(STAGESELECT3);
+                }
+                else if (m_completedWorld == 3)
+                {
+                    sceneManager->SwitchScene(MENU);
+                }
+            }
             return;
         }
     }

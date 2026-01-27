@@ -18,6 +18,7 @@
 #include "Projectile.h"
 #include "Enemy.h"
 #include "Texture1.h"
+#include "Audio.h"
 
 class ProjectileManager;
 
