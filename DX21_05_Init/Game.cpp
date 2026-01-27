@@ -1435,6 +1435,7 @@ void HandleInput() {
         if (currentScene == GAMEPLAY || currentScene == CAKE) // the areas and the cake scene
         {
             sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
+            Audio::PauseBGM();
         }
 
         // if you press P or Esc key again you can go back to the stage (you can use the mouse and click the continue button
@@ -1444,6 +1445,7 @@ void HandleInput() {
             if (previousScene == GAMEPLAY || previousScene == CAKE) // the areas and the cake scene
             {
                 sceneManager.SwitchScene(previousScene);
+                Audio::ResumeBGM();
             }
         }
     }
