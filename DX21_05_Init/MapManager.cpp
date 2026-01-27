@@ -70,8 +70,14 @@ void MapManager::CreateMapEnemies() {
         else if (enemyType == "E8") {
             g_enemies.push_back(new ThrowerEnemy(x, y));
         }
+    else if (enemyType == "B1") {
+        g_enemies.push_back(new BossEnemy(x, y)); // 使用专用Boss
+    }
         else if (enemyType == "E9") {
             g_enemies.push_back(new BlindEyeEnemy(x, y));
+        }
+        else if (enemyType == "B1") {
+            g_enemies.push_back(new BossEnemy(x, y)); // 使用专用Boss
         }
     }
 }
