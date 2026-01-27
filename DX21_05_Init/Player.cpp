@@ -1226,4 +1226,11 @@ void OnEnemyDefeated(bool wasWeakPointKill) {
 
     g_player.comboCount++;
     g_player.comboTimer = 5.0f;
+
+    // Gauge kill burst particle effect
+    if (g_player.isInvincible && g_player.isGaugeInvincible) {
+        // Use a stable kill anchor around the player body.
+        // Enemy position isn't passed here; approximate at player center for now.
+        SpawnGaugeKillParticlesRed(g_player.posX + PLAYER_WIDTH * 0.5f, g_player.posY + PLAYER_HEIGHT * 0.6f);
+    }
 }

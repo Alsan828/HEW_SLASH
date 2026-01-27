@@ -41,6 +41,104 @@ struct AfterImageInstance {
 
 static std::vector<AfterImageInstance> g_playerAfterImages;
 
+static std::vector<GaugeTrailParticleInstance> g_gaugeTrailParticles;
+static float g_gaugeTrailSpawnTimer = 0.0f;
+static constexpr float GAUGE_TRAIL_SPAWN_INTERVAL = 0.03f;
+static constexpr float GAUGE_TRAIL_SPAWN_RATE_MULT = 1.5f;
+static constexpr float GAUGE_TRAIL_ANIM_SPEED_MULT = 0.75f;
+
+struct GaugeKillParticleInstance {
+    float x = 0.0f;
+    float y = 0.0f;
+    float vx = 0.0f;
+    float vy = 0.0f;
+    float scale = 1.0f;
+    float timer = 0.0f;
+    float frameTimer = 0.0f;
+    float frameTime = 0.05f;
+    int frame = 0;
+    float rotation = 0.0f;
+    float angularVelocity = 0.0f;
+    static constexpr int rows = 1;
+    static constexpr int columns = 5;
+    static constexpr int frameCount = 5;
+    bool active = false;
+    ID3D11ShaderResourceView* texture = nullptr;
+};
+
+static std::vector<GaugeKillParticleInstance> g_gaugeKillParticlesRed;
+
+static float Rand01() {
+    return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+}
+
+void SpawnGaugeKillParticlesRed(float worldX, float worldY) {
+    if (!g_gaugeKillParticleRedTexture) return;
+
+    const int count = 4 + (rand() % 4); // 4..7
+    for (int i = 0; i < count; ++i) {
+        GaugeKillParticleInstance p;
+        p.x = worldX;
+        p.y = worldY;
+        p.texture = g_gaugeKillParticleRedTexture;
+        p.active = true;
+
+        // Random radial burst
+        const float angle = Rand01() * 6.2831853f;
+        const float speed = (0.06f + Rand01() * 0.09f) * 10.0f;
+        p.vx = cosf(angle) * speed;
+        p.vy = sinf(angle) * speed;
+
+        p.scale = (0.45f * (0.85f + Rand01() * 0.35f)) * 2.0f;
+        p.rotation = (Rand01() * 2.0f - 1.0f) * 3.14159f;
+        p.angularVelocity = (Rand01() * 2.0f - 1.0f) * 6.0f;
+        p.frame = 0;
+        p.timer = 0.0f;
+        p.frameTimer = 0.0f;
+        // Slow down animation to ~0.6x of current speed (increase frame time)
+        p.frameTime = 0.05f / 0.6f;
+
+        g_gaugeKillParticlesRed.push_back(p);
+    }
+}
+
+static void SpawnGaugeTrailParticle(float worldX, float worldY) {
+    if (!g_gaugeTrailParticleTexture) return;
+
+    GaugeTrailParticleInstance p;
+    p.x = worldX;
+    p.y = worldY;
+    p.texture = g_gaugeTrailParticleTexture;
+    p.active = true;
+
+    // Natural dispersion:
+    // - random drift direction
+    // - slight bias backwards relative to facing
+    // - random scale + rotation
+    const float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    const float r02 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    const float r03 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+    const float r04 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+
+    const float angle = (r01 * 2.0f - 1.0f) * 1.1f; // ~[-1.1, 1.1] rad
+    const float speed = 0.02f + r02 * 0.03f;        // 0.02..0.05
+
+    float backBias = g_player.facingRight ? -0.015f : 0.015f;
+    p.vx = cosf(angle) * speed + backBias;
+    p.vy = sinf(angle) * speed + 0.01f;
+
+    // Size: half of previous (base 1.0 -> 0.5), with small random variation.
+    p.scale = 0.5f * (0.85f + r03 * 0.30f);
+    p.rotation = (r04 * 2.0f - 1.0f) * 0.35f;
+    p.angularVelocity = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2.0f - 1.0f) * 2.2f;
+    p.frame = 0;
+    p.timer = 0.0f;
+    p.frameTimer = 0.0f;
+    p.frameTime = 0.06f / GAUGE_TRAIL_ANIM_SPEED_MULT;
+
+    g_gaugeTrailParticles.push_back(p);
+}
+
 GameStatistics g_gameStats;
 Animation g_gaugeEffectAnim;
 
@@ -204,6 +302,9 @@ void ResetGame() {
     CleanupEnemies();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
+    g_gaugeTrailParticles.clear();
+    g_gaugeKillParticlesRed.clear();
+    g_gaugeTrailSpawnTimer = 0.0f;
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
     }
@@ -237,6 +338,9 @@ void CleanUpGameWorld()
     g_mouseIndicator.Cleanup();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
+    g_gaugeTrailParticles.clear();
+    g_gaugeKillParticlesRed.clear();
+    g_gaugeTrailSpawnTimer = 0.0f;
 
     // 释放所有纹理 - 只保留右边纹理
     ReleaseTexture(g_playerTexture);
@@ -303,6 +407,8 @@ void CleanUpGameWorld()
     ReleaseTexture(g_gaugeBarEmptyTexture);
     ReleaseTexture(g_gaugeBarFilledTexture);
     ReleaseTexture(g_gaugeFullEffectTexture);
+    ReleaseTexture(g_gaugeTrailParticleTexture);
+    ReleaseTexture(g_gaugeKillParticleRedTexture);
 
     ReleaseTexture(g_attackCountTestTexture);
 
@@ -613,6 +719,12 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect_max.png", &g_gaugeFullEffectTexture);
     g_gaugeEffectAnim.AddClip("GaugeFull", 1, 7, 1, 8, 0.08f, true, g_gaugeFullEffectTexture);
 
+    // Gauge mode trailing particle (1x5)
+    LoadTexture(g_pDevice, "asset/effect/particle_sheet.png", &g_gaugeTrailParticleTexture);
+
+    // Gauge kill burst particle (1x5)
+    LoadTexture(g_pDevice, "asset/effect/particle_sheet_red.png", &g_gaugeKillParticleRedTexture);
+
     LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_attackCountTestTexture);
 
 
@@ -625,7 +737,6 @@ void InitGameWorld() {
     g_camera.SetLookAhead(camera_LookAhead);
     g_camera.SetDeadZone(camera_DeadZone);
 }
-
 
 // Modified game update function
 void UpdateGame(float deltaTime) {
@@ -738,6 +849,81 @@ void UpdateGame(float deltaTime) {
     }
 
     float scaledDeltaTime = deltaTime * timeScale;
+
+    // Gauge trail particles: active only during gauge-based invincibility.
+    if (g_player.isInvincible && g_player.isGaugeInvincible && !g_player.isDead) {
+        g_gaugeTrailSpawnTimer -= scaledDeltaTime;
+        if (g_gaugeTrailSpawnTimer <= 0.0f) {
+            // Spawn around player's body (random within an ellipse around the player).
+            const float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+            const float r02 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+            const float ang = r01 * 6.2831853f;
+            const float rad = sqrtf(r02);
+
+            const float rx = PLAYER_WIDTH * 0.75f;
+            const float ry = PLAYER_HEIGHT * 0.75f;
+            const float offsetX = cosf(ang) * rad * rx;
+            const float offsetY = sinf(ang) * rad * ry;
+
+            const float spawnX = g_player.posX + PLAYER_WIDTH * 0.5f + offsetX;
+            const float spawnY = g_player.posY + PLAYER_HEIGHT * 0.5f + offsetY;
+            SpawnGaugeTrailParticle(spawnX, spawnY);
+
+            // 1.5x spawn rate => interval gets smaller.
+            g_gaugeTrailSpawnTimer = GAUGE_TRAIL_SPAWN_INTERVAL / GAUGE_TRAIL_SPAWN_RATE_MULT;
+        }
+    }
+    else {
+        g_gaugeTrailSpawnTimer = 0.0f;
+    }
+
+    for (auto it = g_gaugeTrailParticles.begin(); it != g_gaugeTrailParticles.end();) {
+        if (!it->active || !it->texture) {
+            it = g_gaugeTrailParticles.erase(it);
+            continue;
+        }
+
+        it->x += it->vx * scaledDeltaTime;
+        it->y += it->vy * scaledDeltaTime;
+        it->rotation += it->angularVelocity * scaledDeltaTime;
+
+        it->frameTimer += scaledDeltaTime;
+        while (it->frameTimer >= it->frameTime) {
+            it->frameTimer -= it->frameTime;
+            it->frame++;
+        }
+
+        if (it->frame >= GaugeTrailParticleInstance::frameCount) {
+            it = g_gaugeTrailParticles.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+
+    for (auto it = g_gaugeKillParticlesRed.begin(); it != g_gaugeKillParticlesRed.end();) {
+        if (!it->active || !it->texture) {
+            it = g_gaugeKillParticlesRed.erase(it);
+            continue;
+        }
+
+        it->x += it->vx * scaledDeltaTime;
+        it->y += it->vy * scaledDeltaTime;
+        it->rotation += it->angularVelocity * scaledDeltaTime;
+
+        it->frameTimer += scaledDeltaTime;
+        while (it->frameTimer >= it->frameTime) {
+            it->frameTimer -= it->frameTime;
+            it->frame++;
+        }
+
+        if (it->frame >= GaugeKillParticleInstance::frameCount) {
+            it = g_gaugeKillParticlesRed.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
 
     // Update / spawn player afterimages
     for (auto it = g_playerAfterImages.begin(); it != g_playerAfterImages.end();) {
@@ -1130,6 +1316,32 @@ void DrawGame() {
     }
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+    // Draw gauge trail particles (behind player)
+    for (const auto& pInst : g_gaugeTrailParticles) {
+        if (!pInst.active || !pInst.texture) continue;
+
+        float t = static_cast<float>(pInst.frame) / static_cast<float>(GaugeTrailParticleInstance::frameCount);
+        t = std::clamp(t, 0.0f, 1.0f);
+        // Ease-out fade, looks more "natural" than linear.
+        float alpha = (1.0f - t);
+        alpha = alpha * alpha;
+        alpha *= 0.9f;
+        auto p = worldToScreen(pInst.x, pInst.y);
+
+        // Slightly bluish-white to match gauge vibe.
+        SetColor(0.85f, 0.95f, 1.0f, alpha);
+        float w = PLAYER_WIDTH * 0.9f * pInst.scale;
+        float h = PLAYER_HEIGHT * 0.9f * pInst.scale;
+        RenderImage(p.first, p.second, w, h,
+            pInst.texture,
+            pInst.frame,
+            GaugeTrailParticleInstance::rows,
+            GaugeTrailParticleInstance::columns,
+            false,
+            pInst.rotation);
+    }
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
     for (const auto& e : g_weakPointHitEffects) {
         if (!e.active) continue;
         if (!e.texture) continue;
@@ -1294,6 +1506,24 @@ void DrawGame() {
         SetColor(1.0f, 0.3f, 0.3f, alpha);
         RenderImage(dashPos.first, dashPos.second, effectSize, effectSize, g_dashEffectTexture, 0, 1, 1);
     }
+
+    // Draw gauge-kill red particles (burst)
+    for (const auto& p : g_gaugeKillParticlesRed) {
+        if (!p.active || !p.texture) continue;
+
+        auto pos = worldToScreen(p.x, p.y);
+        const float baseW = 0.14f;
+        const float baseH = 0.14f;
+        const float w = baseW * p.scale;
+        const float h = baseH * p.scale;
+
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderImage(pos.first - w * 0.5f, pos.second - h * 0.5f, w, h,
+            p.texture, p.frame, GaugeKillParticleInstance::rows, GaugeKillParticleInstance::columns,
+            false, p.rotation, false);
+    }
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     RenderEnemies(g_camera);
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());

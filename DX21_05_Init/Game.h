@@ -80,7 +80,7 @@ struct Player {
 
     // for the gauge bar system
     int gaugePoints = 0;              // current gauge points
-    const int MAX_GAUGE_POINTS = 10;  // maximum gauge points
+    const int MAX_GAUGE_POINTS = 1;  // maximum gauge points
     bool isInvincible = false;        // invincibility state
     float invincibleTimer = 0.0f;     // invincibility timer
     const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
@@ -333,6 +333,7 @@ struct HitEffectInstance {
 };
 
 void SpawnWeakPointHitEffect(float worldX, float worldY);
+void SpawnGaugeKillParticlesRed(float worldX, float worldY);
 
 
 
@@ -412,6 +413,8 @@ extern ID3D11ShaderResourceView* g_gaugeBarTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarEmptyTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarFilledTexture;
 extern ID3D11ShaderResourceView* g_gaugeFullEffectTexture;
+extern ID3D11ShaderResourceView* g_gaugeTrailParticleTexture;
+extern ID3D11ShaderResourceView* g_gaugeKillParticleRedTexture;
 
 extern ID3D11ShaderResourceView* g_signWASDTexture;
 extern ID3D11ShaderResourceView* g_signSTexture;
@@ -445,6 +448,25 @@ public:
     void SetVisible(bool visible) { m_visible = visible; }
     bool IsVisible() const { return m_visible; }
     void Render(float cameraX, float cameraY);
+};
+
+struct GaugeTrailParticleInstance {
+    float x = 0.0f;
+    float y = 0.0f;
+    float vx = 0.0f;
+    float vy = 0.0f;
+    float scale = 1.0f;
+    float timer = 0.0f;
+    float frameTimer = 0.0f;
+    float frameTime = 0.06f;
+    int frame = 0;
+    float rotation = 0.0f;
+    float angularVelocity = 0.0f;
+    static constexpr int rows = 1;
+    static constexpr int columns = 5;
+    static constexpr int frameCount = 5;
+    bool active = false;
+    ID3D11ShaderResourceView* texture = nullptr;
 };
 
 extern GameCursor g_gameCursor;
