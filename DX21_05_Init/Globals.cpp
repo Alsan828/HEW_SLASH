@@ -57,6 +57,8 @@ ID3D11ShaderResourceView* g_gaugeBarTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarEmptyTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarFilledTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeFullEffectTexture = nullptr;
+ID3D11ShaderResourceView* g_gaugeTrailParticleTexture = nullptr;
+ID3D11ShaderResourceView* g_gaugeKillParticleRedTexture = nullptr;
 
 ID3D11ShaderResourceView* g_signWASDTexture = nullptr;
 ID3D11ShaderResourceView* g_signSTexture = nullptr;
