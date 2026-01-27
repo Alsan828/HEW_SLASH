@@ -705,6 +705,11 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/combo/combo_number.png", &g_comboNumberTexture);
     LoadTexture(g_pDevice, "asset/UI/combo/combo_X.png", &g_comboXTexture);
 
+    // Slash-count UI (follows player): 1x4 spritesheet, looping
+    LoadTexture(g_pDevice, "asset/UI/slash_count.png", &g_slashCountTexture);
+    g_slashCountAnim.AddClip("SlashCount", 0, 3, 1, 4, 0.1f, true, g_slashCountTexture);
+    g_slashCountAnim.SetClip("SlashCount");
+
     LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
 
     LoadTexture(g_pDevice, "asset/effect/slash_flash1.png", &g_slashFlashTextures[0]);
@@ -756,6 +761,7 @@ void UpdateGame(float deltaTime) {
     g_gameTimer.Tick(); // added december 3rd
 
     signAnim.Update(deltaTime);
+    g_slashCountAnim.Update(deltaTime);
 
     // added december 4th
     g_gameElapsedTime += deltaTime;
@@ -1311,6 +1317,37 @@ void DrawGame() {
     auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
         return { worldX - cameraX, worldY - cameraY };
         };
+
+    // Draw slash-count icons (behind player): follow player slightly up-left.
+    // Hide during gauge-based invincibility.
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_slashCountTexture) {
+        const int count = std::clamp(g_player.dashPoints, 0, g_player.MAX_DASH_POINTS);
+        if (count > 0) {
+            // Sprite size in world units
+            const float iconW = 0.065f;
+            const float iconH = 0.065f;
+            const float spacing = iconW * 0.75f;
+
+            // Anchor: behind & above player
+            float baseX = g_player.posX - iconW * 0.4f;
+            float baseY = g_player.posY + PLAYER_HEIGHT * 0.85f;
+
+            int frame = g_slashCountAnim.GetCurrentFrame() % 4;
+            for (int i = 0; i < count; ++i) {
+                auto p = worldToScreen(baseX + i * spacing, baseY);
+                SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+                RenderImage(p.first, p.second, iconW, iconH,
+                    g_slashCountTexture,
+                    frame,
+                    1,
+                    4,
+                    false,
+                    0.0f,
+                    false);
+            }
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
 
     // Draw player afterimages (behind player)
     for (const auto& a : g_playerAfterImages) {

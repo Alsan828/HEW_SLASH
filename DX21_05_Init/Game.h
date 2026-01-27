@@ -29,6 +29,10 @@ extern InputSystem g_inputSystem;
 extern Camera g_camera;
 class Enemy;
 
+// Slash-count UI (1x4 spritesheet)
+extern ID3D11ShaderResourceView* g_slashCountTexture;
+extern Animation g_slashCountAnim;
+
 // Game state enumeration
 enum GameState {
     STATE_PLAYING,
@@ -81,7 +85,7 @@ struct Player {
 
     // for the gauge bar system
     int gaugePoints = 0;              // current gauge points
-    const int MAX_GAUGE_POINTS = 1;  // maximum gauge points
+    const int MAX_GAUGE_POINTS = 12;  // maximum gauge points
     bool isInvincible = false;        // invincibility state
     float invincibleTimer = 0.0f;     // invincibility timer
     const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
