@@ -1352,7 +1352,9 @@ void DrawGame() {
             const float yOffset[3] = { -iconH * 0.18f, 0.0f, iconH * 0.18f };
             const float rotOffset[3] = { -0.08f, 0.0f, 0.08f };
 
-            const float dt = std::clamp(g_gameTimer.GetDeltaTime(), 0.0f, 0.033f);
+            // Use real delta time for smoothing (don't clamp). Clamping dt makes the follower
+            // advance in uneven steps when the actual frame time fluctuates.
+            const float dt = std::max(0.0f, g_gameTimer.GetDeltaTime());
 
             // Consume spawn request: only affect the newly-restored indicator (the last one)
             if (g_slashCountSpawnPending) {
@@ -1380,13 +1382,18 @@ void DrawGame() {
                 const float dy = targetY - f.y;
                 const float dist = sqrtf(dx * dx + dy * dy);
 
-                // Adaptive follow per-indicator: farther = faster
-                const float tauNear = 0.024f;
-                const float tauFar = 0.0012f;
+                // Framerate-independent exponential smoothing.
+                // a = 1 - exp(-dt / tau)
+                // This avoids jitter/stepping when dt varies.
+                // 10x faster follow: reduce time constants by 10.
+                const float tauNear = 0.010f;  // seconds (slow when near)
+                const float tauFar = 0.002f;   // seconds (fast when far)
                 const float dist01 = std::clamp(dist / (GRID_WIDTH * 2.0f), 0.0f, 1.0f);
                 const float tau = tauNear + (tauFar - tauNear) * dist01;
-                float a = (tau <= 1e-6f) ? 1.0f : (dt / (tau + dt));
-                a = std::clamp(a, 0.0f, 0.45f);
+
+                const float safeTau = std::max(tau, 1e-4f);
+                float a = 1.0f - expf(-dt / safeTau);
+                a = std::clamp(a, 0.0f, 1.0f);
 
                 f.x += dx * a;
                 f.y += dy * a;
