@@ -21,6 +21,10 @@ private:
     ID3D11ShaderResourceView* cakeTexture = nullptr;
     ID3D11ShaderResourceView* plateTexture = nullptr;
 
+    std::vector<UIButton> uiButtons;
+    ID3D11ShaderResourceView* continueTexture = nullptr;
+    ID3D11ShaderResourceView* continueHoverTexture = nullptr;
+
     bool isCakeCut = false;
     bool isPlateShown = false;
     float cutAnimTimer = 0.0f;
