@@ -32,6 +32,9 @@ class Enemy;
 // Slash-count UI (1x4 spritesheet)
 extern ID3D11ShaderResourceView* g_slashCountTexture;
 extern Animation g_slashCountAnim;
+// Health follower texture/animation (1x3 spritesheet)
+extern ID3D11ShaderResourceView* g_healthTexture;
+extern Animation g_healthAnim;
 
 // Weak-point hit/kill effect spawning (defined in Game.cpp)
 void SpawnWeakPointHitEffect(float worldX, float worldY);

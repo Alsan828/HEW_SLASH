@@ -800,6 +800,11 @@ void InitGameWorld() {
     g_slashCountAnim.AddClip("SlashCount", 0, 2, 1, 3, 0.12f, true, g_slashCountTexture);
     g_slashCountAnim.SetClip("SlashCount");
 
+    // Health follower spritesheet (1x3)
+    LoadTexture(g_pDevice, "asset/UI/Health.png", &g_healthTexture);
+    g_healthAnim.AddClip("Health", 0, 2, 1, 3, 0.12f, true, g_healthTexture);
+    g_healthAnim.SetClip("Health");
+
     LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
 
     LoadTexture(g_pDevice, "asset/effect/slash_flash1.png", &g_slashFlashTextures[0]);
@@ -1401,6 +1406,7 @@ void SetTileColor(const std::string& tileCode) {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
+
 void DrawGame() {
     int currentWidth = g_camera.GetWidth();
     int currentHeight = g_camera.GetHeight();
@@ -1412,6 +1418,9 @@ void DrawGame() {
     auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
         return { worldX - cameraX, worldY - cameraY };
         };
+
+    // Advance health icon animation
+    g_healthAnim.Update(g_gameTimer.GetDeltaTime());
 
     // Draw slash-count icons (behind player): 3 independent followers.
     // Hide during gauge-based invincibility.

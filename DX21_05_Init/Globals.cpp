@@ -55,6 +55,9 @@ ID3D11ShaderResourceView* g_comboNumberTexture = nullptr;
 ID3D11ShaderResourceView* g_comboXTexture = nullptr;
 ID3D11ShaderResourceView* g_slashCountTexture = nullptr;
 Animation g_slashCountAnim;
+// Health follower texture/animation (1x3 spritesheet)
+ID3D11ShaderResourceView* g_healthTexture = nullptr;
+Animation g_healthAnim;
 ID3D11ShaderResourceView* g_gaugeBarTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarFilledTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeFullEffectTexture = nullptr;

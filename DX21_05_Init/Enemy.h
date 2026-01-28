@@ -136,6 +136,16 @@ public:
     virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera);
     void RenderHealthBar(const Camera& camera);
 
+    // Health follower state per enemy (icons that smoothly follow the enemy)
+    struct HealthFollower {
+        float x = 0.0f;
+        float y = 0.0f;
+        bool init = false;
+    };
+
+    // Per-enemy followers (one per 10 HP segment of maxHealth)
+    std::vector<HealthFollower> healthFollowers;
+
     // 攻击角度计算
     int CalculateDamageFromPlayer(int baseDamage, float playerDashAngle);
 

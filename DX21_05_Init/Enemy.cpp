@@ -428,6 +428,8 @@ Enemy::Enemy(float x, float y, float hp)
 
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
     if (dir >= DIR_FRONT && dir <= DIR_FRONT_DOWN) {
+        // Enforce a minimum damage multiplier of 1.0f so enemies never take reduced damage
+        if (multiplier < 1.0f) multiplier = 1.0f;
         damageMultipliers[static_cast<int>(dir)] = multiplier;
     }
 }
@@ -809,6 +811,8 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
+    // NOTE: health bar is rendered after the enemy so it appears on top
+
     // 获取UV偏移用于精灵表动画
     DirectX::XMFLOAT2 uvOffset = anim.GetUVOffset();
 
@@ -836,13 +840,9 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // 如果不是死亡状态，渲染血条
-    // Only render health bar for enemies that require more than one normal hit
-    // i.e., hide health bar when enemy can be killed by a single non-weak hit
+    // 如果不是死亡状态，渲染血条（包括血量小于等于10的敌人）
     if (!isDying) {
-        if (maxHealth > g_player.attackDamage) {
-            RenderHealthBar(camera);
-        }
+        RenderHealthBar(camera);
     }
 }
 
@@ -880,21 +880,80 @@ void BossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
 }
 
 void Enemy::RenderHealthBar(const Camera& camera) {
-    // 将世界坐标转换为屏幕坐标
-    float screenX, screenY;
-    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
+    // Follower-style health icons (using asset/UI/Health.png 1x3 spritesheet)
+    // Compute how many icons to show: one per 10 HP (ceil)
+    int icons = std::max(0, (int)std::ceil(maxHealth / 10.0f));
+    if (icons <= 0) return;
 
-    float barWidth = width;
-    float barHeight = 0.02f;
-    float barX = screenX;
-    float barY = screenY + height + 0.02f;
+    // Ensure healthFollowers vector has the right size
+    if ((int)healthFollowers.size() != icons) {
+        healthFollowers.clear();
+        healthFollowers.resize(icons);
+    }
 
-    // 背景条（红色）
-    RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
+    // World-to-screen base anchor: above enemy
+    float baseWorldX = posX + width * 0.5f;
+    float baseWorldY = posY + height + 0.02f;
 
-    // 血条（绿色）
-    float healthRatio = health / maxHealth;
-    RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_groundTexture, 1, 1, 1);
+    // Per-icon layout
+    // Keep icon size constant; only reduce spacing to fit within enemy width
+    const float iconW = width * 0.28f; // base icon size relative to enemy width
+    const float iconH = iconW;
+    // Reduce default spacing significantly so indicators are closer together
+    float spacing = iconW * 0.12f; // much smaller spacing
+    const float minSpacing = width * 0.01f; // absolute minimum spacing
+
+    // Ensure the total indicator area does not exceed the enemy width
+    // leave a small margin so edges do not go beyond the enemy size
+    const float margin = width * 0.05f;
+    const float maxBarWidth = std::max(0.0f, width - margin * 2.0f);
+    float totalWidth = icons * iconW + (icons - 1) * spacing;
+    if (totalWidth > maxBarWidth) {
+        if (icons > 1) {
+            float availableForSpacing = maxBarWidth - icons * iconW;
+            spacing = std::max(minSpacing, availableForSpacing / (icons - 1));
+            if (spacing < 0.0f) spacing = 0.0f;
+        } else {
+            spacing = 0.0f;
+        }
+        totalWidth = icons * iconW + (icons - 1) * spacing;
+    }
+
+    // Use real delta time for smoothing
+    const float dt = std::max(0.0f, g_gameTimer.GetDeltaTime());
+
+    for (int i = 0; i < icons; ++i) {
+        auto& hf = healthFollowers[i];
+
+        // target position stacked horizontally centered above the enemy
+        float totalWidth = icons * iconW + (icons - 1) * spacing;
+        float startX = baseWorldX - totalWidth * 0.5f;
+        float targetX = startX + i * (iconW + spacing);
+        float targetY = baseWorldY;
+
+        // Directly snap follower to target position so health icons are fixed above the head
+        hf.x = targetX;
+        hf.y = targetY;
+        hf.init = true;
+
+        // Convert to screen coords
+        float sx, sy;
+        WorldToScreenPosition(hf.x, hf.y, sx, sy, camera);
+
+        // Determine visibility: each icon represents 10 HP (strict). Show icon i when health > i*10
+        float threshold = i * 10.0f;
+        bool visible = (health > threshold + 0.0001f);
+
+        float alpha = visible ? 1.0f : 0.35f;
+        SetColor(1.0f, 1.0f, 1.0f, alpha);
+
+        int totalFrames = g_healthAnim.GetSplitX() * g_healthAnim.GetSplitY();
+        int frame = 0;
+        if (totalFrames > 0) frame = g_healthAnim.GetCurrentFrame() % totalFrames;
+        RenderImage(sx, sy, iconW, iconH, g_healthTexture, frame, g_healthAnim.GetSplitX(), g_healthAnim.GetSplitY(), false);
+    }
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 bool Enemy::CheckPlayerCollision() {
