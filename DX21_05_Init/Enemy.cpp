@@ -192,7 +192,7 @@ void InitEnemies() {
 
 // ========== BlindEyeEnemy ==========
 BlindEyeEnemy::BlindEyeEnemy(float x, float y)
-    : Enemy(x, y, 100.0f) {
+    : Enemy(x, y, 10.0f) {
     // 盲眼敌人不追人，巡逻逻辑自己处理转向，不需要朝向冷却
     useTurnCooldown = false;  
 detectionRange = 0.0f;
@@ -205,9 +205,15 @@ detectionRange = 0.0f;
     anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_enemyDeathTexture);
     anim.SetClip("idle");
 
+    // initial weakpoint: front takes double damage
+    SetDamageMultiplier(DIR_FRONT, 2.0f);
+
     // 轻微慢一点，符合“普通”巡逻敌人
     moveSpeed = MOVE_SPEED * 0.55f;
     patrolDirection = 1.0f;
+
+    // Make a clear weakpoint (one-hit kill) for testing: hit from above
+    SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
 void BlindEyeEnemy::Update(float deltaTime, MapManager* mapManager) {
@@ -278,7 +284,7 @@ void BlindEyeEnemy::PatrolBehavior(float deltaTime) {
 
 // ========== ThrowerEnemy ==========
 ThrowerEnemy::ThrowerEnemy(float x, float y)
-    : Enemy(x, y, 120.0f) {
+    : Enemy(x, y, 40.0f) {
     // Reuse mage/"projectile" enemy texture as requested.
     anim.ClearClips();
     anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_mageEnemyIdleTexture);
@@ -293,6 +299,9 @@ ThrowerEnemy::ThrowerEnemy(float x, float y)
     throwRange = 7.0f;
     // Larger flight time => slower projectile speed while keeping the same ballistic arc formula
     throwFlyTime = 0.9f;
+
+    // One-hit weakpoint (top attack)
+    SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
 bool ThrowerEnemy::CanThrow() const {
@@ -964,7 +973,7 @@ bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
 }
 
 // FlyEnemy实现 - 飞行敌人，不受重力影响
-FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
+FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     // 飞行敌人：空中单位
 	targetAltitude = y;
@@ -995,6 +1004,9 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     altitudeChangeRate = 0.05f;  // 高度变化速度
 
     scale = 3.0f;
+
+    // ensure there is a clear weak direction (back) for one-shot testing
+    SetDamageMultiplier(DIR_BACK, 100.0f);
 }
 
 
@@ -1068,11 +1080,11 @@ void FlyEnemy::OnDeath() {
 }
 
 // MageEnemy实现
-MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
+MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 20.0f) {
     useTurnCooldown = false;
-    // 法师敌人：从顶部和底部易受伤害
-    SetDamageMultiplier(DIR_UP, 2.0f);
-    SetDamageMultiplier(DIR_DOWN, 2.0f);
+    // 法师敌人：顶部和底部为弱点（一击必杀）
+    SetDamageMultiplier(DIR_UP, 100.0f);
+    SetDamageMultiplier(DIR_DOWN, 100.0f);
     SetDamageMultiplier(DIR_FRONT, 0.7f);
     SetDamageMultiplier(DIR_BACK, 0.7f);
 
@@ -1095,6 +1107,9 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     projectileDamage = 20.0f;
 
     scale = 3.0f;
+
+    // expose a weakpoint direction for one-shot testing
+    SetDamageMultiplier(DIR_BACK, 100.0f);
 }
 
 void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
@@ -1183,7 +1198,7 @@ void MageEnemy::CastProjectile() {
 }
 
 // FastEnemy实现
-FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
+FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     moveSpeed = MOVE_SPEED * 1.5f;
     dashCooldown = 2.0f;
@@ -1197,6 +1212,9 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     anim.SetClip("run");
 
     scale = 3.0f;
+
+    // one-hit weakpoint from above for testing
+    SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
 // 添加这个函数实现
@@ -1312,11 +1330,11 @@ void FastEnemy::DashAttack() {
 }
 
 // BombEnemy实现
-BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 60000.0f) {
+BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 30.0f) {
     useTurnCooldown = false;
-    // 炸弹敌人：顶部和底部10倍伤害，其他方向减少伤害
-    SetDamageMultiplier(DIR_UP, 10.0f);
-    SetDamageMultiplier(DIR_DOWN, 10.0f);
+    // 炸弹敌人：顶部和底部为弱点（一击必杀），其他方向减少伤害
+    SetDamageMultiplier(DIR_UP, 100.0f);
+    SetDamageMultiplier(DIR_DOWN, 100.0f);
     SetDamageMultiplier(DIR_FRONT, 0.7f);
     SetDamageMultiplier(DIR_BACK, 0.7f);
     SetDamageMultiplier(DIR_FRONT_UP, 1.2f);
@@ -1501,11 +1519,11 @@ void BombEnemy::CreateProjectiles() {
 }
 
 
-BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 1000000.0f)
+BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 300.0f)
 {
     useTurnCooldown = false;
-    SetMaxHealth(1000000.0f); 
-    SetHealth(1000000.0f);
+    SetMaxHealth(300.0f); 
+    SetHealth(300.0f);
 
     // Boss: collision box and sprite are both 3x
     // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
@@ -1855,7 +1873,7 @@ void BossEnemy::RecomputeWeakMultipliers() {
 }
 
 // SquareEnemy implementation - stationary enemy
-SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 30000.0f) {
+SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     // Square enemy: takes normal damage from all directions
     SetDamageMultiplier(DIR_FRONT, 1.0f);
@@ -1961,12 +1979,12 @@ void SquareEnemy::OnDeath() {
 }
 
 
-BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 90000.0f) {
-    // Weak points: Vertical and Horizontal lines (like a cross)
-    SetDamageMultiplier(DIR_UP, 8.0f);
-    SetDamageMultiplier(DIR_DOWN, 8.0f);
-    SetDamageMultiplier(DIR_FRONT, 8.0f);
-    SetDamageMultiplier(DIR_BACK, 8.0f);
+BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 30.0f) {
+    // Weak points: Vertical and Horizontal lines (one-hit weakpoints)
+    SetDamageMultiplier(DIR_UP, 100.0f);
+    SetDamageMultiplier(DIR_DOWN, 100.0f);
+    SetDamageMultiplier(DIR_FRONT, 100.0f);
+    SetDamageMultiplier(DIR_BACK, 100.0f);
 
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
