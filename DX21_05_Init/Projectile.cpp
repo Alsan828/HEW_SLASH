@@ -196,7 +196,7 @@ void  Projectile::CheckPlayerCollision() {
     // 敌人射弹判定略微缩小，避免贴图较大导致“擦边也算命中”。
     // 注意：这里只影响碰撞，不影响渲染。
     // Shrink enemy projectile hitbox more to avoid accidental grazing hits
-    constexpr float ENEMY_PROJECTILE_HITBOX_SCALE = 0.60f;
+    constexpr float ENEMY_PROJECTILE_HITBOX_SCALE = 0.80f;
     float collisionRadius = (actualSize + std::min(playerWidth, playerHeight)) * 0.5f * ENEMY_PROJECTILE_HITBOX_SCALE;
 
     if (distance < collisionRadius)
@@ -336,12 +336,16 @@ bool Projectile::CheckMapCollision(MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) return false;
 
     auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+    // Only count as collision when the projectile's center point intersects a solid tile.
+    // Use visual size (scaleEffect) to compute the center position.
+    float visualSize = size * scaleEffect;
+    float centerX = posX + visualSize * 0.5f;
+    float centerY = posY + visualSize * 0.5f;
+
     for (const auto& tile : solidTiles) {
-        // Simple rectangle collision detection
-        if (posX < tile.posX + tile.width &&
-            posX + size > tile.posX &&
-            posY < tile.posY + tile.height &&
-            posY + size > tile.posY) {
+        // Check if center point lies within the tile rectangle
+        if (centerX >= tile.posX && centerX <= tile.posX + tile.width &&
+            centerY >= tile.posY && centerY <= tile.posY + tile.height) {
             return true;
         }
     }
