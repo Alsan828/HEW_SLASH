@@ -837,8 +837,12 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // 如果不是死亡状态，渲染血条
+    // Only render health bar for enemies that require more than one normal hit
+    // i.e., hide health bar when enemy can be killed by a single non-weak hit
     if (!isDying) {
-        RenderHealthBar(camera);
+        if (maxHealth > g_player.attackDamage) {
+            RenderHealthBar(camera);
+        }
     }
 }
 
