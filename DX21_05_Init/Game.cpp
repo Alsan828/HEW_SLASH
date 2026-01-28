@@ -532,34 +532,38 @@ void DrawComboUI(void)
         return;
     }
 
-    float comboX = 0.3f/*0.4f*/;   // right side
-    float comboY = 0.5f;   // top side
+    // Combo X symbol UI
+    InGameUI comboXUI;
+    comboXUI.x = 0.3f;
+    comboXUI.y = 0.45f;
+    comboXUI.width = 0.45f;
+    comboXUI.height = 0.5f;
 
-    // modify the size of it
-    float xWidth = 0.45f;   // Width of the "X" symbol
-    float xHeight = 0.5f;  // Height of the "X" symbol
-    float xYaxis = 0.45f; // change the y axis of the X symbol
-    float digitWidth = 0.15f;   // Width of the number
-    float digitHeight = 0.35f;
-    float digitYaxis = 0.55f;
+    // Combo digit UI
+    InGameUI comboDigitUI;
+    comboDigitUI.width = 0.15f;
+    comboDigitUI.height = 0.35f;
+    comboDigitUI.y = 0.55f;
+
+    // Spacing values
     float spaceBetweenDigits = 0.12f;
     float spaceBetweenXandDigit = 0.08f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Draw the "X" symbol
-    RenderImage(comboX, xYaxis, xWidth, xHeight, g_comboXTexture, 0, 1, 1);
+    RenderImage(comboXUI.x, comboXUI.y, comboXUI.width, comboXUI.height, g_comboXTexture, 0, 1, 1);
 
     char buffer[32];
     sprintf_s(buffer, "%d", g_player.comboCount); // it converts the number into digits
 
-    float digitXaxis = comboX + (xWidth * 0.5f) + spaceBetweenXandDigit; // for the first number x axis position 
+    float digitXaxis = comboXUI.x + (comboXUI.width * 0.5f) + spaceBetweenXandDigit; // for the first number x axis position 
 
     // Draw combo number
     for (int i = 0; buffer[i] != '\0'; i++)
     {
         int digit = buffer[i] - '0';  // 1 for frame 1, 2 for frame 2, 3 for frame 3, etc etc
-        RenderImage(digitXaxis, digitYaxis, digitWidth, digitHeight,
+        RenderImage(digitXaxis, comboDigitUI.y, comboDigitUI.width, comboDigitUI.height,
             g_comboNumberTexture, digit, 1, 10);
 
         digitXaxis += spaceBetweenDigits; // Move to next digit position
@@ -573,18 +577,21 @@ void DrawComboUI(void)
     }
     ratio = std::clamp(ratio, 0.0f, 1.0f);
 
-    float barWidth = 0.28f;
-    float barHeight = 0.025f;
-    float barX = comboX + 0.2f;
-    float barY = comboY - 0.02f;
+    // Combo timer bar UI
+    InGameUI comboTimerBarUI;
+    comboTimerBarUI.width = 0.28f;
+    comboTimerBarUI.height = 0.025f;
+    comboTimerBarUI.x = comboXUI.x + 0.2f;
+    comboTimerBarUI.y = 0.5f - 0.02f;
 
     // background
     SetColor(0.05f, 0.05f, 0.05f, 0.75f);
-    RenderImage(barX, barY, barWidth, barHeight, g_bossHealthBarTexture, 0, 1, 1);
+    RenderImage(comboTimerBarUI.x, comboTimerBarUI.y, comboTimerBarUI.width, comboTimerBarUI.height, g_bossHealthBarTexture, 0, 1, 1);
 
     // fill
     SetColor(1.0f, 0.0f, 0.0f, 0.95f);
-    RenderImage(barX - (barWidth * (1.0f - ratio) * 0.5f), barY, barWidth * ratio, barHeight, g_bossHealthBarTexture, 0, 1, 1);
+    RenderImage(comboTimerBarUI.x - (comboTimerBarUI.width * (1.0f - ratio) * 0.5f), comboTimerBarUI.y,
+        comboTimerBarUI.width * ratio, comboTimerBarUI.height, g_bossHealthBarTexture, 0, 1, 1);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -593,30 +600,31 @@ void DrawComboUI(void)
 void DrawGaugeUI(void)
 {
     // for the surrounded of the gauge bar. 
-    float gaugeX = -1.0f;
-    float gaugeY = -0.5f;
-    float frameWidth = 0.35f;
-    float frameHeight = 1.15f;
+    InGameUI gaugeFrameUI;
+    gaugeFrameUI.x = -1.0f;
+    gaugeFrameUI.y = -0.5f;
+    gaugeFrameUI.width = 0.35f;
+    gaugeFrameUI.height = 1.15f;
 
-	// for the inner part of the gauge bar
-    float barWidth = frameWidth * 0.5f;
-    float barHeight = frameHeight *0.49f;
-    float barOffsetX = -0.0015f;  // if positibe move right, if negative move left
+    // for the inner part of the gauge bar
+    float barOffsetX = -0.0015f;  // if positive move right, if negative move left
     float barOffsetY = 0.32f;    // if positive move up, if negative move down
 
+    // Gauge bar UI struct (inner filled part)
+    InGameUI gaugeBarUI;
+    gaugeBarUI.width = gaugeFrameUI.width * 0.5f;
+    gaugeBarUI.height = gaugeFrameUI.height * 0.49f;
     // Center horizontally, bottom aligned
-    float barX = gaugeX + (frameWidth - barWidth) * 0.5f + barOffsetX;
-    float barY = gaugeY + (frameHeight - barHeight) * 0.0f + barOffsetY;
-
-
+    gaugeBarUI.x = gaugeFrameUI.x + (gaugeFrameUI.width - gaugeBarUI.width) * 0.5f + barOffsetX;
+    gaugeBarUI.y = gaugeFrameUI.y + (gaugeFrameUI.height - gaugeBarUI.height) * 0.0f + barOffsetY;
 
     // for the surrounding frame of the gauge bar
     SetColor(1, 1, 1, 1);
     if (g_gaugeBarTexture)
-        RenderImage(gaugeX, gaugeY, frameWidth, frameHeight,
+        RenderImage(gaugeFrameUI.x, gaugeFrameUI.y, gaugeFrameUI.width, gaugeFrameUI.height,
             g_gaugeBarTexture, 0, 1, 1);
 
-	// draw the gauge full effect animation when the gauge is full
+    // draw the gauge full effect animation when the gauge is full
     if (g_player.g_gaugeEffectActive)
     {
         if (g_gaugeEffectAnim.GetClipCount() > 0)
@@ -626,19 +634,11 @@ void DrawGaugeUI(void)
             {
                 int rows = g_gaugeEffectAnim.GetSplitY();
                 int columns = g_gaugeEffectAnim.GetSplitX();
-
                 if (rows > 0 && columns > 0)
                 {
                     int currentFrame = g_gaugeEffectAnim.GetCurrentFrame();
 
-                    //float effectScale = 1.2f;
-                    float effectWidth = frameWidth;
-                    float effectHeight = frameHeight;
-
-                    float effectX = gaugeX;
-                    float effectY = gaugeY;
-
-                    RenderImage(effectX, effectY, effectWidth, effectHeight,
+                    RenderImage(gaugeFrameUI.x, gaugeFrameUI.y, gaugeFrameUI.width, gaugeFrameUI.height,
                         tex, currentFrame, rows, columns,
                         false, 0.0f, false);
                 }
@@ -658,8 +658,7 @@ void DrawGaugeUI(void)
     if (g_player.isInvincible && g_player.isGaugeInvincible)
     {
         float drainProgress = g_player.invincibleTimer / g_player.INVINCIBLE_DURATION;
-        fillRatio =/* 0.0f + */drainProgress;  // it goes down from top to bottom
-
+        fillRatio = drainProgress;  // it goes down from top to bottom
         if (fillRatio < 0.0f) {
             fillRatio = 0.0f;
         }
@@ -671,32 +670,31 @@ void DrawGaugeUI(void)
         if (fillRatio > 1.0f) {
             fillRatio = 1.0f;
         }
-
         SetColor(1, 1, 1, 1);
-        RenderGaugeFillImage(barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio);
+        RenderGaugeFillImage(gaugeBarUI.x, gaugeBarUI.y, gaugeBarUI.width, gaugeBarUI.height,
+            g_gaugeBarFilledTexture, fillRatio);
     }
 
     SetColor(1, 1, 1, 1);
 }
-
 
 // for the score UI
 void DrawScoreUI(void)
 {
     if (!g_uiNumberTexture) return;
 
-    // Position on top left, below the timer
-    float scoreX = -0.768f;
-    float scoreY = 0.66f;
-    float scoreDigitWidth = 0.03f;
-    float scoreDigitHeight = 0.07f;
+    InGameUI scoreUI;
+    scoreUI.x = -0.768f;
+    scoreUI.y = 0.66f;
+    scoreUI.width = 0.03f;
+    scoreUI.height = 0.07f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    int enemyPoints = g_gameStats.GetTotalEnemyPoints(); // show enemy points
+    int enemyPoints = g_gameStats.GetTotalEnemyPoints();
 
     // Draw the enemy points
-    DrawNumber(enemyPoints, scoreX, scoreY, scoreDigitWidth, scoreDigitHeight, g_numberTexture);
+    DrawNumber(enemyPoints, scoreUI.x, scoreUI.y, scoreUI.width, scoreUI.height, g_numberTexture);
 }
 
 
@@ -1870,14 +1868,15 @@ void DrawGame() {
 
     // for the esc texture
     if (g_escTexture) {
-        // size and position
-        float escWidth = 0.4f; 
-        float escHeight = 0.5f;
-        float escPosX = -0.95f;
-        float escPosY = -0.95f;
+        // ESC button UI
+        InGameUI escUI;
+        escUI.x = -0.95f;
+        escUI.y = -0.95f;
+        escUI.width = 0.4f;
+        escUI.height = 0.5f;
 
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderImage(escPosX, escPosY, escWidth, escHeight, g_escTexture, 0, 1, 1);
+        RenderImage(escUI.x, escUI.y, escUI.width, escUI.height, g_escTexture, 0, 1, 1);
     }
 }
 
