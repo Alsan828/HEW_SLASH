@@ -591,10 +591,6 @@ void DrawComboUI(void)
 void DrawGaugeUI(void)
 {
     // for the surrounded of the gauge bar. 
-    /*float gaugeX = -1.1f;
-    float gaugeY = -0.5f;
-    float frameWidth = 0.5f;
-    float frameHeight = 1.0f;*/
     float gaugeX = -1.0f;
     float gaugeY = -0.5f;
     float frameWidth = 0.35f;

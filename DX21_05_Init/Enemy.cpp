@@ -323,7 +323,7 @@ void ThrowerEnemy::TryThrow(MapManager* mapManager) {
     if (dist > throwRange) return;
 
     // Spawn a base enemy at thrower's position and launch it.
-    Enemy* thrown = new Enemy(posX, posY, 100.0f);
+    Enemy* thrown = new Enemy(posX, posY, 10.0f);
     g_enemies.push_back(thrown);
 
     float T = std::max(0.25f, throwFlyTime);
