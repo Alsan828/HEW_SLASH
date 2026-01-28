@@ -1169,7 +1169,7 @@ void MageEnemy::CastProjectile() {
         float targetY = g_player.posY;
 
         // 发射魔法射弹
-        projectileManager.CreateFireball/*Bullet*/(
+        projectileManager.CreateBullet(
             posX + width * 0.5f,  // 从中心发射
             posY + height * 0.4f,  // 从敌人高度40%处发射（原来是0.7f，降低了30%）
             targetX,
@@ -1501,11 +1501,11 @@ void BombEnemy::CreateProjectiles() {
 }
 
 
-BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 10000000.0f)
+BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 1000000.0f)
 {
     useTurnCooldown = false;
-    SetMaxHealth(10000000.0f); 
-    SetHealth(10000000.0f);
+    SetMaxHealth(1000000.0f); 
+    SetHealth(1000000.0f);
 
     // Boss: collision box and sprite are both 3x
     // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
@@ -1531,17 +1531,17 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 10000000.0f)
 
     // 充能/蓄力（保持原有）
     anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, true, g_bossChargeStage1Texture);
-    anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.08f, false, g_bossChargeStage2Texture);
+    anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.06f, false, g_bossChargeStage2Texture);
 
     // 新增：slash 准备与激活，来自你提供的两张图
     // 图片5：4帧，从右到左播放 => start=3, end=0, splitX=4, splitY=1
-    anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, false, g_bossSlashPrepTexture);
+    anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, true, g_bossSlashPrepTexture);
 	// 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
 	// Slow down to 0.5x speed (double frame time)
-	anim.AddClip("slash_active", 7, 0, 8, 1, 0.10f, false, g_bossSlashActiveTexture);
+	anim.AddClip("slash_active", 0, 7, 8, 1, 0.06f, false, g_bossSlashActiveTexture);
 
     // death: 5帧示例
-    anim.AddClip("death",  0, 14, 15, 1, 0.08f, false, g_bossDeathTexture);
+    anim.AddClip("death",  0, 14, 15, 1, 0.06f, false, g_bossDeathTexture);
 
     anim.SetClip("idle");
 }
@@ -1760,7 +1760,7 @@ void BossEnemy::UpdateDashCharge(float dt) {
     if (stateTimer >= half && anim.GetCurrentClipName() == std::string("charge_stage1")) {
         anim.SetClip("charge_stage2");
     }
-    if (stateTimer >= chargeDuration) {
+    if (stateTimer >= chargeDuration * 0.7) {
         EnterState(BOSS_DASH_MOVING);
         // Move quickly towards player
         float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
@@ -1793,7 +1793,7 @@ void BossEnemy::UpdateDashAfter(float dt) {
 
 void BossEnemy::UpdateSlashCharge(float dt) {
     // After prep animation finishes (or a fallback duration), enter active slash
-    if (anim.IsFinished() || stateTimer >= chargeDuration) {
+    if (stateTimer >= chargeDuration) {        //(anim.IsFinished() || stateTimer >= chargeDuration)
         EnterState(BOSS_SLASH_ACTIVE);
     }
 }
@@ -1978,7 +1978,7 @@ BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 90000.0f) {
     anim.AddClip("pre_attack", 0, 3, 1, 4, 0.8f, false, g_beamEnemyPreAttackTexture);
     anim.AddClip("attack", 0, 3, 1, 4, 0.06f, true, g_beamEnemyAttackTexture);
     anim.AddClip("post_attack", 0, 2, 1, 3, 0.15f, false, g_beamEnemyPostAttackTexture);
-    anim.AddClip("pre_death", 0, 5, 1, 6, 0.15f, false, g_beamEnemyPreDeathTexture);
+    anim.AddClip("pre_death", 0, 5, 1, 6, 0.03f, false, g_beamEnemyPreDeathTexture);
     anim.AddClip("death", 0, 5, 1, 6, 0.06f, false, g_beamEnemyDeathTexture);
     anim.AddClip("post_death", 0, 2, 1, 3, 0.15f, false, g_beamEnemyPostDeathTexture);
 

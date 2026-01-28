@@ -436,14 +436,14 @@ private:
     int weakCycleIndex = 0;          // weakline direction cycle
 
     // Tunable timings
-    float chargeDuration = 1.5f;     // faster charge
-    float dashAfterDuration = 2.0f;  // faster recovery after dash
-    float slashActiveFrames = 3.0f;  // 3 frames window
+    float chargeDuration = 2.0f;     // faster charge
+    float dashAfterDuration = 0.5f;  // faster recovery after dash
+    float slashActiveFrames = 2.0f;  // 3 frames window
     float downDuration = 6.0f;       // shorter down time
 
     // Dash tuning
-    float dashSpeedMultiplier = 10.0f;   // even faster dash
-    float dashMaxDuration = 4.0f;       // allow dash for longer time (approx half-map in many setups)
+    float dashSpeedMultiplier = 20.0f;   // even faster dash
+    float dashMaxDuration = 6.0f;       // allow dash for longer time (approx half-map in many setups)
     float dashStopDistance = 0.1f;      // stop only when extremely close to player
     int dashLevel = 1;                  // dash level (affects speed)
 
