@@ -509,6 +509,9 @@ extern ID3D11ShaderResourceView* g_paddingTitleAnim;
 // Game initialization
 void InitGameWorld();
 
+// Clear gauge-related state when player dies
+void ClearGaugeOnDeath();
+
 // Provide the game window handle so mouse->client conversion is correct.
 void SetGameWindowHandle(HWND hwnd);
 // Drawing function

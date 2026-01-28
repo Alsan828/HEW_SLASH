@@ -72,6 +72,22 @@ static float Rand01() {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
 
+// Clear gauge state and particles (callable from other modules)
+void ClearGaugeOnDeath()
+{
+    // Reset player gauge values
+    g_player.gaugePoints = 0;
+    g_player.isInvincible = false;
+    g_player.isGaugeInvincible = false;
+    g_player.g_gaugeEffectActive = false;
+    g_player.g_gaugeEffectTimer = 0.0f;
+
+    // Clear particles and spawn timer
+    g_gaugeTrailParticles.clear();
+    g_gaugeKillParticlesRed.clear();
+    g_gaugeTrailSpawnTimer = 0.0f;
+}
+
 void SpawnGaugeKillParticlesRed(float worldX, float worldY) {
     if (!g_gaugeKillParticleRedTexture) return;
 
@@ -307,9 +323,11 @@ void ResetGame() {
     CleanupEnemies();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
-    g_gaugeTrailParticles.clear();
-    g_gaugeKillParticlesRed.clear();
-    g_gaugeTrailSpawnTimer = 0.0f;
+    // Preserve gauge-related particles and timers so the player's gauge
+    // progress and visual effects are not lost when entering a new level.
+    // g_gaugeTrailParticles.clear();
+    // g_gaugeKillParticlesRed.clear();
+    // g_gaugeTrailSpawnTimer = 0.0f;
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
     }
@@ -326,11 +344,9 @@ void ResetGame() {
     g_player.hasSavedCharge = false;
     g_player.chargeDecayTimer = 0.0f;
 
-    // Reset gauge bar
-    g_player.gaugePoints = 0;
-    g_player.isInvincible = false;
-    g_player.isGaugeInvincible = false;
-    g_player.invincibleTimer = 0.0f;
+    // Preserve gauge points and invincibility state across level transitions.
+    // Do not reset g_player.gaugePoints, g_player.isInvincible, g_player.isGaugeInvincible,
+    // or g_player.invincibleTimer here.
 
     g_gameState = STATE_PLAYING;
 }
@@ -343,9 +359,10 @@ void CleanUpGameWorld()
     g_mouseIndicator.Cleanup();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
-    g_gaugeTrailParticles.clear();
-    g_gaugeKillParticlesRed.clear();
-    g_gaugeTrailSpawnTimer = 0.0f;
+    // NOTE: preserve gauge-related particles/state when switching maps so
+    // the player's gauge (points and active effects) is not unexpectedly
+    // reset when entering a new level. Do not clear the gauge particle
+    // lists or reset the spawn timer here.
 
     // 释放所有纹理 - 只保留右边纹理
     ReleaseTexture(g_playerTexture);
@@ -1366,6 +1383,10 @@ void DrawGame() {
             }
 
             int frame = g_slashCountAnim.GetCurrentFrame() % 3;
+            // Determine which followers to highlight when charging and previewing cost.
+            int pendingCost = std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS);
+            int highlightStart = std::max(0, count - pendingCost); // highlight the last `pendingCost` followers
+
             for (int i = 0; i < count; ++i) {
                 Follower& f = s_follow[i];
 
@@ -1404,7 +1425,15 @@ void DrawGame() {
                 }
 
                 auto p = worldToScreen(f.x, f.y);
-                SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+                // If charging and cost preview is active, highlight the followers that will be consumed.
+                if (g_player.isCharging && g_player.isChargeCostHighlight && pendingCost > 0 && i >= highlightStart) {
+                    SetColor(1.0f, 1.0f, 0.3f, 1.0f); // highlight color (yellowish)
+                }
+                else {
+                    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+                }
+
                 RenderImage(p.first, p.second, iconW, iconH,
                     g_slashCountTexture,
                     frame,
@@ -1962,15 +1991,13 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     float digitWidth = 0.08f;
     float digitHeight = 0.12f;
 
-    // Render dash points (preview charge consumption + highlight while charging)
+    // Render dash points (preview charge consumption). Do not highlight the numeric display;
+    // highlighting is done on follower icons instead.
     int shownDashPoints = g_player.dashPoints;
     if (g_player.isCharging && g_player.isChargeCostHighlight) {
         shownDashPoints = std::max(0, g_player.dashPoints - std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS));
-        SetColor(1.0f, 1.0f, 0.3f, 1.0f); // highlight
     }
-    else {
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-    }
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     RenderNumber(shownDashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
