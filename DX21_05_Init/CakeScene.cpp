@@ -24,6 +24,13 @@ bool CakeScene::Init()
     LoadTexture(g_pDevice, "asset/UI/cake/cake.png", &cakeTexture);
     LoadTexture(g_pDevice, "asset/UI/cake/plate.png", &plateTexture);
 
+    LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_normal.png", &continueTexture); // for the button
+    LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_hover.png", &continueHoverTexture);
+
+    uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, RESULT, continueTexture, continueHoverTexture);
+    uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // change this values if needed depending on the size of the button
+    uiButtons.back().SetHitboxOffset(-0.06f);
+
     // reset the stats
   /*  isCakeCut = false;
     showPlate = false;
@@ -185,11 +192,21 @@ void CakeScene::Update(float deltaTime)
         g_inputSystem.Update();
 
         // Check for mouse click to advance to results
-        if (g_inputSystem.IsMouseLeftDown())
+        //if (g_inputSystem.IsMouseLeftDown())
+        //{
+        //    g_gameStats.UpdateTime(g_gameElapsedTime); // Update game statistics with elapsed time
+        //    g_gameStats.CalculateFinalScore(); // Calculate final score based on performance
+        //    sceneManager->SwitchScene(RESULT); // go to result scene
+        //}
+
+        for (auto& btn : uiButtons)
         {
-            g_gameStats.UpdateTime(g_gameElapsedTime); // Update game statistics with elapsed time
-            g_gameStats.CalculateFinalScore(); // Calculate final score based on performance
-            sceneManager->SwitchScene(RESULT); // go to result scene
+            if (btn.Process() == UIButtonResult::Clicked)
+            {
+                g_gameStats.UpdateTime(g_gameElapsedTime); // Update game statistics with elapsed time
+                g_gameStats.CalculateFinalScore(); // Calculate final score based on performance
+                sceneManager->SwitchScene(btn.GetTargetScene());
+            }
         }
     }
 }
@@ -300,6 +317,9 @@ void CakeScene::DrawCakeSequence()
             RenderImage(0.05f, cakeOffsetY - cakePieceHeight / 2,
                 cakePieceWidth, cakePieceHeight, cakeTexture, 1, 1, 2, false, -0.785f);
         }
+
+        for (const auto& btn : uiButtons)
+            btn.Draw(0.65f);
     }
 }
 
@@ -316,24 +336,10 @@ void CakeScene::Draw()
     DrawCakeSequence();
 }
 
-
-
-// Draw the stage
-//void CakeScene::Draw()
-//{
-//    // Call your global draw function
-//    DrawGame();
-//
-//}
-
-
 // Cleanup
 void CakeScene::Uninit()
 {
-    //ResetGame();  // Reset game state
 
-    //CleanUpGameWorld();  // Release all textures and cleanup
-    
     if (cakeTexture)
     {
         cakeTexture->Release();
@@ -346,4 +352,18 @@ void CakeScene::Uninit()
         plateTexture = nullptr;
     }
 
+    if (continueTexture)
+    {
+        continueTexture->Release();
+        continueTexture = nullptr;
+    }
+    if (continueHoverTexture)
+    {
+        continueHoverTexture->Release();
+        continueHoverTexture = nullptr;
+    }
+
+
+    uiButtons.clear();
+    g_mouseIndicator.Cleanup();
 }
