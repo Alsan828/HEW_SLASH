@@ -972,6 +972,15 @@ bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
 }
 
 bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
+    // For hazard spikes, use a smaller collision box (one third), centered
+    if (tile.tileInfo.type == std::string("hazard")) {
+        float shrinkFactor = 1.0f / 3.0f;
+        float hw = tile.width * shrinkFactor;
+        float hh = tile.height * shrinkFactor;
+        float hx = tile.posX + (tile.width - hw) * 0.5f;
+        float hy = tile.posY + (tile.height - hh) * 0.5f;
+        return CheckCollision(posX, posY, width, height, hx, hy, hw, hh);
+    }
     return CheckCollision(posX, posY, width, height,
         tile.posX, tile.posY, tile.width, tile.height);
 }
@@ -1560,7 +1569,7 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 300.0f)
     anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, true, g_bossSlashPrepTexture);
 	// 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
 	// Slow down to 0.5x speed (double frame time)
-	anim.AddClip("slash_active", 0, 7, 8, 1, 0.06f, false, g_bossSlashActiveTexture);
+    anim.AddClip("slash_active", 0, 7, 8, 1, slashFrameTime, false, g_bossSlashActiveTexture);
 
     // death: 5帧示例
     anim.AddClip("death",  0, 14, 15, 1, 0.06f, false, g_bossDeathTexture);
@@ -1591,9 +1600,11 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
         moveSpeed *= 1.5f;
     }
 
-    // Update facing towards player (no cooldown)
-    float dxFace = g_player.posX - posX;
-    if (dxFace != 0) facingRight = (dxFace > 0);
+    // Update facing towards player unless locked during release
+    if (!facingLocked) {
+        float dxFace = g_player.posX - posX;
+        if (dxFace != 0) facingRight = (dxFace > 0);
+    }
 
     // State machine
     stateTimer += deltaTime;
@@ -1736,6 +1747,7 @@ void BossEnemy::EnterState(BossState s) {
     case BOSS_IDLE:
         anim.SetClip("idle");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_DASH_CHARGE:
         // Start charge animation using stage1
@@ -1743,35 +1755,51 @@ void BossEnemy::EnterState(BossState s) {
             anim.SetClip("charge_stage1");
         }
         velocityX = 0.0f;
+        // Lock facing at start of charge
+        fixedFacingRight = facingRight;
+        facingLocked = true;
         break;
     case BOSS_DASH_MOVING:
         anim.SetClip("dash");
+        // Maintain locked facing during dash movement
+        facingRight = fixedFacingRight;
+        facingLocked = true;
         break;
     case BOSS_DASH_AFTER:
         // Play dash_over first, then return to idle when finished
         anim.SetClip("dash_over");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_SLASH_CHARGE:
         anim.SetClip("slash_prep");
         velocityX = 0.0f;
+        // Lock facing at start of slash
+        fixedFacingRight = facingRight;
+        facingLocked = true;
         break;
     case BOSS_SLASH_ACTIVE:
         anim.SetClip("slash_active");
+        hasSpawnedSlashProjectiles = false;
+        // Maintain locked facing
+        facingRight = fixedFacingRight;
         break;
     case BOSS_DOWN_BEFORE:
         anim.SetClip("idle");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_DOWN:
         anim.SetClip("idle");
         velocityX = 0.0f;
         inDownImmortal = true;
+        facingLocked = true; // keep facing fixed during down
         break;
     case BOSS_DOWN_AFTER:
         anim.SetClip("idle");
         velocityX = 0.0f;
         inDownImmortal = false;
+        facingLocked = false;
         break;
     }
 }
@@ -1832,6 +1860,28 @@ void BossEnemy::UpdateSlashActive(float dt) {
         if (CheckCollision(hx, hy, hw, hh, g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT) && !g_player.isInvincible) {
             g_player.health = 0.0f;
             OnPlayerDeath();
+        }
+        // Spawn projectile barrage once
+        if (!hasSpawnedSlashProjectiles) {
+            hasSpawnedSlashProjectiles = true;
+            ProjectileManager& pm = ProjectileManager::GetInstance();
+            float originX = posX + width * 0.5f;
+            float originY = posY + height * 0.5f;
+            // Fan-shaped barrage fired along boss facing direction
+            const int bulletCount = 9;
+            const float totalSpread = 0.9f; // radians, wider fan
+            // Use fixed/locked facing if available, else current facing
+            bool faceRight = facingLocked ? fixedFacingRight : facingRight;
+            float baseAngle = faceRight ? 0.0f : 3.14159f;
+            for (int i = 0; i < bulletCount; ++i) {
+                float t = (bulletCount == 1) ? 0.0f : (float)i / (bulletCount - 1);
+                float ang = baseAngle + (t - 0.5f) * totalSpread;
+                float dx = cosf(ang);
+                float dy = sinf(ang);
+                float targetX = originX + dx * 4.0f;
+                float targetY = originY + dy * 4.0f;
+                pm.CreateBullet(originX, originY, targetX, targetY, false);
+            }
         }
     }
     // End slash when the clip finishes.
