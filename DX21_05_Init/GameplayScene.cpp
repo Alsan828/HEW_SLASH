@@ -191,7 +191,7 @@ void GameplayScene::RespawnBossAtCheckpoint()
     if (!g_enemies.empty())
     {
         m_boss = g_enemies[0];
-        m_boss->SetMaxHealth(300.f/ Restore boss stats for the current test enemy 
+        m_boss->SetMaxHealth(300.f);// tore boss stats for the current test enemy
 
         // it has reached a checkpoint, restores the checkpoint hp 
         if (m_bossCheckpointHP > 0.0f) 
