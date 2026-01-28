@@ -456,7 +456,7 @@ private:
     bool fixedFacingRight = true;
 
     // Tunable timings
-    float chargeDuration = 0.5f;     // even faster charge (2x faster than previous)
+    float chargeDuration = 1.0f;     // even faster charge (2x faster than previous)
     float dashAfterDuration = 0.5f;  // faster recovery after dash
     float slashActiveFrames = 2.0f;  // 3 frames window
     float slashFrameTime = 0.06f;    // 斩击动画的每帧时间，影响斩击释放速度
