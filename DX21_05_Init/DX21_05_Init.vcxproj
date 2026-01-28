@@ -141,7 +141,6 @@
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>
     </ClCompile>
     <ClCompile Include="Audio.cpp" />
-    <ClCompile Include="BossScene.cpp" />
     <ClCompile Include="CakeScene.cpp" />
     <ClCompile Include="DamageNumber.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Full</Optimization>

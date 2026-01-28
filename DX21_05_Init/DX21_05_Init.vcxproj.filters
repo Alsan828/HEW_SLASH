@@ -90,9 +90,6 @@
     <ClCompile Include="DamageNumber.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="BossScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="CakeScene.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
