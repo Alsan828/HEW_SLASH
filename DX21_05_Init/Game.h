@@ -160,6 +160,9 @@ struct Player {
     float dashPointRecoverTimer = 0.0f;
     const float DASH_POINT_RECOVER_TIME = 0.1f;
 
+    // 本次冲刺消耗的点数（用于伤害加成计算）
+    int lastDashConsumedPoints = 1;
+
     // 蓄力消耗点数（蓄力过程中预扣，放出时结算）
     int chargePendingCost = 0;            // 当前蓄力已累计的消耗点数（0~3）
     float chargeCostTimer = 0.0f;         // 用于按时间累计消耗

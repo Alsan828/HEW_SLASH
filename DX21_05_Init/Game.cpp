@@ -2027,12 +2027,21 @@ void HandleInput() {
     }
 
     // Jump control
-    static bool wasJumpKeyPressed = false;
-    bool isJumpKeyPressed = g_inputSystem.IsJumping();
-    if (isJumpKeyPressed && !wasJumpKeyPressed) {
+    // Allow both Space and W to trigger a jump (including while wall-sliding).
+    static bool wasSpacePressed = false;
+    static bool wasWPressed = false;
+
+    bool spaceDown = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+    bool wDown = (GetAsyncKeyState('W') & 0x8000) != 0;
+
+    // Trigger jump on edge (pressed this frame but not previous). If both are
+    // pressed simultaneously, only call Jump() once.
+    if ((spaceDown && !wasSpacePressed) || (wDown && !wasWPressed)) {
         Jump();
     }
-    wasJumpKeyPressed = isJumpKeyPressed;
+
+    wasSpacePressed = spaceDown;
+    wasWPressed = wDown;
 }
 
 // MouseIndicatorSystem implementation

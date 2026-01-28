@@ -82,13 +82,11 @@ void InputSystem::RebindKey(int action, int newKey) {
 }
 
 void InputSystem::Update() {
-    // 更新键盘状态（现有代码）
-    //m_previousKeyStates = m_currentKeyStates;
+    // 更新键盘状态：先保存上一帧状态，再读取当前按键状态
+    m_previousKeyStates = m_currentKeyStates;
     for (auto& pair : m_currentKeyStates) {
         pair.second = (GetAsyncKeyState(pair.first) & 0x8000) != 0;
     }
-
-    m_previousKeyStates = m_currentKeyStates;
 
     // 更新鼠标状态
     UpdateMouseState();
