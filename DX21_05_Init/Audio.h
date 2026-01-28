@@ -16,4 +16,6 @@ namespace Audio
 
 	void PreloadSE(const std::string& filePath); // use this we we make sure the SE will play instantly and there will not be any delay
 
+	std::string GetCurrentBGMPath();
+	bool IsBGMPlaying();
 }

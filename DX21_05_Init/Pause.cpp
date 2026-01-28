@@ -79,7 +79,25 @@ void PauseScene::Update(float deltaTime)
 				if (target == pausedSceneType)
 				{
 					Audio::PlaySE(SoundEffect::RESUME);
+
+                    // so it resumes the bgm if pressing the button continue in pause scene
+                    std::string savedPath = sceneManager->GetSavedBGMPath();
+                    if (!Audio::IsBGMPlaying() && !savedPath.empty())
+                    {
+                        Audio::PlayBGM(savedPath, true);
+                    }
+                    else
+                    {
+                        Audio::ResumeBGM();
+                    }
+                    sceneManager->ClearSavedBGMPath();
 				}
+
+                if (target == HOWTOPLAY || target == STAGESELECT || target == STAGESELECT2 || target == STAGESELECT3)
+                {
+                    sceneManager->SaveBGMPath(Audio::GetCurrentBGMPath());
+                }
+
                 sceneManager->SwitchScene(target);
                 return;
             }

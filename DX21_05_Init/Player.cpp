@@ -79,10 +79,22 @@ static void PerformDashHitTest(float testX, float testY) {
                     g_camera.Shake(0.02f, 0.05f);
                     // 可选全局慢动作
                     // TriggerSlowMotion(0.05f, 0.3f);
+
+                    if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                        if (multiplier > 1.5f) {
+                            g_player.gaugePoints += 2;
+                        }
+                        else {
+                            g_player.gaugePoints += 1;
+                        }
+                        if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+                            g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+                        }
+                    }
                 }
             }
 
-            if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+           /* if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
                 if (multiplier > 1.5f) {
                     g_player.gaugePoints += 2;
                 }
@@ -92,7 +104,7 @@ static void PerformDashHitTest(float testX, float testY) {
                 if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
                     g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
                 }
-            }
+            }*/
  
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
             enemy->TakeDamage(actualDamage, dashAngle);
@@ -145,10 +157,22 @@ static void PerformDashEndCircleHitTest() {
                 g_player.hitStopTriggered++;
                 if (!g_player.isInvincible) {
                     g_camera.Shake(0.02f, 0.05f);
+
+                    if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+                        if (multiplier > 1.5f) {
+                            g_player.gaugePoints += 2;
+                        }
+                        else {
+                            g_player.gaugePoints += 1;
+                        }
+                        if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+                            g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+                        }
+                    }
                 }
             }
 
-            if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+            /*if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
                 if (multiplier > 1.5f) {
                     g_player.gaugePoints += 2;
                 }
@@ -158,7 +182,7 @@ static void PerformDashEndCircleHitTest() {
                 if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
                     g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
                 }
-            }
+            }*/
 
             int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
             enemy->TakeDamage(actualDamage, dashAngle);
