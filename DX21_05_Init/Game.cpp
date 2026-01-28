@@ -118,6 +118,40 @@ void SpawnGaugeKillParticlesRed(float worldX, float worldY) {
     }
 }
 
+// Spawn a larger, more dramatic burst when the gauge is filled (player becomes invincible).
+// This creates more particles with higher speed and wider spread than the regular red kill burst.
+void SpawnGaugeFullBurst(float worldX, float worldY) {
+    // Use the trail particle sheet (particle_sheet.png) for a more varied look
+    if (!g_gaugeTrailParticleTexture) return;
+
+    const int count = 20 + (rand() % 11); // 20..30 particles for a very large burst
+    for (int i = 0; i < count; ++i) {
+        GaugeKillParticleInstance p;
+        p.x = worldX;
+        p.y = worldY;
+        p.texture = g_gaugeTrailParticleTexture; // particle_sheet.png
+        p.active = true;
+
+        // Stronger radial burst with wider variation
+        const float angle = Rand01() * 6.2831853f;
+        const float speed = (0.15f + Rand01() * 0.35f) * 10.0f; // faster
+        p.vx = cosf(angle) * speed;
+        p.vy = sinf(angle) * speed;
+
+        // Larger, more varied scale
+        p.scale = 1.2f * (0.9f + Rand01() * 0.6f);
+        p.rotation = (Rand01() * 2.0f - 1.0f) * 3.14159f;
+        p.angularVelocity = (Rand01() * 2.0f - 1.0f) * 12.0f; // stronger spin
+        p.frame = 0;
+        p.timer = 0.0f;
+        p.frameTimer = 0.0f;
+        // Faster animation for a snappier look
+        p.frameTime = 0.035f;
+
+        g_gaugeKillParticlesRed.push_back(p);
+    }
+}
+
 static void SpawnGaugeTrailParticle(float worldX, float worldY) {
     if (!g_gaugeTrailParticleTexture) return;
 
@@ -916,6 +950,12 @@ void UpdateGame(float deltaTime) {
         g_player.gaugePoints = 0;
 
         Audio::PlaySE(SoundEffect::LIMITBREAK, 2.0f);
+        // Spawn a dramatic particle burst at the player's center when gauge activates
+        {
+            float centerX = g_player.posX + PLAYER_WIDTH * 0.5f;
+            float centerY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+            SpawnGaugeFullBurst(centerX, centerY);
+        }
     }
 
 	// for the gauge effect timer
