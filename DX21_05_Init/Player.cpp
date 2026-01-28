@@ -1096,17 +1096,9 @@ void ExecuteMouseChargeDash() {
 
     g_player.hitEnemies.clear();
     // 结算蓄力消耗：
-    // - 蓄力过程中按时间累计消耗点数（chargePendingCost）
-    // - 最大蓄力时固定消耗 3 点
+    // 修改：不论蓄力持续多久，都只消耗 1 点（其他蓄力效果保持不变）
     // - 若处于 gauge 无敌，则不消耗点数
-    int costToConsume = g_player.chargePendingCost;
-    // 最小蓄力也消耗 1 点（只要有点）
-    if (g_player.chargeTime > 0.0f && costToConsume == 0) {
-        costToConsume = 1;
-    }
-    if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-        costToConsume = g_player.MAX_DASH_POINTS;
-    }
+    int costToConsume = 1;
     costToConsume = std::clamp(costToConsume, 0, g_player.MAX_DASH_POINTS);
 
     if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
