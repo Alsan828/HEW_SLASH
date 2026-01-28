@@ -450,6 +450,7 @@ extern ID3D11ShaderResourceView* g_signLongClickTexture;
 extern ID3D11ShaderResourceView* g_signESCTexture;
 extern ID3D11ShaderResourceView* g_signRightTexture;
 extern ID3D11ShaderResourceView* g_signClickTexture;
+extern ID3D11ShaderResourceView* g_escTexture;
 
 
 extern ID3D11ShaderResourceView* g_attackCountTestTexture;

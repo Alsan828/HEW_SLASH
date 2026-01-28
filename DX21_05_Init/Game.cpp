@@ -499,6 +499,8 @@ void CleanUpGameWorld()
     ReleaseTexture(g_arrowTexture);
     ReleaseTexture(g_cursorTexture);
 
+    ReleaseTexture(g_escTexture);
+
     // for the combo texture
     ReleaseTexture(g_comboNumberTexture);
     ReleaseTexture(g_comboXTexture);
@@ -821,6 +823,8 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/effect/particle_sheet_red.png", &g_gaugeKillParticleRedTexture);
 
     LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_attackCountTestTexture);
+
+    LoadTexture(g_pDevice, "asset/UI/UI_esc.png", &g_escTexture);
 
 
     InitEnemies();
@@ -1863,8 +1867,20 @@ void DrawGame() {
     DrawComboUI();
     DrawGaugeUI();
     DrawScoreUI();
-    
+
+    // for the esc texture
+    if (g_escTexture) {
+        // size and position
+        float escWidth = 0.4f; 
+        float escHeight = 0.5f;
+        float escPosX = -0.95f;
+        float escPosY = -0.95f;
+
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderImage(escPosX, escPosY, escWidth, escHeight, g_escTexture, 0, 1, 1);
+    }
 }
+
 void HandleInput() {
     if (g_inputSystem.IsResetting()) {
         ResetGame();
