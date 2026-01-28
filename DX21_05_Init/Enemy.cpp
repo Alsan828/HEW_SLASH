@@ -1529,8 +1529,9 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 10000000.0f)
     // 新增：slash 准备与激活，来自你提供的两张图
     // 图片5：4帧，从右到左播放 => start=3, end=0, splitX=4, splitY=1
     anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, false, g_bossSlashPrepTexture);
-    // 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
-    anim.AddClip("slash_active", 7, 0, 8, 1, 0.05f, false, g_bossSlashActiveTexture);
+	// 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
+	// Slow down to 0.5x speed (double frame time)
+	anim.AddClip("slash_active", 7, 0, 8, 1, 0.10f, false, g_bossSlashActiveTexture);
 
     // death: 5帧示例
     anim.AddClip("death",  0, 14, 15, 1, 0.08f, false, g_bossDeathTexture);
@@ -1672,6 +1673,10 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
 
     DamageNumberManager::AddDamageNumber(posX + width * 0.5f, posY + height, actualDamage, multiplier > 1.5f);
 
+    // Hit feedback (same as normal enemies)
+    Audio::PlaySE(SoundEffect::ENEMY_HIT);
+    SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.5f);
+
     health -= actualDamage;
     isHit = true;
     hitTimer = HIT_DURATION;
@@ -1787,10 +1792,9 @@ void BossEnemy::UpdateSlashCharge(float dt) {
 }
 
 void BossEnemy::UpdateSlashActive(float dt) {
-    // Effective hit window for the first ~5 frames of the 8-frame sheet
-    float window = 5.0f * 0.05f; // matches anim.AddClip("slash_active", ..., frameTime=0.05f)
-    if (stateTimer <= window) {
-        // Simple hitbox in front of boss; kill player if touching
+    // Deal damage on the second-to-last frame.
+    // With startFrame=7 and endFrame=0 (reverse playback), the second-to-last frame is 1.
+    if (anim.GetCurrentFrame() == 1) {
         float range = 0.5f;
         float hx = facingRight ? (posX + width) : (posX - range);
         float hw = range;
@@ -1801,8 +1805,8 @@ void BossEnemy::UpdateSlashActive(float dt) {
             OnPlayerDeath();
         }
     }
-    // End slash when clip finishes or after ~0.7s
-    if (anim.IsFinished() || stateTimer >= 0.7f) {
+    // End slash when the clip finishes.
+    if (anim.IsFinished()) {
         EnterState(BOSS_IDLE);
     }
 }

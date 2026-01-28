@@ -87,8 +87,10 @@ void GameplayScene::UpdateBossLogic(float deltaTime)
 
     UpdateGame(deltaTime);
 
-    // if the player dies, the animation of death is over, the player respawns
-    if (g_player.isDead && g_player.deathTimer > 1.0f)
+    // If the player dies, wait for the normal death animation duration,
+    // then respawn at the last boss checkpoint.
+    // Note: `g_player.deathTimer` counts DOWN from `DEATH_RESPAWN_TIME` to 0.
+    if (g_player.isDead && g_player.deathTimer <= 0.0f)
     {
         RespawnBossAtCheckpoint();
     }
