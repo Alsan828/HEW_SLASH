@@ -166,6 +166,14 @@ void Map::InitializeTileDictionary() {
         {"B7", {"B7", "decoration", "signLongClick", false, false, false, false}},
         {"B8", {"B8", "decoration", "signClick", false, false, false, false}},
         {"B9", {"B9", "decoration", "signESC", false, false, false, false}}
+        ,
+        // Hazard spikes (directional)
+        {"ddup",   {"ddup",   "hazard", "spike_up",    true, false, false, false}},
+        {"ddleft", {"ddleft", "hazard", "spike_left",  true, false, false, false}},
+        {"dddown", {"dddown", "hazard", "spike_down",  true, false, false, false}},
+        {"ddright",{"ddright","hazard", "spike_right", true, false, false, false}},
+        // Generic spike tile (non-directional)
+        {"DD",     {"DD",     "hazard", "spike",       true, false, false, false}}
     };
 }
 

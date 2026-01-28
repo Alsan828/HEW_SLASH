@@ -959,6 +959,15 @@ bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
 }
 
 bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
+    // For hazard spikes, use a smaller collision box (one third), centered
+    if (tile.tileInfo.type == std::string("hazard")) {
+        float shrinkFactor = 1.0f / 3.0f;
+        float hw = tile.width * shrinkFactor;
+        float hh = tile.height * shrinkFactor;
+        float hx = tile.posX + (tile.width - hw) * 0.5f;
+        float hy = tile.posY + (tile.height - hh) * 0.5f;
+        return CheckCollision(posX, posY, width, height, hx, hy, hw, hh);
+    }
     return CheckCollision(posX, posY, width, height,
         tile.posX, tile.posY, tile.width, tile.height);
 }
@@ -1501,11 +1510,11 @@ void BombEnemy::CreateProjectiles() {
 }
 
 
-BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 1000000.0f)
+BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 500000.0f)
 {
     useTurnCooldown = false;
-    SetMaxHealth(1000000.0f); 
-    SetHealth(1000000.0f);
+    SetMaxHealth(500000.0f); 
+    SetHealth(500000.0f);
 
     // Boss: collision box and sprite are both 3x
     // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
@@ -1569,9 +1578,11 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
         moveSpeed *= 1.5f;
     }
 
-    // Update facing towards player (no cooldown)
-    float dxFace = g_player.posX - posX;
-    if (dxFace != 0) facingRight = (dxFace > 0);
+    // Update facing towards player unless locked during release
+    if (!facingLocked) {
+        float dxFace = g_player.posX - posX;
+        if (dxFace != 0) facingRight = (dxFace > 0);
+    }
 
     // State machine
     stateTimer += deltaTime;
@@ -1714,6 +1725,7 @@ void BossEnemy::EnterState(BossState s) {
     case BOSS_IDLE:
         anim.SetClip("idle");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_DASH_CHARGE:
         // Start charge animation using stage1
@@ -1721,6 +1733,9 @@ void BossEnemy::EnterState(BossState s) {
             anim.SetClip("charge_stage1");
         }
         velocityX = 0.0f;
+        // Lock facing at start of charge
+        fixedFacingRight = facingRight;
+        facingLocked = true;
         break;
     case BOSS_DASH_MOVING:
         anim.SetClip("dash");
@@ -1729,28 +1744,37 @@ void BossEnemy::EnterState(BossState s) {
         // Play dash_over first, then return to idle when finished
         anim.SetClip("dash_over");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_SLASH_CHARGE:
         anim.SetClip("slash_prep");
         velocityX = 0.0f;
+        // Lock facing at start of slash
+        fixedFacingRight = facingRight;
+        facingLocked = true;
         break;
     case BOSS_SLASH_ACTIVE:
         anim.SetClip("slash_active");
         hasSpawnedSlashProjectiles = false;
+        // Maintain locked facing
+        facingRight = fixedFacingRight;
         break;
     case BOSS_DOWN_BEFORE:
         anim.SetClip("idle");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_DOWN:
         anim.SetClip("idle");
         velocityX = 0.0f;
         inDownImmortal = true;
+        facingLocked = true; // keep facing fixed during down
         break;
     case BOSS_DOWN_AFTER:
         anim.SetClip("idle");
         velocityX = 0.0f;
         inDownImmortal = false;
+        facingLocked = false;
         break;
     }
 }

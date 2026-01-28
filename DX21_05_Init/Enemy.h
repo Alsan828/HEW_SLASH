@@ -441,6 +441,10 @@ private:
     int weakCycleIndex = 0;          // weakline direction cycle
     bool hasSpawnedSlashProjectiles = false; // slash barrage spawn guard
 
+    // Facing lock during attack release
+    bool facingLocked = false;
+    bool fixedFacingRight = true;
+
     // Tunable timings
     float chargeDuration = 0.5f;     // even faster charge (2x faster than previous)
     float dashAfterDuration = 0.5f;  // faster recovery after dash
