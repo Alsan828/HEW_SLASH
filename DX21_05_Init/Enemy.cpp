@@ -1864,11 +1864,11 @@ void BossEnemy::EnterState(BossState s) {
 
 void BossEnemy::UpdateDashCharge(float dt) {
     // While charging, advance animation from stage1 to stage2 midway
-    float half = chargeDuration * 0.5f;
+    float half = chargeDuration * 0.6f;
     if (stateTimer >= half && anim.GetCurrentClipName() == std::string("charge_stage1")) {
         anim.SetClip("charge_stage2");
     }
-    if (stateTimer >= chargeDuration * 0.7) {
+    if (stateTimer >= chargeDuration * 0.9f) {
         EnterState(BOSS_DASH_MOVING);
         // Move quickly towards player
         float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
