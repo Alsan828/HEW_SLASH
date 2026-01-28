@@ -1367,10 +1367,17 @@ void BombEnemy::TakeDamage(int damage, float attackAngle) {
     // 如果从顶部或底部攻击，立即死亡并触发爆炸
     if (multiplier >= 10.0f) {
         health = 0;  // 立即死亡
+        // mark as weak-spot death so kill rewards & effects apply
+        weakSpotDeath = true;
         isAlive = false;
         OnDeath();  // 触发爆炸
         return;     // 直接返回，跳过后续逻辑
     }
+
+    // 非致命/非垂直一击时，播放普通的击中反馈（特效与音效）
+    SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.85f);
+    Audio::PlaySE(SoundEffect::ENEMY_HIT);
+    g_camera.Shake(0.05f, 0.5f);
 
     // 非垂直攻击，正常处理伤害
     health -= actualDamage;
@@ -1795,7 +1802,7 @@ void BossEnemy::UpdateSlashActive(float dt) {
     // Deal damage on the second-to-last frame.
     // With startFrame=7 and endFrame=0 (reverse playback), the second-to-last frame is 1.
     if (anim.GetCurrentFrame() == 1) {
-        float range = 0.28f;
+        float range = 0.25f;
         float hx = facingRight ? (posX + width) : (posX - range);
         float hw = range;
         float hy = posY;

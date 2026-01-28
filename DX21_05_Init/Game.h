@@ -33,6 +33,10 @@ class Enemy;
 extern ID3D11ShaderResourceView* g_slashCountTexture;
 extern Animation g_slashCountAnim;
 
+// Weak-point hit/kill effect spawning (defined in Game.cpp)
+void SpawnWeakPointHitEffect(float worldX, float worldY);
+void SpawnWeakPointKillEffect(float worldX, float worldY);
+
 // When a dash point is restored on enemy death, spawn the follower indicator from that world position.
 extern float g_slashCountSpawnX;
 extern float g_slashCountSpawnY;
@@ -155,6 +159,12 @@ struct Player {
     const int MAX_DASH_POINTS = 3;
     float dashPointRecoverTimer = 0.0f;
     const float DASH_POINT_RECOVER_TIME = 0.1f;
+
+    // 蓄力消耗点数（蓄力过程中预扣，放出时结算）
+    int chargePendingCost = 0;            // 当前蓄力已累计的消耗点数（0~3）
+    float chargeCostTimer = 0.0f;         // 用于按时间累计消耗
+    const float CHARGE_COST_INTERVAL = 0.25f; // 每隔多少秒增加 1 点消耗
+    bool isChargeCostHighlight = false;   // UI 高亮：蓄力时显示消耗反馈
 
     // 冲刺后硬直状态
     bool isInDashAftermath = false;
@@ -502,6 +512,9 @@ extern ID3D11ShaderResourceView* g_paddingTitleAnim;
 
 // Game initialization
 void InitGameWorld();
+
+// Clear gauge-related state when player dies
+void ClearGaugeOnDeath();
 
 // Provide the game window handle so mouse->client conversion is correct.
 void SetGameWindowHandle(HWND hwnd);

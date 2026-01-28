@@ -641,6 +641,9 @@ void UpdatePlayerPhysics(float deltaTime) {
         g_player.comboCount = 0;
         g_player.comboTimer = 0.0f;
 
+    // Clear gauge state and visual effects (delegated to Game.cpp)
+    ClearGaugeOnDeath();
+
         // only counts deaths if the player has points
         int killPoints = (g_gameStats.GetEnemiesKilled() * 10) + (g_gameStats.GetWeakPointKills() * 30);
         if (killPoints > 0) {
@@ -804,6 +807,60 @@ void UpdateDash(float deltaTime) {
             }
             ExecuteMouseChargeDash();*/
             g_player.chargeTime = g_player.MAX_CHARGE_TIME; // it caps to max charge time and it doesnt release it unless you stop clicking
+        }
+
+        // === 蓄力点数消耗累计（预扣） ===
+        // 在蓄力时持续增加“将要消耗”的点数，用于 UI 高亮与放出结算。
+        // 若当前可用点数有限，则不会累计超过当前点数，并且蓄力时间会被限制在对应层数的阈值，
+        // 避免出现继续蓄力但到释放时点数不足导致蓄力作废的情况。
+        if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
+            g_player.isChargeCostHighlight = true;
+
+            // 最大允许的预扣点数受到当前持有点数限制
+            int maxAllowedPending = std::min(g_player.dashPoints, g_player.MAX_DASH_POINTS);
+
+            if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
+                // 达到满蓄力：预扣至当前可用的最大点数（不强制扣除超过当前持有）
+                g_player.chargePendingCost = maxAllowedPending;
+            }
+            else {
+                // 逐步按时间累计，但不超过当前可用点数
+                g_player.chargeCostTimer += deltaTime;
+                while (g_player.chargeCostTimer >= g_player.CHARGE_COST_INTERVAL && g_player.chargePendingCost < maxAllowedPending) {
+                    g_player.chargePendingCost++;
+                    g_player.chargeCostTimer -= g_player.CHARGE_COST_INTERVAL;
+                    // 每次增加预扣点数时触发蓄力音效
+                    Audio::PlaySE(SoundEffect::CHARGE_START);
+                }
+
+                // 如果已经达到当前可用点数上限，则阻止继续增加 chargeTime 到更高层数，
+                // 将 chargeTime 限制到对应的层数阈值，这样蓄力会在该层停住。
+                if (g_player.chargePendingCost >= maxAllowedPending && maxAllowedPending > 0) {
+                    float capTime = 0.0f;
+                    switch (maxAllowedPending) {
+                    case 1:
+                        capTime = g_player.CHARGE_THRESHOLD_LOW;
+                        break;
+                    case 2:
+                        capTime = g_player.CHARGE_THRESHOLD_MID;
+                        break;
+                    case 3:
+                        capTime = g_player.CHARGE_THRESHOLD_HIGH;
+                        break;
+                    default:
+                        capTime = g_player.MAX_CHARGE_TIME;
+                        break;
+                    }
+                    if (g_player.chargeTime > capTime) {
+                        g_player.chargeTime = capTime;
+                    }
+                }
+            }
+        }
+        else {
+            g_player.isChargeCostHighlight = false;
+            g_player.chargePendingCost = 0;
+            g_player.chargeCostTimer = 0.0f;
         }
 
         // Play charge SE when reaching max (once per charge)
@@ -990,6 +1047,17 @@ void StartMouseChargeDash() {
 
     // 重置蓄力时间，从0开始计算本次蓄力
     g_player.chargeTime = 0.0f;
+    // 重置本次蓄力的点数消耗累计
+    g_player.chargeCostTimer = 0.0f;
+    g_player.isChargeCostHighlight = true;
+    // 按下一瞬间立即预扣 1 点（只要有点），并播放蓄力音效
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_player.dashPoints > 0) {
+        g_player.chargePendingCost = 1;
+        Audio::PlaySE(SoundEffect::CHARGE_START);
+    }
+    else {
+        g_player.chargePendingCost = 0;
+    }
     // 不清除保存的蓄力，但本次重新开始
 }
 
@@ -1016,7 +1084,32 @@ void ExecuteMouseChargeDash() {
     }
 
     g_player.hitEnemies.clear();
-    if (!ConsumeDashPoint()) return;
+    // 结算蓄力消耗：
+    // - 蓄力过程中按时间累计消耗点数（chargePendingCost）
+    // - 最大蓄力时固定消耗 3 点
+    // - 若处于 gauge 无敌，则不消耗点数
+    int costToConsume = g_player.chargePendingCost;
+    // 最小蓄力也消耗 1 点（只要有点）
+    if (g_player.chargeTime > 0.0f && costToConsume == 0) {
+        costToConsume = 1;
+    }
+    if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
+        costToConsume = g_player.MAX_DASH_POINTS;
+    }
+    costToConsume = std::clamp(costToConsume, 0, g_player.MAX_DASH_POINTS);
+
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
+        if (g_player.dashPoints < costToConsume) {
+            // 点数不足：不放出，取消蓄力
+            g_player.isCharging = false;
+            g_player.chargeTime = 0.0f;
+            g_player.chargePendingCost = 0;
+            g_player.chargeCostTimer = 0.0f;
+            g_player.isChargeCostHighlight = false;
+            return;
+        }
+        g_player.dashPoints -= costToConsume;
+    }
 
     // 获取当前鼠标位置
     float currentMouseX, currentMouseY;
@@ -1148,6 +1241,9 @@ void ExecuteMouseChargeDash() {
     // 结束蓄力状态
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
+    g_player.chargePendingCost = 0;
+    g_player.chargeCostTimer = 0.0f;
+    g_player.isChargeCostHighlight = false;
 }
 // Enter dash aftermath state
 void EnterDashAftermath() {
@@ -1255,11 +1351,33 @@ void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY
     // Track kills for statistics
     if (wasWeakPointKill) {
         g_gameStats.IncrementWeakPointKills();  // 30 points
-        g_gameStats.AddScore(30); 
+        g_gameStats.AddScore(30);
         printf("[POINTS] Weak kill +30 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
+
+        // Enhanced visual feedback for weak-point kills
+        SpawnWeakPointKillEffect(enemyWorldX, enemyWorldY);
+
+        // Increase slash hit-stop duration by 1.5x for dramatic effect
+        if (g_player.hitStopTimer > 0.0f) {
+            g_player.hitStopTimer *= 1.5f;
+        }
+        else {
+            g_player.hitStopTimer = ComputeDashHitStopTime() * 1.5f;
+        }
     }
     else {
         g_gameStats.IncrementKills();  // 10 points
+    }
+
+    // Award gauge points for kills, but do NOT increase gauge while the player
+    // already has gauge-based invincibility active. This prevents extending the
+    // current invincible state by farming additional kills during the effect.
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
+        int gaugeGain = wasWeakPointKill ? 3 : 1; // weak kills give more gauge
+        g_player.gaugePoints += gaugeGain;
+        if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+            g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+        }
     }
 
     // Restore dash point

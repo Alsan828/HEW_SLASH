@@ -72,6 +72,22 @@ static float Rand01() {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
 
+// Clear gauge state and particles (callable from other modules)
+void ClearGaugeOnDeath()
+{
+    // Reset player gauge values
+    g_player.gaugePoints = 0;
+    g_player.isInvincible = false;
+    g_player.isGaugeInvincible = false;
+    g_player.g_gaugeEffectActive = false;
+    g_player.g_gaugeEffectTimer = 0.0f;
+
+    // Clear particles and spawn timer
+    g_gaugeTrailParticles.clear();
+    g_gaugeKillParticlesRed.clear();
+    g_gaugeTrailSpawnTimer = 0.0f;
+}
+
 void SpawnGaugeKillParticlesRed(float worldX, float worldY) {
     if (!g_gaugeKillParticleRedTexture) return;
 
@@ -173,6 +189,51 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
     e.texture = chosen;
 
     // Some textures are sprite-sheets (slash flash), others are single images (legacy hit).
+    if (chosen == g_hitEffectTexture) {
+        e.rows = 1;
+        e.columns = 1;
+        e.frameCount = 1;
+    }
+    else {
+        e.rows = WEAKPOINT_HIT_EFFECT_ROWS;
+        e.columns = WEAKPOINT_HIT_EFFECT_COLUMNS;
+        e.frameCount = WEAKPOINT_HIT_EFFECT_FRAMES;
+    }
+    g_weakPointHitEffects.push_back(e);
+}
+
+// Spawn a larger visual effect for weak-point kills
+void SpawnWeakPointKillEffect(float worldX, float worldY) {
+    // Prefer new slash flash textures; fallback to old single texture if needed.
+    ID3D11ShaderResourceView* chosen = nullptr;
+    int availableCount = 0;
+    ID3D11ShaderResourceView* available[4] = { nullptr,nullptr,nullptr,nullptr };
+
+    for (auto* t : g_slashFlashTextures) {
+        if (t) available[availableCount++] = t;
+    }
+
+    if (availableCount > 0) {
+        chosen = available[rand() % availableCount];
+    }
+    else {
+        chosen = g_hitEffectTexture;
+    }
+
+    if (!chosen) return;
+
+    HitEffectInstance e;
+    e.x = worldX;
+    e.y = worldY;
+    // Make the kill effect larger than a normal weak-point hit
+    e.scale = (chosen == g_hitEffectTexture) ? 1.5f : 3.0f;
+    e.timer = 0.0f;
+    // Slightly slower frame time for a more dramatic kill flash
+    e.frameTime = 0.10f;
+    e.frame = 0;
+    e.active = true;
+    e.texture = chosen;
+
     if (chosen == g_hitEffectTexture) {
         e.rows = 1;
         e.columns = 1;
@@ -307,9 +368,11 @@ void ResetGame() {
     CleanupEnemies();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
-    g_gaugeTrailParticles.clear();
-    g_gaugeKillParticlesRed.clear();
-    g_gaugeTrailSpawnTimer = 0.0f;
+    // Preserve gauge-related particles and timers so the player's gauge
+    // progress and visual effects are not lost when entering a new level.
+    // g_gaugeTrailParticles.clear();
+    // g_gaugeKillParticlesRed.clear();
+    // g_gaugeTrailSpawnTimer = 0.0f;
     if (g_mapManager.IsMapLoaded()) {
         g_mapManager.ReloadCurrentMap();
     }
@@ -326,11 +389,9 @@ void ResetGame() {
     g_player.hasSavedCharge = false;
     g_player.chargeDecayTimer = 0.0f;
 
-    // Reset gauge bar
-    g_player.gaugePoints = 0;
-    g_player.isInvincible = false;
-    g_player.isGaugeInvincible = false;
-    g_player.invincibleTimer = 0.0f;
+    // Preserve gauge points and invincibility state across level transitions.
+    // Do not reset g_player.gaugePoints, g_player.isInvincible, g_player.isGaugeInvincible,
+    // or g_player.invincibleTimer here.
 
     g_gameState = STATE_PLAYING;
 }
@@ -343,9 +404,10 @@ void CleanUpGameWorld()
     g_mouseIndicator.Cleanup();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
-    g_gaugeTrailParticles.clear();
-    g_gaugeKillParticlesRed.clear();
-    g_gaugeTrailSpawnTimer = 0.0f;
+    // NOTE: preserve gauge-related particles/state when switching maps so
+    // the player's gauge (points and active effects) is not unexpectedly
+    // reset when entering a new level. Do not clear the gauge particle
+    // lists or reset the spawn timer here.
 
     // 释放所有纹理 - 只保留右边纹理
     ReleaseTexture(g_playerTexture);
@@ -1366,6 +1428,10 @@ void DrawGame() {
             }
 
             int frame = g_slashCountAnim.GetCurrentFrame() % 3;
+            // Determine which followers to highlight when charging and previewing cost.
+            int pendingCost = std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS);
+            int highlightStart = std::max(0, count - pendingCost); // highlight the last `pendingCost` followers
+
             for (int i = 0; i < count; ++i) {
                 Follower& f = s_follow[i];
 
@@ -1404,7 +1470,15 @@ void DrawGame() {
                 }
 
                 auto p = worldToScreen(f.x, f.y);
-                SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+                // If charging and cost preview is active, highlight the followers that will be consumed.
+                if (g_player.isCharging && g_player.isChargeCostHighlight && pendingCost > 0 && i >= highlightStart) {
+                    SetColor(1.0f, 1.0f, 0.3f, 1.0f); // highlight color (yellowish)
+                }
+                else {
+                    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+                }
+
                 RenderImage(p.first, p.second, iconW, iconH,
                     g_slashCountTexture,
                     frame,
@@ -1969,29 +2043,9 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
         m_cursorTexture, 0, 1, 1, false, 0);
     // Mouse cursor is rendered by `g_gameCursor` globally.
 
-    // Fixed display of dash points in top right corner of screen
-    float dashPointsX = 0.9f; // Right side of screen
-    float dashPointsY = 0.1f; // Top of screen
-    float digitWidth = 0.08f;
-    float digitHeight = 0.12f;
+    // (Removed fixed numeric dash-points UI — followers still render above player.)
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-    // Render dash points
-    RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
-
-    // Debug/toggle display (numeric):
-    // T-mode: charge-dash executes on release
-    // G-mode: dash aftermath ignores gravity
-    float toggleX = -0.95f;
-    float toggleY = 0.85f;
-    float toggleDigitW = 0.04f;
-    float toggleDigitH = 0.06f;
-
-    // [T] mode value (0/1)
-    RenderNumber(g_releaseDashChargeMode ? 1 : 0, toggleX, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
-    // [G] mode value (0/1)
-    RenderNumber(g_noGravityAftermathMode ? 1 : 0, toggleX + toggleDigitW * 1.4f, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
+    // (Removed debug numeric toggle UI for T/G modes)
 
     
     float uiX = -1.0f;
