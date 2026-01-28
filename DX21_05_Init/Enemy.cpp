@@ -875,9 +875,8 @@ void BossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    if (!isDying) {
-        RenderHealthBar(camera);
-    }
+    // Boss uses the HUD-mounted health bar (rendered by GameplayScene).
+    // Do not render the above-head health bar for the boss to avoid duplicate UI.
 }
 
 void Enemy::RenderHealthBar(const Camera& camera) {

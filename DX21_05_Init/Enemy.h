@@ -98,7 +98,7 @@ public:
     }
 
 
-    Enemy(float x, float y, float hp = 100.0f);
+    Enemy(float x, float y, float hp = 10.0f);
     virtual ~Enemy() = default;
     
     // 设置伤害系数
