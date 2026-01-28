@@ -111,7 +111,7 @@ struct Player {
     float health = 100.0f;
     float maxHealth = 100.0f;
     // 攻击系统
-    float attackDamage = 30000.0f;  // 基础攻击力
+    float attackDamage = 10.0f;  // 基础攻击力
     bool isAttacking = false;    // 攻击状态
     float attackTimer = 0.0f;
     const float ATTACK_DURATION = 0.2f;
