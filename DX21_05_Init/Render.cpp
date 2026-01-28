@@ -446,6 +446,7 @@ void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelS
 	// Release temporary resources
 	SAFE_RELEASE(pQuadBuffer);
 }
+
 void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV,
 	int frameIndex, int rows, int columns, bool enableCulling,
 	float rotation, bool flipHorizontal)
@@ -572,58 +573,102 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	SAFE_RELEASE(pDynamicBuffer);
 }
 
-// this is used for the gauge bar when its filling from bottom to top
-void RenderImageWithCrop(float posX, float posY, float width, float height,
+// used for the gauge in the game
+void RenderGaugeFillImage(float posX, float posY, float width, float height,
 	ID3D11ShaderResourceView* textureSRV, float fillRatio)
 {
-	if (fillRatio <= 0.0f || textureSRV == nullptr) return;
-	fillRatio = min(fillRatio, 1.0f);  // or std::min if needed
+	if (textureSRV == nullptr || fillRatio <= 0.0f) return;
 
-	float displayHeight = height * fillRatio;
-	float bottomY = posY;               // fixed bottom
-	float topY = posY + displayHeight;  // grows upward
+	fillRatio = min(max(fillRatio, 0.0f), 1.0f);
 
-	float u0 = 0.0f;
-	float u1 = 1.0f;
+	// Update constant buffer to enable gauge fill
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	HRESULT hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (SUCCEEDED(hr))
+	{
+		ConstantBuffer* cb = (ConstantBuffer*)mappedResource.pData;
 
-	// ────────────────────────────────────────────────
-	// DX11 standard: v=0 = TOP of texture image, v=1 = BOTTOM
-	// For bottom-fill: anchor at v=1 (bottom), reveal upward to lower v
-	float v_bottom = 1.0f;                 // Bottom of visible quad → bottom of texture
-	float v_top = 1.0f - fillRatio;     // Top of visible quad → moves toward top of texture
+		// Set up identity matrices (your RenderImage doesn't use them, so just use identity)
+		cb->worldView = DirectX::XMMatrixIdentity();
+		cb->projection = DirectX::XMMatrixIdentity();
+		cb->color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+		cb->matrixTex = DirectX::XMMatrixIdentity();
 
-	VertexV vertices[4] = {
-		{ posX + width, topY,    0.5f, u1, v_top    },  // Top-right     → v = 1 - ratio
-		{ posX + width, bottomY, 0.5f, u1, v_bottom },  // Bottom-right  → v = 1.0
-		{ posX,         topY,    0.5f, u0, v_top    },  // Top-left
-		{ posX,         bottomY, 0.5f, u0, v_bottom }   // Bottom-left
-	};
+		// Enable gauge fill
+		cb->fillRatio = fillRatio;
+		cb->useGaugeFill = 1.0f;
+		cb->padding[0] = 0.0f;
+		cb->padding[1] = 0.0f;
 
-	D3D11_SUBRESOURCE_DATA initData = {};
-	initData.pSysMem = vertices;
-	initData.SysMemPitch = 0;
-	initData.SysMemSlicePitch = 0;
+		g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+	}
 
-	ID3D11Buffer* pDynamicBuffer = nullptr;
-	D3D11_BUFFER_DESC desc = {};
-	desc.ByteWidth = sizeof(VertexV) * 4;
-	desc.Usage = D3D11_USAGE_DYNAMIC;
-	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	// Render normally
+	RenderImage(posX, posY, width, height, textureSRV, 0, 1, 1, false, 0.0f, false);
 
-	HRESULT hr = g_pDevice->CreateBuffer(&desc, &initData, &pDynamicBuffer);
-	if (FAILED(hr)) return;
-
-	UINT stride = sizeof(VertexV);
-	UINT offset = 0;
-	g_pDeviceContext->IASetVertexBuffers(0, 1, &pDynamicBuffer, &stride, &offset);
-	g_pDeviceContext->PSSetShaderResources(0, 1, &textureSRV);
-	g_pDeviceContext->PSSetSamplers(0, 1, &pSamplerState);
-	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF);
-	g_pDeviceContext->Draw(4, 0);
-
-	SAFE_RELEASE(pDynamicBuffer);
+	// Disable gauge fill for next renders
+	hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (SUCCEEDED(hr))
+	{
+		ConstantBuffer* cb = (ConstantBuffer*)mappedResource.pData;
+		cb->useGaugeFill = 0.0f;
+		g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+	}
 }
+
+
+//// this is used for the gauge bar when its filling from bottom to top (when its a rectangle)
+//void RenderImageWithCrop(float posX, float posY, float width, float height,
+//	ID3D11ShaderResourceView* textureSRV, float fillRatio)
+//{
+//	if (fillRatio <= 0.0f || textureSRV == nullptr) return;
+//	fillRatio = min(fillRatio, 1.0f);  // or std::min if needed
+//
+//	float displayHeight = height * fillRatio;
+//	float bottomY = posY;               // fixed bottom
+//	float topY = posY + displayHeight;  // grows upward
+//
+//	float u0 = 0.0f;
+//	float u1 = 1.0f;
+//
+//	// ────────────────────────────────────────────────
+//	// DX11 standard: v=0 = TOP of texture image, v=1 = BOTTOM
+//	// For bottom-fill: anchor at v=1 (bottom), reveal upward to lower v
+//	float v_bottom = 1.0f;                 // Bottom of visible quad → bottom of texture
+//	float v_top = 1.0f - fillRatio;     // Top of visible quad → moves toward top of texture
+//
+//	VertexV vertices[4] = {
+//		{ posX + width, topY,    0.5f, u1, v_top    },  // Top-right     → v = 1 - ratio
+//		{ posX + width, bottomY, 0.5f, u1, v_bottom },  // Bottom-right  → v = 1.0
+//		{ posX,         topY,    0.5f, u0, v_top    },  // Top-left
+//		{ posX,         bottomY, 0.5f, u0, v_bottom }   // Bottom-left
+//	};
+//
+//	D3D11_SUBRESOURCE_DATA initData = {};
+//	initData.pSysMem = vertices;
+//	initData.SysMemPitch = 0;
+//	initData.SysMemSlicePitch = 0;
+//
+//	ID3D11Buffer* pDynamicBuffer = nullptr;
+//	D3D11_BUFFER_DESC desc = {};
+//	desc.ByteWidth = sizeof(VertexV) * 4;
+//	desc.Usage = D3D11_USAGE_DYNAMIC;
+//	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+//	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+//
+//	HRESULT hr = g_pDevice->CreateBuffer(&desc, &initData, &pDynamicBuffer);
+//	if (FAILED(hr)) return;
+//
+//	UINT stride = sizeof(VertexV);
+//	UINT offset = 0;
+//	g_pDeviceContext->IASetVertexBuffers(0, 1, &pDynamicBuffer, &stride, &offset);
+//	g_pDeviceContext->PSSetShaderResources(0, 1, &textureSRV);
+//	g_pDeviceContext->PSSetSamplers(0, 1, &pSamplerState);
+//	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF);
+//	g_pDeviceContext->Draw(4, 0);
+//
+//	SAFE_RELEASE(pDynamicBuffer);
+//}
 
 
 void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV, bool enableCulling) {
@@ -666,8 +711,16 @@ void SetColor(float r, float g, float b, float a)
 	ConstantBuffer* dataPtr = (ConstantBuffer*)mappedResource.pData;
 	dataPtr->color = DirectX::XMFLOAT4(r, g, b, a);
 
+
+	dataPtr->fillRatio = 0.0f;
+	dataPtr->useGaugeFill = 0.0f;
+	dataPtr->padding[0] = 0.0f;
+	dataPtr->padding[1] = 0.0f;
+
+
 	g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
 
 	// Bind to pixel shader
 	g_pDeviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+
 }

@@ -243,7 +243,7 @@ namespace Audio
 			g_bgmVoice = nullptr;
 		}
 		g_bgmData.clear();
-		g_currentBGM = "";
+		//g_currentBGM = "";
 	}
 
 	void PauseBGM()
@@ -312,6 +312,18 @@ namespace Audio
 		// Submit and play
 		sourceVoice->SubmitSourceBuffer(&buffer);
 		sourceVoice->Start(0);
+	}
+
+	// for getting the current bgm
+	std::string GetCurrentBGMPath()
+	{
+		return g_currentBGM;
+	}
+
+	// for checkiing if the bgm is playing or not
+	bool IsBGMPlaying()
+	{
+		return (g_bgmVoice != nullptr);
 	}
 }
 

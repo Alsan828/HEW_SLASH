@@ -37,6 +37,11 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
         maxLifeTime = 3.0f;
         homingStrength = 0.0f;
         break;
+    case ProjectileType::BULLET: 
+        size = 0.15f;
+        maxLifeTime = 3.0f;
+        homingStrength = 0.0f;
+        break;
     case ProjectileType::ICE_SHARD:
         size = 0.05f;
         maxLifeTime = 4.0f;
@@ -87,6 +92,9 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
     switch (type) {
     case ProjectileType::FIREBALL:
         UpdateFireball(deltaTime);
+        break;
+    case ProjectileType::BULLET:
+        UpdateBullet(deltaTime);
         break;
     case ProjectileType::ICE_SHARD:
         UpdateIceShard(deltaTime);
@@ -203,6 +211,12 @@ void Projectile::UpdateFireball(float deltaTime) {
     speed += deltaTime * 2.0f;
     // 火球的自转效果保留
     rotation += deltaTime * 10.0f;
+}
+
+void Projectile::UpdateBullet(float deltaTime) {
+    // Bullet: simple projectile with slight rotation
+    rotation += deltaTime * 10.0f;  // Slower rotation than other projectiles
+    // No scaling effect - keeps constant size
 }
 
 void Projectile::UpdateIceShard(float deltaTime) {
@@ -411,6 +425,9 @@ void Projectile::Render(const Camera& camera) {
     switch (type) {
     case ProjectileType::FIREBALL:
         SetColor(1.0f, 0.5f, 0.2f, 1.0f);
+        break;
+    case ProjectileType::BULLET: 
+        SetColor(0.9f, 0.9f, 0.9f, 1.0f);
         break;
     case ProjectileType::ICE_SHARD:
         SetColor(0.6f, 0.8f, 1.0f, 1.0f);

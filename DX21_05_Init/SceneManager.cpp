@@ -71,6 +71,10 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_gameElapsedTime = 0.0f;
             g_gameMinutes = 0;
             g_gameSeconds = 0;
+            // so I can play the bgm from the beginning if I start a new stage
+            Audio::StopBGM();
+            ClearSavedBGMPath();
+
             comingFromStageSelect = false;
         }
 

@@ -513,20 +513,33 @@ void DrawComboUI(void)
 void DrawGaugeUI(void)
 {
     // for the surrounded of the gauge bar. 
-    float gaugeX = -1.1f;
+    /*float gaugeX = -1.1f;
     float gaugeY = -0.5f;
     float frameWidth = 0.5f;
-    float frameHeight = 1.0f;
+    float frameHeight = 1.0f;*/
+    float gaugeX = -1.05f;
+    float gaugeY = -0.3f;
+    float frameWidth = 0.4f;
+    float frameHeight = 0.7f;
 
 	// for the inner part of the gauge bar
-    float barWidth = frameWidth * 0.078f;
-    float barHeight = frameHeight * 0.5f;
-    float barOffsetX = -0.005f;  // if positibe move right, if negative move left
-    float barOffsetY = 0.24f;    // if positive move up, if negative move down
+    float barWidth = frameWidth * 0.47f/** 0.078f*/;
+    float barHeight = frameHeight *0.72f/** 0.5f*/;
+    float barOffsetX = -0.004f;  // if positibe move right, if negative move left
+    float barOffsetY = 0.095f;    // if positive move up, if negative move down
 
     // Center horizontally, bottom aligned
     float barX = gaugeX + (frameWidth - barWidth) * 0.5f + barOffsetX;
     float barY = gaugeY + (frameHeight - barHeight) * 0.0f + barOffsetY;
+
+
+
+    // for the surrounding frame of the gauge bar
+    SetColor(1, 1, 1, 1);
+    if (g_gaugeBarTexture)
+        RenderImage(gaugeX, gaugeY, frameWidth, frameHeight,
+            g_gaugeBarTexture, 0, 1, 1);
+
 
 	// for the empty bar background
     SetColor(1, 1, 1, 1);
@@ -536,7 +549,6 @@ void DrawGaugeUI(void)
     }
 
 	// draw the gauge full effect animation when the gauge is full
-    //if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS)
     if (g_player.g_gaugeEffectActive)
     {
         if (g_gaugeEffectAnim.GetClipCount() > 0)
@@ -573,42 +585,30 @@ void DrawGaugeUI(void)
             (float)g_player.MAX_GAUGE_POINTS;
     }   
 
-	// it draws the filled part of the gauge bar
-    //if (fillRatio > 0.0f && g_gaugeBarFilledTexture)
-    //{
-    //    if (fillRatio > 1.0f)
-    //        fillRatio = 1.0f;
-
-    //    // Pulsing when full
-    //    if (g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS)
-    //    {
-    //        float beat = 0.8f + 0.2f * sin(g_gameElapsedTime * 5.0f);
-    //        SetColor(beat, beat, beat, 1.0f);
-    //    }
-    //    else
-    //    {
-    //        SetColor(1, 1, 1, 1);
-    //    }
-
-    //    RenderImageWithCrop( barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio);
-    //}
-
 	// draw the filled part of the gauge bar
     if (fillRatio > 0.0f && g_gaugeBarFilledTexture) 
     {
         if (fillRatio > 1.0f) {
             fillRatio = 1.0f;
         }
-       
+        
         SetColor(1, 1, 1, 1); 
-        RenderImageWithCrop(barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio); 
+
+        char debugMsg[256];
+        sprintf_s(debugMsg, "GaugePoints: %d, MaxPoints: %d, FillRatio: %.2f\n",
+            g_player.gaugePoints, g_player.MAX_GAUGE_POINTS, fillRatio);
+        OutputDebugStringA(debugMsg);
+
+
+        //RenderImageWithCrop(barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio); 
+        RenderGaugeFillImage(barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio);
     }
 
-	// for the surrounding frame of the gauge bar
-    SetColor(1, 1, 1, 1);
-    if (g_gaugeBarTexture)
-        RenderImage(gaugeX, gaugeY, frameWidth, frameHeight,
-            g_gaugeBarTexture, 0, 1, 1);
+	//// for the surrounding frame of the gauge bar
+ //   SetColor(1, 1, 1, 1);
+ //   if (g_gaugeBarTexture)
+ //       RenderImage(gaugeX, gaugeY, frameWidth, frameHeight,
+ //           g_gaugeBarTexture, 0, 1, 1);
 
     SetColor(1, 1, 1, 1);
 }
@@ -1536,26 +1536,12 @@ void DrawGame() {
             SetTileColor(tile.tileInfo.code);
             //RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
            
-            // for one way platforms. they will be a bit smaller to match collision with character. might change later
-            if (tile.tileInfo.code == "OP") {
-                // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
-                float renderScale = 0.67f;  // Adjust this to match your collision size
-                float renderWidth = tile.width; // no change
-                float renderHeight = tile.height * renderScale;
-
-                // center the sprite on the tile position
-                float offsetX = (tile.width - renderWidth) * 0.5f;
-                float offsetY = (tile.height - renderHeight) * 0.5f;
-
-                RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
-                    renderWidth, renderHeight, texture, 0, 1, 1);
-            }
             // for the goal
-			else if (tile.tileInfo.code == "DF" || tile.tileInfo.code == "DI" || tile.tileInfo.code == "D4" || tile.tileInfo.code == "D5" || 
-                     tile.tileInfo.code == "D6" || tile.tileInfo.code == "D7" || tile.tileInfo.code == "DB" || tile.tileInfo.code == "21" || tile.tileInfo.code == "22" || 
-                     tile.tileInfo.code == "23" || tile.tileInfo.code == "24" || tile.tileInfo.code == "25" || tile.tileInfo.code == "26" || tile.tileInfo.code == "27" ||
-                     tile.tileInfo.code == "31" || tile.tileInfo.code == "32" || tile.tileInfo.code == "33" || tile.tileInfo.code == "34" || tile.tileInfo.code == "35" ||
-                     tile.tileInfo.code == "36" || tile.tileInfo.code == "37") {
+			if (tile.tileInfo.code == "DF" || tile.tileInfo.code == "DI" || tile.tileInfo.code == "D4" || tile.tileInfo.code == "D5" || 
+                tile.tileInfo.code == "D6" || tile.tileInfo.code == "D7" || tile.tileInfo.code == "DB" || tile.tileInfo.code == "21" || tile.tileInfo.code == "22" || 
+                tile.tileInfo.code == "23" || tile.tileInfo.code == "24" || tile.tileInfo.code == "25" || tile.tileInfo.code == "26" || tile.tileInfo.code == "27" ||
+                tile.tileInfo.code == "31" || tile.tileInfo.code == "32" || tile.tileInfo.code == "33" || tile.tileInfo.code == "34" || tile.tileInfo.code == "35" ||
+                tile.tileInfo.code == "36" || tile.tileInfo.code == "37") {
                 // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
                 float renderScale = 2.0f;  // Adjust this to match your collision size
                 float renderWidth = tile.width; // no change
@@ -1568,6 +1554,22 @@ void DrawGame() {
                 RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
                     renderWidth, renderHeight, texture, 0, 1, 1);
             }
+
+            //// for one way platforms. they will be a bit smaller to match collision with character. might change later
+            //else if (tile.tileInfo.code == "OP") {
+            //    // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
+            //    float renderScale = 0.67f;  // Adjust this to match your collision size
+            //    float renderWidth = tile.width; // no change
+            //    float renderHeight = tile.height * renderScale;
+
+            //    // center the sprite on the tile position
+            //    float offsetX = (tile.width - renderWidth) * 0.5f;
+            //    float offsetY = (tile.height - renderHeight) * 0.5f;
+
+            //    RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
+            //        renderWidth, renderHeight, texture, 0, 1, 1);
+            //}
+            
             // for the animation of the signs
             else if (tile.tileInfo.code == "B1" || tile.tileInfo.code == "B2" || tile.tileInfo.code == "B3" || tile.tileInfo.code == "B4" || tile.tileInfo.code == "B5" ||
                      tile.tileInfo.code == "B6" || tile.tileInfo.code == "B7" || tile.tileInfo.code == "B8" || tile.tileInfo.code == "B9") {
@@ -1814,6 +1816,7 @@ void HandleInput() {
 
         if (currentScene == GAMEPLAY || currentScene == CAKE) // the areas and the cake scene
         {
+            sceneManager.SaveBGMPath(Audio::GetCurrentBGMPath());
             sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
             Audio::PauseBGM();
         }
@@ -1825,7 +1828,17 @@ void HandleInput() {
             if (previousScene == GAMEPLAY || previousScene == CAKE) // the areas and the cake scene
             {
                 sceneManager.SwitchScene(previousScene);
-                Audio::ResumeBGM();
+                //Audio::ResumeBGM();
+                std::string savedPath = sceneManager.GetSavedBGMPath();
+                if (!Audio::IsBGMPlaying() && !savedPath.empty())
+                {
+                    Audio::PlayBGM(savedPath, true);
+                }
+                else
+                {
+                    Audio::ResumeBGM();
+                }
+                sceneManager.ClearSavedBGMPath();
             }
         }
     }
