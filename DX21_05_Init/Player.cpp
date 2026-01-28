@@ -106,7 +106,10 @@ static void PerformDashHitTest(float testX, float testY) {
                 }
             }*/
  
-            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
+            // Scale base damage by 1.5x per extra consumed dash point
+            float damageScale = powf(1.5f, static_cast<float>(std::max(1, g_player.lastDashConsumedPoints) - 1));
+            int scaledBase = static_cast<int>(g_player.attackDamage * damageScale);
+            int actualDamage = enemy->CalculateDamageFromPlayer(scaledBase, dashAngle);
             enemy->TakeDamage(actualDamage, dashAngle);
 
             g_player.hitEnemies.push_back(enemy);
@@ -184,7 +187,10 @@ static void PerformDashEndCircleHitTest() {
                 }
             }*/
 
-            int actualDamage = enemy->CalculateDamageFromPlayer((int)g_player.attackDamage, dashAngle);
+            // Scale base damage by 1.5x per extra consumed dash point
+            float damageScale = powf(1.5f, static_cast<float>(std::max(1, g_player.lastDashConsumedPoints) - 1));
+            int scaledBase = static_cast<int>(g_player.attackDamage * damageScale);
+            int actualDamage = enemy->CalculateDamageFromPlayer(scaledBase, dashAngle);
             enemy->TakeDamage(actualDamage, dashAngle);
             g_player.hitEnemies.push_back(enemy);
         }
@@ -985,6 +991,9 @@ void DashToMouse() {
         return;
     }
 
+    // record that we consumed 1 point for this dash (used for damage scaling)
+    g_player.lastDashConsumedPoints = 1;
+
 	Audio::PlaySE(SoundEffect::DASH);
 
     g_mouseIndicator.showArrow(false);
@@ -1022,8 +1031,9 @@ void DashToMouse() {
     }
 
     // Set dash speed
-    g_player.velocityX = dirX * DASH_SPEED;
-    g_player.velocityY = dirY * DASH_SPEED;
+    // Increase minimum dash distance by 1.3x for basic (non-charge) dash
+    g_player.velocityX = dirX * DASH_SPEED * 1.3f;
+    g_player.velocityY = dirY * DASH_SPEED * 1.3f;
 
     // Store mouse target position
     g_player.mouseTargetX = mouseX;
@@ -1110,6 +1120,9 @@ void ExecuteMouseChargeDash() {
         }
         g_player.dashPoints -= costToConsume;
     }
+
+    // record consumed points for this dash (at least 1)
+    g_player.lastDashConsumedPoints = std::max(1, costToConsume);
 
     // 获取当前鼠标位置
     float currentMouseX, currentMouseY;
@@ -1230,9 +1243,16 @@ void ExecuteMouseChargeDash() {
         g_player.facingRight = (dirX >= 0.0f);
     }
 
-    // 应用冲刺速度
-    g_player.velocityX = dirX * DASH_SPEED * speedMultiplier;
-    g_player.velocityY = dirY * DASH_SPEED * speedMultiplier;
+    // 应用冲刺速度：保持最长距离不变, 但把最短距离延长为1.3倍
+    // We scale the base speed by speedMultiplier for charge levels.
+    // For minimal (non-charge) dash we additionally multiply by 1.3 to lengthen shortest dash.
+    float baseSpeed = DASH_SPEED * speedMultiplier;
+    // If this dash consumed only 1 point (short dash), increase to 1.3x
+    if (g_player.lastDashConsumedPoints <= 1) {
+        baseSpeed *= 1.3f;
+    }
+    g_player.velocityX = dirX * baseSpeed;
+    g_player.velocityY = dirY * baseSpeed;
 
     // 存储新的鼠标目标位置
     g_player.mouseTargetX = currentMouseX;
@@ -1301,7 +1321,10 @@ void UpdateDashPoints(float deltaTime) {
         return;
     }
 
-    if (!g_player.isOnGround || g_player.dashPoints >= g_player.MAX_DASH_POINTS) {
+    // Allow recovery when on ground OR while wall-sliding.
+    // Previously recovery required being on ground; this change permits
+    // wall-slide to also count as a valid recovery state.
+    if (!(g_player.isOnGround || g_player.isWallSliding) || g_player.dashPoints >= g_player.MAX_DASH_POINTS) {
         g_player.dashPointRecoverTimer = 0.0f;
         return;
     }
@@ -1401,9 +1424,10 @@ void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY
     g_player.comboTimer = 5.0f;
 
     // Gauge kill burst particle effect
+    // When the player is in gauge-based invincibility, spawn the red burst at the
+    // defeated enemy's world position instead of the player's position so the
+    // effect originates from the enemy.
     if (g_player.isInvincible && g_player.isGaugeInvincible) {
-        // Use a stable kill anchor around the player body.
-        // Enemy position isn't passed here; approximate at player center for now.
-        SpawnGaugeKillParticlesRed(g_player.posX + PLAYER_WIDTH * 0.5f, g_player.posY + PLAYER_HEIGHT * 0.6f);
+        SpawnGaugeKillParticlesRed(enemyWorldX, enemyWorldY);
     }
 }
