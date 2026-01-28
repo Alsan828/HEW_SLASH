@@ -1538,7 +1538,7 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 1000000.0f)
     anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, true, g_bossSlashPrepTexture);
 	// 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
 	// Slow down to 0.5x speed (double frame time)
-	anim.AddClip("slash_active", 0, 7, 8, 1, 0.06f, false, g_bossSlashActiveTexture);
+    anim.AddClip("slash_active", 0, 7, 8, 1, slashFrameTime, false, g_bossSlashActiveTexture);
 
     // death: 5帧示例
     anim.AddClip("death",  0, 14, 15, 1, 0.06f, false, g_bossDeathTexture);
@@ -1736,6 +1736,7 @@ void BossEnemy::EnterState(BossState s) {
         break;
     case BOSS_SLASH_ACTIVE:
         anim.SetClip("slash_active");
+        hasSpawnedSlashProjectiles = false;
         break;
     case BOSS_DOWN_BEFORE:
         anim.SetClip("idle");
@@ -1810,6 +1811,28 @@ void BossEnemy::UpdateSlashActive(float dt) {
         if (CheckCollision(hx, hy, hw, hh, g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT) && !g_player.isInvincible) {
             g_player.health = 0.0f;
             OnPlayerDeath();
+        }
+        // Spawn projectile barrage once
+        if (!hasSpawnedSlashProjectiles) {
+            hasSpawnedSlashProjectiles = true;
+            ProjectileManager& pm = ProjectileManager::GetInstance();
+            float originX = posX + width * 0.5f;
+            float originY = posY + height * 0.5f;
+            // Fan-shaped barrage aimed toward the player
+            const int bulletCount = 9;
+            const float totalSpread = 0.9f; // radians, wider fan
+            float playerX = g_player.posX + PLAYER_WIDTH * 0.5f;
+            float playerY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+            float baseAngle = atan2f(playerY - originY, playerX - originX);
+            for (int i = 0; i < bulletCount; ++i) {
+                float t = (bulletCount == 1) ? 0.0f : (float)i / (bulletCount - 1);
+                float ang = baseAngle + (t - 0.5f) * totalSpread;
+                float dx = cosf(ang);
+                float dy = sinf(ang);
+                float targetX = originX + dx * 4.0f;
+                float targetY = originY + dy * 4.0f;
+                pm.CreateBullet(originX, originY, targetX, targetY, false);
+            }
         }
     }
     // End slash when the clip finishes.

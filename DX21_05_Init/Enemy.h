@@ -399,6 +399,11 @@ public:
     virtual void TakeDamage(int damage, float attackAngle) override;
     virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
 
+    // 调整技能速度的接口
+    void SetDashSpeedMultiplier(float mul) { dashSpeedMultiplier = mul; }
+    void SetSlashSpeed(float frameTimeSeconds) { slashFrameTime = frameTimeSeconds; }
+    void SetChargeDuration(float seconds) { chargeDuration = seconds; }
+
 protected:
     virtual void ChaseBehavior(float deltaTime) override;
     virtual void OnHit(int damage) override;
@@ -434,11 +439,13 @@ private:
     int hitsTaken = 0;               // total hits received
     bool inDownImmortal = false;     // cannot die during down
     int weakCycleIndex = 0;          // weakline direction cycle
+    bool hasSpawnedSlashProjectiles = false; // slash barrage spawn guard
 
     // Tunable timings
-    float chargeDuration = 2.0f;     // faster charge
+    float chargeDuration = 0.5f;     // even faster charge (2x faster than previous)
     float dashAfterDuration = 0.5f;  // faster recovery after dash
     float slashActiveFrames = 2.0f;  // 3 frames window
+    float slashFrameTime = 0.06f;    // 斩击动画的每帧时间，影响斩击释放速度
     float downDuration = 6.0f;       // shorter down time
 
     // Dash tuning

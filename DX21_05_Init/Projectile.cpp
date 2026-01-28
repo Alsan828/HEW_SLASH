@@ -39,7 +39,7 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
         break;
     case ProjectileType::BULLET: 
         size = 0.15f;
-        maxLifeTime = 3.0f;
+        maxLifeTime = 6.0f;
         homingStrength = 0.0f;
         break;
     case ProjectileType::ICE_SHARD:
