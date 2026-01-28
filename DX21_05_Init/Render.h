@@ -39,6 +39,11 @@ struct ConstantBuffer
 	// added november 12th
 	DirectX::XMFLOAT4 color; // for the color
 	DirectX::XMMATRIX matrixTex;   	// for the UV //send it to the const buffer
+
+	float fillRatio; // for gauge fill
+	float useGaugeFill; // for gauge fill mode
+	float padding[2]; // for the GPU alligment
+
 };
 
 // Use extern to declare global variables (without initialization)
@@ -78,8 +83,11 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	int frameIndex = 0, int rows = 1, int columns = 1, bool enableCulling = false,
 	float rotation = 0.0f, bool flipHorizontal = false); // added the rotation
 
-void RenderImageWithCrop(float posX, float posY, float width, float height,
-	ID3D11ShaderResourceView* textureSRV, float fillRatio);
+//void RenderImageWithCrop(float posX, float posY, float width, float height,
+//	ID3D11ShaderResourceView* textureSRV, float fillRatio); //this is used for the gauge bar when its a rectangle
+
+void RenderGaugeFillImage(float posX, float posY, float width, float height,
+	ID3D11ShaderResourceView* textureSRV, float fillRatio); //this is used for the gauge bar when it has the shape of a diamond
 
 void SetColor(float r, float g, float b, float a); // added november 12th
 

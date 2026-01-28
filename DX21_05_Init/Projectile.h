@@ -81,6 +81,7 @@ private:
     float GetRotationAngle()const;
     // 类型特定行为
     void UpdateFireball(float deltaTime);
+    void UpdateBullet(float deltaTime);
     void UpdateIceShard(float deltaTime);
     void UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemies);
     void UpdateLightning(float deltaTime);

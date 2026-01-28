@@ -36,6 +36,8 @@ private:
 
     SCENE stageSelectOrigin = TITLE;
 
+    std::string savedBGMPath = "";
+
 public:
     bool Init(SCENE startScene);
     void Update(float deltaTime);
@@ -58,4 +60,8 @@ public:
 
     StageInfo GetCurrentStageInfo() const { return currentStageInfo; } //new test
     SCENE GetStageSelectForCurrentStage();
+
+    void SaveBGMPath(const std::string& path) { savedBGMPath = path; }
+    std::string GetSavedBGMPath() const { return savedBGMPath; }
+    void ClearSavedBGMPath() { savedBGMPath = ""; }
 };

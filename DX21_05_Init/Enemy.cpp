@@ -1120,7 +1120,7 @@ void MageEnemy::CastProjectile() {
         float targetY = g_player.posY;
 
         // 发射魔法射弹
-        projectileManager.CreateFireball(
+        projectileManager.CreateFireball/*Bullet*/(
             posX + width * 0.5f,  // 从中心发射
             posY + height * 0.4f,  // 从敌人高度40%处发射（原来是0.7f，降低了30%）
             targetX,
