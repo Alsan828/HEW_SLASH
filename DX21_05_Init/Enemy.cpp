@@ -192,7 +192,7 @@ void InitEnemies() {
 
 // ========== BlindEyeEnemy ==========
 BlindEyeEnemy::BlindEyeEnemy(float x, float y)
-    : Enemy(x, y, 100.0f) {
+    : Enemy(x, y, 10.0f) {
     // 盲眼敌人不追人，巡逻逻辑自己处理转向，不需要朝向冷却
     useTurnCooldown = false;  
 detectionRange = 0.0f;
@@ -205,9 +205,15 @@ detectionRange = 0.0f;
     anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_enemyDeathTexture);
     anim.SetClip("idle");
 
+    // initial weakpoint: front takes double damage
+    SetDamageMultiplier(DIR_FRONT, 2.0f);
+
     // 轻微慢一点，符合“普通”巡逻敌人
     moveSpeed = MOVE_SPEED * 0.55f;
     patrolDirection = 1.0f;
+
+    // Make a clear weakpoint (one-hit kill) for testing: hit from above
+    SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
 void BlindEyeEnemy::Update(float deltaTime, MapManager* mapManager) {
@@ -278,7 +284,7 @@ void BlindEyeEnemy::PatrolBehavior(float deltaTime) {
 
 // ========== ThrowerEnemy ==========
 ThrowerEnemy::ThrowerEnemy(float x, float y)
-    : Enemy(x, y, 120.0f) {
+    : Enemy(x, y, 40.0f) {
     // Reuse mage/"projectile" enemy texture as requested.
     anim.ClearClips();
     anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_mageEnemyIdleTexture);
@@ -293,6 +299,9 @@ ThrowerEnemy::ThrowerEnemy(float x, float y)
     throwRange = 7.0f;
     // Larger flight time => slower projectile speed while keeping the same ballistic arc formula
     throwFlyTime = 0.9f;
+
+    // One-hit weakpoint (top attack)
+    SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
 bool ThrowerEnemy::CanThrow() const {
@@ -314,7 +323,7 @@ void ThrowerEnemy::TryThrow(MapManager* mapManager) {
     if (dist > throwRange) return;
 
     // Spawn a base enemy at thrower's position and launch it.
-    Enemy* thrown = new Enemy(posX, posY, 100.0f);
+    Enemy* thrown = new Enemy(posX, posY, 10.0f);
     g_enemies.push_back(thrown);
 
     float T = std::max(0.25f, throwFlyTime);
@@ -419,6 +428,8 @@ Enemy::Enemy(float x, float y, float hp)
 
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
     if (dir >= DIR_FRONT && dir <= DIR_FRONT_DOWN) {
+        // Enforce a minimum damage multiplier of 1.0f so enemies never take reduced damage
+        if (multiplier < 1.0f) multiplier = 1.0f;
         damageMultipliers[static_cast<int>(dir)] = multiplier;
     }
 }
@@ -800,6 +811,8 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
+    // NOTE: health bar is rendered after the enemy so it appears on top
+
     // 获取UV偏移用于精灵表动画
     DirectX::XMFLOAT2 uvOffset = anim.GetUVOffset();
 
@@ -827,7 +840,7 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // 如果不是死亡状态，渲染血条
+    // 如果不是死亡状态，渲染血条（包括血量小于等于10的敌人）
     if (!isDying) {
         RenderHealthBar(camera);
     }
@@ -862,27 +875,85 @@ void BossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    if (!isDying) {
-        RenderHealthBar(camera);
-    }
+    // Boss uses the HUD-mounted health bar (rendered by GameplayScene).
+    // Do not render the above-head health bar for the boss to avoid duplicate UI.
 }
 
 void Enemy::RenderHealthBar(const Camera& camera) {
-    // 将世界坐标转换为屏幕坐标
-    float screenX, screenY;
-    WorldToScreenPosition(posX, posY, screenX, screenY, camera);
+    // Follower-style health icons (using asset/UI/Health.png 1x3 spritesheet)
+    // Compute how many icons to show: one per 10 HP (ceil)
+    int icons = std::max(0, (int)std::ceil(maxHealth / 10.0f));
+    if (icons <= 0) return;
 
-    float barWidth = width;
-    float barHeight = 0.02f;
-    float barX = screenX;
-    float barY = screenY + height + 0.02f;
+    // Ensure healthFollowers vector has the right size
+    if ((int)healthFollowers.size() != icons) {
+        healthFollowers.clear();
+        healthFollowers.resize(icons);
+    }
 
-    // 背景条（红色）
-    RenderImage(barX, barY, barWidth, barHeight, g_groundTexture, 0, 1, 1);
+    // World-to-screen base anchor: above enemy
+    float baseWorldX = posX + width * 0.5f;
+    float baseWorldY = posY + height + 0.02f;
 
-    // 血条（绿色）
-    float healthRatio = health / maxHealth;
-    RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_groundTexture, 1, 1, 1);
+    // Per-icon layout
+    // Keep icon size constant; only reduce spacing to fit within enemy width
+    const float iconW = width * 0.28f; // base icon size relative to enemy width
+    const float iconH = iconW;
+    // Reduce default spacing significantly so indicators are closer together
+    float spacing = iconW * 0.12f; // much smaller spacing
+    const float minSpacing = width * 0.01f; // absolute minimum spacing
+
+    // Ensure the total indicator area does not exceed the enemy width
+    // leave a small margin so edges do not go beyond the enemy size
+    const float margin = width * 0.05f;
+    const float maxBarWidth = std::max(0.0f, width - margin * 2.0f);
+    float totalWidth = icons * iconW + (icons - 1) * spacing;
+    if (totalWidth > maxBarWidth) {
+        if (icons > 1) {
+            float availableForSpacing = maxBarWidth - icons * iconW;
+            spacing = std::max(minSpacing, availableForSpacing / (icons - 1));
+            if (spacing < 0.0f) spacing = 0.0f;
+        } else {
+            spacing = 0.0f;
+        }
+        totalWidth = icons * iconW + (icons - 1) * spacing;
+    }
+
+    // Use real delta time for smoothing
+    const float dt = std::max(0.0f, g_gameTimer.GetDeltaTime());
+
+    for (int i = 0; i < icons; ++i) {
+        auto& hf = healthFollowers[i];
+
+        // target position stacked horizontally centered above the enemy
+        float totalWidth = icons * iconW + (icons - 1) * spacing;
+        float startX = baseWorldX - totalWidth * 0.5f;
+        float targetX = startX + i * (iconW + spacing);
+        float targetY = baseWorldY;
+
+        // Directly snap follower to target position so health icons are fixed above the head
+        hf.x = targetX;
+        hf.y = targetY;
+        hf.init = true;
+
+        // Convert to screen coords
+        float sx, sy;
+        WorldToScreenPosition(hf.x, hf.y, sx, sy, camera);
+
+        // Determine visibility: each icon represents 10 HP (strict). Show icon i when health > i*10
+        float threshold = i * 10.0f;
+        bool visible = (health > threshold + 0.0001f);
+
+        float alpha = visible ? 1.0f : 0.35f;
+        SetColor(1.0f, 1.0f, 1.0f, alpha);
+
+        int totalFrames = g_healthAnim.GetSplitX() * g_healthAnim.GetSplitY();
+        int frame = 0;
+        if (totalFrames > 0) frame = g_healthAnim.GetCurrentFrame() % totalFrames;
+        RenderImage(sx, sy, iconW, iconH, g_healthTexture, frame, g_healthAnim.GetSplitX(), g_healthAnim.GetSplitY(), false);
+    }
+
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 bool Enemy::CheckPlayerCollision() {
@@ -959,12 +1030,21 @@ bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
 }
 
 bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
+    // For hazard spikes, use a smaller collision box (one third), centered
+    if (tile.tileInfo.type == std::string("hazard")) {
+        float shrinkFactor = 1.0f / 3.0f;
+        float hw = tile.width * shrinkFactor;
+        float hh = tile.height * shrinkFactor;
+        float hx = tile.posX + (tile.width - hw) * 0.5f;
+        float hy = tile.posY + (tile.height - hh) * 0.5f;
+        return CheckCollision(posX, posY, width, height, hx, hy, hw, hh);
+    }
     return CheckCollision(posX, posY, width, height,
         tile.posX, tile.posY, tile.width, tile.height);
 }
 
 // FlyEnemy实现 - 飞行敌人，不受重力影响
-FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
+FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     // 飞行敌人：空中单位
 	targetAltitude = y;
@@ -995,6 +1075,9 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 150.0f) {
     altitudeChangeRate = 0.05f;  // 高度变化速度
 
     scale = 3.0f;
+
+    // ensure there is a clear weak direction (back) for one-shot testing
+    SetDamageMultiplier(DIR_BACK, 100.0f);
 }
 
 
@@ -1068,11 +1151,11 @@ void FlyEnemy::OnDeath() {
 }
 
 // MageEnemy实现
-MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
+MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 20.0f) {
     useTurnCooldown = false;
-    // 法师敌人：从顶部和底部易受伤害
-    SetDamageMultiplier(DIR_UP, 2.0f);
-    SetDamageMultiplier(DIR_DOWN, 2.0f);
+    // 法师敌人：顶部和底部为弱点（一击必杀）
+    SetDamageMultiplier(DIR_UP, 100.0f);
+    SetDamageMultiplier(DIR_DOWN, 100.0f);
     SetDamageMultiplier(DIR_FRONT, 0.7f);
     SetDamageMultiplier(DIR_BACK, 0.7f);
 
@@ -1095,6 +1178,9 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 80.0f) {
     projectileDamage = 20.0f;
 
     scale = 3.0f;
+
+    // expose a weakpoint direction for one-shot testing
+    SetDamageMultiplier(DIR_BACK, 100.0f);
 }
 
 void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
@@ -1146,15 +1232,15 @@ void MageEnemy::CastProjectile() {
     //如果死亡
     if (!isAlive) return;
 
-    float dx = g_player.posX - posX;
-    float dy = g_player.posY - posY;
+    // Aim at player's center, and fire from enemy center (body)
+    float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+
+    float dx = playerCenterX - (posX + width * 0.5f);
+    float dy = playerCenterY - (posY + height * 0.5f);
     float distance = sqrt(dx * dx + dy * dy);
 
     if (distance > 0.1f) {
-        // 归一化方向向量
-        dx /= distance;
-        dy /= distance;
-
         // 获取ProjectileManager实例
         ProjectileManager& projectileManager = ProjectileManager::GetInstance();
 
@@ -1164,14 +1250,14 @@ void MageEnemy::CastProjectile() {
         magicEffect.areaRadius = 0.2f;
         magicEffect.pierce = false;
 
-        // 计算射弹目标位置
-        float targetX = g_player.posX;
-        float targetY = g_player.posY;
+        // 计算射弹目标位置为玩家中心
+        float targetX = playerCenterX;
+        float targetY = playerCenterY;
 
-        // 发射魔法射弹
+        // 发射魔法射弹：从敌人身体中心发射
         projectileManager.CreateBullet(
-            posX + width * 0.5f,  // 从中心发射
-            posY + height * 0.4f,  // 从敌人高度40%处发射（原来是0.7f，降低了30%）
+            posX + width * 0.5f,  // 从身体中心发射
+            posY + height * 0.5f,  // 从敌人中心Y
             targetX,
             targetY,
             false
@@ -1183,7 +1269,7 @@ void MageEnemy::CastProjectile() {
 }
 
 // FastEnemy实现
-FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
+FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     moveSpeed = MOVE_SPEED * 1.5f;
     dashCooldown = 2.0f;
@@ -1197,6 +1283,9 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 60.0f) {
     anim.SetClip("run");
 
     scale = 3.0f;
+
+    // one-hit weakpoint from above for testing
+    SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
 // 添加这个函数实现
@@ -1312,11 +1401,11 @@ void FastEnemy::DashAttack() {
 }
 
 // BombEnemy实现
-BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 60000.0f) {
+BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 30.0f) {
     useTurnCooldown = false;
-    // 炸弹敌人：顶部和底部10倍伤害，其他方向减少伤害
-    SetDamageMultiplier(DIR_UP, 10.0f);
-    SetDamageMultiplier(DIR_DOWN, 10.0f);
+    // 炸弹敌人：顶部和底部为弱点（一击必杀），其他方向减少伤害
+    SetDamageMultiplier(DIR_UP, 100.0f);
+    SetDamageMultiplier(DIR_DOWN, 100.0f);
     SetDamageMultiplier(DIR_FRONT, 0.7f);
     SetDamageMultiplier(DIR_BACK, 0.7f);
     SetDamageMultiplier(DIR_FRONT_UP, 1.2f);
@@ -1501,11 +1590,11 @@ void BombEnemy::CreateProjectiles() {
 }
 
 
-BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 1000000.0f)
+BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 300.0f)
 {
     useTurnCooldown = false;
-    SetMaxHealth(1000000.0f); 
-    SetHealth(1000000.0f);
+    SetMaxHealth(300.0f); 
+    SetHealth(300.0f);
 
     // Boss: collision box and sprite are both 3x
     // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
@@ -1538,7 +1627,7 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 1000000.0f)
     anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, true, g_bossSlashPrepTexture);
 	// 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
 	// Slow down to 0.5x speed (double frame time)
-	anim.AddClip("slash_active", 0, 7, 8, 1, 0.06f, false, g_bossSlashActiveTexture);
+    anim.AddClip("slash_active", 0, 7, 8, 1, slashFrameTime, false, g_bossSlashActiveTexture);
 
     // death: 5帧示例
     anim.AddClip("death",  0, 14, 15, 1, 0.06f, false, g_bossDeathTexture);
@@ -1569,9 +1658,11 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
         moveSpeed *= 1.5f;
     }
 
-    // Update facing towards player (no cooldown)
-    float dxFace = g_player.posX - posX;
-    if (dxFace != 0) facingRight = (dxFace > 0);
+    // Update facing towards player unless locked during release
+    if (!facingLocked) {
+        float dxFace = g_player.posX - posX;
+        if (dxFace != 0) facingRight = (dxFace > 0);
+    }
 
     // State machine
     stateTimer += deltaTime;
@@ -1714,6 +1805,7 @@ void BossEnemy::EnterState(BossState s) {
     case BOSS_IDLE:
         anim.SetClip("idle");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_DASH_CHARGE:
         // Start charge animation using stage1
@@ -1721,46 +1813,62 @@ void BossEnemy::EnterState(BossState s) {
             anim.SetClip("charge_stage1");
         }
         velocityX = 0.0f;
+        // Lock facing at start of charge
+        fixedFacingRight = facingRight;
+        facingLocked = true;
         break;
     case BOSS_DASH_MOVING:
         anim.SetClip("dash");
+        // Maintain locked facing during dash movement
+        facingRight = fixedFacingRight;
+        facingLocked = true;
         break;
     case BOSS_DASH_AFTER:
         // Play dash_over first, then return to idle when finished
         anim.SetClip("dash_over");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_SLASH_CHARGE:
         anim.SetClip("slash_prep");
         velocityX = 0.0f;
+        // Lock facing at start of slash
+        fixedFacingRight = facingRight;
+        facingLocked = true;
         break;
     case BOSS_SLASH_ACTIVE:
         anim.SetClip("slash_active");
+        hasSpawnedSlashProjectiles = false;
+        // Maintain locked facing
+        facingRight = fixedFacingRight;
         break;
     case BOSS_DOWN_BEFORE:
         anim.SetClip("idle");
         velocityX = 0.0f;
+        facingLocked = false;
         break;
     case BOSS_DOWN:
         anim.SetClip("idle");
         velocityX = 0.0f;
         inDownImmortal = true;
+        facingLocked = true; // keep facing fixed during down
         break;
     case BOSS_DOWN_AFTER:
         anim.SetClip("idle");
         velocityX = 0.0f;
         inDownImmortal = false;
+        facingLocked = false;
         break;
     }
 }
 
 void BossEnemy::UpdateDashCharge(float dt) {
     // While charging, advance animation from stage1 to stage2 midway
-    float half = chargeDuration * 0.5f;
+    float half = chargeDuration * 0.6f;
     if (stateTimer >= half && anim.GetCurrentClipName() == std::string("charge_stage1")) {
         anim.SetClip("charge_stage2");
     }
-    if (stateTimer >= chargeDuration * 0.7) {
+    if (stateTimer >= chargeDuration * 0.9f) {
         EnterState(BOSS_DASH_MOVING);
         // Move quickly towards player
         float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
@@ -1811,6 +1919,28 @@ void BossEnemy::UpdateSlashActive(float dt) {
             g_player.health = 0.0f;
             OnPlayerDeath();
         }
+        // Spawn projectile barrage once
+        if (!hasSpawnedSlashProjectiles) {
+            hasSpawnedSlashProjectiles = true;
+            ProjectileManager& pm = ProjectileManager::GetInstance();
+            float originX = posX + width * 0.5f;
+            float originY = posY + height * 0.5f;
+            // Fan-shaped barrage fired along boss facing direction
+            const int bulletCount = 9;
+            const float totalSpread = 0.9f; // radians, wider fan
+            // Use fixed/locked facing if available, else current facing
+            bool faceRight = facingLocked ? fixedFacingRight : facingRight;
+            float baseAngle = faceRight ? 0.0f : 3.14159f;
+            for (int i = 0; i < bulletCount; ++i) {
+                float t = (bulletCount == 1) ? 0.0f : (float)i / (bulletCount - 1);
+                float ang = baseAngle + (t - 0.5f) * totalSpread;
+                float dx = cosf(ang);
+                float dy = sinf(ang);
+                float targetX = originX + dx * 4.0f;
+                float targetY = originY + dy * 4.0f;
+                pm.CreateBullet(originX, originY, targetX, targetY, false);
+            }
+        }
     }
     // End slash when the clip finishes.
     if (anim.IsFinished()) {
@@ -1855,7 +1985,7 @@ void BossEnemy::RecomputeWeakMultipliers() {
 }
 
 // SquareEnemy implementation - stationary enemy
-SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 30000.0f) {
+SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     // Square enemy: takes normal damage from all directions
     SetDamageMultiplier(DIR_FRONT, 1.0f);
@@ -1961,12 +2091,12 @@ void SquareEnemy::OnDeath() {
 }
 
 
-BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 90000.0f) {
-    // Weak points: Vertical and Horizontal lines (like a cross)
-    SetDamageMultiplier(DIR_UP, 8.0f);
-    SetDamageMultiplier(DIR_DOWN, 8.0f);
-    SetDamageMultiplier(DIR_FRONT, 8.0f);
-    SetDamageMultiplier(DIR_BACK, 8.0f);
+BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 30.0f) {
+    // Weak points: Vertical and Horizontal lines (one-hit weakpoints)
+    SetDamageMultiplier(DIR_UP, 100.0f);
+    SetDamageMultiplier(DIR_DOWN, 100.0f);
+    SetDamageMultiplier(DIR_FRONT, 100.0f);
+    SetDamageMultiplier(DIR_BACK, 100.0f);
 
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;

@@ -81,12 +81,9 @@ static void PerformDashHitTest(float testX, float testY) {
                     // TriggerSlowMotion(0.05f, 0.3f);
 
                     if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
-                        if (multiplier > 1.5f) {
-                            g_player.gaugePoints += 2;
-                        }
-                        else {
-                            g_player.gaugePoints += 1;
-                        }
+                        // Always grant a single gauge point per hit — remove
+                        // extra gauge for weak-point hits so gains are uniform.
+                        g_player.gaugePoints += 1;
                         if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
                             g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
                         }
@@ -162,12 +159,9 @@ static void PerformDashEndCircleHitTest() {
                     g_camera.Shake(0.02f, 0.05f);
 
                     if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
-                        if (multiplier > 1.5f) {
-                            g_player.gaugePoints += 2;
-                        }
-                        else {
-                            g_player.gaugePoints += 1;
-                        }
+                        // Always grant a single gauge point per hit — remove
+                        // extra gauge for weak-point hits so gains are uniform.
+                        g_player.gaugePoints += 1;
                         if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
                             g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
                         }
@@ -288,7 +282,8 @@ void UpdatePlayerPhysics(float deltaTime) {
             float playerBottom = playerTop + currentHeight;
 
             // 定义很小的接触阈值
-            const float CONTACT_EPSILON = 0.002f;
+            // 增大一点使爬墙判定更容易触发
+            const float CONTACT_EPSILON = 0.006f;
 
             // 检测左右墙壁接触
             for (const auto& tile : nearbyTiles) {
@@ -1095,17 +1090,9 @@ void ExecuteMouseChargeDash() {
 
     g_player.hitEnemies.clear();
     // 结算蓄力消耗：
-    // - 蓄力过程中按时间累计消耗点数（chargePendingCost）
-    // - 最大蓄力时固定消耗 3 点
+    // 修改：不论蓄力持续多久，都只消耗 1 点（其他蓄力效果保持不变）
     // - 若处于 gauge 无敌，则不消耗点数
-    int costToConsume = g_player.chargePendingCost;
-    // 最小蓄力也消耗 1 点（只要有点）
-    if (g_player.chargeTime > 0.0f && costToConsume == 0) {
-        costToConsume = 1;
-    }
-    if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-        costToConsume = g_player.MAX_DASH_POINTS;
-    }
+    int costToConsume = 1;
     costToConsume = std::clamp(costToConsume, 0, g_player.MAX_DASH_POINTS);
 
     if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
@@ -1396,7 +1383,8 @@ void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY
     // already has gauge-based invincibility active. This prevents extending the
     // current invincible state by farming additional kills during the effect.
     if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
-        int gaugeGain = wasWeakPointKill ? 3 : 1; // weak kills give more gauge
+        // Always grant 1 gauge point per kill. Remove extra gauge for weak-point kills.
+        int gaugeGain = 1;
         g_player.gaugePoints += gaugeGain;
         if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
             g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;

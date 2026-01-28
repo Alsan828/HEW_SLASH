@@ -47,7 +47,7 @@ void MapManager::CreateMapEnemies() {
 
         // Create appropriate enemy type based on spawn code
         if (enemyType == "E1") {
-            g_enemies.push_back(new Enemy(x, y, 100.0f));  // Normal enemy
+            g_enemies.push_back(new Enemy(x, y, 10.0f));  // Normal enemy
         }
         else if (enemyType == "E2") {
             g_enemies.push_back(new FlyEnemy(x, y));    // Shield enemy

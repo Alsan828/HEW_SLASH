@@ -32,6 +32,9 @@ class Enemy;
 // Slash-count UI (1x4 spritesheet)
 extern ID3D11ShaderResourceView* g_slashCountTexture;
 extern Animation g_slashCountAnim;
+// Health follower texture/animation (1x3 spritesheet)
+extern ID3D11ShaderResourceView* g_healthTexture;
+extern Animation g_healthAnim;
 
 // Weak-point hit/kill effect spawning (defined in Game.cpp)
 void SpawnWeakPointHitEffect(float worldX, float worldY);
@@ -111,7 +114,7 @@ struct Player {
     float health = 100.0f;
     float maxHealth = 100.0f;
     // 攻击系统
-    float attackDamage = 30000.0f;  // 基础攻击力
+    float attackDamage = 10.0f;  // 基础攻击力
     bool isAttacking = false;    // 攻击状态
     float attackTimer = 0.0f;
     const float ATTACK_DURATION = 0.2f;
@@ -433,7 +436,6 @@ extern ID3D11ShaderResourceView* g_cursorTexture;
 extern ID3D11ShaderResourceView* g_comboNumberTexture;
 extern ID3D11ShaderResourceView* g_comboXTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarTexture;
-extern ID3D11ShaderResourceView* g_gaugeBarEmptyTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarFilledTexture;
 extern ID3D11ShaderResourceView* g_gaugeFullEffectTexture;
 extern ID3D11ShaderResourceView* g_gaugeTrailParticleTexture;
@@ -448,6 +450,7 @@ extern ID3D11ShaderResourceView* g_signLongClickTexture;
 extern ID3D11ShaderResourceView* g_signESCTexture;
 extern ID3D11ShaderResourceView* g_signRightTexture;
 extern ID3D11ShaderResourceView* g_signClickTexture;
+extern ID3D11ShaderResourceView* g_escTexture;
 
 
 extern ID3D11ShaderResourceView* g_attackCountTestTexture;

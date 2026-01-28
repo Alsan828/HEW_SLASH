@@ -79,6 +79,7 @@ private:
 
     float CalculateDirectionAngle()const;
     float GetRotationAngle()const;
+    void SetRotation(float r);
     // 类型特定行为
     void UpdateFireball(float deltaTime);
     void UpdateBullet(float deltaTime);

@@ -6,6 +6,10 @@ ProjectileManager& ProjectileManager::GetInstance() {
     static ProjectileManager instance;
     return instance;
 }
+
+void Projectile::SetRotation(float r) {
+    rotation = r;
+}
 Projectile::Projectile(ProjectileType type, float startX, float startY,
     float targetX, float targetY, float speed,
     const ProjectileEffect& effect, bool fromPlayer)
@@ -30,6 +34,11 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
     // 根据速度方向计算初始旋转角度
     rotation = CalculateDirectionAngle();
 
+    // 对于普通子弹（BULLET），我们不希望它随方向旋转，使用固定旋转0
+    if (type == ProjectileType::BULLET) {
+        rotation = 0.0f;
+    }
+
     // Set initial properties based on type
     switch (type) {
     case ProjectileType::FIREBALL:
@@ -39,7 +48,7 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
         break;
     case ProjectileType::BULLET: 
         size = 0.15f;
-        maxLifeTime = 3.0f;
+        maxLifeTime = 6.0f;
         homingStrength = 0.0f;
         break;
     case ProjectileType::ICE_SHARD:
@@ -186,6 +195,7 @@ void  Projectile::CheckPlayerCollision() {
     // 碰撞半径
     // 敌人射弹判定略微缩小，避免贴图较大导致“擦边也算命中”。
     // 注意：这里只影响碰撞，不影响渲染。
+    // Shrink enemy projectile hitbox more to avoid accidental grazing hits
     constexpr float ENEMY_PROJECTILE_HITBOX_SCALE = 0.80f;
     float collisionRadius = (actualSize + std::min(playerWidth, playerHeight)) * 0.5f * ENEMY_PROJECTILE_HITBOX_SCALE;
 
@@ -215,7 +225,8 @@ void Projectile::UpdateFireball(float deltaTime) {
 
 void Projectile::UpdateBullet(float deltaTime) {
     // Bullet: simple projectile with slight rotation
-    rotation += deltaTime * 10.0f;  // Slower rotation than other projectiles
+    // Disable rotation for BULLET: keep rotation fixed
+    rotation = 0.0f;
     // No scaling effect - keeps constant size
 }
 
@@ -325,12 +336,16 @@ bool Projectile::CheckMapCollision(MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) return false;
 
     auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
+    // Only count as collision when the projectile's center point intersects a solid tile.
+    // Use visual size (scaleEffect) to compute the center position.
+    float visualSize = size * scaleEffect;
+    float centerX = posX + visualSize * 0.5f;
+    float centerY = posY + visualSize * 0.5f;
+
     for (const auto& tile : solidTiles) {
-        // Simple rectangle collision detection
-        if (posX < tile.posX + tile.width &&
-            posX + size > tile.posX &&
-            posY < tile.posY + tile.height &&
-            posY + size > tile.posY) {
+        // Check if center point lies within the tile rectangle
+        if (centerX >= tile.posX && centerX <= tile.posX + tile.width &&
+            centerY >= tile.posY && centerY <= tile.posY + tile.height) {
             return true;
         }
     }
@@ -414,7 +429,7 @@ void Projectile::Render(const Camera& camera) {
     ID3D11ShaderResourceView* texture = ProjectileManager::GetInstance().GetTextureForType(type);
     if (!texture) return;
 
-    // Convert to screen coordinates
+    // Convert to screen coordinates (world -> screen)
     float screenX, screenY;
     float cameraX = camera.GetX();
     float cameraY = camera.GetY();
@@ -451,7 +466,27 @@ void Projectile::Render(const Camera& camera) {
 
     // 渲染射弹（带旋转和缩放）
     float renderSize = size * scaleEffect;
-    RenderImage(screenX, screenY, renderSize, renderSize, texture, 0, 1, 1, false, totalRotation, false);
+
+    // 默认使用正方形渲染（多数子弹）
+    float renderWidth = renderSize;
+    float renderHeight = renderSize;
+
+    // 将绘制坐标调整为以中心为锚（便于旋转/翻转）
+    float drawX = screenX - renderWidth * 0.5f;
+    float drawY = screenY - renderHeight * 0.5f;
+
+    // 对于普通子弹，禁用旋转并根据水平速度决定水平翻转
+    bool flipHoriz = false;
+    float drawRotation = totalRotation;
+    if (type == ProjectileType::BULLET) {
+        drawRotation = 0.0f; // ensure no rotation
+        // If moving left, flip the sprite horizontally
+		renderHeight = renderSize * 1.5f; // Make bullet sprite rectangular
+		renderWidth = renderSize * 1.0f;
+        flipHoriz = (velocityX < 0.0f);
+    }
+
+    RenderImage(drawX, drawY, renderWidth, renderHeight, texture, 0, 1, 1, false, drawRotation, flipHoriz);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -576,6 +611,9 @@ float Projectile::GetRotationAngle() const {
     case ProjectileType::FIREBALL:
         // 火球：基础方向角度 + 自转角度
         return baseAngle;
+    case ProjectileType::BULLET:
+        // 普通子弹：禁用方向旋转，始终保持不变
+        return 0.0f;
     case ProjectileType::ICE_SHARD:
         // 冰箭：基础方向角度 + 自转角度
         return baseAngle ;

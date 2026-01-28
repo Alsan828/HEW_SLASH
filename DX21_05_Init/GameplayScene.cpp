@@ -60,8 +60,9 @@ bool GameplayScene::Init()
         }
 
         if (m_boss) {
-            m_boss->SetMaxHealth(500000.0f);
-            m_boss->SetHealth(500000.0f);
+            // Set boss HP to 300 for normal gameplay
+            m_boss->SetMaxHealth(300.0f);
+            m_boss->SetHealth(300.0f);
         }
     }
 
@@ -128,9 +129,10 @@ void GameplayScene::CheckBossCheckpoints()
 {
     if (!m_boss) return; // if there is not boss, dont do anything
 
-    float maxHP = 500000.0f; // this is just for a test. the actual hp is not this
+    // Use the boss' actual max HP when computing checkpoints
+    float maxHP = m_boss->GetMaxHealth();
     float currentHP = m_boss->GetHealth();
-    float healthPercent = currentHP / maxHP;
+    float healthPercent = (maxHP > 0.0f) ? (currentHP / maxHP) : 0.0f;
 
     // Checkpoint at 2/3 HP
     if (!m_checkpoint1Reached && healthPercent <= 0.667f)
@@ -189,7 +191,7 @@ void GameplayScene::RespawnBossAtCheckpoint()
     if (!g_enemies.empty())
     {
         m_boss = g_enemies[0];
-        m_boss->SetMaxHealth(500000.0f); // Restore boss stats for the current test enemy 
+        m_boss->SetMaxHealth(300.f);// tore boss stats for the current test enemy
 
         // it has reached a checkpoint, restores the checkpoint hp 
         if (m_bossCheckpointHP > 0.0f) 
@@ -198,7 +200,7 @@ void GameplayScene::RespawnBossAtCheckpoint()
         }
         else // if it hasnt reached any checkpoint
         {
-            m_boss->SetHealth(500000.0f);
+            m_boss->SetHealth(300.f);
         }
     }
 

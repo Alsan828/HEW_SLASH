@@ -98,7 +98,7 @@ public:
     }
 
 
-    Enemy(float x, float y, float hp = 100.0f);
+    Enemy(float x, float y, float hp = 10.0f);
     virtual ~Enemy() = default;
     
     // 设置伤害系数
@@ -135,6 +135,16 @@ public:
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr);
     virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera);
     void RenderHealthBar(const Camera& camera);
+
+    // Health follower state per enemy (icons that smoothly follow the enemy)
+    struct HealthFollower {
+        float x = 0.0f;
+        float y = 0.0f;
+        bool init = false;
+    };
+
+    // Per-enemy followers (one per 10 HP segment of maxHealth)
+    std::vector<HealthFollower> healthFollowers;
 
     // 攻击角度计算
     int CalculateDamageFromPlayer(int baseDamage, float playerDashAngle);
@@ -399,6 +409,11 @@ public:
     virtual void TakeDamage(int damage, float attackAngle) override;
     virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
 
+    // 调整技能速度的接口
+    void SetDashSpeedMultiplier(float mul) { dashSpeedMultiplier = mul; }
+    void SetSlashSpeed(float frameTimeSeconds) { slashFrameTime = frameTimeSeconds; }
+    void SetChargeDuration(float seconds) { chargeDuration = seconds; }
+
 protected:
     virtual void ChaseBehavior(float deltaTime) override;
     virtual void OnHit(int damage) override;
@@ -434,11 +449,17 @@ private:
     int hitsTaken = 0;               // total hits received
     bool inDownImmortal = false;     // cannot die during down
     int weakCycleIndex = 0;          // weakline direction cycle
+    bool hasSpawnedSlashProjectiles = false; // slash barrage spawn guard
+
+    // Facing lock during attack release
+    bool facingLocked = false;
+    bool fixedFacingRight = true;
 
     // Tunable timings
-    float chargeDuration = 2.0f;     // faster charge
+    float chargeDuration = 1.0f;     // even faster charge (2x faster than previous)
     float dashAfterDuration = 0.5f;  // faster recovery after dash
     float slashActiveFrames = 2.0f;  // 3 frames window
+    float slashFrameTime = 0.06f;    // 斩击动画的每帧时间，影响斩击释放速度
     float downDuration = 6.0f;       // shorter down time
 
     // Dash tuning
@@ -451,7 +472,7 @@ private:
     float leapChargeDuration = 6.0f;      // charge before leap
     float leapInitialVy = -6.0f;          // upward velocity (negative = up)
     float leapDashSpeedMultiplier = 1.0f; // faster horizontal dash while airborne
-    float leapAirDuration = 1.2f;         // max air time for leap
+    float leapAirDuration = 1.2f;         // max air time for leap1
 
     // Helpers
     void EnterState(BossState s);
