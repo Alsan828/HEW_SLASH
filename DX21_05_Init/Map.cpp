@@ -120,6 +120,7 @@ void Map::InitializeTileDictionary() {
         {"E7", {"E7", "enemy", "beam", false, false, false, true}},
         {"E8", {"E8", "enemy", "thrower", false, false, false, true}},
         {"E9", {"E9", "enemy", "blind_eye", false, false, false, true}},
+        {"BS", {"BS", "enemy", "boss", false, false, false, true}}, // 新增 Boss 敌人码
 
         // Portal/door types
         // Default behavior: all non-boss doors go to the next area.
@@ -221,7 +222,17 @@ bool Map::ProcessSpecialTileCode(float x, float y, const std::string& tileCode, 
         spawn.posX = x;
         spawn.posY = y;
         spawn.enemyType = tileCode;
-        spawn.enemySubtype = std::stoi(tileCode.substr(1));
+        // Some enemy codes are not numeric after the prefix (e.g. "BS").
+        // Avoid crashing on std::stoi.
+        spawn.enemySubtype = -1;
+        if (tileCode.size() > 1) {
+            try {
+                spawn.enemySubtype = std::stoi(tileCode.substr(1));
+            }
+            catch (const std::exception&) {
+                spawn.enemySubtype = -1;
+            }
+        }
         m_enemySpawns.push_back(spawn);
         return true;
     }
@@ -464,8 +475,8 @@ void Map::CreateBossMap() {
         {"G1","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","G1"},
         {"G1","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","G1"},
         {"G1","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","G1"},
-        {"G1","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","G1"},
-        {"G1","00","00","S1","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","E5","00","00","00","00","00","00","00","00","G1"},
+        {"G1","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","BS","00","00","00","00","00","00","00","00","G1"},
+        {"G1","00","00","S1","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","G1"},
         {"G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1","G1"},
     };
 

@@ -29,6 +29,15 @@ extern InputSystem g_inputSystem;
 extern Camera g_camera;
 class Enemy;
 
+// Slash-count UI (1x4 spritesheet)
+extern ID3D11ShaderResourceView* g_slashCountTexture;
+extern Animation g_slashCountAnim;
+
+// When a dash point is restored on enemy death, spawn the follower indicator from that world position.
+extern float g_slashCountSpawnX;
+extern float g_slashCountSpawnY;
+extern bool g_slashCountSpawnPending;
+
 // Game state enumeration
 enum GameState {
     STATE_PLAYING,
@@ -277,7 +286,7 @@ private:
     int lifetimeWeakKills = 0;
 
 public:
-   // no need construct now bc I initialied the variables above
+   // no need construct now bc I initialed the variables above
 
     // Reset all statistics
     void Reset();
@@ -533,7 +542,7 @@ void UpdatePlayerDeath(float deltaTime);
 void UpdateDash(float deltaTime);
 void UpdatePlayerPhysics(float deltaTime);
 void OnEnemyDefeated();
-void OnEnemyDefeated(bool wasWeakPointKill);
+void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY);
 bool ConsumeDashPoint();
 void UpdateDashPoints(float deltaTime);
 void UpdateDashAftermath(float deltaTime);
@@ -581,14 +590,18 @@ namespace SoundEffect {
     const std::string UI_CLICK = "asset/SE/enter.wav";
     const std::string PAUSE = "asset/SE/pause.wav";
     const std::string RESUME = "asset/SE/resume.wav";
+
+    // Gauge / limitbreak
+    const std::string LIMITBREAK = "asset/SE/limitbreak.wav";
+    const std::string INVINCIBLE_WARNING = "asset/SE/invincible_warning.wav";
 }
 
 namespace BackgroundMusic {
     const std::string MAIN_MENU = "asset/Music/main_menu.wav";
-    const std::string LEVEL1 = "asset/Music/level1.wav";
-    const std::string LEVEL2 = "asset/Music/level2.wav";
-    const std::string LEVEL3 = "asset/Music/level3.wav";
-    const std::string BOSS_BATTLE = "asset/Music/boss_battle.wav";
+    const std::string LEVEL1 = "asset/Music/Dancer.wav";
+    const std::string LEVEL2 = "asset/Music/0246_Nightmare-Assemblage.wav";
+    const std::string LEVEL3 = "asset/Music/planetarium_garden.wav";
+    const std::string BOSS_BATTLE = "asset/Music/0194_Red-Eyes.wav";
     const std::string GAME_OVER = "asset/Music/game_over.wav";
     const std::string VICTORY = "asset/Music/victory.wav";
 }

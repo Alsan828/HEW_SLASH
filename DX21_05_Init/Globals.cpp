@@ -53,6 +53,8 @@ ID3D11ShaderResourceView* g_arrowTexture = nullptr;
 ID3D11ShaderResourceView* g_cursorTexture = nullptr;
 ID3D11ShaderResourceView* g_comboNumberTexture = nullptr;
 ID3D11ShaderResourceView* g_comboXTexture = nullptr;
+ID3D11ShaderResourceView* g_slashCountTexture = nullptr;
+Animation g_slashCountAnim;
 ID3D11ShaderResourceView* g_gaugeBarTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarEmptyTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarFilledTexture = nullptr;
@@ -95,3 +97,14 @@ MouseIndicatorSystem g_mouseIndicator;
 // 在Game.cpp开头定义全局变量
 int g_windowWidth = 0;
 int g_windowHeight = 0;
+
+ID3D11ShaderResourceView* g_bossIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_bossAttackTexture = nullptr;
+ID3D11ShaderResourceView* g_bossDeathTexture = nullptr;
+ID3D11ShaderResourceView* g_bossChargeStage1Texture = nullptr;
+ID3D11ShaderResourceView* g_bossChargeStage2Texture = nullptr;
+ID3D11ShaderResourceView* g_bossDashTexture = nullptr;
+ID3D11ShaderResourceView* g_bossDashOverTexture = nullptr;
+ID3D11ShaderResourceView* g_bossSlashPrepTexture = nullptr;
+ID3D11ShaderResourceView* g_bossSlashActiveTexture = nullptr;
+Animation g_bossSlashAnim;

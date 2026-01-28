@@ -793,6 +793,7 @@ void UpdateDash(float deltaTime) {
 
     // Charge logic should be independent of aftermath state
     if (g_player.isCharging) {
+        const float prevChargeTime = g_player.chargeTime;
         g_player.chargeTime += deltaTime * g_player.GetChargeSpeedMultiplier();
 
         // Allow charging during stun, but charge time cannot be too long
@@ -803,6 +804,11 @@ void UpdateDash(float deltaTime) {
             }
             ExecuteMouseChargeDash();*/
             g_player.chargeTime = g_player.MAX_CHARGE_TIME; // it caps to max charge time and it doesnt release it unless you stop clicking
+        }
+
+        // Play charge SE when reaching max (once per charge)
+        if (prevChargeTime < g_player.MAX_CHARGE_TIME && g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
+            Audio::PlaySE(SoundEffect::CHARGE_START);
         }
     }
 
@@ -979,7 +985,6 @@ void StartMouseChargeDash() {
 
     g_mouseIndicator.showArrow(true);
     g_player.isCharging = true;
-	Audio::PlaySE(SoundEffect::CHARGE_START);
     g_inputSystem.GetMousePosition(g_player.mouseTargetX, g_player.mouseTargetY);
     g_player.hasMouseTarget = true;
 
@@ -1246,7 +1251,7 @@ void OnEnemyDefeated() {
     g_gameStats.IncrementKills();
 }
 
-void OnEnemyDefeated(bool wasWeakPointKill) {
+void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY) {
     // Track kills for statistics
     if (wasWeakPointKill) {
         g_gameStats.IncrementWeakPointKills();  // 30 points
@@ -1260,8 +1265,18 @@ void OnEnemyDefeated(bool wasWeakPointKill) {
     // Restore dash point
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
-        g_gameStats.AddScore(10); 
+        g_gameStats.AddScore(10);
         printf("[POINTS] Normal kill +10 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
+
+        // Spawn indicator at enemy death position instead of popping in at the player.
+        // The slash-count UI uses internal static smoothing state inside DrawGame().
+        // We "teleport" its current position to the death location, so it flies back to the player anchor.
+        extern float g_slashCountSpawnX;
+        extern float g_slashCountSpawnY;
+        extern bool g_slashCountSpawnPending;
+        g_slashCountSpawnX = enemyWorldX;
+        g_slashCountSpawnY = enemyWorldY;
+        g_slashCountSpawnPending = true;
     }
 
     g_player.comboCount++;

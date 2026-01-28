@@ -70,8 +70,16 @@ void MapManager::CreateMapEnemies() {
         else if (enemyType == "E8") {
             g_enemies.push_back(new ThrowerEnemy(x, y));
         }
+        else if (enemyType == "BS") {
+            g_enemies.push_back(new BossEnemy(x, y)); // Boss (统一使用 BS)
+        }
         else if (enemyType == "E9") {
             g_enemies.push_back(new BlindEyeEnemy(x, y));
+        }
+        else if (enemyType == "B1") {
+            // B1: 看板（Billboard）
+            // TODO: 如果已有看板/装饰物系统，可在这里生成对应对象。
+            // 目前不再错误生成 Boss。
         }
     }
 }

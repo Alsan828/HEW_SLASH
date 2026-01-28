@@ -188,6 +188,11 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
 
 HWND g_gameHwnd = nullptr;
 
+// Slash-count follower spawn request (set on enemy kill)
+float g_slashCountSpawnX = 0.0f;
+float g_slashCountSpawnY = 0.0f;
+bool g_slashCountSpawnPending = false;
+
 void SetGameWindowHandle(HWND hwnd) {
     g_gameHwnd = hwnd;
 }
@@ -705,6 +710,11 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/combo/combo_number.png", &g_comboNumberTexture);
     LoadTexture(g_pDevice, "asset/UI/combo/combo_X.png", &g_comboXTexture);
 
+    // Dash/slash-count UI (follows player): attack_count.png is a 1x3 sheet
+    LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_slashCountTexture);
+    g_slashCountAnim.AddClip("SlashCount", 0, 2, 1, 3, 0.12f, true, g_slashCountTexture);
+    g_slashCountAnim.SetClip("SlashCount");
+
     LoadTexture(g_pDevice, "asset/effect/effect_hit.png", &g_hitEffectTexture);
 
     LoadTexture(g_pDevice, "asset/effect/slash_flash1.png", &g_slashFlashTextures[0]);
@@ -756,6 +766,7 @@ void UpdateGame(float deltaTime) {
     g_gameTimer.Tick(); // added december 3rd
 
     signAnim.Update(deltaTime);
+    g_slashCountAnim.Update(deltaTime);
 
     // added december 4th
     g_gameElapsedTime += deltaTime;
@@ -818,7 +829,14 @@ void UpdateGame(float deltaTime) {
 
     // for updating the invincibility timer
     if (g_player.isInvincible) {
+        const float prevInvTime = g_player.invincibleTimer;
         g_player.invincibleTimer -= deltaTime;
+
+        // Gauge invincibility: 1-second warning (play once)
+        if (g_player.isGaugeInvincible && prevInvTime > 1.0f && g_player.invincibleTimer <= 1.0f) {
+            Audio::PlaySE(SoundEffect::INVINCIBLE_WARNING);
+        }
+
         if (g_player.invincibleTimer <= 0.0f) {
             g_player.isInvincible = false;
             g_player.isGaugeInvincible = false;
@@ -834,6 +852,8 @@ void UpdateGame(float deltaTime) {
         g_player.g_gaugeEffectActive = true; 
         g_player.g_gaugeEffectTimer = g_player.INVINCIBLE_DURATION;
         g_player.gaugePoints = 0;
+
+        Audio::PlaySE(SoundEffect::LIMITBREAK, 2.0f);
     }
 
 	// for the gauge effect timer
@@ -1302,6 +1322,107 @@ void DrawGame() {
     auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
         return { worldX - cameraX, worldY - cameraY };
         };
+
+    // Draw slash-count icons (behind player): 3 independent followers.
+    // Hide during gauge-based invincibility.
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_slashCountTexture) {
+        const int count = std::clamp(g_player.dashPoints, 0, g_player.MAX_DASH_POINTS);
+        if (count > 0) {
+            struct Follower {
+                float x = 0.0f;
+                float y = 0.0f;
+                bool init = false;
+            };
+
+            static Follower s_follow[3];
+
+            // Sprite size in world units
+            const float iconW = 0.065f;
+            const float iconH = 0.065f;
+            const float spacing = iconW * 0.60f;
+
+            // Target anchor: one grid tile behind player (respect facing)
+            const float behind = GRID_WIDTH;
+            const float baseTargetX = g_player.posX + (g_player.facingRight ? -behind : behind);
+            const float baseTargetY = g_player.posY + PLAYER_HEIGHT * 0.55f;
+
+            // Per-icon offsets (so they don't overlap and are not aligned)
+            const float xDir = g_player.facingRight ? -1.0f : 1.0f; // extend further behind
+            const float xOffset[3] = { 0.0f, spacing * xDir, spacing * 2.0f * xDir };
+            const float yOffset[3] = { -iconH * 0.18f, 0.0f, iconH * 0.18f };
+            const float rotOffset[3] = { -0.08f, 0.0f, 0.08f };
+
+            // Use real delta time for smoothing (don't clamp). Clamping dt makes the follower
+            // advance in uneven steps when the actual frame time fluctuates.
+            const float dt = std::max(0.0f, g_gameTimer.GetDeltaTime());
+
+            // Consume spawn request: only affect the newly-restored indicator (the last one)
+            if (g_slashCountSpawnPending) {
+                int spawnIndex = std::clamp(g_player.dashPoints - 1, 0, g_player.MAX_DASH_POINTS - 1);
+                s_follow[spawnIndex].x = g_slashCountSpawnX;
+                s_follow[spawnIndex].y = g_slashCountSpawnY;
+                s_follow[spawnIndex].init = true;
+                g_slashCountSpawnPending = false;
+            }
+
+            int frame = g_slashCountAnim.GetCurrentFrame() % 3;
+            for (int i = 0; i < count; ++i) {
+                Follower& f = s_follow[i];
+
+                const float targetX = baseTargetX + xOffset[i];
+                const float targetY = baseTargetY + yOffset[i];
+
+                if (!f.init) {
+                    f.x = targetX;
+                    f.y = targetY;
+                    f.init = true;
+                }
+
+                const float dx = targetX - f.x;
+                const float dy = targetY - f.y;
+                const float dist = sqrtf(dx * dx + dy * dy);
+
+                // Framerate-independent exponential smoothing.
+                // a = 1 - exp(-dt / tau)
+                // This avoids jitter/stepping when dt varies.
+                // 10x faster follow: reduce time constants by 10.
+                const float tauNear = 0.010f;  // seconds (slow when near)
+                const float tauFar = 0.002f;   // seconds (fast when far)
+                const float dist01 = std::clamp(dist / (GRID_WIDTH * 2.0f), 0.0f, 1.0f);
+                const float tau = tauNear + (tauFar - tauNear) * dist01;
+
+                const float safeTau = std::max(tau, 1e-4f);
+                float a = 1.0f - expf(-dt / safeTau);
+                a = std::clamp(a, 0.0f, 1.0f);
+
+                f.x += dx * a;
+                f.y += dy * a;
+
+                if (dist < 0.0025f) {
+                    f.x = targetX;
+                    f.y = targetY;
+                }
+
+                auto p = worldToScreen(f.x, f.y);
+                SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+                RenderImage(p.first, p.second, iconW, iconH,
+                    g_slashCountTexture,
+                    frame,
+                    1,
+                    3,
+                    false,
+                    rotOffset[i],
+                    false);
+            }
+
+            // When points are missing, reset hidden followers so they don't "jump" when re-shown.
+            for (int i = count; i < 3; ++i) {
+                s_follow[i].init = false;
+            }
+
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
 
     // Draw player afterimages (behind player)
     for (const auto& a : g_playerAfterImages) {
