@@ -1842,12 +1842,12 @@ void BossEnemy::UpdateSlashActive(float dt) {
             ProjectileManager& pm = ProjectileManager::GetInstance();
             float originX = posX + width * 0.5f;
             float originY = posY + height * 0.5f;
-            // Fan-shaped barrage aimed toward the player
+            // Fan-shaped barrage fired along boss facing direction
             const int bulletCount = 9;
             const float totalSpread = 0.9f; // radians, wider fan
-            float playerX = g_player.posX + PLAYER_WIDTH * 0.5f;
-            float playerY = g_player.posY + PLAYER_HEIGHT * 0.5f;
-            float baseAngle = atan2f(playerY - originY, playerX - originX);
+            // Use fixed/locked facing if available, else current facing
+            bool faceRight = facingLocked ? fixedFacingRight : facingRight;
+            float baseAngle = faceRight ? 0.0f : 3.14159f;
             for (int i = 0; i < bulletCount; ++i) {
                 float t = (bulletCount == 1) ? 0.0f : (float)i / (bulletCount - 1);
                 float ang = baseAngle + (t - 0.5f) * totalSpread;
