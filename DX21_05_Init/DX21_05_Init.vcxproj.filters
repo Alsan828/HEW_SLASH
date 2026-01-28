@@ -180,9 +180,6 @@
     <ClInclude Include="TitleScene.h">
       <Filter>ヘッダー ファイル\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="BossScene.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="CakeScene.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>

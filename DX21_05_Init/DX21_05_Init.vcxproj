@@ -250,7 +250,6 @@
   <ItemGroup>
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Audio.h" />
-    <ClInclude Include="BossScene.h" />
     <ClInclude Include="CakeScene.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Enemy.h" />
