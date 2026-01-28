@@ -782,6 +782,29 @@ void UpdateDash(float deltaTime) {
             g_player.chargeTime = g_player.MAX_CHARGE_TIME; // it caps to max charge time and it doesnt release it unless you stop clicking
         }
 
+        // === 蓄力点数消耗累计（预扣） ===
+        // 在蓄力时持续增加“将要消耗”的点数，用于 UI 高亮与放出结算。
+        // gauge 无敌期间 dash 免费，因此这里不累计消耗。
+        if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
+            g_player.isChargeCostHighlight = true;
+
+            if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
+                g_player.chargePendingCost = g_player.MAX_DASH_POINTS;
+            }
+            else {
+                g_player.chargeCostTimer += deltaTime;
+                while (g_player.chargeCostTimer >= g_player.CHARGE_COST_INTERVAL && g_player.chargePendingCost < g_player.MAX_DASH_POINTS) {
+                    g_player.chargePendingCost++;
+                    g_player.chargeCostTimer -= g_player.CHARGE_COST_INTERVAL;
+                }
+            }
+        }
+        else {
+            g_player.isChargeCostHighlight = false;
+            g_player.chargePendingCost = 0;
+            g_player.chargeCostTimer = 0.0f;
+        }
+
         // Play charge SE when reaching max (once per charge)
         if (prevChargeTime < g_player.MAX_CHARGE_TIME && g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
             Audio::PlaySE(SoundEffect::CHARGE_START);
@@ -966,6 +989,10 @@ void StartMouseChargeDash() {
 
     // 重置蓄力时间，从0开始计算本次蓄力
     g_player.chargeTime = 0.0f;
+    // 重置本次蓄力的点数消耗累计
+    g_player.chargePendingCost = 0;
+    g_player.chargeCostTimer = 0.0f;
+    g_player.isChargeCostHighlight = true;
     // 不清除保存的蓄力，但本次重新开始
 }
 
@@ -992,7 +1019,28 @@ void ExecuteMouseChargeDash() {
     }
 
     g_player.hitEnemies.clear();
-    if (!ConsumeDashPoint()) return;
+    // 结算蓄力消耗：
+    // - 蓄力过程中按时间累计消耗点数（chargePendingCost）
+    // - 最大蓄力时固定消耗 3 点
+    // - 若处于 gauge 无敌，则不消耗点数
+    int costToConsume = g_player.chargePendingCost;
+    if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
+        costToConsume = g_player.MAX_DASH_POINTS;
+    }
+    costToConsume = std::clamp(costToConsume, 0, g_player.MAX_DASH_POINTS);
+
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
+        if (g_player.dashPoints < costToConsume) {
+            // 点数不足：不放出，取消蓄力
+            g_player.isCharging = false;
+            g_player.chargeTime = 0.0f;
+            g_player.chargePendingCost = 0;
+            g_player.chargeCostTimer = 0.0f;
+            g_player.isChargeCostHighlight = false;
+            return;
+        }
+        g_player.dashPoints -= costToConsume;
+    }
 
     // 获取当前鼠标位置
     float currentMouseX, currentMouseY;
@@ -1124,6 +1172,9 @@ void ExecuteMouseChargeDash() {
     // 结束蓄力状态
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
+    g_player.chargePendingCost = 0;
+    g_player.chargeCostTimer = 0.0f;
+    g_player.isChargeCostHighlight = false;
 }
 // Enter dash aftermath state
 void EnterDashAftermath() {

@@ -156,6 +156,12 @@ struct Player {
     float dashPointRecoverTimer = 0.0f;
     const float DASH_POINT_RECOVER_TIME = 0.1f;
 
+    // 蓄力消耗点数（蓄力过程中预扣，放出时结算）
+    int chargePendingCost = 0;            // 当前蓄力已累计的消耗点数（0~3）
+    float chargeCostTimer = 0.0f;         // 用于按时间累计消耗
+    const float CHARGE_COST_INTERVAL = 0.25f; // 每隔多少秒增加 1 点消耗
+    bool isChargeCostHighlight = false;   // UI 高亮：蓄力时显示消耗反馈
+
     // 冲刺后硬直状态
     bool isInDashAftermath = false;
     float dashAftermathTimer = 0.0f;

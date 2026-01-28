@@ -1795,7 +1795,7 @@ void BossEnemy::UpdateSlashActive(float dt) {
     // Deal damage on the second-to-last frame.
     // With startFrame=7 and endFrame=0 (reverse playback), the second-to-last frame is 1.
     if (anim.GetCurrentFrame() == 1) {
-        float range = 0.5f;
+        float range = 0.25f;
         float hx = facingRight ? (posX + width) : (posX - range);
         float hw = range;
         float hy = posY;

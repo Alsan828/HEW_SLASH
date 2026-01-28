@@ -1962,10 +1962,18 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     float digitWidth = 0.08f;
     float digitHeight = 0.12f;
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // Render dash points (preview charge consumption + highlight while charging)
+    int shownDashPoints = g_player.dashPoints;
+    if (g_player.isCharging && g_player.isChargeCostHighlight) {
+        shownDashPoints = std::max(0, g_player.dashPoints - std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS));
+        SetColor(1.0f, 1.0f, 0.3f, 1.0f); // highlight
+    }
+    else {
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    }
 
-    // Render dash points
-    RenderNumber(g_player.dashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
+    RenderNumber(shownDashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Debug/toggle display (numeric):
     // T-mode: charge-dash executes on release
