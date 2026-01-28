@@ -56,7 +56,6 @@ ID3D11ShaderResourceView* g_comboXTexture = nullptr;
 ID3D11ShaderResourceView* g_slashCountTexture = nullptr;
 Animation g_slashCountAnim;
 ID3D11ShaderResourceView* g_gaugeBarTexture = nullptr;
-ID3D11ShaderResourceView* g_gaugeBarEmptyTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeBarFilledTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeFullEffectTexture = nullptr;
 ID3D11ShaderResourceView* g_gaugeTrailParticleTexture = nullptr;

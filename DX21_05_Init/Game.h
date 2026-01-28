@@ -420,7 +420,6 @@ extern ID3D11ShaderResourceView* g_cursorTexture;
 extern ID3D11ShaderResourceView* g_comboNumberTexture;
 extern ID3D11ShaderResourceView* g_comboXTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarTexture;
-extern ID3D11ShaderResourceView* g_gaugeBarEmptyTexture;
 extern ID3D11ShaderResourceView* g_gaugeBarFilledTexture;
 extern ID3D11ShaderResourceView* g_gaugeFullEffectTexture;
 extern ID3D11ShaderResourceView* g_gaugeTrailParticleTexture;

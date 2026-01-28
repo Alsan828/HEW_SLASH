@@ -409,7 +409,6 @@ void CleanUpGameWorld()
 
     // for the gauge bar when there is one
     ReleaseTexture(g_gaugeBarTexture);
-    ReleaseTexture(g_gaugeBarEmptyTexture);
     ReleaseTexture(g_gaugeBarFilledTexture);
     ReleaseTexture(g_gaugeFullEffectTexture);
     ReleaseTexture(g_gaugeTrailParticleTexture);
@@ -500,16 +499,16 @@ void DrawGaugeUI(void)
     float gaugeY = -0.5f;
     float frameWidth = 0.5f;
     float frameHeight = 1.0f;*/
-    float gaugeX = -1.05f;
-    float gaugeY = -0.3f;
-    float frameWidth = 0.4f;
-    float frameHeight = 0.7f;
+    float gaugeX = -1.0f;
+    float gaugeY = -0.5f;
+    float frameWidth = 0.35f;
+    float frameHeight = 1.15f;
 
 	// for the inner part of the gauge bar
-    float barWidth = frameWidth * 0.47f/** 0.078f*/;
-    float barHeight = frameHeight *0.72f/** 0.5f*/;
-    float barOffsetX = -0.004f;  // if positibe move right, if negative move left
-    float barOffsetY = 0.095f;    // if positive move up, if negative move down
+    float barWidth = frameWidth * 0.5f;
+    float barHeight = frameHeight *0.49f;
+    float barOffsetX = -0.0015f;  // if positibe move right, if negative move left
+    float barOffsetY = 0.32f;    // if positive move up, if negative move down
 
     // Center horizontally, bottom aligned
     float barX = gaugeX + (frameWidth - barWidth) * 0.5f + barOffsetX;
@@ -522,14 +521,6 @@ void DrawGaugeUI(void)
     if (g_gaugeBarTexture)
         RenderImage(gaugeX, gaugeY, frameWidth, frameHeight,
             g_gaugeBarTexture, 0, 1, 1);
-
-
-	// for the empty bar background
-    SetColor(1, 1, 1, 1);
-    if (g_gaugeBarEmptyTexture) {
-        RenderImage(barX, barY, barWidth, barHeight,
-            g_gaugeBarEmptyTexture, 0, 1, 1);
-    }
 
 	// draw the gauge full effect animation when the gauge is full
     if (g_player.g_gaugeEffectActive)
@@ -547,11 +538,11 @@ void DrawGaugeUI(void)
                     int currentFrame = g_gaugeEffectAnim.GetCurrentFrame();
 
                     //float effectScale = 1.2f;
-                    float effectWidth = frameWidth/* * effectScale*/;
-                    float effectHeight = frameHeight/* * effectScale*/;
+                    float effectWidth = frameWidth;
+                    float effectHeight = frameHeight;
 
-                    float effectX = gaugeX /*- (effectWidth - frameWidth) * 0.5f*/;
-                    float effectY = gaugeY /*- (effectHeight - frameHeight) * 0.5f*/;
+                    float effectX = gaugeX;
+                    float effectY = gaugeY;
 
                     RenderImage(effectX, effectY, effectWidth, effectHeight,
                         tex, currentFrame, rows, columns,
@@ -561,37 +552,35 @@ void DrawGaugeUI(void)
         }
     }
 
-	// for the filled bar calculation
+    // for the filled bar calculation
     float fillRatio = 0.0f;
-    if (g_player.MAX_GAUGE_POINTS > 0){
-        fillRatio = (float)g_player.gaugePoints /
-            (float)g_player.MAX_GAUGE_POINTS;
-    }   
 
-	// draw the filled part of the gauge bar
-    if (fillRatio > 0.0f && g_gaugeBarFilledTexture) 
+    // Normal gameplay: calculate from gauge points
+    if (g_player.MAX_GAUGE_POINTS > 0) {
+        fillRatio = (float)g_player.gaugePoints / (float)g_player.MAX_GAUGE_POINTS;
+    }
+
+    // If invincible the drain progress will go from top to bottom
+    if (g_player.isInvincible && g_player.isGaugeInvincible)
+    {
+        float drainProgress = g_player.invincibleTimer / g_player.INVINCIBLE_DURATION;
+        fillRatio =/* 0.0f + */drainProgress;  // it goes down from top to bottom
+
+        if (fillRatio < 0.0f) {
+            fillRatio = 0.0f;
+        }
+    }
+
+    // draw the filled part of the gauge bar
+    if (fillRatio > 0.0f && g_gaugeBarFilledTexture)
     {
         if (fillRatio > 1.0f) {
             fillRatio = 1.0f;
         }
-        
-        SetColor(1, 1, 1, 1); 
 
-        char debugMsg[256];
-        sprintf_s(debugMsg, "GaugePoints: %d, MaxPoints: %d, FillRatio: %.2f\n",
-            g_player.gaugePoints, g_player.MAX_GAUGE_POINTS, fillRatio);
-        OutputDebugStringA(debugMsg);
-
-
-        //RenderImageWithCrop(barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio); 
+        SetColor(1, 1, 1, 1);
         RenderGaugeFillImage(barX, barY, barWidth, barHeight, g_gaugeBarFilledTexture, fillRatio);
     }
-
-	//// for the surrounding frame of the gauge bar
- //   SetColor(1, 1, 1, 1);
- //   if (g_gaugeBarTexture)
- //       RenderImage(gaugeX, gaugeY, frameWidth, frameHeight,
- //           g_gaugeBarTexture, 0, 1, 1);
 
     SetColor(1, 1, 1, 1);
 }
@@ -724,10 +713,9 @@ void InitGameWorld() {
 
 	// for the gauge bar 
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame.png", &g_gaugeBarTexture);
-    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame_background.png", &g_gaugeBarEmptyTexture);
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_filled.png", &g_gaugeBarFilledTexture);
-    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect_max.png", &g_gaugeFullEffectTexture);
-    g_gaugeEffectAnim.AddClip("GaugeFull", 1, 7, 1, 8, 0.08f, true, g_gaugeFullEffectTexture);
+    LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect.png", &g_gaugeFullEffectTexture);
+    g_gaugeEffectAnim.AddClip("GaugeFull", 0, 9, 10, 1, 0.08f, true, g_gaugeFullEffectTexture);
 
     // Gauge mode trailing particle (1x5)
     LoadTexture(g_pDevice, "asset/effect/particle_sheet.png", &g_gaugeTrailParticleTexture);
