@@ -1232,15 +1232,15 @@ void MageEnemy::CastProjectile() {
     //如果死亡
     if (!isAlive) return;
 
-    float dx = g_player.posX - posX;
-    float dy = g_player.posY - posY;
+    // Aim at player's center, and fire from enemy center (body)
+    float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+
+    float dx = playerCenterX - (posX + width * 0.5f);
+    float dy = playerCenterY - (posY + height * 0.5f);
     float distance = sqrt(dx * dx + dy * dy);
 
     if (distance > 0.1f) {
-        // 归一化方向向量
-        dx /= distance;
-        dy /= distance;
-
         // 获取ProjectileManager实例
         ProjectileManager& projectileManager = ProjectileManager::GetInstance();
 
@@ -1250,14 +1250,14 @@ void MageEnemy::CastProjectile() {
         magicEffect.areaRadius = 0.2f;
         magicEffect.pierce = false;
 
-        // 计算射弹目标位置
-        float targetX = g_player.posX;
-        float targetY = g_player.posY;
+        // 计算射弹目标位置为玩家中心
+        float targetX = playerCenterX;
+        float targetY = playerCenterY;
 
-        // 发射魔法射弹
+        // 发射魔法射弹：从敌人身体中心发射
         projectileManager.CreateBullet(
-            posX + width * 0.5f,  // 从中心发射
-            posY + height * 0.4f,  // 从敌人高度40%处发射（原来是0.7f，降低了30%）
+            posX + width * 0.5f,  // 从身体中心发射
+            posY + height * 0.5f,  // 从敌人中心Y
             targetX,
             targetY,
             false
