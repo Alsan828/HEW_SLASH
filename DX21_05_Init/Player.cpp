@@ -1351,8 +1351,19 @@ void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY
     // Track kills for statistics
     if (wasWeakPointKill) {
         g_gameStats.IncrementWeakPointKills();  // 30 points
-        g_gameStats.AddScore(30); 
+        g_gameStats.AddScore(30);
         printf("[POINTS] Weak kill +30 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
+
+        // Enhanced visual feedback for weak-point kills
+        SpawnWeakPointKillEffect(enemyWorldX, enemyWorldY);
+
+        // Increase slash hit-stop duration by 1.5x for dramatic effect
+        if (g_player.hitStopTimer > 0.0f) {
+            g_player.hitStopTimer *= 1.5f;
+        }
+        else {
+            g_player.hitStopTimer = ComputeDashHitStopTime() * 1.5f;
+        }
     }
     else {
         g_gameStats.IncrementKills();  // 10 points

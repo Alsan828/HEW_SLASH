@@ -202,6 +202,51 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
     g_weakPointHitEffects.push_back(e);
 }
 
+// Spawn a larger visual effect for weak-point kills
+void SpawnWeakPointKillEffect(float worldX, float worldY) {
+    // Prefer new slash flash textures; fallback to old single texture if needed.
+    ID3D11ShaderResourceView* chosen = nullptr;
+    int availableCount = 0;
+    ID3D11ShaderResourceView* available[4] = { nullptr,nullptr,nullptr,nullptr };
+
+    for (auto* t : g_slashFlashTextures) {
+        if (t) available[availableCount++] = t;
+    }
+
+    if (availableCount > 0) {
+        chosen = available[rand() % availableCount];
+    }
+    else {
+        chosen = g_hitEffectTexture;
+    }
+
+    if (!chosen) return;
+
+    HitEffectInstance e;
+    e.x = worldX;
+    e.y = worldY;
+    // Make the kill effect larger than a normal weak-point hit
+    e.scale = (chosen == g_hitEffectTexture) ? 1.5f : 3.0f;
+    e.timer = 0.0f;
+    // Slightly slower frame time for a more dramatic kill flash
+    e.frameTime = 0.10f;
+    e.frame = 0;
+    e.active = true;
+    e.texture = chosen;
+
+    if (chosen == g_hitEffectTexture) {
+        e.rows = 1;
+        e.columns = 1;
+        e.frameCount = 1;
+    }
+    else {
+        e.rows = WEAKPOINT_HIT_EFFECT_ROWS;
+        e.columns = WEAKPOINT_HIT_EFFECT_COLUMNS;
+        e.frameCount = WEAKPOINT_HIT_EFFECT_FRAMES;
+    }
+    g_weakPointHitEffects.push_back(e);
+}
+
 HWND g_gameHwnd = nullptr;
 
 // Slash-count follower spawn request (set on enemy kill)
