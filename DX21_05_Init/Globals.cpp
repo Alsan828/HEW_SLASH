@@ -70,6 +70,7 @@ ID3D11ShaderResourceView* g_signLongClickTexture = nullptr;
 ID3D11ShaderResourceView* g_signESCTexture = nullptr;
 ID3D11ShaderResourceView* g_signRightTexture = nullptr;
 ID3D11ShaderResourceView* g_signClickTexture = nullptr;
+ID3D11ShaderResourceView* g_escTexture = nullptr;
 Animation signAnim;
 
 ID3D11ShaderResourceView* g_attackCountTestTexture = nullptr;
