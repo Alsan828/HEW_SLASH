@@ -1998,35 +1998,9 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
         m_cursorTexture, 0, 1, 1, false, 0);
     // Mouse cursor is rendered by `g_gameCursor` globally.
 
-    // Fixed display of dash points in top right corner of screen
-    float dashPointsX = 0.9f; // Right side of screen
-    float dashPointsY = 0.1f; // Top of screen
-    float digitWidth = 0.08f;
-    float digitHeight = 0.12f;
+    // (Removed fixed numeric dash-points UI — followers still render above player.)
 
-    // Render dash points (preview charge consumption). Do not highlight the numeric display;
-    // highlighting is done on follower icons instead.
-    int shownDashPoints = g_player.dashPoints;
-    if (g_player.isCharging && g_player.isChargeCostHighlight) {
-        shownDashPoints = std::max(0, g_player.dashPoints - std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS));
-    }
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-    RenderNumber(shownDashPoints, dashPointsX, dashPointsY, digitWidth, digitHeight, pTextureNum);
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-    // Debug/toggle display (numeric):
-    // T-mode: charge-dash executes on release
-    // G-mode: dash aftermath ignores gravity
-    float toggleX = -0.95f;
-    float toggleY = 0.85f;
-    float toggleDigitW = 0.04f;
-    float toggleDigitH = 0.06f;
-
-    // [T] mode value (0/1)
-    RenderNumber(g_releaseDashChargeMode ? 1 : 0, toggleX, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
-    // [G] mode value (0/1)
-    RenderNumber(g_noGravityAftermathMode ? 1 : 0, toggleX + toggleDigitW * 1.4f, toggleY, toggleDigitW, toggleDigitH, pTextureNum);
+    // (Removed debug numeric toggle UI for T/G modes)
 
     
     float uiX = -1.0f;

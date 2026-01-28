@@ -1358,6 +1358,17 @@ void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY
         g_gameStats.IncrementKills();  // 10 points
     }
 
+    // Award gauge points for kills, but do NOT increase gauge while the player
+    // already has gauge-based invincibility active. This prevents extending the
+    // current invincible state by farming additional kills during the effect.
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
+        int gaugeGain = wasWeakPointKill ? 3 : 1; // weak kills give more gauge
+        g_player.gaugePoints += gaugeGain;
+        if (g_player.gaugePoints > g_player.MAX_GAUGE_POINTS) {
+            g_player.gaugePoints = g_player.MAX_GAUGE_POINTS;
+        }
+    }
+
     // Restore dash point
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
