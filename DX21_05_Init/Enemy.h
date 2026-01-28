@@ -458,7 +458,7 @@ private:
     float leapChargeDuration = 6.0f;      // charge before leap
     float leapInitialVy = -6.0f;          // upward velocity (negative = up)
     float leapDashSpeedMultiplier = 1.0f; // faster horizontal dash while airborne
-    float leapAirDuration = 1.2f;         // max air time for leap
+    float leapAirDuration = 1.2f;         // max air time for leap1
 
     // Helpers
     void EnterState(BossState s);
