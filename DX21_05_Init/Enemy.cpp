@@ -1739,6 +1739,9 @@ void BossEnemy::EnterState(BossState s) {
         break;
     case BOSS_DASH_MOVING:
         anim.SetClip("dash");
+        // Maintain locked facing during dash movement
+        facingRight = fixedFacingRight;
+        facingLocked = true;
         break;
     case BOSS_DASH_AFTER:
         // Play dash_over first, then return to idle when finished
