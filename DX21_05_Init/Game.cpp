@@ -71,7 +71,6 @@ static std::vector<GaugeKillParticleInstance> g_gaugeKillParticlesRed;
 static float Rand01() {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
-
 // Clear gauge state and particles (callable from other modules)
 void ClearGaugeOnDeath()
 {
@@ -1424,118 +1423,7 @@ void DrawGame() {
     // Advance health icon animation
     g_healthAnim.Update(g_gameTimer.GetDeltaTime());
 
-    // Draw slash-count icons (behind player): 3 independent followers.
-    // Hide during gauge-based invincibility.
-    if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_slashCountTexture) {
-        const int count = std::clamp(g_player.dashPoints, 0, g_player.MAX_DASH_POINTS);
-        if (count > 0) {
-            struct Follower {
-                float x = 0.0f;
-                float y = 0.0f;
-                bool init = false;
-            };
-
-            static Follower s_follow[3];
-
-            // Sprite size in world units
-            const float iconW = 0.065f;
-            const float iconH = 0.065f;
-            const float spacing = iconW * 0.60f;
-
-            // Target anchor: one grid tile behind player (respect facing)
-            const float behind = GRID_WIDTH;
-            const float baseTargetX = g_player.posX + (g_player.facingRight ? -behind : behind);
-            const float baseTargetY = g_player.posY + PLAYER_HEIGHT * 0.55f;
-
-            // Per-icon offsets (so they don't overlap and are not aligned)
-            const float xDir = g_player.facingRight ? -1.0f : 1.0f; // extend further behind
-            const float xOffset[3] = { 0.0f, spacing * xDir, spacing * 2.0f * xDir };
-            const float yOffset[3] = { -iconH * 0.18f, 0.0f, iconH * 0.18f };
-            const float rotOffset[3] = { -0.08f, 0.0f, 0.08f };
-
-            // Use real delta time for smoothing (don't clamp). Clamping dt makes the follower
-            // advance in uneven steps when the actual frame time fluctuates.
-            const float dt = std::max(0.0f, g_gameTimer.GetDeltaTime());
-
-            // Consume spawn request: only affect the newly-restored indicator (the last one)
-            if (g_slashCountSpawnPending) {
-                int spawnIndex = std::clamp(g_player.dashPoints - 1, 0, g_player.MAX_DASH_POINTS - 1);
-                s_follow[spawnIndex].x = g_slashCountSpawnX;
-                s_follow[spawnIndex].y = g_slashCountSpawnY;
-                s_follow[spawnIndex].init = true;
-                g_slashCountSpawnPending = false;
-            }
-
-            int frame = g_slashCountAnim.GetCurrentFrame() % 3;
-            // Determine which followers to highlight when charging and previewing cost.
-            int pendingCost = std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS);
-            int highlightStart = std::max(0, count - pendingCost); // highlight the last `pendingCost` followers
-
-            for (int i = 0; i < count; ++i) {
-                Follower& f = s_follow[i];
-
-                const float targetX = baseTargetX + xOffset[i];
-                const float targetY = baseTargetY + yOffset[i];
-
-                if (!f.init) {
-                    f.x = targetX;
-                    f.y = targetY;
-                    f.init = true;
-                }
-
-                const float dx = targetX - f.x;
-                const float dy = targetY - f.y;
-                const float dist = sqrtf(dx * dx + dy * dy);
-
-                // Framerate-independent exponential smoothing.
-                // a = 1 - exp(-dt / tau)
-                // This avoids jitter/stepping when dt varies.
-                // 10x faster follow: reduce time constants by 10.
-                const float tauNear = 0.010f;  // seconds (slow when near)
-                const float tauFar = 0.002f;   // seconds (fast when far)
-                const float dist01 = std::clamp(dist / (GRID_WIDTH * 2.0f), 0.0f, 1.0f);
-                const float tau = tauNear + (tauFar - tauNear) * dist01;
-
-                const float safeTau = std::max(tau, 1e-4f);
-                float a = 1.0f - expf(-dt / safeTau);
-                a = std::clamp(a, 0.0f, 1.0f);
-
-                f.x += dx * a;
-                f.y += dy * a;
-
-                if (dist < 0.0025f) {
-                    f.x = targetX;
-                    f.y = targetY;
-                }
-
-                auto p = worldToScreen(f.x, f.y);
-
-                // If charging and cost preview is active, highlight the followers that will be consumed.
-                if (g_player.isCharging && g_player.isChargeCostHighlight && pendingCost > 0 && i >= highlightStart) {
-                    SetColor(1.0f, 1.0f, 0.3f, 1.0f); // highlight color (yellowish)
-                }
-                else {
-                    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-                }
-
-                RenderImage(p.first, p.second, iconW, iconH,
-                    g_slashCountTexture,
-                    frame,
-                    1,
-                    3,
-                    false,
-                    rotOffset[i],
-                    false);
-            }
-
-            // When points are missing, reset hidden followers so they don't "jump" when re-shown.
-            for (int i = count; i < 3; ++i) {
-                s_follow[i].init = false;
-            }
-
-            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-        }
-    }
+    // Draw slash-count icons will be rendered later (moved down) so they are not occluded by terrain
 
     // Draw player afterimages (behind player)
     for (const auto& a : g_playerAfterImages) {
@@ -1765,6 +1653,109 @@ void DrawGame() {
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
 
     g_projectileManager.Render(g_camera);
+    // Draw slash-count icons (followers) here so they render after tiles and are not occluded by terrain
+    // Hide during gauge-based invincibility.
+    if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_slashCountTexture) {
+        const int count = std::clamp(g_player.dashPoints, 0, g_player.MAX_DASH_POINTS);
+        if (count > 0) {
+            struct Follower {
+                float x = 0.0f;
+                float y = 0.0f;
+                bool init = false;
+            };
+
+            static Follower s_follow[3];
+
+            // Sprite size in world units
+            const float iconW = 0.065f;
+            const float iconH = 0.065f;
+            const float spacing = iconW * 0.60f;
+
+            // Target anchor: one grid tile behind player (respect facing)
+            const float behind = GRID_WIDTH;
+            const float baseTargetX = g_player.posX + (g_player.facingRight ? -behind : behind);
+            const float baseTargetY = g_player.posY + PLAYER_HEIGHT * 0.55f;
+
+            // Per-icon offsets (so they don't overlap and are not aligned)
+            const float xDir = g_player.facingRight ? -1.0f : 1.0f; // extend further behind
+            const float xOffset[3] = { 0.0f, spacing * xDir, spacing * 2.0f * xDir };
+            const float yOffset[3] = { -iconH * 0.18f, 0.0f, iconH * 0.18f };
+            const float rotOffset[3] = { -0.08f, 0.0f, 0.08f };
+
+            const float dt = std::max(0.0f, g_gameTimer.GetDeltaTime());
+
+            if (g_slashCountSpawnPending) {
+                int spawnIndex = std::clamp(g_player.dashPoints - 1, 0, g_player.MAX_DASH_POINTS - 1);
+                s_follow[spawnIndex].x = g_slashCountSpawnX;
+                s_follow[spawnIndex].y = g_slashCountSpawnY;
+                s_follow[spawnIndex].init = true;
+                g_slashCountSpawnPending = false;
+            }
+
+            int frame = g_slashCountAnim.GetCurrentFrame() % 3;
+            int pendingCost = std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS);
+            int highlightStart = std::max(0, count - pendingCost);
+
+            for (int i = 0; i < count; ++i) {
+                Follower& f = s_follow[i];
+
+                const float targetX = baseTargetX + xOffset[i];
+                const float targetY = baseTargetY + yOffset[i];
+
+                if (!f.init) {
+                    f.x = targetX;
+                    f.y = targetY;
+                    f.init = true;
+                }
+
+                const float dx = targetX - f.x;
+                const float dy = targetY - f.y;
+                const float dist = sqrtf(dx * dx + dy * dy);
+
+                const float tauNear = 0.010f;
+                const float tauFar = 0.002f;
+                const float dist01 = std::clamp(dist / (GRID_WIDTH * 2.0f), 0.0f, 1.0f);
+                const float tau = tauNear + (tauFar - tauNear) * dist01;
+                const float safeTau = std::max(tau, 1e-4f);
+                float a = 1.0f - expf(-dt / safeTau);
+                a = std::clamp(a, 0.0f, 1.0f);
+
+                f.x += dx * a;
+                f.y += dy * a;
+
+                if (dist < 0.0025f) {
+                    f.x = targetX;
+                    f.y = targetY;
+                }
+
+                auto p = worldToScreen(f.x, f.y);
+
+                if (g_player.isCharging && g_player.isChargeCostHighlight && pendingCost > 0 && i >= highlightStart) {
+                    SetColor(1.0f, 1.0f, 0.3f, 1.0f);
+                }
+                else {
+                    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+                }
+
+                bool followerFlip = (f.x < g_player.posX);
+                RenderImage(p.first, p.second, iconW, iconH,
+                    g_slashCountTexture,
+                    frame,
+                    1,
+                    3,
+                    false,
+                    rotOffset[i],
+                    followerFlip);
+            }
+
+            for (int i = count; i < 3; ++i) {
+                s_follow[i].init = false;
+            }
+
+            SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
+
     // Draw player
     if (!g_player.isDead) {
         // Normal drawing when alive
@@ -1938,6 +1929,13 @@ void HandleInput() {
                 sceneManager.ClearSavedBGMPath();
             }
         }
+    }
+
+    // If the current active scene is the pause scene, do not process any
+    // further gameplay inputs (movement, dash, jump, mouse charge, etc.).
+    // Pause toggle handling above still executes so player can resume.
+    if (sceneManager.GetCurrentSceneType() == PAUSE) {
+        return;
     }
 
     // Get mouse input state
@@ -2171,22 +2169,39 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
                 chargeTime = g_player.savedChargeTime;
             }
 
-            // Calculate smooth charge ratio (0.0 to 1.0)
-            float chargeRatio = chargeTime / g_player.MAX_CHARGE_TIME;
-            chargeRatio = std::clamp(chargeRatio, 0.0f, 1.0f);
+            // Determine charge level and use the same multipliers as in ExecuteMouseChargeDash
+            int chargeLevelPreview = g_player.GetChargeLevelFromTime(chargeTime);
 
-            // Smoothly interpolate speed multiplier from 1.0 to 2.0 based on charge
-            float minSpeedMultiplier = 1.0f;
-            float maxSpeedMultiplier = 2.0f;
-            float speedMultiplier = minSpeedMultiplier + (maxSpeedMultiplier - minSpeedMultiplier) * chargeRatio;
-
+            float speedMultiplier = 1.0f;
             float durationMultiplier = 1.0f;
+            switch (chargeLevelPreview) {
+            case 1:
+                speedMultiplier = 1.3f;
+                durationMultiplier = 1.0f;
+                break;
+            case 2:
+                speedMultiplier = 1.6f;
+                durationMultiplier = 1.0f;
+                break;
+            case 3:
+                speedMultiplier = 2.0f;
+                durationMultiplier = 1.0f;
+                break;
+            default:
+                speedMultiplier = 1.0f;
+                durationMultiplier = 1.0f;
+                break;
+            }
+
+            // ExecuteMouseChargeDash and DashToMouse apply an extra 1.3x multiplier
+            // for short (1-point) dashes; the preview should match that behavior.
+            const float SHORT_DASH_EXTRA = 1.3f;
 
             // Calculate the ACTUAL world distance the player will travel
-            // Distance = velocity × time × 60.0 (from your physics calculation)
-            float dashSpeed = DASH_SPEED * speedMultiplier;
+            // Distance = velocity × time × 60.0 (matching UpdatePlayerPhysics)
+            float dashSpeed = DASH_SPEED * speedMultiplier * SHORT_DASH_EXTRA;
             float dashDuration = DASH_DURATION * durationMultiplier;
-            float arrowLength = dashSpeed * dashDuration * 60.0f; // Added the 60.0f multiplier!
+            float arrowLength = dashSpeed * dashDuration * 60.0f;
 
             float tailX = playerCenterX;
             float tailY = playerCenterY;
@@ -2213,9 +2228,49 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
             }
 
             SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-            // Render with arrowLength (horizontal stretch) and arrowWidth (vertical size)
-            RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
-                g_arrowTexture, 0, 1, 1, false, m_arrowAngle);
+            // The arrow texture is a 1x3 spritesheet: frames 0 and 1 are body segments, frame 2 is the head.
+            // Instead of stretching the whole image, repeat frames 0/1 to form the shaft, then draw frame 2 as the head.
+            float dirX = cosf(m_arrowAngle);
+            float dirY = sinf(m_arrowAngle);
+
+            // Choose head width in world units. Keep head height equal to arrowWidth.
+            float headWidth = arrowWidth; // try to keep head unscaled horizontally relative to its height
+
+            // If arrow is too short, fall back to original stretched rendering
+            if (arrowLength <= headWidth * 1.1f) {
+                RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
+                    g_arrowTexture, 0, 1, 1, false, m_arrowAngle);
+            }
+            else {
+                float bodyLength = arrowLength - headWidth;
+
+                // Determine number of body segments. Use headWidth as a nominal segment unit to keep visuals consistent.
+                int segmentCount = (int)ceilf(bodyLength / headWidth);
+                if (segmentCount < 1) segmentCount = 1;
+
+                float segmentWidth = bodyLength / (float)segmentCount;
+
+                // Draw each body segment, alternating frames 0 and 1
+                for (int i = 0; i < segmentCount; ++i) {
+                    float segCenterDist = (segmentWidth * (i + 0.5f));
+                    float segCenterX = tailX + dirX * segCenterDist;
+                    float segCenterY = tailY + dirY * segCenterDist;
+
+                    auto segScreenPos = worldToScreen(segCenterX - segmentWidth * 0.5f, segCenterY - arrowWidth * 0.5f);
+
+                    int frame = (i % 2 == 0) ? 0 : 1; // alternate frame 0 and 1
+                    RenderImage(segScreenPos.first, segScreenPos.second, segmentWidth, arrowWidth,
+                        g_arrowTexture, frame, 1, 3, false, m_arrowAngle);
+                }
+
+                // Draw head at the tip
+                float headCenterDist = bodyLength + headWidth * 0.5f;
+                float headCenterX = tailX + dirX * headCenterDist;
+                float headCenterY = tailY + dirY * headCenterDist;
+                auto headScreenPos = worldToScreen(headCenterX - headWidth * 0.5f, headCenterY - arrowWidth * 0.5f);
+                RenderImage(headScreenPos.first, headScreenPos.second, headWidth, arrowWidth,
+                    g_arrowTexture, 2, 1, 3, false, m_arrowAngle);
+            }
 
             SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
