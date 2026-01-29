@@ -504,6 +504,7 @@ void CleanUpGameWorld()
     // for the combo texture
     ReleaseTexture(g_comboNumberTexture);
     ReleaseTexture(g_comboXTexture);
+    ReleaseTexture(g_comboRemainingTimeTexture);
 
     // for the gauge bar when there is one
     ReleaseTexture(g_gaugeBarTexture);
@@ -515,6 +516,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_attackCountTestTexture);
 
     ReleaseTexture(g_bossHealthBarTexture);
+    ReleaseTexture(g_bossInnerHPTexture);
 }
 
 // Improved collision detection function
@@ -586,12 +588,12 @@ void DrawComboUI(void)
 
     // background
     SetColor(0.05f, 0.05f, 0.05f, 0.75f);
-    RenderImage(comboTimerBarUI.x, comboTimerBarUI.y, comboTimerBarUI.width, comboTimerBarUI.height, g_bossHealthBarTexture, 0, 1, 1);
+    RenderImage(comboTimerBarUI.x, comboTimerBarUI.y, comboTimerBarUI.width, comboTimerBarUI.height, g_comboRemainingTimeTexture, 0, 1, 1);
 
     // fill
     SetColor(1.0f, 0.0f, 0.0f, 0.95f);
     RenderImage(comboTimerBarUI.x - (comboTimerBarUI.width * (1.0f - ratio) * 0.5f), comboTimerBarUI.y,
-        comboTimerBarUI.width * ratio, comboTimerBarUI.height, g_bossHealthBarTexture, 0, 1, 1);
+        comboTimerBarUI.width * ratio, comboTimerBarUI.height, g_comboRemainingTimeTexture, 0, 1, 1);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
@@ -759,7 +761,9 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/goal.png", &g_goalTexture);
     LoadTexture(g_pDevice, "asset/platform/platform_pass4.png", &g_oneWayPlatformTexture);
-    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_bossHealthBarTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_comboRemainingTimeTexture);
+    LoadTexture(g_pDevice, "asset/UI/boss_HP/boss_HP_background.png", &g_bossHealthBarTexture);
+    LoadTexture(g_pDevice, "asset/UI/boss_HP/boss_HP.png", &g_bossInnerHPTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
     // for the signs
