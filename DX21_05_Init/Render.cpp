@@ -616,6 +616,60 @@ void RenderGaugeFillImage(float posX, float posY, float width, float height,
 	}
 }
 
+void RenderImageClipped(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, float texClipRight)
+{
+	// Calculate texture coordinates - clip from the right
+	float u0 = 0.0f;              // Left boundary
+	float u1 = texClipRight;      // Right boundary - CLIPPED
+	float v0 = 0.0f;              // Top boundary
+	float v1 = 1.0f;              // Bottom boundary
+
+	D3D11_SUBRESOURCE_DATA initData;
+
+	VertexV vertices[4] = {
+		{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
+		{ posX + width, posY,           0.5f, u1, v1 }, // Bottom right
+		{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
+		{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
+	};
+	initData.pSysMem = vertices;
+
+	// Create temporary vertex buffer
+	ID3D11Buffer* pDynamicBuffer = nullptr;
+	D3D11_BUFFER_DESC desc;
+	desc.ByteWidth = sizeof(VertexV) * 4;
+	desc.Usage = D3D11_USAGE_DYNAMIC;
+	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	desc.MiscFlags = 0;
+	desc.StructureByteStride = 0;
+
+	initData.SysMemPitch = 0;
+	initData.SysMemSlicePitch = 0;
+
+	HRESULT hr = g_pDevice->CreateBuffer(&desc, &initData, &pDynamicBuffer);
+	if (FAILED(hr)) {
+		return;
+	}
+
+	// Bind vertex buffer
+	UINT stride = sizeof(VertexV);
+	UINT offset = 0;
+	g_pDeviceContext->IASetVertexBuffers(0, 1, &pDynamicBuffer, &stride, &offset);
+
+	// Bind texture resource
+	g_pDeviceContext->PSSetShaderResources(0, 1, &textureSRV);
+
+	// Set sampler state
+	g_pDeviceContext->PSSetSamplers(0, 1, &pSamplerState);
+	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF);
+
+	// Draw quad
+	g_pDeviceContext->Draw(4, 0);
+
+	// Release temporary resources
+	SAFE_RELEASE(pDynamicBuffer);
+}
 
 //// this is used for the gauge bar when its filling from bottom to top (when its a rectangle)
 //void RenderImageWithCrop(float posX, float posY, float width, float height,

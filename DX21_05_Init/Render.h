@@ -86,6 +86,8 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 //void RenderImageWithCrop(float posX, float posY, float width, float height,
 //	ID3D11ShaderResourceView* textureSRV, float fillRatio); //this is used for the gauge bar when its a rectangle
 
+void RenderImageClipped(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, float texClipRight);
+
 void RenderGaugeFillImage(float posX, float posY, float width, float height,
 	ID3D11ShaderResourceView* textureSRV, float fillRatio); //this is used for the gauge bar when it has the shape of a diamond
 

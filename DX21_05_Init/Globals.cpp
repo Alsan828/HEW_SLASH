@@ -41,6 +41,7 @@ ID3D11ShaderResourceView* g_groundTexture = nullptr;
 ID3D11ShaderResourceView* g_goalTexture = nullptr;
 ID3D11ShaderResourceView* g_oneWayPlatformTexture = nullptr;
 ID3D11ShaderResourceView* g_bossHealthBarTexture = nullptr;
+ID3D11ShaderResourceView* g_bossInnerHPTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture2 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture3 = nullptr;
@@ -53,6 +54,7 @@ ID3D11ShaderResourceView* g_arrowTexture = nullptr;
 ID3D11ShaderResourceView* g_cursorTexture = nullptr;
 ID3D11ShaderResourceView* g_comboNumberTexture = nullptr;
 ID3D11ShaderResourceView* g_comboXTexture = nullptr;
+ID3D11ShaderResourceView* g_comboRemainingTimeTexture = nullptr;
 ID3D11ShaderResourceView* g_slashCountTexture = nullptr;
 Animation g_slashCountAnim;
 // Health follower texture/animation (1x3 spritesheet)

@@ -221,26 +221,22 @@ void GameplayScene::RenderBossHealthBar()
     if (!m_boss || !m_boss->IsAlive()) return; // if there is no boss or if its not alive, dont do anything
 
     // Boss HP bar dimensions and position
-    float barWidth = 1.2f;    // for the width of the HP bar
-    float barHeight = 0.06f;  // for the height of the HP bar
-    float barX = -barWidth * 0.5f; // Center horizontally
-    float barY = -0.85f;      // Bottom center of screen
+    InGameUI bossHPBarUI;
+    bossHPBarUI.width = 0.6f;    // for the width of the HP bar
+    bossHPBarUI.height = 0.6f;  // for the height of the HP bar
+    bossHPBarUI.x = -0.3f; // Center horizontally
+    bossHPBarUI.y = -1.1f;      // Bottom center of screen
 
-    // for around the hp bar color
-    SetColor(0.1f, 0.1f, 0.1f, 0.9f);
-    RenderImage(barX - 0.01f, barY - 0.01f, barWidth + 0.02f, barHeight + 0.02f,
-        g_bossHealthBarTexture, 0, 1, 1);
-
-    // for when the the hp bar is not full
-    SetColor(0.3f, 0.1f, 0.1f, 0.8f);
-    RenderImage(barX, barY, barWidth, barHeight, g_bossHealthBarTexture, 0, 1, 1);
+    // for the hp bar when its not full
+    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    RenderImage(bossHPBarUI.x, bossHPBarUI.y, bossHPBarUI.width, bossHPBarUI.height, g_bossHealthBarTexture, 0, 1, 1);
 
     // Calculate health
     float healthRatio = m_boss->GetHealth() / m_boss->GetMaxHealth();
 
-    // Color changes depenging on HP percentage
+    // Color changes depenging on HP percentage. MIGHT NOT NEED IN THE FUTURE
     if (healthRatio > 0.6f) {
-        SetColor(0.2f, 1.0f, 0.2f, 1.0f);  // greeen for more than half of hp
+        //SetColor(0.2f, 1.0f, 0.2f, 1.0f);  // greeen for more than half of hp
     }
     else if (healthRatio > 0.3f) {
         SetColor(1.0f, 0.8f, 0.0f, 1.0f);  // yellow for half of hp
@@ -250,7 +246,11 @@ void GameplayScene::RenderBossHealthBar()
     }
 
     // Draw filled HP bar
-    RenderImage(barX, barY, barWidth * healthRatio, barHeight, g_bossHealthBarTexture, 0, 1, 1);
+    //RenderImage(bossHPBarUI.x, bossHPBarUI.y, bossHPBarUI.width * healthRatio, bossHPBarUI.height, g_bossInnerHPTexture, 0, 1, 1);
+
+    float hpBarWidth = bossHPBarUI.width * healthRatio;
+    RenderImageClipped(bossHPBarUI.x, bossHPBarUI.y, hpBarWidth, bossHPBarUI.height, g_bossInnerHPTexture, healthRatio);
+
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
