@@ -16,6 +16,8 @@ ResultScene::ResultScene(SceneManager* manager, int completedWorld)
 //it initializes the objects
 bool ResultScene::Init()
 {
+    Audio::PlayBGM(BackgroundMusic::VICTORY, true);
+
     SetInGameCursorEnabled(true);
 
     LoadTexture(g_pDevice, "asset/UI/result/background.png", &backgroundTexture);

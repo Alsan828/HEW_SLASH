@@ -100,11 +100,11 @@ void Map::InitializeTileDictionary() {
         {"G1", {"G1", "ground", "grass", true, false, false, false}},
         {"G2", {"G2", "ground", "dirt", true, false, false, false}},
         {"G3", {"G3", "ground", "stone", true, false, false, false}},
-
+        
         // Wall types
         {"W1", {"W1", "wall", "brick", true, false, false, false}},
         {"W2", {"W2", "wall", "stone", true, false, false, false}},
-
+       
         // Platform types
         {"P1", {"P1", "platform", "wood", true, false, false, false}},
         {"P2", {"P2", "platform", "metal", true, false, false, false}},
