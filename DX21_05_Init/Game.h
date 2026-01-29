@@ -623,16 +623,23 @@ namespace SoundEffect {
     // Gauge / limitbreak
     const std::string LIMITBREAK = "asset/SE/limitbreak.wav";
     const std::string INVINCIBLE_WARNING = "asset/SE/invincible_warning.wav";
+
+    // Boss
+    const std::string BOSS_SLASH1 = "asset/SE/oni_slash.wav";
+    const std::string BOSS_CHARGE = "asset/SE/enemy_charge.wav";
+    const std::string BOSS_DASH = "asset/SE/oni_dash.wav";
+    const std::string BOSS_DEATH = "asset/SE/boss_death.wav";
+    const std::string BOSS_DOWN = "asset/SE/down.wav";
 }
 
 namespace BackgroundMusic {
-    const std::string MAIN_MENU = "asset/Music/main_menu.wav";
+    const std::string MAIN_MENU = "asset/Music/level1.wav";
     const std::string LEVEL1 = "asset/Music/Dancer.wav";
     const std::string LEVEL2 = "asset/Music/0246_Nightmare-Assemblage.wav";
     const std::string LEVEL3 = "asset/Music/planetarium_garden.wav";
     const std::string BOSS_BATTLE = "asset/Music/0194_Red-Eyes.wav";
     const std::string GAME_OVER = "asset/Music/game_over.wav";
-    const std::string VICTORY = "asset/Music/victory.wav";
+    const std::string VICTORY = "asset/Music/Sagittarius.wav";
 }
 
 
@@ -646,3 +653,8 @@ extern ID3D11ShaderResourceView* g_bossDashTexture;
 extern ID3D11ShaderResourceView* g_bossDashOverTexture;
 extern ID3D11ShaderResourceView* g_bossSlashPrepTexture;
 extern ID3D11ShaderResourceView* g_bossSlashActiveTexture;
+extern ID3D11ShaderResourceView* g_bossDownBeforeTexture;
+extern ID3D11ShaderResourceView* g_bossDownHorizontalTexture;
+extern ID3D11ShaderResourceView* g_bossDownVarticalTexture;
+extern ID3D11ShaderResourceView* g_bossDownDiagonal1Texture;
+extern ID3D11ShaderResourceView* g_bossDownDiagonal2Texture;

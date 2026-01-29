@@ -81,46 +81,32 @@ void GameplayScene::Update(float deltaTime)
 
 void GameplayScene::UpdateBossLogic(float deltaTime)
 {
-    // for checking if the hp bar reahed the checkpoint or not
-    if (m_boss && m_boss->IsAlive()) {
-        CheckBossCheckpoints();
+    // 死亡中でもタイマーだけは更新する
+    if (g_player.isDead)
+    {
+        g_player.deathTimer -= deltaTime;
+
+        if (g_player.deathTimer <= 0.0f)
+        {
+            RespawnBossAtCheckpoint();
+        }
+        return;
     }
 
     UpdateGame(deltaTime);
 
-    // If the player dies, wait for the normal death animation duration,
-    // then respawn at the last boss checkpoint.
-    // Note: `g_player.deathTimer` counts DOWN from `DEATH_RESPAWN_TIME` to 0.
-    if (g_player.isDead && g_player.deathTimer <= 0.0f)
+    if (m_boss)
     {
-        RespawnBossAtCheckpoint();
-    }
-
-    // if boss died, the hp bar disspears as well as the boss.
-    if (m_boss && !m_boss->IsAlive())
-    {
-        m_boss = nullptr;
-
-        ////after killing the boss in world 1
-        //if (worldNumber == 1) { 
-        //    
-        //    sceneManager->SwitchScene(CAKE); // go to cake scene
-        //}
-        // //after killing the boss in world 2. add it later when there is one
-        //else if (worldNumber == 2) {
-        //    sceneManager->SwitchScene(CAKE);
-        //}
-        // // after killing the boss in world 3. add it later when there is one
-        //else if (worldNumber == 3) {  
-        //    sceneManager->SwitchScene(CAKE);
-        //}
-        char dbg[256];
-        sprintf_s(dbg, "BOSS DEAD: world=%d, area=%d\n", worldNumber, areaNumber);
-        OutputDebugStringA(dbg);
-
-        sceneManager->SwitchScene(CAKE);
-
-        return;
+        if (m_boss->IsAlive())
+        {
+            CheckBossCheckpoints();
+        }
+        else
+        {
+            sceneManager->SwitchScene(CAKE);
+            m_boss = nullptr;
+            return;
+        }
     }
 }
 

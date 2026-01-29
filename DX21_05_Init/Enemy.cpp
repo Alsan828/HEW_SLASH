@@ -188,6 +188,8 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/boss/boss_dash_over.png", &g_bossDashOverTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_slash_prep.png", &g_bossSlashPrepTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_slash_active.png", &g_bossSlashActiveTexture);
+    LoadTexture(g_pDevice, "asset/boss/boss_down_before.png", &g_bossDownBeforeTexture);
+    LoadTexture(g_pDevice, "asset/boss/boss_down_hori.png", &g_bossDownHorizontalTexture);
 }
 
 // ========== BlindEyeEnemy ==========
@@ -1629,6 +1631,10 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 300.0f)
 	// Slow down to 0.5x speed (double frame time)
     anim.AddClip("slash_active", 0, 7, 8, 1, slashFrameTime, false, g_bossSlashActiveTexture);
 
+    // Down before => down
+    anim.AddClip("down_before", 0, 4, 5, 1, 0.06f, false, g_bossDownBeforeTexture);
+    anim.AddClip("down_hori", 0, 0, 1, 1, 0.1f, false, g_bossDownHorizontalTexture);
+
     // death: 5帧示例
     anim.AddClip("death",  0, 14, 15, 1, 0.06f, false, g_bossDeathTexture);
 
@@ -1792,6 +1798,7 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
             health = std::max(1.0f, health);
         } else {
             health = 0;
+            Audio::PlaySE(SoundEffect::BOSS_DEATH);
             OnDeath();
         }
     }
@@ -1810,14 +1817,16 @@ void BossEnemy::EnterState(BossState s) {
     case BOSS_DASH_CHARGE:
         // Start charge animation using stage1
         if (anim.GetCurrentClipName() != "charge_stage1") {
+            Audio::PlaySE(SoundEffect::BOSS_CHARGE);
             anim.SetClip("charge_stage1");
         }
         velocityX = 0.0f;
         // Lock facing at start of charge
         fixedFacingRight = facingRight;
-        facingLocked = true;
+        facingLocked = false;
         break;
     case BOSS_DASH_MOVING:
+        Audio::PlaySE(SoundEffect::BOSS_DASH);
         anim.SetClip("dash");
         // Maintain locked facing during dash movement
         facingRight = fixedFacingRight;
@@ -1830,6 +1839,7 @@ void BossEnemy::EnterState(BossState s) {
         facingLocked = false;
         break;
     case BOSS_SLASH_CHARGE:
+        Audio::PlaySE(SoundEffect::BOSS_CHARGE);
         anim.SetClip("slash_prep");
         velocityX = 0.0f;
         // Lock facing at start of slash
@@ -1837,18 +1847,20 @@ void BossEnemy::EnterState(BossState s) {
         facingLocked = true;
         break;
     case BOSS_SLASH_ACTIVE:
+        Audio::PlaySE(SoundEffect::BOSS_SLASH1);
         anim.SetClip("slash_active");
         hasSpawnedSlashProjectiles = false;
         // Maintain locked facing
         facingRight = fixedFacingRight;
         break;
     case BOSS_DOWN_BEFORE:
-        anim.SetClip("idle");
+        Audio::PlaySE(SoundEffect::BOSS_DOWN);
+        anim.SetClip("down_before");
         velocityX = 0.0f;
         facingLocked = false;
         break;
     case BOSS_DOWN:
-        anim.SetClip("idle");
+        anim.SetClip("down_hori");
         velocityX = 0.0f;
         inDownImmortal = true;
         facingLocked = true; // keep facing fixed during down
