@@ -1805,11 +1805,16 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
     isHit = true;
     hitTimer = HIT_DURATION;
 
-    hitsTaken++;
-    if (bossState != BOSS_DOWN && (hitsTaken >= 15 || multiplier > 1.5f)) {
-        // Enter down sequence
-        hitsTaken = 0;
-        EnterState(BOSS_DOWN_BEFORE);
+    // Only accumulate hits toward the next "down" while not already in the down state.
+    // This prevents hits taken during the down period from contributing toward
+    // the next required hit count.
+    if (bossState != BOSS_DOWN) {
+        hitsTaken++;
+        if (hitsTaken >= 15 || multiplier > 1.5f) {
+            // Enter down sequence
+            hitsTaken = 0;
+            EnterState(BOSS_DOWN_BEFORE);
+        }
     }
 
     if (health <= 0) {
