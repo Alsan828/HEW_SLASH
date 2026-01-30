@@ -1172,7 +1172,7 @@ void FlyEnemy::OnDeath() {
 }
 
 // MageEnemy实现
-MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 20.0f) {
+MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     // 法师敌人：顶部和底部为弱点（一击必杀）
     SetDamageMultiplier(DIR_UP, 100.0f);
