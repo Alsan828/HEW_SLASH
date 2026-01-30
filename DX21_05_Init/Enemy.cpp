@@ -1870,7 +1870,7 @@ void BossEnemy::EnterState(BossState s) {
         facingLocked = false;
         break;
     case BOSS_SLASH_CHARGE:
-        Audio::PlaySE(SoundEffect::BOSS_CHARGE);
+        Audio::PlaySE(SoundEffect::BOSS_CHARGE2);
         anim.SetClip("slash_prep");
         velocityX = 0.0f;
         // Lock facing at start of slash
