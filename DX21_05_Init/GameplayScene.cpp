@@ -214,17 +214,24 @@ void GameplayScene::RespawnBossAtCheckpoint()
     // Find the respawned boss and set its hp to checkpoint
     if (!g_enemies.empty())
     {
-        m_boss = g_enemies[0];
-        m_boss->SetMaxHealth(300.f);// tore boss stats for the current test enemy
-
-        // it has reached a checkpoint, restores the checkpoint hp 
-        if (m_bossCheckpointHP > 0.0f) 
-        {
-            m_boss->SetHealth(m_bossCheckpointHP);
+        // Find the actual BossEnemy instance in the respawned enemy list.
+        m_boss = nullptr;
+        for (auto* e : g_enemies) {
+            if (auto* be = dynamic_cast<BossEnemy*>(e)) {
+                m_boss = be;
+                break;
+            }
         }
-        else // if it hasnt reached any checkpoint
-        {
-            m_boss->SetHealth(300.f);
+
+        if (m_boss) {
+            m_boss->SetMaxHealth(300.f);
+            // restore checkpoint hp if any
+            if (m_bossCheckpointHP > 0.0f) {
+                m_boss->SetHealth(m_bossCheckpointHP);
+            }
+            else {
+                m_boss->SetHealth(300.f);
+            }
         }
     }
 

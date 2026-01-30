@@ -406,18 +406,16 @@ void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
 }
 
 void ResetGame() {
-    g_projectileManager.ClearAll();  // New: clear all projectiles
-    CleanupEnemies();
+    // Clear transient state but do NOT destroy or reload map/enemies here.
+    // ResetGame is called during scene initialization after the map has
+    // already been switched/created. Calling CleanupEnemies()/ReloadCurrentMap()
+    // here would remove the freshly spawned enemies (including the boss)
+    // and cause immediate and incorrect boss-death behavior. Preserve map
+    // and enemy list; Cleanup/Reload should only happen explicitly when
+    // changing maps or performing a full cleanup.
+    g_projectileManager.ClearAll();  // clear transient projectiles only
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
-    // Preserve gauge-related particles and timers so the player's gauge
-    // progress and visual effects are not lost when entering a new level.
-    // g_gaugeTrailParticles.clear();
-    // g_gaugeKillParticlesRed.clear();
-    // g_gaugeTrailSpawnTimer = 0.0f;
-    if (g_mapManager.IsMapLoaded()) {
-        g_mapManager.ReloadCurrentMap();
-    }
 
     g_player.comboCount = 0;
     g_player.comboTimer = 0.0f;
