@@ -71,7 +71,20 @@ void MapManager::CreateMapEnemies() {
             g_enemies.push_back(new ThrowerEnemy(x, y));
         }
         else if (enemyType == "BS") {
+            // Support boss variants: BS=normal, BR=red variant encoded via map's enemyType
+            // If the spawn code is exactly "BR" treat as red boss. Otherwise BS is normal.
             g_enemies.push_back(new BossEnemy(x, y)); // Boss (统一使用 BS)
+        }
+        else if (enemyType == "BR") {
+            // red boss variant
+            BossEnemy* be = new BossEnemy(x, y);
+            // make red variant: double internal speeds and mark texture usage in globals
+            be->SetDashSpeedMultiplier(40.0f); // double of default 20.0f
+            be->SetSlashSpeed(0.03f); // half frame time (faster)
+            be->SetChargeDuration(0.5f); // twice faster charge (original 1.0f -> 0.5f)
+            be->SetTint(1.0f, 0.2f, 0.2f); // tint red
+            // We assume rendering chooses texture based on some global; here only speed changes.
+            g_enemies.push_back(be);
         }
         else if (enemyType == "E9") {
             g_enemies.push_back(new BlindEyeEnemy(x, y));
@@ -189,6 +202,16 @@ void MapManager::InitializeMaps() {
     Map bossMap ("boss", 0.15f, 0.15f);
     bossMap.CreateBossMap();
     AddMap(bossMap);
+
+    // boss2: two bosses map
+    Map boss2Map("boss2", 0.15f, 0.15f);
+    boss2Map.CreateBoss2Map();
+    AddMap(boss2Map);
+
+    // boss3: red faster boss
+    Map boss3Map("boss3", 0.15f, 0.15f);
+    boss3Map.CreateBoss3Map();
+    AddMap(boss3Map);
 
     // Create cake map
     Map cakeMap("cake", 0.15f, 0.15f);

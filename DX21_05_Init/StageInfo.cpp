@@ -1,4 +1,4 @@
-#include "StageInfo.h"
+﻿#include "StageInfo.h"
 
 // construct
 StageInfo::StageInfo(int world, int area)
@@ -31,10 +31,10 @@ void StageInfo::GenerateMapName()
             m_mapName = "boss";      // for world 1 Boss
         }
         else if (m_world == 2) {
-            m_mapName = "boss";   // for world 2 Boss.
+            m_mapName = "boss2";   // for world 2 Boss.
         }
         else if (m_world == 3) {
-            m_mapName = "boss";   // for world 3 Boss. add it when there is one
+            m_mapName = "boss3";   // for world 3 Boss.
         }
     }
     else {

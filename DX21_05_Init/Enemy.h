@@ -177,6 +177,9 @@ public:
     // Visual-only scaling (does not change collision box)
     void SetScale(float s) { scale = s; }
 
+    // Tint for rendering (default white)
+    void SetTint(float r, float g, float b) { tintR = r; tintG = g; tintB = b; }
+
     // Whether this enemy can deal damage to the player by simple contact (collision).
     // Default enemies can damage on contact; special types (e.g. boss) may override.
     virtual bool CanDamageOnContact() const { return true; }
@@ -294,6 +297,10 @@ protected:
     float health;
     float maxHealth;
     float moveSpeed;
+    // tint color
+    float tintR = 1.0f;
+    float tintG = 1.0f;
+    float tintB = 1.0f;
     bool isAlive;
     bool markedForDeletion = false; // to see the animation after I kill the enemy
     bool wasVisible = false;  // 上次更新时是否可见

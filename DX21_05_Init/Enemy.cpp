@@ -809,7 +809,8 @@ void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, fl
 void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive && !isDying) return;
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // Apply tint if set (default white)
+    SetColor(tintR, tintG, tintB, 1.0f);
 
     // 将世界坐标转换为屏幕坐标
     float screenX, screenY;
@@ -842,7 +843,8 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
         !facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
     );
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // Boss may use its own tint
+    SetColor(tintR, tintG, tintB, 1.0f);
 
     // 如果不是死亡状态，渲染血条（包括血量小于等于10的敌人）
     if (!isDying) {
