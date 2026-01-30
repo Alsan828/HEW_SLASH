@@ -419,6 +419,7 @@ extern ID3D11ShaderResourceView* g_invinciblePlayerGroundChargeTexture; // 通�
 extern ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture; // 通用地面蓄力纹理
 
 
+extern ID3D11ShaderResourceView* g_groundBlackTexture;
 extern ID3D11ShaderResourceView* g_groundTexture;
 extern ID3D11ShaderResourceView* g_groundTopTexture;
 extern ID3D11ShaderResourceView* g_groundTopCornerLeftTexture;
