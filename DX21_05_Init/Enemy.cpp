@@ -54,6 +54,8 @@ namespace {
             return;
         }
 
+        
+
         auto* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
 

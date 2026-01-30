@@ -187,6 +187,9 @@ public:
 
     Animation anim;  // 动画系统
 
+    // Allow resetting runtime state for subclasses (no-op for base).
+    virtual void ResetState() {}
+
 protected:
     // turning/facing cooldown
     static constexpr float TURN_COOLDOWN_SECONDS = 1.0f;
@@ -425,6 +428,9 @@ public:
     void SetDashSpeedMultiplier(float mul) { dashSpeedMultiplier = mul; }
     void SetSlashSpeed(float frameTimeSeconds) { slashFrameTime = frameTimeSeconds; }
     void SetChargeDuration(float seconds) { chargeDuration = seconds; }
+    // Reset boss internal state to initial values (used when respawning at checkpoint)
+    // Default implementation does nothing; bosses may override.
+    virtual void ResetState() {}
 
 protected:
     virtual void ChaseBehavior(float deltaTime) override;

@@ -29,7 +29,19 @@ bool GameplayScene::Init()
 
     g_mapManager.SwitchMap(mapName, -1, -1);
 
-    ResetGame();
+    // For boss stages we need a full reload so the boss instance/state is
+    // recreated and initialized cleanly. Regular areas use a soft reset to
+    // preserve transient state like gauge/particles when moving between maps.
+    if (isBossStage) {
+        // Ensure scene-local checkpoint tracking is cleared on (re)entering the boss stage.
+        m_bossCheckpointHP = 0.0f;
+        m_checkpoint1Reached = false;
+        m_checkpoint2Reached = false;
+        ResetGame(true);
+    }
+    else {
+        ResetGame();
+    }
 
     // Load tutorial overlay for first four World1 areas
     if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
@@ -131,19 +143,36 @@ void GameplayScene::UpdateBossLogic(float deltaTime)
         return;
     }
 
+    // Preserve a local pointer to the boss before running the general update
+    // because UpdateGame -> UpdateEnemies may delete enemy objects when their
+    // death animation completes. Checking membership in g_enemies is safer
+    // than dereferencing a potentially deleted pointer.
+    BossEnemy* bossPtr = dynamic_cast<BossEnemy*>(m_boss);
+
     UpdateGame(deltaTime);
 
-    if (m_boss)
-    {
-        if (m_boss->IsAlive())
-        {
-            CheckBossCheckpoints();
+    if (bossPtr) {
+        // If the boss pointer no longer exists in the global enemy list,
+        // it has finished its death animation and was removed — transition.
+        bool stillPresent = false;
+        for (auto* e : g_enemies) {
+            if (e == bossPtr) { stillPresent = true; break; }
         }
-        else
-        {
+
+        if (!stillPresent) {
+            // Boss completed death sequence and was deleted; safe to switch.
             sceneManager->SwitchScene(CAKE);
             m_boss = nullptr;
             return;
+        }
+
+        // If still present, check alive state and perform checkpoint logic.
+        if (m_boss->IsAlive()) {
+            CheckBossCheckpoints();
+        }
+        else {
+            // Boss is dead but still present (death animation playing). Do nothing
+            // and allow UpdateGame to continue updating until removal.
         }
     }
 }
@@ -232,6 +261,9 @@ void GameplayScene::RespawnBossAtCheckpoint()
             else {
                 m_boss->SetHealth(300.f);
             }
+            // Also reset transient boss state so it doesn't carry over
+            // behavior flags from a previous attempt.
+            m_boss->ResetState();
         }
     }
 
