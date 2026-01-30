@@ -107,6 +107,10 @@ void Map::InitializeTileDictionary() {
         {"G7", {"G7", "ground", "bottom", true, false, false, false}},
         {"G8", {"G8", "ground", "bottom_corner_left", true, false, false, false}},
         {"G9", {"G9", "ground", "bottom_corner_right", true, false, false, false}},
+        {"C1", {"C1", "ground", "corner_top_facing_left", true, false, false, false}},
+        {"C2", {"C2", "ground", "corner_top_facing_right", true, false, false, false}},
+        {"C3", {"C3", "ground", "corner_bottom_facing_left", true, false, false, false}},
+        {"C4", {"C4", "ground", "corner_bottom_facing_right", true, false, false, false}},
         {"BD", {"BD", "ground", "boss_decoration", true, false, false, false}},
         
         // Wall types
