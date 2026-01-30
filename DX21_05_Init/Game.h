@@ -431,6 +431,10 @@ extern ID3D11ShaderResourceView* g_groundRightTexture;
 extern ID3D11ShaderResourceView* g_groundBottomTexture;
 extern ID3D11ShaderResourceView* g_groundBottomCornerLeftTexture;
 extern ID3D11ShaderResourceView* g_groundBottomCornerRightTexture;
+extern ID3D11ShaderResourceView* g_groundCornerFacingTopLeftTexture;
+extern ID3D11ShaderResourceView* g_groundCornerFacingTopRightTexture;
+extern ID3D11ShaderResourceView* g_groundCornerFacingBottomLeftTexture;
+extern ID3D11ShaderResourceView* g_groundCornerFacingBottomRightTexture;
 extern ID3D11ShaderResourceView* g_bossDecorationTexture;
 
 extern ID3D11ShaderResourceView* g_goalTexture;

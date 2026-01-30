@@ -491,6 +491,10 @@ void CleanUpGameWorld()
     ReleaseTexture(g_groundBottomTexture);
     ReleaseTexture(g_groundBottomCornerLeftTexture);
     ReleaseTexture(g_groundBottomCornerRightTexture);
+    ReleaseTexture(g_groundCornerFacingTopLeftTexture);
+    ReleaseTexture(g_groundCornerFacingTopRightTexture);
+    ReleaseTexture(g_groundCornerFacingBottomLeftTexture);
+    ReleaseTexture(g_groundCornerFacingBottomRightTexture);
 
     // for the boss decoration in the boss stage
     ReleaseTexture(g_bossDecorationTexture);
@@ -792,6 +796,10 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/platform/platformrenga_down.png", &g_groundBottomTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_dia_left_down.png", &g_groundBottomCornerLeftTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_dia_right_down.png", &g_groundBottomCornerRightTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_left_up.png", &g_groundCornerFacingTopLeftTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_right_up.png", &g_groundCornerFacingTopRightTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_left_down.png", &g_groundCornerFacingBottomLeftTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_right_down.png", &g_groundCornerFacingBottomRightTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_oni.png", &g_bossDecorationTexture);
 
     LoadTexture(g_pDevice, "asset/goal.png", &g_goalTexture);
@@ -1381,6 +1389,18 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     }
     else if (tileCode == "G9") {
         return g_groundBottomCornerRightTexture;
+    }
+    else if (tileCode == "C1") {
+        return g_groundCornerFacingTopLeftTexture;
+    }
+    else if (tileCode == "C2") {
+        return g_groundCornerFacingTopRightTexture;
+    }
+    else if (tileCode == "C3") {
+        return g_groundCornerFacingBottomLeftTexture;
+    }
+    else if (tileCode == "C4") {
+        return g_groundCornerFacingBottomRightTexture;
     }
     else if (tileCode == "BD") {
         return g_bossDecorationTexture;
