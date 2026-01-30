@@ -616,22 +616,26 @@ void RenderGaugeFillImage(float posX, float posY, float width, float height,
 	}
 }
 
-void RenderImageClipped(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, float texClipRight)
+// render image vertical so it doesnt shift left
+void RenderImageClipped(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, float fillRatio)
 {
-	// Calculate texture coordinates - clip from the right
+	// Shrink the quad from the right while keeping left edge fixed
+	float renderWidth = width * fillRatio;  // Actual width to render
+
+	// Texture coordinates - crop from the right to match render width
 	float u0 = 0.0f;              // Left boundary
-	float u1 = texClipRight;      // Right boundary - CLIPPED
+	float u1 = fillRatio;         // Right boundary - crop texture to match
 	float v0 = 0.0f;              // Top boundary
 	float v1 = 1.0f;              // Bottom boundary
 
 	D3D11_SUBRESOURCE_DATA initData;
-
 	VertexV vertices[4] = {
-		{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
-		{ posX + width, posY,           0.5f, u1, v1 }, // Bottom right
-		{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
-		{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
+		{ posX + renderWidth, posY + height, 0.5f, u1, v0 }, // Top right
+		{ posX + renderWidth, posY,          0.5f, u1, v1 }, // Bottom right
+		{ posX,               posY + height, 0.5f, u0, v0 }, // Top left
+		{ posX,               posY,          0.5f, u0, v1 }  // Bottom left
 	};
+
 	initData.pSysMem = vertices;
 
 	// Create temporary vertex buffer
@@ -670,60 +674,6 @@ void RenderImageClipped(float posX, float posY, float width, float height, ID3D1
 	// Release temporary resources
 	SAFE_RELEASE(pDynamicBuffer);
 }
-
-//// this is used for the gauge bar when its filling from bottom to top (when its a rectangle)
-//void RenderImageWithCrop(float posX, float posY, float width, float height,
-//	ID3D11ShaderResourceView* textureSRV, float fillRatio)
-//{
-//	if (fillRatio <= 0.0f || textureSRV == nullptr) return;
-//	fillRatio = min(fillRatio, 1.0f);  // or std::min if needed
-//
-//	float displayHeight = height * fillRatio;
-//	float bottomY = posY;               // fixed bottom
-//	float topY = posY + displayHeight;  // grows upward
-//
-//	float u0 = 0.0f;
-//	float u1 = 1.0f;
-//
-//	// ────────────────────────────────────────────────
-//	// DX11 standard: v=0 = TOP of texture image, v=1 = BOTTOM
-//	// For bottom-fill: anchor at v=1 (bottom), reveal upward to lower v
-//	float v_bottom = 1.0f;                 // Bottom of visible quad → bottom of texture
-//	float v_top = 1.0f - fillRatio;     // Top of visible quad → moves toward top of texture
-//
-//	VertexV vertices[4] = {
-//		{ posX + width, topY,    0.5f, u1, v_top    },  // Top-right     → v = 1 - ratio
-//		{ posX + width, bottomY, 0.5f, u1, v_bottom },  // Bottom-right  → v = 1.0
-//		{ posX,         topY,    0.5f, u0, v_top    },  // Top-left
-//		{ posX,         bottomY, 0.5f, u0, v_bottom }   // Bottom-left
-//	};
-//
-//	D3D11_SUBRESOURCE_DATA initData = {};
-//	initData.pSysMem = vertices;
-//	initData.SysMemPitch = 0;
-//	initData.SysMemSlicePitch = 0;
-//
-//	ID3D11Buffer* pDynamicBuffer = nullptr;
-//	D3D11_BUFFER_DESC desc = {};
-//	desc.ByteWidth = sizeof(VertexV) * 4;
-//	desc.Usage = D3D11_USAGE_DYNAMIC;
-//	desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-//	desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-//
-//	HRESULT hr = g_pDevice->CreateBuffer(&desc, &initData, &pDynamicBuffer);
-//	if (FAILED(hr)) return;
-//
-//	UINT stride = sizeof(VertexV);
-//	UINT offset = 0;
-//	g_pDeviceContext->IASetVertexBuffers(0, 1, &pDynamicBuffer, &stride, &offset);
-//	g_pDeviceContext->PSSetShaderResources(0, 1, &textureSRV);
-//	g_pDeviceContext->PSSetSamplers(0, 1, &pSamplerState);
-//	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF);
-//	g_pDeviceContext->Draw(4, 0);
-//
-//	SAFE_RELEASE(pDynamicBuffer);
-//}
-
 
 void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV, bool enableCulling) {
 
