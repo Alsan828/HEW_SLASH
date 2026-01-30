@@ -706,7 +706,7 @@ void OnPlayerDeath() {
 
     // Small camera shake on player getting hit/death.
     // Keep it subtle to avoid nausea.
-    g_camera.Shake(0.015f, 0.08f);
+    g_camera.Shake(0.1f, 0.16f);
 
     // Track death
     g_gameStats.IncrementDeaths();
@@ -730,6 +730,7 @@ void OnPlayerDeath() {
     g_player.velocityX = 0.0f;
     g_player.velocityY = 0.0f;
 
+    Audio::PlaySE(SoundEffect::DEATH);
     // Death sound can be added here
     // g_audioManager.PlaySFX("death_sound.wav");
 }
