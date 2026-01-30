@@ -56,6 +56,8 @@ ID3D11ShaderResourceView* g_bossInnerHPTexture = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture1 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture2 = nullptr;
 ID3D11ShaderResourceView* g_backgroundTexture3 = nullptr;
+// Scrolling background texture for tiling (platform wood for World3)
+ID3D11ShaderResourceView* g_platformWoodTexture = nullptr;
 ID3D11ShaderResourceView* g_dashEffectTexture = nullptr;
 ID3D11ShaderResourceView* g_chargeEffectTexture = nullptr;
 ID3D11ShaderResourceView* g_hitEffectTexture = nullptr;

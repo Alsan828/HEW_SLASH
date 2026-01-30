@@ -539,6 +539,8 @@ void CleanUpGameWorld()
 
     ReleaseTexture(g_bossHealthBarTexture);
     ReleaseTexture(g_bossInnerHPTexture);
+    // release platform wood background
+    ReleaseTexture(g_platformWoodTexture);
 }
 
 // Improved collision detection function
@@ -844,6 +846,10 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/effect/slash_flash2.png", &g_slashFlashTextures[1]);
     LoadTexture(g_pDevice, "asset/effect/slash_flash3.png", &g_slashFlashTextures[2]);
     LoadTexture(g_pDevice, "asset/effect/slash_flash4.png", &g_slashFlashTextures[3]);
+
+    // background textures: simple tiled backgrounds
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_backgroundTexture1); // used by world1 and world2
+    LoadTexture(g_pDevice, "asset/platform/platformwood.png", &g_platformWoodTexture); // used by world3
 
 	// for the gauge bar 
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame.png", &g_gaugeBarTexture);
@@ -1473,6 +1479,81 @@ void SetTileColor(const std::string& tileCode) {
 }
 
 void DrawGame() {
+    // Draw simple tiled scrolling background based on current map
+    // Draw tiled background with optional parallax and tile scaling.
+    // parallax: 1.0 = follows camera exactly, <1.0 = moves slower (distant)
+    // tileScale: scale tiles larger (useful for distant layer to reduce repetition)
+    auto DrawTiledBackground = [&](ID3D11ShaderResourceView* tex, float tileWorldW, float tileWorldH, float parallax = 1.0f, float tileScale = 1.0f) {
+        if (!tex) return;
+
+        // Center around the camera so the background tiles align with the
+        // visible viewport. This prevents off-center tiling when camera looks ahead.
+        // When using parallax (<1.0), the background should be centered using
+        // the parallax-adjusted camera position so tiles remain around the
+        // screen even as the parallax offset increases.
+        float camX = g_camera.GetX();
+        float camY = g_camera.GetY();
+        // Use parallax-adjusted center for tile selection to avoid the
+        // background tiles drifting away from the camera when parallax != 1.0
+        float centerWorldX = camX * parallax;
+        float centerWorldY = camY * parallax;
+
+        // Compute visible rect in WORLD UNITS (pixel->world scale ~=100)
+        float visibleW = static_cast<float>(g_camera.GetWidth()) / (g_camera.GetZoom() * 100.0f);
+        float visibleH = static_cast<float>(g_camera.GetHeight()) / (g_camera.GetZoom() * 100.0f);
+
+        // Apply tile scaling
+        float tw = tileWorldW * tileScale;
+        float th = tileWorldH * tileScale;
+
+        // Center tile indices around player
+        int centerX = static_cast<int>(std::floor(centerWorldX / tw));
+        int centerY = static_cast<int>(std::floor(centerWorldY / th));
+
+        // How many tiles roughly fit across/height (half-extent)
+        int halfTilesX = static_cast<int>(std::ceil((visibleW / tw) * 0.5f)) + 1;
+        int halfTilesY = static_cast<int>(std::ceil((visibleH / th) * 0.5f)) + 1;
+
+        // Increase radius to render more tiles (user requested ~2x)
+        const int MAX_RADIUS = 8; // (2*8+1)^2 = 289 tiles max
+        halfTilesX = std::min(halfTilesX, MAX_RADIUS);
+        halfTilesY = std::min(halfTilesY, MAX_RADIUS);
+
+        // Darken background (kept here so effect applies equally to layers)
+        SetColor(0.45f, 0.45f, 0.45f, 1.0f);
+
+        // Parallax adjustment: background should move slower than camera.
+        float parCamX = camX * parallax;
+        float parCamY = camY * parallax;
+
+        for (int iy = centerY - halfTilesY; iy <= centerY + halfTilesY; ++iy) {
+            for (int ix = centerX - halfTilesX; ix <= centerX + halfTilesX; ++ix) {
+                float wx = ix * tw;
+                float wy = iy * th;
+                auto screen = std::pair<float,float>(wx - parCamX, wy - parCamY);
+                RenderImage(screen.first, screen.second, tw, th, tex, 0, 1, 1);
+            }
+        }
+
+        // Restore color
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    };
+
+    // choose background texture per current map
+    if (g_mapManager.IsMapLoaded()) {
+        const std::string& mapName = g_mapManager.GetCurrentMapName();
+        if (!mapName.empty()) {
+            if (mapName.rfind("World3", 0) == 0) {
+                // world3: only draw a distant parallax layer (near layer removed)
+                DrawTiledBackground(g_platformWoodTexture, 0.15f, 0.15f, 0.6f, 1.4f);
+            }
+            else {
+                // world1/2: only draw distant parallax layer
+                DrawTiledBackground(g_backgroundTexture1, 0.15f, 0.15f, 0.6f, 1.4f);
+            }
+        }
+    }
+
     int currentWidth = g_camera.GetWidth();
     int currentHeight = g_camera.GetHeight();
     float aspectRatio = static_cast<float>(currentWidth) / static_cast<float>(currentHeight);

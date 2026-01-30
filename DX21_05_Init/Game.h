@@ -440,6 +440,7 @@ extern ID3D11ShaderResourceView* g_bossInnerHPTexture;
 extern ID3D11ShaderResourceView* g_backgroundTexture1;
 extern ID3D11ShaderResourceView* g_backgroundTexture2;
 extern ID3D11ShaderResourceView* g_backgroundTexture3;
+extern ID3D11ShaderResourceView* g_platformWoodTexture;
 extern ID3D11ShaderResourceView* g_dashEffectTexture;
 extern ID3D11ShaderResourceView* g_chargeEffectTexture;
 extern ID3D11ShaderResourceView* g_hitEffectTexture;
