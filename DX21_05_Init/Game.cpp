@@ -1540,7 +1540,8 @@ void DrawGame() {
         halfTilesY = std::min(halfTilesY, MAX_RADIUS);
 
         // Darken background (kept here so effect applies equally to layers)
-        SetColor(0.45f, 0.45f, 0.45f, 1.0f);
+        // Lowered from 0.45 to 0.25 to make the background noticeably darker
+        SetColor(0.25f, 0.25f, 0.25f, 1.0f);
 
         // Parallax adjustment: background should move slower than camera.
         float parCamX = camX * parallax;
