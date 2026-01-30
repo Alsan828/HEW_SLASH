@@ -10,9 +10,10 @@ ProjectileManager& ProjectileManager::GetInstance() {
 bool Projectile::CheckCollisionWithRect(float rectX, float rectY, float rectW, float rectH) const {
     if (!isActive) return false;
 
+    // posX/posY are stored as the projectile center. Use that directly.
     float visualSize = size * scaleEffect;
-    float centerX = posX + visualSize * 0.5f;
-    float centerY = posY + visualSize * 0.5f;
+    float centerX = posX;
+    float centerY = posY;
 
     float rectCenterX = rectX + rectW * 0.5f;
     float rectCenterY = rectY + rectH * 0.5f;
@@ -29,7 +30,8 @@ void Projectile::OnHitByPlayer() {
     // Trigger visual/sound effects on hit
     // spawn weak point hit effect at projectile position
     // Use 0.75 scale for projectile hit effects
-    SpawnWeakPointHitEffectScaled(posX + size * 0.5f, posY + size * 0.5f, 0.75f);
+    // posX/posY represent the projectile center
+    SpawnWeakPointHitEffectScaled(posX, posY, 0.75f);
 
     // Shorter hit-stop and weaker camera shake compared to enemy hit
     g_player.hitStopTimer = 0.025f; // shorter than normal
@@ -240,11 +242,11 @@ void  Projectile::CheckPlayerCollision() {
     }
 
     // 计算射弹的实际碰撞体大小（考虑缩放效果）
-    float actualSize = size * scaleEffect * 0.5f;
+    float actualSize = size * scaleEffect;
 
-    // 射弹中心点
-    float projectileCenterX = posX + actualSize * 0.5f;
-    float projectileCenterY = posY + actualSize * 0.5f;
+    // 射弹中心点（posX/posY are center coordinates）
+    float projectileCenterX = posX;
+    float projectileCenterY = posY;
 
     // 玩家碰撞体中心点
     float playerCenterX = playerX + offsetX + playerWidth * 0.5f;
@@ -400,10 +402,10 @@ bool Projectile::CheckMapCollision(MapManager* mapManager) {
 
     auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
     // Only count as collision when the projectile's center point intersects a solid tile.
-    // Use visual size (scaleEffect) to compute the center position.
+    // posX/posY are stored as the projectile center.
     float visualSize = size * scaleEffect;
-    float centerX = posX + visualSize * 0.5f;
-    float centerY = posY + visualSize * 0.5f;
+    float centerX = posX;
+    float centerY = posY;
 
     for (const auto& tile : solidTiles) {
         // Check if center point lies within the tile rectangle
@@ -429,11 +431,19 @@ void Projectile::CheckEnemyCollision(std::vector<Enemy*>& enemies) {
         float enemyWidth = enemy->GetWidth();
         float enemyHeight = enemy->GetHeight();
 
-        // Collision detection (using values from Get methods)
-        if (posX < enemyX + enemyWidth &&
-            posX + size > enemyX &&
-            posY < enemyY + enemyHeight &&
-            posY + size > enemyY) {
+        // Treat projectile as a box centered at posX/posY with size scaled by scaleEffect
+        float projW = size * scaleEffect;
+        float projH = size * scaleEffect;
+        float projLeft = posX - projW * 0.5f;
+        float projTop = posY - projH * 0.5f;
+        float projRight = projLeft + projW;
+        float projBottom = projTop + projH;
+
+        // Collision detection (AABB)
+        if (projLeft < enemyX + enemyWidth &&
+            projRight > enemyX &&
+            projTop < enemyY + enemyHeight &&
+            projBottom > enemyY) {
 
             ApplyEffectToEnemy(enemy);
 
@@ -453,9 +463,11 @@ void Projectile::CheckEnemyCollision(std::vector<Enemy*>& enemies) {
 void Projectile::ApplyEffectToEnemy(Enemy* enemy) {
     if (!enemy || !enemy->IsAlive()) return;
 
-    // Calculate attack angle (direction from projectile to enemy)
-    float dx = enemy->GetX() - posX;
-    float dy = enemy->GetY() - posY;
+    // Calculate attack angle using centers
+    float enemyCenterX = enemy->GetX() + enemy->GetWidth() * 0.5f;
+    float enemyCenterY = enemy->GetY() + enemy->GetHeight() * 0.5f;
+    float dx = enemyCenterX - posX;
+    float dy = enemyCenterY - posY;
     float attackAngle = atan2(dy, dx);
 
     // Apply damage
