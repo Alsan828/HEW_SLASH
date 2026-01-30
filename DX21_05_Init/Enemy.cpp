@@ -1951,7 +1951,7 @@ void BossEnemy::UpdateDashAfter(float dt) {
 
 void BossEnemy::UpdateSlashCharge(float dt) {
     // After prep animation finishes (or a fallback duration), enter active slash
-    if (stateTimer >= chargeDuration) {        //(anim.IsFinished() || stateTimer >= chargeDuration)
+    if (stateTimer >= chargeDuration * 0.5) {        //(anim.IsFinished() || stateTimer >= chargeDuration)
         EnterState(BOSS_SLASH_ACTIVE);
     }
 }
