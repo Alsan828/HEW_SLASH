@@ -285,11 +285,13 @@ void GameplayScene::RenderBossHealthBar()
         SetColor(1.0f, 0.2f, 0.2f, 1.0f);  // red for almost death
     }
 
-    // Draw filled HP bar
-    //RenderImage(bossHPBarUI.x, bossHPBarUI.y, bossHPBarUI.width * healthRatio, bossHPBarUI.height, g_bossInnerHPTexture, 0, 1, 1);
+    // for the inner part of the hp bar
+    float innerOffsetX = 0.035f; // positive shift right, negative shift left
+    float innerWidthScale = 0.87f;
 
-    float hpBarWidth = bossHPBarUI.width * healthRatio;
-    RenderImageClipped(bossHPBarUI.x, bossHPBarUI.y, hpBarWidth, bossHPBarUI.height, g_bossInnerHPTexture, healthRatio);
+    float hpBarWidth = bossHPBarUI.width * innerWidthScale * healthRatio;
+
+    RenderImageClipped(bossHPBarUI.x + innerOffsetX, bossHPBarUI.y, bossHPBarUI.width * innerWidthScale, bossHPBarUI.height,g_bossInnerHPTexture, healthRatio);
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }

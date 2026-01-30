@@ -83,9 +83,6 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 	int frameIndex = 0, int rows = 1, int columns = 1, bool enableCulling = false,
 	float rotation = 0.0f, bool flipHorizontal = false); // added the rotation
 
-//void RenderImageWithCrop(float posX, float posY, float width, float height,
-//	ID3D11ShaderResourceView* textureSRV, float fillRatio); //this is used for the gauge bar when its a rectangle
-
 void RenderImageClipped(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, float texClipRight);
 
 void RenderGaugeFillImage(float posX, float posY, float width, float height,
