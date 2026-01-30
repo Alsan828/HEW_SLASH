@@ -420,6 +420,16 @@ extern ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture; // 通用�
 
 
 extern ID3D11ShaderResourceView* g_groundTexture;
+extern ID3D11ShaderResourceView* g_groundTopTexture;
+extern ID3D11ShaderResourceView* g_groundTopCornerLeftTexture;
+extern ID3D11ShaderResourceView* g_groundTopCornerRightTexture;
+extern ID3D11ShaderResourceView* g_groundLeftTexture;
+extern ID3D11ShaderResourceView* g_groundRightTexture;
+extern ID3D11ShaderResourceView* g_groundBottomTexture;
+extern ID3D11ShaderResourceView* g_groundBottomCornerLeftTexture;
+extern ID3D11ShaderResourceView* g_groundBottomCornerRightTexture;
+extern ID3D11ShaderResourceView* g_bossDecorationTexture;
+
 extern ID3D11ShaderResourceView* g_goalTexture;
 extern ID3D11ShaderResourceView* g_oneWayPlatformTexture;
 extern ID3D11ShaderResourceView* g_bossHealthBarTexture;

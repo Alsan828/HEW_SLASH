@@ -38,6 +38,16 @@ ID3D11ShaderResourceView* g_invinciblePlayerGroundChargeTexture = nullptr; // �
 ID3D11ShaderResourceView* g_invinciblePlayerWallSlideTexture = nullptr; // 通用地面蓄力纹理
 
 ID3D11ShaderResourceView* g_groundTexture = nullptr;
+ID3D11ShaderResourceView* g_groundTopTexture = nullptr;
+ID3D11ShaderResourceView* g_groundTopCornerLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_groundTopCornerRightTexture = nullptr;
+ID3D11ShaderResourceView* g_groundLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_groundRightTexture = nullptr;
+ID3D11ShaderResourceView* g_groundBottomTexture = nullptr;
+ID3D11ShaderResourceView* g_groundBottomCornerLeftTexture = nullptr;
+ID3D11ShaderResourceView* g_groundBottomCornerRightTexture = nullptr;
+ID3D11ShaderResourceView* g_bossDecorationTexture = nullptr;
+
 ID3D11ShaderResourceView* g_goalTexture = nullptr;
 ID3D11ShaderResourceView* g_oneWayPlatformTexture = nullptr;
 ID3D11ShaderResourceView* g_bossHealthBarTexture = nullptr;

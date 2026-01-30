@@ -121,7 +121,7 @@ void PauseScene::Draw()
     if (g_pauseTexture) 
     {
         // render pause background semi-transparent (alpha = 0.75)
-        SetColor(1, 1, 1, 0.55f);
+        //SetColor(1, 1, 1, 0.55f);
         RenderImage(-1, -1, 2, 2, g_pauseTexture, 0, 1, 1);
         // reset color to opaque for UI elements
         SetColor(1, 1, 1, 1.0f);
