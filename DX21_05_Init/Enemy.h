@@ -487,6 +487,14 @@ private:
     float slashFrameTime = 0.045f;    // 斩击动画的每帧时间，影响斩击释放速度
     float downDuration = 3.0f;       // shorter down time
 
+    // Randomized timing targets (to avoid robotic repeated behavior)
+    float timingVariance = 0.25f; // fraction: +/-25% by default
+    float randomizedIdleDuration = 1.0f;
+    float randomizedChargeDuration = 1.0f;
+    float randomizedDashMovingDuration = 1.0f;
+    float randomizedDashAfterDuration = 0.5f;
+    float randomizedDownDuration = 3.0f;
+
     // Dash tuning
     float dashSpeedMultiplier = 20.0f;   // even faster dash
     float dashMaxDuration = 6.0f;       // allow dash for longer time (approx half-map in many setups)

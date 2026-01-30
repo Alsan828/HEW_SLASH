@@ -855,7 +855,8 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
 void BossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive && !isDying) return;
 
-    SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+    // Apply per-enemy tint (allows BR variant to render red when SetTint was used)
+    SetColor(tintR, tintG, tintB, 1.0f);
 
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
@@ -879,6 +880,7 @@ void BossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
         facingRight
     );
 
+    // Restore draw color to white after rendering the boss
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Boss uses the HUD-mounted health bar (rendered by GameplayScene).
@@ -1840,6 +1842,12 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
 void BossEnemy::EnterState(BossState s) {
     bossState = s;
     stateTimer = 0.0f;
+    // Randomize some durations when entering states to make behavior less predictable
+    auto Randomize = [this](float base) {
+        float v = timingVariance;
+        float r = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f; // [-1,1]
+        return base * (1.0f + r * v);
+    };
     switch (s) {
     case BOSS_IDLE:
         anim.SetClip("idle");
@@ -1857,6 +1865,8 @@ void BossEnemy::EnterState(BossState s) {
         fixedFacingRight = facingRight;
         // Prevent changing facing once the dash direction is chosen
         facingLocked = true;
+        // randomized charge duration
+        randomizedChargeDuration = Randomize(chargeDuration);
         break;
     case BOSS_DASH_MOVING:
         Audio::PlaySE(SoundEffect::BOSS_DASH);
@@ -1864,12 +1874,15 @@ void BossEnemy::EnterState(BossState s) {
         // Maintain locked facing during dash movement
         facingRight = fixedFacingRight;
         facingLocked = true;
+        // randomized dash moving duration (cap by dashMaxDuration later)
+        randomizedDashMovingDuration = Randomize(dashMaxDuration * 0.25f);
         break;
     case BOSS_DASH_AFTER:
         // Play dash_over first, then return to idle when finished
         anim.SetClip("dash_over");
         velocityX = 0.0f;
         facingLocked = false;
+        randomizedDashAfterDuration = Randomize(dashAfterDuration);
         break;
     case BOSS_SLASH_CHARGE:
         Audio::PlaySE(SoundEffect::BOSS_CHARGE2);
@@ -1878,6 +1891,8 @@ void BossEnemy::EnterState(BossState s) {
         // Lock facing at start of slash
         fixedFacingRight = facingRight;
         facingLocked = true;
+        // use same charge duration randomness for slash
+        randomizedChargeDuration = Randomize(chargeDuration);
         break;
     case BOSS_SLASH_ACTIVE:
         Audio::PlaySE(SoundEffect::BOSS_SLASH1);
@@ -1900,6 +1915,7 @@ void BossEnemy::EnterState(BossState s) {
         velocityX = 0.0f;
         inDownImmortal = true;
         facingLocked = true; // keep facing fixed during down
+        randomizedDownDuration = Randomize(downDuration);
         break;
     case BOSS_DOWN_AFTER:
         anim.SetClip("idle");
@@ -1912,11 +1928,11 @@ void BossEnemy::EnterState(BossState s) {
 
 void BossEnemy::UpdateDashCharge(float dt) {
     // While charging, advance animation from stage1 to stage2 midway
-    float half = chargeDuration * 0.6f;
+    float half = randomizedChargeDuration * 0.6f;
     if (stateTimer >= half && anim.GetCurrentClipName() == std::string("charge_stage1")) {
         anim.SetClip("charge_stage2");
     }
-    if (stateTimer >= chargeDuration * 0.9f) {
+    if (stateTimer >= randomizedChargeDuration * 0.9f) {
         EnterState(BOSS_DASH_MOVING);
         // Move quickly in the locked facing direction (ensure dash direction matches facing)
         float dir = fixedFacingRight ? 1.0f : -1.0f;
@@ -1928,14 +1944,18 @@ void BossEnemy::UpdateDashCharge(float dt) {
 }
 
 void BossEnemy::UpdateDashMoving(float dt, MapManager* mapManager) {
-    // Repeat dash animation 4 times before moving to dash_over.
-    // dash clip is 2 frames, 0.05s each => 0.10s per loop.
+    // Repeat dash animation loops before moving to dash_over.
+    // Calculate a requiredTime but allow randomized shorter/longer durations.
     constexpr float kDashLoopSeconds = 2.0f * 0.05f;
     constexpr int kDashLoops = 4;
     const float requiredTime = kDashLoopSeconds * kDashLoops;
 
-    // Keep dashing for the required loops, but still allow a max duration guard.
-    if (stateTimer >= requiredTime || stateTimer > dashMaxDuration) {
+    float allowedTime = requiredTime;
+    // Use randomizedDashMovingDuration when set (fallback to a quarter of dashMaxDuration)
+    if (randomizedDashMovingDuration > 0.0f) allowedTime = randomizedDashMovingDuration;
+
+    // Keep dashing for the required/randomized time, but still allow a max duration guard.
+    if (stateTimer >= allowedTime || stateTimer > dashMaxDuration) {
         EnterState(BOSS_DASH_AFTER);
         velocityX = 0.0f;
         return;
@@ -1944,14 +1964,14 @@ void BossEnemy::UpdateDashMoving(float dt, MapManager* mapManager) {
 
 void BossEnemy::UpdateDashAfter(float dt) {
     // `dash_over` is non-looping; when it finishes or after a short timeout, go back to idle.
-    if (anim.IsFinished() || stateTimer >= dashAfterDuration) {
+    if (anim.IsFinished() || stateTimer >= randomizedDashAfterDuration) {
         EnterState(BOSS_IDLE);
     }
 }
 
 void BossEnemy::UpdateSlashCharge(float dt) {
     // After prep animation finishes (or a fallback duration), enter active slash
-    if (stateTimer >= chargeDuration * 0.5) {        //(anim.IsFinished() || stateTimer >= chargeDuration)
+    if (stateTimer >= randomizedChargeDuration * 0.5) {        //(anim.IsFinished() || stateTimer >= chargeDuration)
         EnterState(BOSS_SLASH_ACTIVE);
     }
 }
@@ -2025,7 +2045,7 @@ void BossEnemy::UpdateDownBefore(float dt) {
 }
 
 void BossEnemy::UpdateDown(float dt) {
-    if (stateTimer >= downDuration) {
+    if (stateTimer >= randomizedDownDuration) {
         EnterState(BOSS_DOWN_AFTER);
     }
 }
