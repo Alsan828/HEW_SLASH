@@ -14,6 +14,7 @@ CakeScene::CakeScene(SceneManager* manager)
 // Initialize the stage
 bool CakeScene::Init()
 {
+    Audio::PlayBGM(BackgroundMusic::THE_CAKE, true);
 
     g_gameState = STATE_PLAYING;
 

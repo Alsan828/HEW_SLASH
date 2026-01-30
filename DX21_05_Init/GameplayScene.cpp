@@ -117,6 +117,8 @@ void GameplayScene::UpdateBossLogic(float deltaTime)
     // 死亡中でもタイマーだけは更新する
     if (g_player.isDead)
     {
+        g_player.anim.Update(deltaTime);
+
         g_player.deathTimer -= deltaTime;
 
         if (g_player.deathTimer <= 0.0f)

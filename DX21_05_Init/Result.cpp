@@ -16,6 +16,8 @@ ResultScene::ResultScene(SceneManager* manager, int completedWorld)
 //it initializes the objects
 bool ResultScene::Init()
 {
+    Audio::PlayBGM(BackgroundMusic::VICTORY, true);
+
     SetInGameCursorEnabled(true);
 
     LoadTexture(g_pDevice, "asset/UI/result/background.png", &backgroundTexture);
@@ -55,6 +57,7 @@ void ResultScene::Update(float deltaTime)
             if (targetScene == TITLE)
             {
                 sceneManager->SwitchScene(TITLE);
+                Audio::StopBGM();
             }
             // if I cllick on next stage it goes to next stage select
             else
@@ -62,14 +65,17 @@ void ResultScene::Update(float deltaTime)
                 if (m_completedWorld == 1)
                 {
                     sceneManager->SwitchScene(STAGESELECT2);
+                    Audio::StopBGM();
                 }
                 else if (m_completedWorld == 2)
                 {
                     sceneManager->SwitchScene(STAGESELECT3);
+                    Audio::StopBGM();
                 }
                 else if (m_completedWorld == 3)
                 {
                     sceneManager->SwitchScene(MENU);
+                    Audio::StopBGM();
                 }
             }
             return;
