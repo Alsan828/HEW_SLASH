@@ -474,7 +474,20 @@ void CleanUpGameWorld()
     ReleaseTexture(g_invinciblePlayerGroundChargeTexture);
     ReleaseTexture(g_invinciblePlayerWallSlideTexture);
 
+    // for the ground tiles texture
     ReleaseTexture(g_groundTexture);
+    ReleaseTexture(g_groundTopTexture);
+    ReleaseTexture(g_groundTopCornerLeftTexture);
+    ReleaseTexture(g_groundTopCornerRightTexture);
+    ReleaseTexture(g_groundLeftTexture);
+    ReleaseTexture(g_groundRightTexture);
+    ReleaseTexture(g_groundBottomTexture);
+    ReleaseTexture(g_groundBottomCornerLeftTexture);
+    ReleaseTexture(g_groundBottomCornerRightTexture);
+
+    // for the boss decoration in the boss stage
+    ReleaseTexture(g_bossDecorationTexture);
+
     ReleaseTexture(g_goalTexture);
     ReleaseTexture(g_oneWayPlatformTexture);
     ReleaseTexture(g_backgroundTexture1);
@@ -759,8 +772,18 @@ void InitGameWorld() {
     g_player.anim.AddClip("InvincibleGroundCharge", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerGroundChargeTexture);
     g_player.anim.AddClip("InvincibleWallSlide", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerWallSlideTexture);
 
-
+    // for the ground texture
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_up.png", &g_groundTopTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_dia_left_up.png", &g_groundTopCornerLeftTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_dia_right_up.png", &g_groundTopCornerRightTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_left.png", &g_groundLeftTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_right.png", &g_groundRightTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga_down.png", &g_groundBottomTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_dia_left_down.png", &g_groundBottomCornerLeftTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_dia_right_down.png", &g_groundBottomCornerRightTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_oni.png", &g_bossDecorationTexture);
+
     LoadTexture(g_pDevice, "asset/goal.png", &g_goalTexture);
     LoadTexture(g_pDevice, "asset/platform/platform_pass4.png", &g_oneWayPlatformTexture);
     LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_comboRemainingTimeTexture);
@@ -1318,8 +1341,35 @@ void UpdateGame(float deltaTime) {
 
 // Helper function: Get texture based on tile code
 ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
-    if (tileCode == "G1" || tileCode == "G2" || tileCode == "G3") {
+    if (tileCode == "G1" ) {
         return g_groundTexture;
+    }
+    else if (tileCode == "G2"){
+        return g_groundTopTexture;
+    }
+    else if (tileCode == "G3") {
+        return g_groundTopCornerLeftTexture;
+    }
+    else if (tileCode == "G4") {
+        return g_groundTopCornerRightTexture;
+    }
+    else if (tileCode == "G5") {
+        return g_groundLeftTexture;
+    }
+    else if (tileCode == "G6") {
+        return g_groundRightTexture;
+    }
+    else if (tileCode == "G7") {
+        return g_groundBottomTexture;
+    }
+    else if (tileCode == "G8") {
+        return g_groundBottomCornerLeftTexture;
+    }
+    else if (tileCode == "G9") {
+        return g_groundBottomCornerRightTexture;
+    }
+    else if (tileCode == "BD") {
+        return g_bossDecorationTexture;
     }
     else if (tileCode == "W1" || tileCode == "W2") {
         return g_groundTexture;
@@ -1371,13 +1421,13 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
 void SetTileColor(const std::string& tileCode) {
     if (tileCode == "G1") {
         //SetColor(0.4f, 0.8f, 0.3f, 1.0f);
-        SetColor(0.7f, 0.7f, 0.7f, 1.0f);
+        //SetColor(0.7f, 0.7f, 0.7f, 1.0f);
     }
     else if (tileCode == "G2") {
-        SetColor(0.6f, 0.4f, 0.2f, 1.0f);
+        //SetColor(0.6f, 0.4f, 0.2f, 1.0f);
     }
     else if (tileCode == "G3") {
-        SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+        //SetColor(0.5f, 0.5f, 0.5f, 1.0f);
     }
     else if (tileCode == "W1") {
         SetColor(0.7f, 0.3f, 0.2f, 1.0f);

@@ -98,8 +98,15 @@ void Map::InitializeTileDictionary() {
 
         // Ground types
         {"G1", {"G1", "ground", "grass", true, false, false, false}},
-        {"G2", {"G2", "ground", "dirt", true, false, false, false}},
-        {"G3", {"G3", "ground", "stone", true, false, false, false}},
+        {"G2", {"G2", "ground", "top", true, false, false, false}}, // for decoration on top of actual platform
+        {"G3", {"G3", "ground", "top_corner_left", true, false, false, false}},
+        {"G4", {"G4", "ground", "top_corner_right", true, false, false, false}},
+        {"G5", {"G5", "ground", "left_side", true, false, false, false}},
+        {"G6", {"G6", "ground", "right_side", true, false, false, false}},
+        {"G7", {"G7", "ground", "bottom", true, false, false, false}},
+        {"G8", {"G8", "ground", "bottom_corner_left", true, false, false, false}},
+        {"G9", {"G9", "ground", "bottom_corner_right", true, false, false, false}},
+        {"BD", {"BD", "ground", "boss_decoration", true, false, false, false}},
         
         // Wall types
         {"W1", {"W1", "wall", "brick", true, false, false, false}},
