@@ -1316,6 +1316,7 @@ void OnEnemyDefeated(bool wasWeakPointKill, float enemyWorldX, float enemyWorldY
     // Restore dash point
     if (g_player.dashPoints < g_player.MAX_DASH_POINTS) {
         g_player.dashPoints++;
+        Audio::PlaySE(SoundEffect::SLASHCOUNT);
         g_gameStats.AddScore(10);
         printf("[POINTS] Normal kill +10 → total now = %d\n", g_gameStats.GetTotalEnemyPoints());
 
