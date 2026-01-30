@@ -31,6 +31,20 @@ bool GameplayScene::Init()
 
     ResetGame();
 
+    // Load tutorial overlay for first four World1 areas
+    if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
+        m_showTutorial = true;
+        g_tutorialActive = true;
+        std::string path = "asset/tutorial/tutorial_" + std::to_string(areaNumber) + ".png";
+        LoadTexture(g_pDevice, path.c_str(), &m_tutorialTexture);
+        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_normal.png", &m_tutorialButtonTexture);
+        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_hover.png", &m_tutorialButtonHoverTexture);
+        // place button at bottom-right
+        m_tutorialButton = UIButton(0.7f, -0.85f, 0.35f, 0.7f, MENU, m_tutorialButtonTexture, m_tutorialButtonHoverTexture);
+        m_tutorialButton.SetHitboxScale(0.25f, 0.13f);
+        m_tutorialButton.SetHitboxOffset(-0.06f);
+    }
+
 	if (isBossStage)
 	{
 		Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true);
@@ -71,6 +85,25 @@ bool GameplayScene::Init()
 
 void GameplayScene::Update(float deltaTime)
 {
+    // If tutorial overlay active, handle tutorial input and don't advance game time
+    if (m_showTutorial) {
+        // still update raw input
+        g_inputSystem.Update();
+
+        // Process tutorial button
+        if (m_tutorialButton.Process() == UIButtonResult::Clicked) {
+            // hide tutorial and resume normal play
+            m_showTutorial = false;
+            g_tutorialActive = false;
+            // release tutorial textures
+            if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
+            if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
+            if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
+        }
+        // while tutorial is shown, do not update game logic or timers
+        return;
+    }
+
     if (isBossStage) {
         UpdateBossLogic(deltaTime); // update the boss logic
     }
@@ -197,6 +230,15 @@ void GameplayScene::Draw()
 {
     DrawGame();
 
+    // Draw tutorial overlay on top if active
+    if (m_showTutorial && m_tutorialTexture) {
+        // draw full-screen centered tutorial image
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, m_tutorialTexture, 0, 1, 1, false, 0.0f, false);
+        // Draw next button
+        m_tutorialButton.Draw(1.0f);
+    }
+
     if (isBossStage) {
         RenderBossHealthBar();
     }
@@ -242,5 +284,8 @@ void GameplayScene::RenderBossHealthBar()
 
 void GameplayScene::Uninit()
 {
+    if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
+    if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
+    if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
     // for erasing
 }

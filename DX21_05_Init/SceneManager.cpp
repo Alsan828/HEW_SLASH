@@ -302,6 +302,16 @@ void SceneManager::Uninit()
 // Modified game loop
 void SceneManager::GameLoop()
 {
+    // If tutorial active, pause game time and let the current scene handle tutorial input
+    if (g_tutorialActive) {
+        // Update raw input so UI can react
+        g_inputSystem.Update();
+        // Call scene Update with zero delta so it can process tutorial UI without advancing timers
+        if (currentScene) currentScene->Update(0.0f);
+        Draw();
+        return;
+    }
+
     g_gameTimer.Tick();
     float delta = g_gameTimer.GetDeltaTime();
 

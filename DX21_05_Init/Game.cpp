@@ -4,6 +4,9 @@ float g_slowMoTimer = 0.0f;
 float g_slowMoFactor = 1.0f;
 bool g_isSlowMotion = false;
 
+// Tutorial global flag
+bool g_tutorialActive = false;
+
 // added december 4th
 // for the timer of the game
 float g_gameElapsedTime = 0.0f;

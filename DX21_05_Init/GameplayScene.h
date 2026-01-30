@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 #include "StageInfo.h"
 #include "SceneManager.h"
@@ -12,6 +12,13 @@ private:
     int worldNumber;  // for the world number ( world1, 2 or 3)
     int areaNumber;  // for the area number ( area1, area2, ... area8)
     bool isBossStage; // to check if its boss stage or not
+
+    // Tutorial overlay for early World1 areas
+    bool m_showTutorial = false;
+    ID3D11ShaderResourceView* m_tutorialTexture = nullptr;
+    ID3D11ShaderResourceView* m_tutorialButtonTexture = nullptr;
+    ID3D11ShaderResourceView* m_tutorialButtonHoverTexture = nullptr;
+    UIButton m_tutorialButton;
 
     // for the boss
     Enemy* m_boss;

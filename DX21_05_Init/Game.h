@@ -509,6 +509,9 @@ extern float g_slowMoTimer;      // 时间减慢计时器
 extern float g_slowMoFactor;     // 时间减慢倍率
 extern bool g_isSlowMotion;      // 是否处于时间减慢状态
 
+// Tutorial active flag: when true, gameplay input & time are suspended for tutorial overlay
+extern bool g_tutorialActive;
+
 // for the timer counting
 extern float g_gameElapsedTime;
 extern int g_gameMinutes;
