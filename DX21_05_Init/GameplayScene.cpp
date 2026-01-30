@@ -43,24 +43,19 @@ bool GameplayScene::Init()
         ResetGame();
     }
 
-    // Only load tutorial button resources for World1 areas 1-4
-    // (Tutorial images will be loaded dynamically when triggered)
-    if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
-        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_normal.png", &m_tutorialButtonTexture);
-        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_hover.png", &m_tutorialButtonHoverTexture);
-        m_tutorialButton = UIButton(0.7f, -0.85f, 0.35f, 0.7f, MENU, m_tutorialButtonTexture, m_tutorialButtonHoverTexture);
-        m_tutorialButton.SetHitboxScale(0.25f, 0.13f);
-        m_tutorialButton.SetHitboxOffset(-0.06f);
+    LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_normal.png", &m_tutorialButtonTexture);
+    LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_hover.png", &m_tutorialButtonHoverTexture);
+    m_tutorialButton = UIButton(0.7f, -0.85f, 0.35f, 0.7f, MENU, m_tutorialButtonTexture, m_tutorialButtonHoverTexture);
+    m_tutorialButton.SetHitboxScale(0.25f, 0.13f);
+    m_tutorialButton.SetHitboxOffset(-0.06f);
 
-        // Reset tutorial tracking
-        for (int i = 0; i < 4; i++) {
-            m_tutorialTriggered[i] = false;
-        }
-
-        // DON'T show tutorial immediately - wait for trigger
-        m_showTutorial = false;
-        g_tutorialActive = false;
+    // Reset tutorial tracking
+    for (int i = 0; i < 4; i++) {
+        m_tutorialTriggered[i] = false;
     }
+
+    m_showTutorial = false;
+    g_tutorialActive = false;
 
     if (isBossStage)
     {
@@ -232,10 +227,7 @@ void GameplayScene::Update(float deltaTime)
         /*return;*/
     }
 
-    // Check for tutorial triggers when not showing tutorial
-    if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
-        CheckTutorialTriggers();
-    }
+    CheckTutorialTriggers();
 
     if (isBossStage) {
         UpdateBossLogic(deltaTime);
@@ -247,9 +239,6 @@ void GameplayScene::Update(float deltaTime)
 
 void GameplayScene::CheckTutorialTriggers()
 {
-    // Only check in World1 areas 1-4
-    if (worldNumber != 1 || areaNumber < 1 || areaNumber > 4) return;
-
     // If tutorial already showing, don't check for new triggers
     if (m_showTutorial) return;
 
@@ -302,7 +291,7 @@ void GameplayScene::CheckTutorialTriggers()
                     g_tutorialActive = true;
                 }
 
-                // Only trigger one tutorial at a time, so break after finding one
+                // Only trigger one tutorial at a time, and then break after finding one
                 break;
             }
         }
