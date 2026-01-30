@@ -238,7 +238,13 @@ void Map::InitializeTileDictionary() {
         {"dddown", {"dddown", "hazard", "spike_down",  true, false, false, false}},
         {"ddright",{"ddright","hazard", "spike_right", true, false, false, false}},
         // Generic spike tile (non-directional)
-        {"DD",     {"DD",     "hazard", "spike",       true, false, false, false}}
+        {"DD",     {"DD",     "hazard", "spike",       true, false, false, false}},
+
+        // Tutorial trigger tiles
+        {"T1", {"T1", "tutorial", "tutorial_1", false, false, false, false}},
+        {"T2", {"T2", "tutorial", "tutorial_2", false, false, false, false}},
+        {"T3", {"T3", "tutorial", "tutorial_3", false, false, false, false}},
+        {"T4", {"T4", "tutorial", "tutorial_4", false, false, false, false}}
     };
 }
 

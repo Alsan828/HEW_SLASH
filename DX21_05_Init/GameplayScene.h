@@ -15,6 +15,8 @@ private:
 
     // Tutorial overlay for early World1 areas
     bool m_showTutorial = false;
+    int m_currentTutorialIndex = 0; // Which tutorial (1-4) to show
+    bool m_tutorialTriggered[4] = { false, false, false, false }; // Track which tutorials shown
     ID3D11ShaderResourceView* m_tutorialTexture = nullptr;
     ID3D11ShaderResourceView* m_tutorialButtonTexture = nullptr;
     ID3D11ShaderResourceView* m_tutorialButtonHoverTexture = nullptr;
@@ -42,4 +44,6 @@ public:
     void CheckBossCheckpoints();      // if we reached the checkpoint of the hp bar
     void RespawnBossAtCheckpoint();   // the boss respawns at the checkpoint, so I can see the bar full or not
     void RenderBossHealthBar();       // draws the boss HP bar
+
+    void CheckTutorialTriggers(); // check if player hit the tutorial or not
 };
