@@ -153,26 +153,46 @@ void GameplayScene::UpdateBossLogic(float deltaTime)
 
     if (bossPtr) {
         // If the boss pointer no longer exists in the global enemy list,
-        // it has finished its death animation and was removed — transition.
+        // it may have finished its death animation and been removed.
+        // For multi-boss fights (e.g. boss2) only transition when ALL
+        // BossEnemy instances have been removed.
         bool stillPresent = false;
         for (auto* e : g_enemies) {
             if (e == bossPtr) { stillPresent = true; break; }
         }
 
         if (!stillPresent) {
-            // Boss completed death sequence and was deleted; safe to switch.
-            sceneManager->SwitchScene(CAKE);
-            m_boss = nullptr;
-            return;
-        }
+            // Count remaining boss instances
+            int remainingBosses = 0;
+            BossEnemy* firstRemaining = nullptr;
+            for (auto* e : g_enemies) {
+                if (auto* be = dynamic_cast<BossEnemy*>(e)) {
+                    ++remainingBosses;
+                    if (!firstRemaining) firstRemaining = be;
+                }
+            }
 
-        // If still present, check alive state and perform checkpoint logic.
-        if (m_boss->IsAlive()) {
-            CheckBossCheckpoints();
+            if (remainingBosses == 0) {
+                // All bosses finished their death animations and were removed.
+                sceneManager->SwitchScene(CAKE);
+                m_boss = nullptr;
+                return;
+            }
+            else {
+                // There are still other bosses alive / playing death animations.
+                // Reassign m_boss to a remaining boss so checkpoint logic can continue.
+                m_boss = firstRemaining;
+            }
         }
         else {
-            // Boss is dead but still present (death animation playing). Do nothing
-            // and allow UpdateGame to continue updating until removal.
+            // If still present, check alive state and perform checkpoint logic.
+            if (m_boss->IsAlive()) {
+                CheckBossCheckpoints();
+            }
+            else {
+                // Boss is dead but still present (death animation playing). Do nothing
+                // and allow UpdateGame to continue updating until removal.
+            }
         }
     }
 }
