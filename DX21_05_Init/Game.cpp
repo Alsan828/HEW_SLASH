@@ -405,17 +405,22 @@ void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
     g_slowMoFactor = factor;
 }
 
-void ResetGame() {
-    // Clear transient state but do NOT destroy or reload map/enemies here.
-    // ResetGame is called during scene initialization after the map has
-    // already been switched/created. Calling CleanupEnemies()/ReloadCurrentMap()
-    // here would remove the freshly spawned enemies (including the boss)
-    // and cause immediate and incorrect boss-death behavior. Preserve map
-    // and enemy list; Cleanup/Reload should only happen explicitly when
-    // changing maps or performing a full cleanup.
-    g_projectileManager.ClearAll();  // clear transient projectiles only
+// ResetGame: perform a soft reset by default. If fullReload is true, also
+// clear enemies and reload the current map (useful for full respawn on death
+// in non-boss stages or when the player requests a manual reset).
+void ResetGame(bool fullReload) {
+    // Always clear transient projectiles and visual effects
+    g_projectileManager.ClearAll();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
+
+    if (fullReload) {
+        // Full cleanup/reload: destroy all enemies and recreate them from map
+        CleanupEnemies();
+        if (g_mapManager.IsMapLoaded()) {
+            g_mapManager.ReloadCurrentMap();
+        }
+    }
 
     g_player.comboCount = 0;
     g_player.comboTimer = 0.0f;

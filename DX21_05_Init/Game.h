@@ -559,7 +559,7 @@ void HandleInput();
 
 void TriggerSlowMotion(float i, float a); // 1秒时间，减慢到20%速度
 // Reset game
-void ResetGame();
+void ResetGame(bool fullReload = false);
 
 void CleanUpGameWorld(void); // added  december 11th
 

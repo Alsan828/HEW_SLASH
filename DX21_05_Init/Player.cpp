@@ -658,7 +658,7 @@ void UpdatePlayerPhysics(float deltaTime) {
             g_gameStats.IncrementPenalizableDeaths();
         }
 
-        ResetGame();
+        ResetGame(true);
     }
 
     CheckDashAttack();
@@ -689,7 +689,9 @@ void UpdatePlayerDeath(float deltaTime) {
     g_player.deathTimer -= deltaTime;
 
     if (g_player.deathTimer <= 0.0f) {
-        ResetGame();
+        // On player death timeout, perform a full reset including
+        // reloading the current map so enemies/spawns are restored.
+        ResetGame(true);
     }
 }
 
