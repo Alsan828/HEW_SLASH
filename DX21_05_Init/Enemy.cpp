@@ -1785,6 +1785,17 @@ void BossEnemy::OnDeath() {
 // Boss takes damage: mitigate during DOWN and change weakline after N hits
 void BossEnemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
+    // If the boss is performing the active slash and is within the
+    // vulnerability window (first five frames), immediately enter the
+    // down sequence. This makes hitting the boss early in the slash
+    // cause a guaranteed knockdown.
+    if (bossState == BOSS_SLASH_ACTIVE) {
+        int curFrame = anim.GetCurrentFrame();
+        if (curFrame < 5) {
+            EnterState(BOSS_DOWN_BEFORE);
+            return;
+        }
+    }
 
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
