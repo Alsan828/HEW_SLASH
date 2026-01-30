@@ -632,6 +632,7 @@ namespace SoundEffect {
     const std::string CHARGE_RELEASE = "asset/SE/slash.wav";
     const std::string SHOOT = "asset/SE/slash.wav";
     const std::string DEATH = "asset/SE/player_death.wav";
+    const std::string SLASHCOUNT = "asset/SE/charge_3.wav";
     const std::string ENEMY_HIT = "asset/SE/hit.wav";
     const std::string ENEMY_DEATH = "asset/SE/damage.wav";
     const std::string SLOWMO_START = "asset/SE/slowmo_start.wav";
@@ -649,6 +650,7 @@ namespace SoundEffect {
     // Boss
     const std::string BOSS_SLASH1 = "asset/SE/oni_slash.wav";
     const std::string BOSS_CHARGE = "asset/SE/enemy_charge.wav";
+    const std::string BOSS_CHARGE2 = "asset/SE/enemy_charge2.wav";
     const std::string BOSS_DASH = "asset/SE/oni_dash.wav";
     const std::string BOSS_DEATH = "asset/SE/boss_death.wav";
     const std::string BOSS_DOWN = "asset/SE/down.wav";

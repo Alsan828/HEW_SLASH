@@ -1250,6 +1250,9 @@ void UpdateDashPoints(float deltaTime) {
     int missing = g_player.MAX_DASH_POINTS - g_player.dashPoints;
     int actualRecover = std::min(pointsToRecover, missing);
     g_player.dashPoints += actualRecover;
+    if (actualRecover > 0) {
+        Audio::PlaySE(SoundEffect::SLASHCOUNT);
+    }
 
     // 保留余量时间，实现“每0.25秒一次”的稳定节拍
     float leftover = fmodf(timeAfterDelay, DASH_POINT_RECOVER_INTERVAL);
