@@ -805,7 +805,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_left_down.png", &g_groundCornerFacingBottomLeftTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_right_down.png", &g_groundCornerFacingBottomRightTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_oni.png", &g_bossDecorationTexture);
-    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_tutorialTexture);
+    LoadTexture(g_pDevice, "asset/platform/tutorial2.png", &g_tutorialTexture);
 
     LoadTexture(g_pDevice, "asset/goal.png", &g_goalTexture);
     LoadTexture(g_pDevice, "asset/platform/platform_pass4.png", &g_oneWayPlatformTexture);
