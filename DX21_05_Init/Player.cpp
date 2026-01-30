@@ -810,53 +810,17 @@ void UpdateDash(float deltaTime) {
             g_player.chargeTime = g_player.MAX_CHARGE_TIME; // it caps to max charge time and it doesnt release it unless you stop clicking
         }
 
-        // === 蓄力点数消耗累计（预扣） ===
-        // 在蓄力时持续增加“将要消耗”的点数，用于 UI 高亮与放出结算。
-        // 若当前可用点数有限，则不会累计超过当前点数，并且蓄力时间会被限制在对应层数的阈值，
-        // 避免出现继续蓄力但到释放时点数不足导致蓄力作废的情况。
+        // === 蓄力点数消耗显示调整 ===
+        // 现在无论蓄力持续多久，预扣始终显示为 1 点（只高亮一个 follower），
+        // 并且不再根据段数播放音效。充能达到最大时会播放一次音效（见下方的 max 音效触发）。
         if (!(g_player.isInvincible && g_player.isGaugeInvincible)) {
             g_player.isChargeCostHighlight = true;
 
-            // 最大允许的预扣点数受到当前持有点数限制
+            // 仅显示将要消耗的 1 点（如果有点数的话），避免多点预扣显示
             int maxAllowedPending = std::min(g_player.dashPoints, g_player.MAX_DASH_POINTS);
-
-            if (g_player.chargeTime >= g_player.MAX_CHARGE_TIME) {
-                // 达到满蓄力：预扣至当前可用的最大点数（不强制扣除超过当前持有）
-                g_player.chargePendingCost = maxAllowedPending;
-            }
-            else {
-                // 逐步按时间累计，但不超过当前可用点数
-                g_player.chargeCostTimer += deltaTime;
-                while (g_player.chargeCostTimer >= g_player.CHARGE_COST_INTERVAL && g_player.chargePendingCost < maxAllowedPending) {
-                    g_player.chargePendingCost++;
-                    g_player.chargeCostTimer -= g_player.CHARGE_COST_INTERVAL;
-                    // 每次增加预扣点数时触发蓄力音效
-                    Audio::PlaySE(SoundEffect::CHARGE_START);
-                }
-
-                // 如果已经达到当前可用点数上限，则阻止继续增加 chargeTime 到更高层数，
-                // 将 chargeTime 限制到对应的层数阈值，这样蓄力会在该层停住。
-                if (g_player.chargePendingCost >= maxAllowedPending && maxAllowedPending > 0) {
-                    float capTime = 0.0f;
-                    switch (maxAllowedPending) {
-                    case 1:
-                        capTime = g_player.CHARGE_THRESHOLD_LOW;
-                        break;
-                    case 2:
-                        capTime = g_player.CHARGE_THRESHOLD_MID;
-                        break;
-                    case 3:
-                        capTime = g_player.CHARGE_THRESHOLD_HIGH;
-                        break;
-                    default:
-                        capTime = g_player.MAX_CHARGE_TIME;
-                        break;
-                    }
-                    if (g_player.chargeTime > capTime) {
-                        g_player.chargeTime = capTime;
-                    }
-                }
-            }
+            g_player.chargePendingCost = (maxAllowedPending > 0) ? 1 : 0;
+            // 不再累加计时器用于逐步增加预扣点数，重置计时器以免遗留
+            g_player.chargeCostTimer = 0.0f;
         }
         else {
             g_player.isChargeCostHighlight = false;
@@ -1058,7 +1022,6 @@ void StartMouseChargeDash() {
     // 按下一瞬间立即预扣 1 点（只要有点），并播放蓄力音效
     if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_player.dashPoints > 0) {
         g_player.chargePendingCost = 1;
-        Audio::PlaySE(SoundEffect::CHARGE_START);
     }
     else {
         g_player.chargePendingCost = 0;
@@ -1133,91 +1096,38 @@ void ExecuteMouseChargeDash() {
         dirY = 0.0f;
     }
 
-    // === 关键修改：判断是短按还是长按 ===
-    int chargeLevel = 0;
-    float speedMultiplier = 1.0f;
-    float durationMultiplier = 1.0f;
-    float cooldownMultiplier = 1.0f;
-
+    // === 关键修改：基于蓄力时间计算冲刺距离（而非离散段数） ===
+    float effectiveChargeForDash = 0.0f;
+    // short-press chaining: if short and has saved charge, use savedChargeTime
     if (g_player.chargeTime < g_player.CHARGE_THRESHOLD_LOW) {
-        // 短按：使用保存的蓄力（如果有的话）
         if (g_player.hasSavedCharge) {
-            // 使用保存的蓄力等级
-            int savedChargeLevel = g_player.GetChargeLevelFromTime(g_player.savedChargeTime);
-            chargeLevel = savedChargeLevel;
-
-            // 根据保存的蓄力等级设置属性倍数
-            switch (savedChargeLevel) {
-            case 1:
-                speedMultiplier = 1.3f;
-                cooldownMultiplier = 0.8f;
-                break;
-            case 2:
-                speedMultiplier = 1.6f;
-                cooldownMultiplier = 0.6f;
-                break;
-            case 3:
-                speedMultiplier = 2.0f;
-                cooldownMultiplier = 0.5f;
-                break;
-            default:
-                speedMultiplier = 1.0f;
-                cooldownMultiplier = 1.0f;
-                break;
-            }
-
-            // 短按不保存新的蓄力，保留原来的蓄力
-            // 但重置衰减计时器，让保存的蓄力保持更久
+            effectiveChargeForDash = g_player.savedChargeTime;
+            // refresh decay timer
             g_player.chargeDecayTimer = g_player.CHARGE_DECAY_TIME;
-
-            // 关键：本次冲刺实际“使用”的是保存蓄力。
-            // 将其写回 chargeTime，保证命中顿刀等效果读取到正确的蓄力强度。
+            // reflect saved charge into chargeTime for hit-stop / other logic
             g_player.chargeTime = g_player.savedChargeTime;
         }
         else {
-            // 没有保存的蓄力，则使用当前短暂的蓄力时间
-            chargeLevel = 0; // 相当于无蓄力
-            speedMultiplier = 1.0f;
-            durationMultiplier = 1.0f;
-            cooldownMultiplier = 1.0f;
+            effectiveChargeForDash = g_player.chargeTime;
         }
     }
     else {
-        // 长按：使用本次蓄力，并保存
-        chargeLevel = g_player.GetChargeLevel();
-
-        // 根据当前蓄力等级设置属性倍数
-        switch (chargeLevel) {
-        case 1:
-            speedMultiplier = 1.3f;
-            durationMultiplier = 1.0f;
-            cooldownMultiplier = 0.8f;
-            break;
-        case 2:
-            speedMultiplier = 1.6f;
-            durationMultiplier = 1.0f;
-            cooldownMultiplier = 0.6f;
-            break;
-        case 3:
-            speedMultiplier = 2.0f;
-            durationMultiplier = 1.0f;
-            cooldownMultiplier = 0.5f;
-            break;
-        default:
-            speedMultiplier = 1.0f;
-            durationMultiplier = 1.0f;
-            cooldownMultiplier = 1.0f;
-            break;
-        }
-
-        // 长按蓄力：保存当前蓄力时间
+        // long press: use current charge time and save if long enough
+        effectiveChargeForDash = g_player.chargeTime;
         if (g_player.chargeTime >= g_player.MIN_CHARGE_TIME) {
-            g_player.SaveCharge(); // 保存当前蓄力时间
+            g_player.SaveCharge();
         }
         else {
-            g_player.ClearSavedCharge(); // 时间太短，清除保存的蓄力
+            g_player.ClearSavedCharge();
         }
     }
+
+    // normalize to [0,1]
+    float normalizedCharge = std::clamp(effectiveChargeForDash / g_player.MAX_CHARGE_TIME, 0.0f, 1.0f);
+    // max speed multiplier when fully charged (matches previous level-3 behavior)
+    const float MAX_SPEED_MULT = 2.0f;
+    float speedMultiplier = 1.0f + normalizedCharge * (MAX_SPEED_MULT - 1.0f);
+    float durationMultiplier = 1.0f; // keep duration fixed for now
     
     // 设置冲刺状态
     g_player.isDashing = true;

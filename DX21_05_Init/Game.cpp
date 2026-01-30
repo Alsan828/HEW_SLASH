@@ -1746,7 +1746,38 @@ void DrawGame() {
             }
 
             int frame = g_slashCountAnim.GetCurrentFrame() % 3;
-            int pendingCost = std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS);
+
+            // Compute preview-based pending cost so follower highlights stay
+            // perfectly in sync with the arrow preview. We take the maximum
+            // of the actual accumulated pending cost and the preview derived
+            // from the current/saved charge time.
+            int actualPending = std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS);
+            int previewPending = 0;
+
+            // Determine effective charge time used for preview (matches MouseIndicatorSystem logic)
+            float effectiveChargeTime = 0.0f;
+            if (g_player.isCharging) {
+                const bool willChainSavedCharge =
+                    g_releaseDashChargeMode &&
+                    g_player.hasSavedCharge &&
+                    (g_player.chargeTime < g_player.CHARGE_THRESHOLD_LOW);
+
+                effectiveChargeTime = willChainSavedCharge ? g_player.savedChargeTime : g_player.chargeTime;
+            }
+            else if (g_player.hasSavedCharge) {
+                effectiveChargeTime = g_player.savedChargeTime;
+            }
+
+            // Preview pending: when actively charging, UI should only show a single
+            // pending consumption (one red follower) regardless of charge amount.
+            if (g_player.isCharging) {
+                previewPending = 1;
+            }
+            else {
+                previewPending = g_player.GetChargeLevelFromTime(effectiveChargeTime);
+            }
+
+            int pendingCost = std::clamp(std::max(actualPending, previewPending), 0, g_player.MAX_DASH_POINTS);
             int highlightStart = std::max(0, count - pendingCost);
 
             for (int i = 0; i < count; ++i) {
@@ -2247,8 +2278,9 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
             }
 
             // ExecuteMouseChargeDash and DashToMouse apply an extra 1.3x multiplier
-            // for short (1-point) dashes; the preview should match that behavior.
-            const float SHORT_DASH_EXTRA = 1.3f;
+            // for short (no-charge) dashes; the preview should match that behavior.
+            // Only apply the extra multiplier when the previewed charge level is 0.
+            const float SHORT_DASH_EXTRA = (chargeLevelPreview == 0) ? 1.3f : 1.0f;
 
             // Calculate the ACTUAL world distance the player will travel
             // Distance = velocity × time × 60.0 (matching UpdatePlayerPhysics)
