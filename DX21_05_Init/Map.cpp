@@ -97,6 +97,7 @@ void Map::InitializeTileDictionary() {
         {"00", {"00", "empty", "none", false, false, false, false}},
 
         // Ground types
+        {"BB", {"BB", "ground", "black", true, false, false, false}}, // for the black platform
         {"G1", {"G1", "ground", "grass", true, false, false, false}},
         {"G2", {"G2", "ground", "top", true, false, false, false}}, // for decoration on top of actual platform
         {"G3", {"G3", "ground", "top_corner_left", true, false, false, false}},

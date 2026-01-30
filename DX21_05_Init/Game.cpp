@@ -475,6 +475,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_invinciblePlayerWallSlideTexture);
 
     // for the ground tiles texture
+    ReleaseTexture(g_groundBlackTexture);
     ReleaseTexture(g_groundTexture);
     ReleaseTexture(g_groundTopTexture);
     ReleaseTexture(g_groundTopCornerLeftTexture);
@@ -773,6 +774,7 @@ void InitGameWorld() {
     g_player.anim.AddClip("InvincibleWallSlide", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerWallSlideTexture);
 
     // for the ground texture
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3_black.png", &g_groundBlackTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_up.png", &g_groundTopTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_dia_left_up.png", &g_groundTopCornerLeftTexture);
@@ -1370,6 +1372,9 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     }
     else if (tileCode == "BD") {
         return g_bossDecorationTexture;
+    }
+    else if (tileCode == "BB") {
+        return g_groundBlackTexture;
     }
     else if (tileCode == "W1" || tileCode == "W2") {
         return g_groundTexture;
