@@ -498,6 +498,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_groundCornerFacingTopRightTexture);
     ReleaseTexture(g_groundCornerFacingBottomLeftTexture);
     ReleaseTexture(g_groundCornerFacingBottomRightTexture);
+    ReleaseTexture(g_tutorialTexture);
 
     // for the boss decoration in the boss stage
     ReleaseTexture(g_bossDecorationTexture);
@@ -804,6 +805,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_left_down.png", &g_groundCornerFacingBottomLeftTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_inversiondia_right_down.png", &g_groundCornerFacingBottomRightTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_oni.png", &g_bossDecorationTexture);
+    LoadTexture(g_pDevice, "asset/platform/platformtest.png", &g_tutorialTexture);
 
     LoadTexture(g_pDevice, "asset/goal.png", &g_goalTexture);
     LoadTexture(g_pDevice, "asset/platform/platform_pass4.png", &g_oneWayPlatformTexture);
@@ -1451,6 +1453,9 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     }
     else if (tileCode == "OP") {
         return g_oneWayPlatformTexture;
+    }
+    else if (tileCode == "T1" || tileCode == "T2" || tileCode == "T3" || tileCode == "T4") {
+        return g_tutorialTexture; // ground texture for tutorial tiles
     }
     else {
         return g_groundTexture;

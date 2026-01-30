@@ -52,6 +52,7 @@ ID3D11ShaderResourceView* g_groundCornerFacingTopRightTexture = nullptr;
 ID3D11ShaderResourceView* g_groundCornerFacingBottomLeftTexture = nullptr;
 ID3D11ShaderResourceView* g_groundCornerFacingBottomRightTexture = nullptr;
 ID3D11ShaderResourceView* g_bossDecorationTexture = nullptr;
+ID3D11ShaderResourceView* g_tutorialTexture = nullptr;
 
 ID3D11ShaderResourceView* g_goalTexture = nullptr;
 ID3D11ShaderResourceView* g_oneWayPlatformTexture = nullptr;

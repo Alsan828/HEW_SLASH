@@ -20,7 +20,7 @@ GameplayScene::GameplayScene(SceneManager* manager, int world, int area)
 
 bool GameplayScene::Init()
 {
-	ShowCursor(FALSE);
+    ShowCursor(FALSE);
     g_gameState = STATE_PLAYING;
 
     // generates the map name based on world and stage
@@ -43,37 +43,42 @@ bool GameplayScene::Init()
         ResetGame();
     }
 
-    // Load tutorial overlay for first four World1 areas
+    // Only load tutorial button resources for World1 areas 1-4
+    // (Tutorial images will be loaded dynamically when triggered)
     if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
-        m_showTutorial = true;
-        g_tutorialActive = true;
-        std::string path = "asset/tutorial/tutorial_" + std::to_string(areaNumber) + ".png";
-        LoadTexture(g_pDevice, path.c_str(), &m_tutorialTexture);
         LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_normal.png", &m_tutorialButtonTexture);
         LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_hover.png", &m_tutorialButtonHoverTexture);
-        // place button at bottom-right
         m_tutorialButton = UIButton(0.7f, -0.85f, 0.35f, 0.7f, MENU, m_tutorialButtonTexture, m_tutorialButtonHoverTexture);
         m_tutorialButton.SetHitboxScale(0.25f, 0.13f);
         m_tutorialButton.SetHitboxOffset(-0.06f);
+
+        // Reset tutorial tracking
+        for (int i = 0; i < 4; i++) {
+            m_tutorialTriggered[i] = false;
+        }
+
+        // DON'T show tutorial immediately - wait for trigger
+        m_showTutorial = false;
+        g_tutorialActive = false;
     }
 
-	if (isBossStage)
-	{
-		Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true);
-	}
-	else
-	{
-		switch (worldNumber)
-		{
-		case 1: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
-		case 2: Audio::PlayBGM(BackgroundMusic::LEVEL2, true); break;
-		case 3: Audio::PlayBGM(BackgroundMusic::LEVEL3, true); break;
-		default: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
-		}
-	}
+    if (isBossStage)
+    {
+        Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true);
+    }
+    else
+    {
+        switch (worldNumber)
+        {
+        case 1: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+        case 2: Audio::PlayBGM(BackgroundMusic::LEVEL2, true); break;
+        case 3: Audio::PlayBGM(BackgroundMusic::LEVEL3, true); break;
+        default: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+        }
+    }
 
     // if boss stage, set up the boss
-    if (isBossStage) 
+    if (isBossStage)
     {
         m_boss = nullptr;
 
@@ -95,38 +100,214 @@ bool GameplayScene::Init()
     return true;
 }
 
+// with this I show the tutorial without the trigger 
+//bool GameplayScene::Init()
+//{
+//	ShowCursor(FALSE);
+//    g_gameState = STATE_PLAYING;
+//
+//    // generates the map name based on world and stage
+//    StageInfo info(worldNumber, areaNumber);
+//    std::string mapName = info.GetMapName();
+//
+//    g_mapManager.SwitchMap(mapName, -1, -1);
+//
+//    // For boss stages we need a full reload so the boss instance/state is
+//    // recreated and initialized cleanly. Regular areas use a soft reset to
+//    // preserve transient state like gauge/particles when moving between maps.
+//    if (isBossStage) {
+//        // Ensure scene-local checkpoint tracking is cleared on (re)entering the boss stage.
+//        m_bossCheckpointHP = 0.0f;
+//        m_checkpoint1Reached = false;
+//        m_checkpoint2Reached = false;
+//        ResetGame(true);
+//    }
+//    else {
+//        ResetGame();
+//    }
+//
+//    // Load tutorial overlay for first four World1 areas
+//    if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
+//        m_showTutorial = true;
+//        g_tutorialActive = true;
+//        std::string path = "asset/tutorial/tutorial_" + std::to_string(areaNumber) + ".png";
+//        LoadTexture(g_pDevice, path.c_str(), &m_tutorialTexture);
+//        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_normal.png", &m_tutorialButtonTexture);
+//        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_hover.png", &m_tutorialButtonHoverTexture);
+//        // place button at bottom-right
+//        m_tutorialButton = UIButton(0.7f, -0.85f, 0.35f, 0.7f, MENU, m_tutorialButtonTexture, m_tutorialButtonHoverTexture);
+//        m_tutorialButton.SetHitboxScale(0.25f, 0.13f);
+//        m_tutorialButton.SetHitboxOffset(-0.06f);
+//    }
+//
+//	if (isBossStage)
+//	{
+//		Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true);
+//	}
+//	else
+//	{
+//		switch (worldNumber)
+//		{
+//		case 1: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+//		case 2: Audio::PlayBGM(BackgroundMusic::LEVEL2, true); break;
+//		case 3: Audio::PlayBGM(BackgroundMusic::LEVEL3, true); break;
+//		default: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+//		}
+//	}
+//
+//    // if boss stage, set up the boss
+//    if (isBossStage) 
+//    {
+//        m_boss = nullptr;
+//
+//        // 在当前敌人列表中查找 BossEnemy
+//        for (auto* e : g_enemies) {
+//            if (dynamic_cast<BossEnemy*>(e) != nullptr) {
+//                m_boss = e;
+//                break;
+//            }
+//        }
+//
+//        if (m_boss) {
+//            // Set boss HP to 300 for normal gameplay
+//            m_boss->SetMaxHealth(300.0f);
+//            m_boss->SetHealth(300.0f);
+//        }
+//    }
+//
+//    return true;
+//}
+// this is for the tutorial without the triggers
+//void GameplayScene::Update(float deltaTime)
+//{
+//    // If tutorial overlay active, handle tutorial input and don't advance game time
+//    if (m_showTutorial) {
+//        // still update raw input
+//        g_inputSystem.Update();
+//
+//        // Process tutorial button
+//        if (m_tutorialButton.Process() == UIButtonResult::Clicked) {
+//            // hide tutorial and resume normal play
+//            m_showTutorial = false;
+//            g_tutorialActive = false;
+//            // release tutorial textures
+//            if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
+//            if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
+//            if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
+//
+//            // while tutorial is shown, do not update game logic or timers
+//            return;
+//        }
+//        //// while tutorial is shown, do not update game logic or timers
+//        //return;
+//    }
+//
+//    if (isBossStage) {
+//        UpdateBossLogic(deltaTime); // update the boss logic
+//    }
+//    else {
+//        UpdateGame(deltaTime); // update the game logic
+//    }
+//}
+
+// with this I show the tutorial with the triggers
 void GameplayScene::Update(float deltaTime)
 {
     // If tutorial overlay active, handle tutorial input and don't advance game time
     if (m_showTutorial) {
-        // still update raw input
         g_inputSystem.Update();
 
-        // Process tutorial button
         if (m_tutorialButton.Process() == UIButtonResult::Clicked) {
-            // hide tutorial and resume normal play
             m_showTutorial = false;
             g_tutorialActive = false;
-            // release tutorial textures
-            if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
-            if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
-            if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
 
-            // while tutorial is shown, do not update game logic or timers
+            // Release tutorial texture (keep button textures for reuse)
+            if (m_tutorialTexture) {
+                m_tutorialTexture->Release();
+                m_tutorialTexture = nullptr;
+            }
+
             return;
         }
-        //// while tutorial is shown, do not update game logic or timers
-        //return;
+        /*return;*/
+    }
+
+    // Check for tutorial triggers when not showing tutorial
+    if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
+        CheckTutorialTriggers();
     }
 
     if (isBossStage) {
-        UpdateBossLogic(deltaTime); // update the boss logic
+        UpdateBossLogic(deltaTime);
     }
     else {
-        UpdateGame(deltaTime); // update the game logic
+        UpdateGame(deltaTime);
     }
 }
 
+void GameplayScene::CheckTutorialTriggers()
+{
+    // Only check in World1 areas 1-4
+    if (worldNumber != 1 || areaNumber < 1 || areaNumber > 4) return;
+
+    // If tutorial already showing, don't check for new triggers
+    if (m_showTutorial) return;
+
+    // Get current map
+    Map* currentMap = g_mapManager.GetCurrentMap();
+    if (!currentMap) return;
+
+    // Get all midground tiles (main gameplay layer)
+    const std::vector<MapTile>& tiles = currentMap->GetTiles(MapLayer::MIDGROUND);
+
+    // Check each tile to see if player is touching a tutorial trigger
+    for (const auto& tile : tiles) {
+        // Check if tile is a tutorial type
+        if (tile.tileInfo.type != "tutorial") continue;
+
+        // Simple AABB collision check between player and tile
+        bool collision = (
+            g_player.posX < tile.posX + tile.width &&
+            g_player.posX + PLAYER_WIDTH > tile.posX &&
+            g_player.posY < tile.posY + tile.height &&
+            g_player.posY + PLAYER_HEIGHT > tile.posY
+            );
+
+        if (collision) {
+            int tutorialIndex = -1;
+
+            // Determine which tutorial based on tile code
+            if (tile.tileInfo.code == "T1") tutorialIndex = 0;
+            else if (tile.tileInfo.code == "T2") tutorialIndex = 1;
+            else if (tile.tileInfo.code == "T3") tutorialIndex = 2;
+            else if (tile.tileInfo.code == "T4") tutorialIndex = 3;
+
+            // If valid tutorial and not yet triggered
+            if (tutorialIndex >= 0 && tutorialIndex < 4 && !m_tutorialTriggered[tutorialIndex]) {
+                m_tutorialTriggered[tutorialIndex] = true;
+                m_currentTutorialIndex = tutorialIndex + 1; // 1-based for filename
+
+                // Load the tutorial texture
+                std::string path = "asset/tutorial/tutorial_" + std::to_string(m_currentTutorialIndex) + ".png";
+
+                // Release old texture if any
+                if (m_tutorialTexture) {
+                    m_tutorialTexture->Release();
+                    m_tutorialTexture = nullptr;
+                }
+
+                // Load new tutorial texture
+                if (SUCCEEDED(LoadTexture(g_pDevice, path.c_str(), &m_tutorialTexture))) {
+                    m_showTutorial = true;
+                    g_tutorialActive = true;
+                }
+
+                // Only trigger one tutorial at a time, so break after finding one
+                break;
+            }
+        }
+    }
+}
 void GameplayScene::UpdateBossLogic(float deltaTime)
 {
     // 死亡中でもタイマーだけは更新する
@@ -350,8 +531,21 @@ void GameplayScene::RenderBossHealthBar()
 
 void GameplayScene::Uninit()
 {
-    if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
-    if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
-    if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
+    //if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
+    //if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
+    //if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
     // for erasing
+
+    if (m_tutorialTexture) {
+        m_tutorialTexture->Release();
+        m_tutorialTexture = nullptr;
+    }
+    if (m_tutorialButtonTexture) {
+        m_tutorialButtonTexture->Release();
+        m_tutorialButtonTexture = nullptr;
+    }
+    if (m_tutorialButtonHoverTexture) {
+        m_tutorialButtonHoverTexture->Release();
+        m_tutorialButtonHoverTexture = nullptr;
+    }
 }
