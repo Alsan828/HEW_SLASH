@@ -631,6 +631,7 @@ namespace SoundEffect {
     const std::string CHARGE_START = "asset/SE/charge.wav";
     const std::string CHARGE_RELEASE = "asset/SE/slash.wav";
     const std::string SHOOT = "asset/SE/slash.wav";
+    const std::string DEATH = "asset/SE/player_death.wav";
     const std::string ENEMY_HIT = "asset/SE/hit.wav";
     const std::string ENEMY_DEATH = "asset/SE/damage.wav";
     const std::string SLOWMO_START = "asset/SE/slowmo_start.wav";
