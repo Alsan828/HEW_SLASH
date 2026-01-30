@@ -7,6 +7,69 @@ ProjectileManager& ProjectileManager::GetInstance() {
     return instance;
 }
 
+bool Projectile::CheckCollisionWithRect(float rectX, float rectY, float rectW, float rectH) const {
+    if (!isActive) return false;
+
+    float visualSize = size * scaleEffect;
+    float centerX = posX + visualSize * 0.5f;
+    float centerY = posY + visualSize * 0.5f;
+
+    float rectCenterX = rectX + rectW * 0.5f;
+    float rectCenterY = rectY + rectH * 0.5f;
+
+    float dx = centerX - rectCenterX;
+    float dy = centerY - rectCenterY;
+    float distance = sqrtf(dx * dx + dy * dy);
+
+    float collisionRadius = (visualSize + std::min(rectW, rectH)) * 0.5f * 0.9f;
+    return distance < collisionRadius;
+}
+
+void Projectile::OnHitByPlayer() {
+    // Trigger visual/sound effects on hit
+    // spawn weak point hit effect at projectile position
+    // Use 0.75 scale for projectile hit effects
+    SpawnWeakPointHitEffectScaled(posX + size * 0.5f, posY + size * 0.5f, 0.75f);
+
+    // Shorter hit-stop and weaker camera shake compared to enemy hit
+    g_player.hitStopTimer = 0.025f; // shorter than normal
+    if (!g_player.isInvincible) {
+        g_camera.Shake(0.01f, 0.03f);
+    }
+
+    // Deactivate projectile
+    isActive = false;
+}
+
+bool Projectile::IsHostileAndAimedAtPlayer() const {
+    // We only consider projectiles that are from enemies (not from player)
+    if (fromPlayer) return false;
+
+    // Compute direction to player
+    float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
+    float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
+
+    float projCenterX = posX + size * 0.5f;
+    float projCenterY = posY + size * 0.5f;
+
+    float dx = playerCenterX - projCenterX;
+    float dy = playerCenterY - projCenterY;
+    float len = sqrtf(dx * dx + dy * dy);
+    if (len <= 0.001f) return true; // very close -> probably aimed
+
+    dx /= len; dy /= len;
+
+    // projectile travel direction
+    float pvlen = sqrtf(velocityX * velocityX + velocityY * velocityY);
+    if (pvlen <= 0.001f) return false;
+    float pvx = velocityX / pvlen;
+    float pvy = velocityY / pvlen;
+
+    // dot product: if the projectile is roughly heading towards the player, dot > cos(60deg)=0.5
+    float dot = dx * pvx + dy * pvy;
+    return dot > 0.5f;
+}
+
 void Projectile::SetRotation(float r) {
     rotation = r;
 }
@@ -508,6 +571,33 @@ void ProjectileManager::Update(float deltaTime, MapManager* mapManager, std::vec
             ++it;
         }
     }
+}
+
+void ProjectileManager::HandlePlayerSlashHitRect(float rectX, float rectY, float rectW, float rectH) {
+    for (auto it = projectiles.begin(); it != projectiles.end();) {
+        if (it->CheckCollisionWithRect(rectX, rectY, rectW, rectH)) {
+            // Only allow cutting projectiles that are hostile and actually aimed at the player
+            if (it->IsHostileAndAimedAtPlayer()) {
+                it->OnHitByPlayer();
+            }
+        }
+
+        if (!it->IsActive()) {
+            it = projectiles.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+void ProjectileManager::HandlePlayerSlashHitCircle(float centerX, float centerY, float radius) {
+    // convert circle to rect for simple check
+    float rectX = centerX - radius;
+    float rectY = centerY - radius;
+    float rectW = radius * 2.0f;
+    float rectH = radius * 2.0f;
+    HandlePlayerSlashHitRect(rectX, rectY, rectW, rectH);
 }
 
 void ProjectileManager::Render(const Camera& camera) {
