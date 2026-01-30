@@ -1963,7 +1963,12 @@ void BossEnemy::UpdateSlashActive(float dt) {
         float hw = range;
         float hy = posY;
         float hh = height;
-        if (CheckCollision(hx, hy, hw, hh, g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT) && !g_player.isInvincible) {
+        // Only kill the player if they are not already dead, not currently
+        // invincible (gauge or dash), and not dashing (dashing is an attack
+        // state and should not be interrupted). Match the beam enemy checks
+        // to avoid inconsistent behavior.
+        if (CheckCollision(hx, hy, hw, hh, g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT)
+            && !g_player.isDead && !g_player.isInvincible && !g_player.isDashing) {
             g_player.health = 0.0f;
             OnPlayerDeath();
         }
