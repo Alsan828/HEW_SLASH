@@ -1168,7 +1168,7 @@ void FlyEnemy::OnDeath() {
 }
 
 // MageEnemy实现
-MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 10.0f) {
+MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 20.0f) {
     useTurnCooldown = false;
     // 法师敌人：顶部和底部为弱点（一击必杀）
     SetDamageMultiplier(DIR_UP, 100.0f);
@@ -1805,16 +1805,10 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
     isHit = true;
     hitTimer = HIT_DURATION;
 
-    // Only accumulate hits toward the next "down" while not already in the down state.
-    // This prevents hits taken during the down period from contributing toward
-    // the next required hit count.
-    if (bossState != BOSS_DOWN) {
-        hitsTaken++;
-        if (hitsTaken >= 15 || multiplier > 1.5f) {
-            // Enter down sequence
-            hitsTaken = 0;
-            EnterState(BOSS_DOWN_BEFORE);
-        }
+    hitsTaken++;
+    if (bossState != BOSS_DOWN && (hitsTaken == 15 || multiplier > 1.5f)) {
+        // Enter down sequence
+        EnterState(BOSS_DOWN_BEFORE);
     }
 
     if (health <= 0) {
@@ -2020,6 +2014,10 @@ void BossEnemy::UpdateDown(float dt) {
 
 void BossEnemy::UpdateDownAfter(float dt) {
     if (stateTimer >= 0.5f) {
+        // When the boss finishes the down-after recovery and gets up,
+        // clear the accumulated hit counter so the next down-phase
+        // requires fresh hits.
+        hitsTaken = 0;
         EnterState(BOSS_IDLE);
     }
 }
