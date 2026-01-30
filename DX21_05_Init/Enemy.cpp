@@ -1791,7 +1791,7 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
     // cause a guaranteed knockdown.
     if (bossState == BOSS_SLASH_ACTIVE) {
         int curFrame = anim.GetCurrentFrame();
-        if (curFrame < 5) {
+        if (curFrame < 3) {
             EnterState(BOSS_DOWN_BEFORE);
             return;
         }
