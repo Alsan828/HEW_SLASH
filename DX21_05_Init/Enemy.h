@@ -177,6 +177,14 @@ public:
     // Visual-only scaling (does not change collision box)
     void SetScale(float s) { scale = s; }
 
+    // Whether this enemy can deal damage to the player by simple contact (collision).
+    // Default enemies can damage on contact; special types (e.g. boss) may override.
+    virtual bool CanDamageOnContact() const { return true; }
+
+    // Returns true if the enemy is currently performing an attack that should
+    // be able to hurt the player (even if contact damage is normally disabled).
+    virtual bool IsCurrentlyAttacking() const { return false; }
+
     Animation anim;  // 动画系统
 
 protected:
@@ -408,6 +416,10 @@ public:
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr) override;
     virtual void TakeDamage(int damage, float attackAngle) override;
     virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
+
+    // Boss overrides contact damage behavior: boss does not damage by simple contact.
+    virtual bool CanDamageOnContact() const override;
+    virtual bool IsCurrentlyAttacking() const override;
 
     // 调整技能速度的接口
     void SetDashSpeedMultiplier(float mul) { dashSpeedMultiplier = mul; }

@@ -195,6 +195,10 @@ GameStatistics g_gameStats;
 Animation g_gaugeEffectAnim;
 
 void SpawnWeakPointHitEffect(float worldX, float worldY) {
+    SpawnWeakPointHitEffectScaled(worldX, worldY, 0.0f);
+}
+
+void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float overrideScale /*=0*/) {
     // Prefer new slash flash textures; fallback to old single texture if needed.
     ID3D11ShaderResourceView* chosen = nullptr;
     int availableCount = 0;
@@ -217,7 +221,9 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
     e.x = worldX;
     e.y = worldY;
     // Weak-point slash flash should be more visible than a normal hit.
-    e.scale = (chosen == g_hitEffectTexture) ? 1.0f : 2.0f;
+    float baseScale = (chosen == g_hitEffectTexture) ? 1.0f : 2.0f;
+    if (overrideScale > 0.0f) baseScale = overrideScale;
+    e.scale = baseScale;
     e.timer = 0.0f;
     e.frameTime = 0.08f;
     e.frame = 0;

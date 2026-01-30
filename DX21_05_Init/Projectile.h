@@ -40,6 +40,13 @@ public:
     bool IsActive() const { return isActive; }
     void Deactivate() { isActive = false; }
 
+    // Check collision with an arbitrary rectangle (used by player slash to hit projectiles)
+    bool CheckCollisionWithRect(float rectX, float rectY, float rectW, float rectH) const;
+    // Called when a player successfully hits this projectile
+    void OnHitByPlayer();
+    // Returns true if this projectile is hostile (not from player) and is aimed at the player
+    bool IsHostileAndAimedAtPlayer() const;
+
     // 获取射弹信息
     float GetDamage() const { return effect.damage; }
     bool IsFromPlayer() const { return fromPlayer; }
@@ -102,6 +109,10 @@ public:
     void Update(float deltaTime, MapManager* mapManager, std::vector<Enemy*>& enemies);
     void Render(const Camera& camera);
     void ClearAll();
+
+    // Called when player slash should try to hit enemy projectiles
+    void HandlePlayerSlashHitRect(float rectX, float rectY, float rectW, float rectH);
+    void HandlePlayerSlashHitCircle(float centerX, float centerY, float radius);
 
     // 工具函数：创建预定义效果的射弹
     void CreateFireball(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);

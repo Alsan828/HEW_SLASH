@@ -959,8 +959,21 @@ void Enemy::RenderHealthBar(const Camera& camera) {
 }
 
 bool Enemy::CheckPlayerCollision() {
-    return CheckCollision(posX, posY, width, height,
+    // Basic bounding box overlap
+    bool overlap = CheckCollision(posX, posY, width, height,
         g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT);
+
+    if (!overlap) return false;
+
+    // If overlapping, only count as a damaging collision when either:
+    //  - this enemy type allows contact damage (CanDamageOnContact()) and
+    //    the player is not dashing (dashing is considered an attack), OR
+    //  - the enemy is currently executing an explicit attack (IsCurrentlyAttacking()).
+    if (IsCurrentlyAttacking()) return true;
+
+    if (CanDamageOnContact() && !g_player.isDashing) return true;
+
+    return false;
 }
 
 // 检查与特定区域的碰撞
@@ -1641,6 +1654,11 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 300.0f)
     anim.SetClip("idle");
 }
 
+// Boss should not deal damage by simple collision/contact.
+bool BossEnemy::CanDamageOnContact() const {
+    return false;
+}
+
 void BossEnemy::Update(float deltaTime, MapManager* mapManager)
 {
     // Handle death state
@@ -1823,7 +1841,8 @@ void BossEnemy::EnterState(BossState s) {
         velocityX = 0.0f;
         // Lock facing at start of charge
         fixedFacingRight = facingRight;
-        facingLocked = false;
+        // Prevent changing facing once the dash direction is chosen
+        facingLocked = true;
         break;
     case BOSS_DASH_MOVING:
         Audio::PlaySE(SoundEffect::BOSS_DASH);
@@ -1852,6 +1871,9 @@ void BossEnemy::EnterState(BossState s) {
         hasSpawnedSlashProjectiles = false;
         // Maintain locked facing
         facingRight = fixedFacingRight;
+        // When entering active slash, mark as attacking so collision can hurt the player
+        // (IsCurrentlyAttacking will report true during the active window)
+        // We will use state and animation frame checks in IsCurrentlyAttacking.
         break;
     case BOSS_DOWN_BEFORE:
         Audio::PlaySE(SoundEffect::BOSS_DOWN);
@@ -1882,10 +1904,12 @@ void BossEnemy::UpdateDashCharge(float dt) {
     }
     if (stateTimer >= chargeDuration * 0.9f) {
         EnterState(BOSS_DASH_MOVING);
-        // Move quickly towards player
-        float dir = (g_player.posX > posX) ? 1.0f : -1.0f;
+        // Move quickly in the locked facing direction (ensure dash direction matches facing)
+        float dir = fixedFacingRight ? 1.0f : -1.0f;
         float dashMul = dashSpeedMultiplier * (1.0f + 0.25f * (dashLevel - 1));
         velocityX = dir * moveSpeed * dashMul;
+        // Make sure the visual facing matches the dash
+        facingRight = fixedFacingRight;
     }
 }
 
@@ -1958,6 +1982,20 @@ void BossEnemy::UpdateSlashActive(float dt) {
     if (anim.IsFinished()) {
         EnterState(BOSS_IDLE);
     }
+}
+
+bool BossEnemy::IsCurrentlyAttacking() const {
+    // Slash attack: damage occurs on the specific frame (frame 1)
+    if (bossState == BOSS_SLASH_ACTIVE) {
+        return (anim.GetCurrentFrame() == 1);
+    }
+
+    // Dash movement: treat the boss as attacking for contact damage while moving in dash state
+    if (bossState == BOSS_DASH_MOVING) {
+        return true;
+    }
+
+    return false;
 }
 
 void BossEnemy::UpdateDownBefore(float dt) {

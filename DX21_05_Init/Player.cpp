@@ -112,6 +112,10 @@ static void PerformDashHitTest(float testX, float testY) {
             g_player.hitEnemies.push_back(enemy);
         }
     }
+
+    // Also hit enemy projectiles that intersect the dash attack hitbox
+    // Use the same rect used above
+    g_projectileManager.HandlePlayerSlashHitRect(testX + offsetX, testY + offsetY, playerWidth, playerHeight);
 }
 
 // 冲刺结束点追加一个“小圆形”命中判定：只在到达终点的那一刻触发一次。
@@ -189,6 +193,9 @@ static void PerformDashEndCircleHitTest() {
             g_player.hitEnemies.push_back(enemy);
         }
     }
+
+    // Also hit enemy projectiles in the end-circle area
+    g_projectileManager.HandlePlayerSlashHitCircle(endCenterX, endCenterY, radius);
 }
 
 void UpdatePlayerPhysics(float deltaTime) {
@@ -735,9 +742,8 @@ void CheckPlayerDeath() {
     for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive()) continue;
 
-        if (CheckCollision(g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT,
-            enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
-
+        // Use the enemy's collision logic which may gate contact damage
+        if (enemy->CheckPlayerCollision()) {
             // If player is dashing, they won't die but will attack the enemy instead
             if (g_player.isDashing) {
                 // Attack logic handled in CheckDashAttack

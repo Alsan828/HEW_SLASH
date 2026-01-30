@@ -38,6 +38,7 @@ extern Animation g_healthAnim;
 
 // Weak-point hit/kill effect spawning (defined in Game.cpp)
 void SpawnWeakPointHitEffect(float worldX, float worldY);
+void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float scale);
 void SpawnWeakPointKillEffect(float worldX, float worldY);
 
 // When a dash point is restored on enemy death, spawn the follower indicator from that world position.
@@ -386,6 +387,7 @@ extern int g_windowWidth;
 extern int g_windowHeight;
 
 extern Player g_player;
+extern ProjectileManager& g_projectileManager;
 
 // Gameplay toggles (runtime)
 extern bool g_releaseDashChargeMode;      // VK_T: dash executes on mouse release; short hold chains saved charge
