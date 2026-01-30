@@ -99,9 +99,12 @@ void GameplayScene::Update(float deltaTime)
             if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
             if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
             if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
+
+            // while tutorial is shown, do not update game logic or timers
+            return;
         }
-        // while tutorial is shown, do not update game logic or timers
-        return;
+        //// while tutorial is shown, do not update game logic or timers
+        //return;
     }
 
     if (isBossStage) {
