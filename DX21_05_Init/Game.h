@@ -684,3 +684,16 @@ extern ID3D11ShaderResourceView* g_bossDownHorizontalTexture;
 extern ID3D11ShaderResourceView* g_bossDownVarticalTexture;
 extern ID3D11ShaderResourceView* g_bossDownDiagonal1Texture;
 extern ID3D11ShaderResourceView* g_bossDownDiagonal2Texture;
+
+extern ID3D11ShaderResourceView* g_finalbossIdleTexture;
+extern ID3D11ShaderResourceView* g_finalbossAttackTexture;
+extern ID3D11ShaderResourceView* g_finalbossDeathTexture;
+extern ID3D11ShaderResourceView* g_finalbossChargeStage1Texture;
+extern ID3D11ShaderResourceView* g_finalbossChargeStage2Texture;
+extern ID3D11ShaderResourceView* g_finalbossDashTexture;
+extern ID3D11ShaderResourceView* g_finalbossDashOverTexture;
+extern ID3D11ShaderResourceView* g_finalbossSlashPrepTexture;
+extern ID3D11ShaderResourceView* g_finalbossSlashActiveTexture;
+extern ID3D11ShaderResourceView* g_finalbossDownBeforeTexture;
+extern ID3D11ShaderResourceView* g_finalbossDownHorizontalTexture;
+

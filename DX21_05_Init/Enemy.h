@@ -444,7 +444,7 @@ protected:
     virtual void OnHit(int damage) override;
     virtual void OnDeath() override;
 
-private:
+protected:
     //write here anything related to the boss (phases, types of attacks if there are, attack cooldown, etc....)
     void SpecialAttack(); // special attack if there is one
 
@@ -523,6 +523,14 @@ private:
     void RecomputeWeakMultipliers();
 };
 
+// for the ifnla boss enemy class
+class FinalBossEnemy : public BossEnemy 
+{
+public:
+    FinalBossEnemy(float x, float y);
+    virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
+    virtual void ResetState() override;
+};
 
 // for the square enemy class
 class SquareEnemy : public Enemy 

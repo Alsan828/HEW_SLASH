@@ -77,12 +77,12 @@ void MapManager::CreateMapEnemies() {
         }
         else if (enemyType == "BR") {
             // red boss variant
-            BossEnemy* be = new BossEnemy(x, y);
+            FinalBossEnemy* be = new FinalBossEnemy(x, y);
             // make red variant: double internal speeds and mark texture usage in globals
             be->SetDashSpeedMultiplier(40.0f); // double of default 20.0f
             be->SetSlashSpeed(0.03f); // half frame time (faster)
             be->SetChargeDuration(0.5f); // twice faster charge (original 1.0f -> 0.5f)
-            be->SetTint(1.0f, 0.2f, 0.2f); // tint red
+            be->SetTint(1.0f, 1.0f, 1.0f); // tint red
             // We assume rendering chooses texture based on some global; here only speed changes.
             g_enemies.push_back(be);
         }

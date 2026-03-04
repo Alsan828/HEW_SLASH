@@ -192,6 +192,20 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/boss/boss_slash_active.png", &g_bossSlashActiveTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_down_before.png", &g_bossDownBeforeTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_down_hori.png", &g_bossDownHorizontalTexture);
+
+    LoadTexture(g_pDevice, "asset/boss_final/boss_idle.png", &g_finalbossIdleTexture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_attack.png", &g_finalbossAttackTexture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_death.png", &g_finalbossDeathTexture);
+    // Load boss charge textures (provide correct file paths for your images)
+    LoadTexture(g_pDevice, "asset/boss_final/boss_charge_stage1.png", &g_finalbossChargeStage1Texture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_charge_stage2.png", &g_finalbossChargeStage2Texture);
+    // Load boss dash (2 frames) sprite
+    LoadTexture(g_pDevice, "asset/boss_final/boss_dash.png", &g_finalbossDashTexture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_dash_over.png", &g_finalbossDashOverTexture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_slash_prep.png", &g_finalbossSlashPrepTexture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_slash_active.png", &g_finalbossSlashActiveTexture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_down_before.png", &g_finalbossDownBeforeTexture);
+    LoadTexture(g_pDevice, "asset/boss_final/boss_down_hori.png", &g_finalbossDownHorizontalTexture);
 }
 
 // ========== BlindEyeEnemy ==========
@@ -2077,6 +2091,45 @@ void BossEnemy::RecomputeWeakMultipliers() {
     }
 }
 
+
+FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
+{
+    SetMaxHealth(500.0f);
+    SetHealth(500.0f);
+
+    dashSpeedMultiplier = 25.0f;  // faster dash
+    chargeDuration = 0.7f;        // shorter charge window (harder to react)
+    downDuration = 2.0f;          // shorter vulnerability window
+    timingVariance = 0.15f;       // less predictable timing
+
+    anim.ClearClips();
+
+    anim.AddClip("idle", 0, 3, 4, 1, 0.12f, true, g_finalbossIdleTexture);
+    anim.AddClip("dash", 0, 5, 6, 1, 0.05f, false, g_finalbossDashTexture);
+    anim.AddClip("dash_over", 0, 3, 4, 1, 0.06f, false, g_finalbossDashOverTexture);
+    anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, true, g_finalbossChargeStage1Texture);
+    anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.06f, false, g_finalbossChargeStage2Texture);
+    anim.AddClip("slash_prep", 3, 0, 4, 1, 0.06f, true, g_finalbossSlashPrepTexture);
+    anim.AddClip("slash_active", 0, 7, 8, 1, slashFrameTime, false, g_finalbossSlashActiveTexture);
+    anim.AddClip("down_before", 0, 4, 5, 1, 0.06f, false, g_finalbossDownBeforeTexture);
+    anim.AddClip("down_hori", 0, 0, 1, 1, 0.1f, false, g_finalbossDownHorizontalTexture);
+    anim.AddClip("death", 0, 14, 15, 1, 0.06f, false, g_finalbossDeathTexture);
+
+    anim.SetClip("idle");
+}
+
+void FinalBossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera)
+{
+    BossEnemy::Render(texture, camera);
+}
+
+void FinalBossEnemy::ResetState()
+{
+    BossEnemy::ResetState();
+}
+
+
+
 // SquareEnemy implementation - stationary enemy
 SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
@@ -2565,6 +2618,9 @@ void RenderEnemies(const Camera& camera) {
         }
         else if (dynamic_cast<SquareEnemy*>(enemy)) {
             texture = g_squareEnemyIdleTexture;
+        }
+        else if (dynamic_cast<FinalBossEnemy*>(enemy)) {
+            texture = g_finalbossIdleTexture;
         }
         else if (dynamic_cast<BossEnemy*>(enemy)) {
             texture = g_bossIdleTexture;

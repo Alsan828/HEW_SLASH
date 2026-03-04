@@ -136,3 +136,15 @@ ID3D11ShaderResourceView* g_bossDownVarticalTexture = nullptr;
 ID3D11ShaderResourceView* g_bossDownDiagonal1Texture = nullptr;
 ID3D11ShaderResourceView* g_bossDownDiagonal2Texture = nullptr;
 Animation g_bossSlashAnim;
+
+ID3D11ShaderResourceView* g_finalbossIdleTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossAttackTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossDeathTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossChargeStage1Texture = nullptr;
+ID3D11ShaderResourceView* g_finalbossChargeStage2Texture = nullptr;
+ID3D11ShaderResourceView* g_finalbossDashTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossDashOverTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossSlashPrepTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossSlashActiveTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossDownBeforeTexture = nullptr;
+ID3D11ShaderResourceView* g_finalbossDownHorizontalTexture = nullptr;

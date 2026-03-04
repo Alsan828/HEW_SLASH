@@ -518,6 +518,7 @@ void GameplayScene::RenderBossHealthBar()
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
+
 void GameplayScene::Uninit()
 {
     //if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
