@@ -202,6 +202,13 @@ void UpdatePlayerPhysics(float deltaTime) {
     if (g_player.isDead)
         return;
 
+    if (g_player.oneWayPlatformDropTimer > 0.0f) {
+        g_player.oneWayPlatformDropTimer = std::max(
+            0.0f,
+            g_player.oneWayPlatformDropTimer - deltaTime
+        );
+    }
+
     g_mapManager.GetCurrentMap()->BuildSpatialGrid();//TODO
     // 计算玩家当前的碰撞体大小
     float currentWidth = PLAYER_WIDTH;
@@ -294,7 +301,7 @@ void UpdatePlayerPhysics(float deltaTime) {
 
             // 检测左右墙壁接触
             for (const auto& tile : nearbyTiles) {
-                if (tile->tileInfo.isSolid) {
+                if (tile->tileInfo.isSolid && tile->tileInfo.type != "platform") {
                     float tileLeft = tile->posX;
                     float tileRight = tile->posX + tile->width;
                     float tileTop = tile->posY;
@@ -390,6 +397,30 @@ void UpdatePlayerPhysics(float deltaTime) {
                 }
                 else {
                     regularSolidTiles.push_back(tile);
+                }
+            }
+        }
+
+        if (g_player.oneWayPlatformDropTimer <= 0.0f &&
+            (g_inputSystem.IsKeyPressed(VK_S) || g_inputSystem.IsKeyPressed(VK_DOWN))) {
+            const float playerLeft = g_player.posX + offsetX;
+            const float playerRight = playerLeft + currentWidth;
+            const float standTolerance = 0.03f;
+
+            for (const auto& tile : oneWayPlatformTiles) {
+                const float platformLeft = tile->posX;
+                const float platformRight = platformLeft + tile->width;
+                const bool horizontalOverlap = (playerRight > platformLeft && playerLeft < platformRight);
+                if (!horizontalOverlap) {
+                    continue;
+                }
+
+                const float standY = tile->posY + currentHeight + offsetY;
+                if (fabsf(g_player.posY - standY) <= standTolerance) {
+                    g_player.oneWayPlatformDropTimer = g_player.ONE_WAY_PLATFORM_DROP_GRACE;
+                    g_player.isOnGround = false;
+                    g_player.velocityY = std::min(g_player.velocityY, -0.01f);
+                    break;
                 }
             }
         }
@@ -496,6 +527,10 @@ void UpdatePlayerPhysics(float deltaTime) {
             // 如果没有与普通固体碰撞，检测单向平台
             if (!yCollision) {
                 for (const auto& tile : oneWayPlatformTiles) {
+                    if (g_player.oneWayPlatformDropTimer > 0.0f) {
+                        continue;
+                    }
+
                     // 计算玩家的边界
                     float playerLeft = g_player.posX + offsetX;
                     float playerRight = playerLeft + currentWidth;
@@ -520,10 +555,6 @@ void UpdatePlayerPhysics(float deltaTime) {
                     float currentBottom = playerBottom;
 
                     if (currentBottom > platformTop + currentHeight + offsetY) {
-                        if (g_inputSystem.IsKeyDown(VK_S)) {
-                            g_player.isOnGround = false;
-                            continue;
-                        }
                         if (g_player.posY < platformTop + currentHeight + offsetY) {
                             g_player.isOnGround = true;
                             g_player.posY = platformTop + currentHeight + offsetY;

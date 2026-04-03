@@ -164,6 +164,10 @@ struct Player {
     float dashPointRecoverTimer = 0.0f;
     const float DASH_POINT_RECOVER_TIME = 0.1f;
 
+    // 单向平台下落宽限：触发一次后，短时间内忽略单向平台碰撞
+    float oneWayPlatformDropTimer = 0.0f;
+    const float ONE_WAY_PLATFORM_DROP_GRACE = 0.18f;
+
     // 本次冲刺消耗的点数（用于伤害加成计算）
     int lastDashConsumedPoints = 1;
 
