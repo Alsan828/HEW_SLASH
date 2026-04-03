@@ -3,19 +3,22 @@
 #include "SceneManager.h"
 #include "Game.h"
 #include "Enemy.h"
-
-enum CutDirection 
-{
-    VERTICAL_CUT,
-    HORIZONTAL_CUT,
-    DIAGONAL_FROM_TOP_CUT,    // from top left to bottom right or viceversa
-    DIAGONAL_FROM_BOTTOM_CUT  // from bottom left to top right or viceversa
-};
+#include "Render.h"
+#include <vector>
 
 // added November 14th
 class CakeScene : public SceneBase
 {
 private:
+    struct CakePoint {
+        float u;
+        float v;
+    };
+
+    struct CakePiece {
+        std::vector<LinearClipPlane> clipPlanes;
+    };
+
     SceneManager* sceneManager;
 
     ID3D11ShaderResourceView* cakeTexture = nullptr;
@@ -28,8 +31,12 @@ private:
     bool isCakeCut = false;
     bool isPlateShown = false;
     float cutAnimTimer = 0.0f;
-    const float CUT_ANIM_DURATION = 1.0f; // for how long it takes for the animation of the cake being cut
-    const float SPLIT_DISTANCE = 0.3f;    // for checking how far the cake splits
+    float worldSplitProgress = 0.0f;
+    bool wasAttackActive = false;
+    const float CUT_ANIM_DURATION = 1.0f; // after the last cut, wait a bit before showing the plate
+    const float CUT_FEEDBACK_DURATION = 0.16f;
+    const float WORLD_SPLIT_DISTANCE = 0.06f;
+    const float PLATE_SPLIT_DISTANCE = 0.12f;
 
     // Cake position and size
     float cakeX = 0.0f;
@@ -37,31 +44,14 @@ private:
     float cakeWidth = 0.4f;
     float cakeHeight = 0.4f;
 
-    CutDirection cutDirection;
-
-
-    // FOR THE CAKE WHEN CUTTING IT IN 8 SLICES
-    float HALF_SLICE_DEG = 22.5f; // bc its 45 divided by 2
-    // 45 bc there are 8 slices. divide 360 which is an entire cirlce by 8 and thats why you get 45
-
-    float RIGHT = 0.0f;
-    float TOP_RIGHT = 45.0f;
-    float TOP = 90.0f;
-    float TOP_LEFT = 135.0f;
-    float LEFT = 180.0f;
-    float BOTTOM_LEFT = 225.0f;
-    float BOTTOM = 270.0f;
-    float BOTTOM_RIGHT = 315.0f;
-
-    float rightPartMax = RIGHT + HALF_SLICE_DEG;               // 22.5
-    float topRightPartMax = TOP_RIGHT + HALF_SLICE_DEG;        // 67.5
-    float topMiddlePartMax = TOP + HALF_SLICE_DEG;             // 112.5
-    float topLeftPartMax = TOP_LEFT + HALF_SLICE_DEG;          // 157.5
-    float leftPartMax = LEFT + HALF_SLICE_DEG;                 // 202.5
-    float bottomLeftPartMax = BOTTOM_LEFT + HALF_SLICE_DEG;    // 247.5
-    float bottomMiddlePartMax = BOTTOM + HALF_SLICE_DEG;       // 292.5
-    float bottomRightPartMax = BOTTOM_RIGHT + HALF_SLICE_DEG;  // 337.5
- 
+    float cutAngle = 0.0f;    // world-space angle of the slash / cut line
+    float cutDirX = 1.0f;
+    float cutDirY = 0.0f;
+    float cutNormalX = 0.0f;
+    float cutNormalY = 1.0f;
+    float cutCenterU = 0.5f;
+    float cutCenterV = 0.5f;
+    std::vector<CakePiece> cakePieces;
 
 public:
     CakeScene(SceneManager* manager);
@@ -71,8 +61,23 @@ public:
     void Draw() override;
     void Uninit() override;
 
+private:
     bool CheckPlayerAttackHitsCake(); // for checking if the player hit the cake or not
-    void CutCake();
+    void ResetCakePieces();
+    bool CutCake();
     void DrawCakeSequence();
-    CutDirection DetermineCutDirection();
+    float DetermineCutAngle() const;
+    void UpdateCutVectors();
+    bool GetAttackSegment(float& startX, float& startY, float& endX, float& endY) const;
+    bool GetAttackSegmentUV(float& startU, float& startV, float& endU, float& endV) const;
+    bool GetCakeEntryPoint(float& hitX, float& hitY) const;
+    void UpdateCutCenterFromWorldPoint(float worldX, float worldY);
+    LinearClipPlane BuildCurrentCutPlane() const;
+    std::vector<CakePoint> BuildPiecePolygon(const CakePiece& piece) const;
+    std::vector<CakePoint> ClipPolygonWithPlane(const std::vector<CakePoint>& polygon, const LinearClipPlane& plane) const;
+    float ComputePolygonArea(const std::vector<CakePoint>& polygon) const;
+    CakePoint ComputePolygonCentroid(const std::vector<CakePoint>& polygon) const;
+    bool DoesSegmentHitPiece(float startU, float startV, float endU, float endV, const CakePiece& piece) const;
+    void GetPiecePresentation(const CakePiece& piece, float splitOffset, float& offsetX, float& offsetY, float& rotation) const;
+    void DrawCakePieces(float centerX, float centerY, float width, float height, float splitOffset);
 };

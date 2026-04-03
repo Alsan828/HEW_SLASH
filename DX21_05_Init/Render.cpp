@@ -30,6 +30,8 @@ ID3D11VertexShader* g_pVertexShader = nullptr;
 ID3D11PixelShader* g_pPixelShader = nullptr;
 ID3D11BlendState* g_pBlendState = nullptr;
 
+static ConstantBuffer g_renderConstantData = {};
+
 ID3D11ShaderResourceView* texIdle1 = nullptr;
 ID3D11ShaderResourceView* texIdle2 = nullptr;
 ID3D11ShaderResourceView* texIdle3 = nullptr;
@@ -40,6 +42,33 @@ ID3D11ShaderResourceView* texRun3 = nullptr;
 
 D3D11_SAMPLER_DESC sampDesc = {};
 ID3D11SamplerState* pSamplerState = nullptr;
+
+static void UploadConstantBufferState()
+{
+	if (!g_pConstantBuffer || !g_pDeviceContext) {
+		return;
+	}
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	HRESULT hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(hr)) {
+		return;
+	}
+
+	memcpy(mappedResource.pData, &g_renderConstantData, sizeof(ConstantBuffer));
+	g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+	g_pDeviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
+}
+
+static void ResetLinearClipState()
+{
+	g_renderConstantData.useLinearClip = 0.0f;
+	g_renderConstantData.clipPlaneCount = 0.0f;
+
+	for (int i = 0; i < MAX_LINEAR_CLIP_PLANES; ++i) {
+		g_renderConstantData.clipPlanes[i] = DirectX::XMFLOAT4(0.0f, 0.0f, 0.5f, 0.5f);
+	}
+}
 
 HRESULT RendererInit(HWND hwnd) {
 	HRESULT hr = S_OK;
@@ -220,6 +249,15 @@ HRESULT RendererInit(HWND hwnd) {
 		MessageBoxA(NULL, "Failed to create constant buffer.", "Error", MB_OK);
 		return hr;
 	}
+
+	g_renderConstantData.worldView = DirectX::XMMatrixIdentity();
+	g_renderConstantData.projection = DirectX::XMMatrixIdentity();
+	g_renderConstantData.color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	g_renderConstantData.matrixTex = DirectX::XMMatrixIdentity();
+	g_renderConstantData.fillRatio = 0.0f;
+	g_renderConstantData.useGaugeFill = 0.0f;
+	ResetLinearClipState();
+	UploadConstantBufferState();
 	
 
 
@@ -581,39 +619,22 @@ void RenderGaugeFillImage(float posX, float posY, float width, float height,
 
 	fillRatio = min(max(fillRatio, 0.0f), 1.0f);
 
-	// Update constant buffer to enable gauge fill
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	HRESULT hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	if (SUCCEEDED(hr))
-	{
-		ConstantBuffer* cb = (ConstantBuffer*)mappedResource.pData;
-
-		// Set up identity matrices (your RenderImage doesn't use them, so just use identity)
-		cb->worldView = DirectX::XMMatrixIdentity();
-		cb->projection = DirectX::XMMatrixIdentity();
-		cb->color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-		cb->matrixTex = DirectX::XMMatrixIdentity();
-
-		// Enable gauge fill
-		cb->fillRatio = fillRatio;
-		cb->useGaugeFill = 1.0f;
-		cb->padding[0] = 0.0f;
-		cb->padding[1] = 0.0f;
-
-		g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
-	}
+	g_renderConstantData.worldView = DirectX::XMMatrixIdentity();
+	g_renderConstantData.projection = DirectX::XMMatrixIdentity();
+	g_renderConstantData.color = DirectX::XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	g_renderConstantData.matrixTex = DirectX::XMMatrixIdentity();
+	g_renderConstantData.fillRatio = fillRatio;
+	g_renderConstantData.useGaugeFill = 1.0f;
+	ResetLinearClipState();
+	UploadConstantBufferState();
 
 	// Render normally
 	RenderImage(posX, posY, width, height, textureSRV, 0, 1, 1, false, 0.0f, false);
 
 	// Disable gauge fill for next renders
-	hr = g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	if (SUCCEEDED(hr))
-	{
-		ConstantBuffer* cb = (ConstantBuffer*)mappedResource.pData;
-		cb->useGaugeFill = 0.0f;
-		g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
-	}
+	g_renderConstantData.fillRatio = 0.0f;
+	g_renderConstantData.useGaugeFill = 0.0f;
+	UploadConstantBufferState();
 }
 
 // render image vertical so it doesnt shift left
@@ -709,22 +730,47 @@ void RenderNumber(int number, float startX, float startY, float digitWidth, floa
 // added november 12th
 void SetColor(float r, float g, float b, float a)
 {
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	g_pDeviceContext->Map(g_pConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	g_renderConstantData.color = DirectX::XMFLOAT4(r, g, b, a);
+	g_renderConstantData.fillRatio = 0.0f;
+	g_renderConstantData.useGaugeFill = 0.0f;
+	ResetLinearClipState();
+	UploadConstantBufferState();
+}
 
-	ConstantBuffer* dataPtr = (ConstantBuffer*)mappedResource.pData;
-	dataPtr->color = DirectX::XMFLOAT4(r, g, b, a);
+void SetLinearClipPlanes(const LinearClipPlane* planes, int count)
+{
+	if (count < 0) {
+		count = 0;
+	}
+	if (count > MAX_LINEAR_CLIP_PLANES) {
+		count = MAX_LINEAR_CLIP_PLANES;
+	}
 
+	ResetLinearClipState();
+	g_renderConstantData.useLinearClip = (count > 0) ? 1.0f : 0.0f;
+	g_renderConstantData.clipPlaneCount = static_cast<float>(count);
 
-	dataPtr->fillRatio = 0.0f;
-	dataPtr->useGaugeFill = 0.0f;
-	dataPtr->padding[0] = 0.0f;
-	dataPtr->padding[1] = 0.0f;
+	for (int i = 0; i < count; ++i) {
+		const LinearClipPlane& plane = planes[i];
+		float keepSide = (plane.keepSide >= 0.0f) ? 1.0f : -1.0f;
+		g_renderConstantData.clipPlanes[i] = DirectX::XMFLOAT4(
+			plane.normalX * keepSide,
+			plane.normalY * keepSide,
+			plane.centerU,
+			plane.centerV
+		);
+	}
 
+	UploadConstantBufferState();
+}
 
-	g_pDeviceContext->Unmap(g_pConstantBuffer, 0);
+void SetLinearClip(bool enabled, float normalX, float normalY, float centerU, float centerV, float keepSide)
+{
+	if (!enabled) {
+		SetLinearClipPlanes(nullptr, 0);
+		return;
+	}
 
-	// Bind to pixel shader
-	g_pDeviceContext->PSSetConstantBuffers(0, 1, &g_pConstantBuffer);
-
+	LinearClipPlane plane = { normalX, normalY, centerU, centerV, keepSide };
+	SetLinearClipPlanes(&plane, 1);
 }

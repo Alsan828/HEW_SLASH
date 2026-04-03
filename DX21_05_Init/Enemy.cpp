@@ -1625,11 +1625,11 @@ void BombEnemy::CreateProjectiles() {
 }
 
 
-BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 300.0f)
+BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 150.0f)
 {
     useTurnCooldown = false;
-    SetMaxHealth(300.0f); 
-    SetHealth(300.0f);
+    SetMaxHealth(150.0f); 
+    SetHealth(150.0f);
 
     // Boss: collision box and sprite are both 3x
     // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
@@ -2094,8 +2094,8 @@ void BossEnemy::RecomputeWeakMultipliers() {
 
 FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
 {
-    SetMaxHealth(500.0f);
-    SetHealth(500.0f);
+    SetMaxHealth(250.0f);
+    SetHealth(250.0f);
 
     dashSpeedMultiplier = 25.0f;  // faster dash
     chargeDuration = 0.7f;        // shorter charge window (harder to react)

@@ -86,9 +86,8 @@ bool GameplayScene::Init()
         }
 
         if (m_boss) {
-            // Set boss HP to 300 for normal gameplay
-            m_boss->SetMaxHealth(300.0f);
-            m_boss->SetHealth(300.0f);
+            // Respect each boss class's tuned max HP and start full for testing.
+            m_boss->SetHealth(m_boss->GetMaxHealth());
         }
     }
 
@@ -443,13 +442,12 @@ void GameplayScene::RespawnBossAtCheckpoint()
         }
 
         if (m_boss) {
-            m_boss->SetMaxHealth(300.f);
             // restore checkpoint hp if any
             if (m_bossCheckpointHP > 0.0f) {
                 m_boss->SetHealth(m_bossCheckpointHP);
             }
             else {
-                m_boss->SetHealth(300.f);
+                m_boss->SetHealth(m_boss->GetMaxHealth());
             }
             // Also reset transient boss state so it doesn't carry over
             // behavior flags from a previous attempt.

@@ -31,6 +31,17 @@ struct VertexV {
 	float r, g, b, a; // for the color
 };
 
+constexpr int MAX_LINEAR_CLIP_PLANES = 16;
+
+struct LinearClipPlane
+{
+	float normalX;
+	float normalY;
+	float centerU;
+	float centerV;
+	float keepSide;
+};
+
 struct ConstantBuffer 
 {
 	DirectX::XMMATRIX worldView;
@@ -42,7 +53,9 @@ struct ConstantBuffer
 
 	float fillRatio; // for gauge fill
 	float useGaugeFill; // for gauge fill mode
-	float padding[2]; // for the GPU alligment
+	float useLinearClip; // enable arbitrary half-plane clipping
+	float clipPlaneCount; // how many active clip planes are used
+	DirectX::XMFLOAT4 clipPlanes[MAX_LINEAR_CLIP_PLANES]; // normal.x, normal.y, centerU, centerV
 
 };
 
@@ -87,6 +100,10 @@ void RenderImageClipped(float posX, float posY, float width, float height, ID3D1
 
 void RenderGaugeFillImage(float posX, float posY, float width, float height,
 	ID3D11ShaderResourceView* textureSRV, float fillRatio); //this is used for the gauge bar when it has the shape of a diamond
+
+void SetLinearClipPlanes(const LinearClipPlane* planes, int count);
+void SetLinearClip(bool enabled, float normalX = 0.0f, float normalY = 0.0f,
+	float centerU = 0.5f, float centerV = 0.5f, float keepSide = 1.0f);
 
 void SetColor(float r, float g, float b, float a); // added november 12th
 
