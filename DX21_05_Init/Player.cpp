@@ -618,8 +618,31 @@ void UpdatePlayerPhysics(float deltaTime) {
             //    portalCooldown = 1.0f;
             //}
             if (targetMap == "boss") {
-                int stage = sceneManager.GetCurrentStageInfo().GetWorld();
-                sceneManager.SwitchToStage(stage, 8);   // it goes to the boss stage of that stage (world)
+                // Derive world from the actual current map name so boss-door routing
+                // does not depend on SceneManager stage state being perfectly synced.
+                const std::string currentMapName = g_mapManager.GetCurrentMapName();
+                int world = 0;
+
+                if (currentMapName.rfind("World", 0) == 0) {
+                    const size_t worldStart = 5;
+                    const size_t areaPos = currentMapName.find("Area", worldStart);
+                    if (areaPos != std::string::npos) {
+                        try {
+                            world = std::stoi(currentMapName.substr(worldStart, areaPos - worldStart));
+                        }
+                        catch (...) {
+                            world = 0;
+                        }
+                    }
+                }
+
+                if (world > 0) {
+                    sceneManager.SwitchToStage(world, 8);   // go to that world's boss stage
+                }
+                else {
+                    // Fallback: direct map switch keeps behavior stable even if parsing fails.
+                    g_mapManager.SwitchMap(targetMap, portalId, linkedSpawnId);
+                }
 
                 //to restore the combo after switching
                 g_player.comboCount = savedCombo;
