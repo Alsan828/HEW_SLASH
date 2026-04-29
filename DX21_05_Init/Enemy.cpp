@@ -1713,7 +1713,7 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
     switch (bossState) {
     case BOSS_IDLE:
         // Choose between dash or slash only (leap disabled)
-        if (stateTimer >= 1.0f) {
+        if (stateTimer >= idleDuration) {
             int r = rand() % 2;
             if (r == 0) EnterState(BOSS_DASH_CHARGE);
             else EnterState(BOSS_SLASH_CHARGE);
@@ -2100,6 +2100,7 @@ FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
     dashSpeedMultiplier = 25.0f;  // faster dash
     dashMaxDuration = 0.6f;       // 
     dashAfterDuration = 0.25f;    //
+    idleDuration = 0.5f;          //
     chargeDuration = 0.7f;        // shorter charge window (harder to react)
     downDuration = 2.0f;          // shorter vulnerability window
     timingVariance = 0.15f;       // less predictable timing
