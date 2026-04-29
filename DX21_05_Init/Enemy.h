@@ -496,8 +496,8 @@ protected:
     float randomizedDownDuration = 3.0f;
 
     // Dash tuning
-    float dashSpeedMultiplier = 20.0f;   // even faster dash
-    float dashMaxDuration = 6.0f;       // allow dash for longer time (approx half-map in many setups)
+    float dashSpeedMultiplier = 18.0f;   // even faster dash
+    float dashMaxDuration = 1.0f;       // allow dash for longer time (approx half-map in many setups)
     float dashStopDistance = 0.1f;      // stop only when extremely close to player
     int dashLevel = 1;                  // dash level (affects speed)
 
@@ -611,8 +611,8 @@ private:
 
     float throwCooldown = 3.0f;
     float currentThrowCooldown = 0.0f;
-    float throwRange = 6.0f;
-    float throwFlyTime = 0.65f;
+    float throwRange = 1.0f;//6
+    float throwFlyTime = 0.1f;//065
 };
 
 // 盲眼普通敌人：只会左右巡逻，遇到墙/悬崖掉头

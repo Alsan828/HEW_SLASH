@@ -312,9 +312,9 @@ ThrowerEnemy::ThrowerEnemy(float x, float y)
     moveSpeed = MOVE_SPEED * 0.4f;
     detectionRange = 10.0f;
     loseSightRange = 12.0f;
-    throwCooldown = 2.5f;
+    throwCooldown = 5.0f;
     currentThrowCooldown = 0.75f;
-    throwRange = 7.0f;
+    throwRange = 10.0f;
     // Larger flight time => slower projectile speed while keeping the same ballistic arc formula
     throwFlyTime = 0.9f;
 
@@ -341,10 +341,10 @@ void ThrowerEnemy::TryThrow(MapManager* mapManager) {
     if (dist > throwRange) return;
 
     // Spawn a base enemy at thrower's position and launch it.
-    Enemy* thrown = new Enemy(posX, posY, 10.0f);
+    Enemy* thrown = new FlyEnemy(posX, posY);
     g_enemies.push_back(thrown);
 
-    float T = std::max(0.25f, throwFlyTime);
+    float T = std::max(0.01f, throwFlyTime);
     float g = GRAVITY;
 
     // Convert to game units per second such that Update (vel * dt * 60)
@@ -2098,6 +2098,8 @@ FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
     SetHealth(250.0f);
 
     dashSpeedMultiplier = 25.0f;  // faster dash
+    dashMaxDuration = 0.6f;       // 
+    dashAfterDuration = 0.25f;    //
     chargeDuration = 0.7f;        // shorter charge window (harder to react)
     downDuration = 2.0f;          // shorter vulnerability window
     timingVariance = 0.15f;       // less predictable timing
@@ -2105,7 +2107,7 @@ FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
     anim.ClearClips();
 
     anim.AddClip("idle", 0, 3, 4, 1, 0.12f, true, g_finalbossIdleTexture);
-    anim.AddClip("dash", 0, 5, 6, 1, 0.05f, false, g_finalbossDashTexture);
+    anim.AddClip("dash", 0, 5, 6, 1, 0.09f, false, g_finalbossDashTexture);
     anim.AddClip("dash_over", 0, 3, 4, 1, 0.06f, false, g_finalbossDashOverTexture);
     anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, true, g_finalbossChargeStage1Texture);
     anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.06f, false, g_finalbossChargeStage2Texture);
