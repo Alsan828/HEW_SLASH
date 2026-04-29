@@ -451,6 +451,7 @@ protected:
     // Boss stats
     float specialAttackCooldown = 5.0f;
     float currentSpecialCooldown = 0.0f;
+    float idleDuration = 1.0f;
     int phase = 1;  // Boss phases
 
     // Spec-driven boss behavior
