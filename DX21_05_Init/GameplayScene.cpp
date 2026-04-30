@@ -59,7 +59,11 @@ bool GameplayScene::Init()
 
     if (isBossStage)
     {
-        Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true);
+        switch (worldNumber)
+        {
+        case 3: Audio::PlayBGM(BackgroundMusic::FINAL_BOSS_BATTLE, true); break;
+        default: Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true); break;
+        }
     }
     else
     {
