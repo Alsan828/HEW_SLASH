@@ -667,6 +667,7 @@ namespace BackgroundMusic {
     const std::string LEVEL2 = "asset/Music/0246_Nightmare-Assemblage.wav";
     const std::string LEVEL3 = "asset/Music/planetarium_garden.wav";
     const std::string BOSS_BATTLE = "asset/Music/0194_Red-Eyes.wav";
+    const std::string FINAL_BOSS_BATTLE = "asset/Music/Crystal_Railway.wav";
     const std::string GAME_OVER = "asset/Music/game_over.wav";
     const std::string THE_CAKE = "asset/Music/0242_Walk_Among_the_Rubble.wav";
     const std::string VICTORY = "asset/Music/Sagittarius.wav";

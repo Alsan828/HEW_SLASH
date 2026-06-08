@@ -451,7 +451,8 @@ protected:
     // ボスステータス
     float specialAttackCooldown = 5.0f;
     float currentSpecialCooldown = 0.0f;
-    int phase = 1;  // ボスフェーズ
+    float idleDuration = 1.0f;
+    int phase = 1;  // Boss phases
 
     // 仕様ベースのボス挙動
     enum BossState {
@@ -495,11 +496,11 @@ protected:
     float randomizedDashAfterDuration = 0.5f;
     float randomizedDownDuration = 3.0f;
 
-    // ダッシュ調整値
-    float dashSpeedMultiplier = 20.0f;   // さらに高速なダッシュ
-    float dashMaxDuration = 6.0f;       // 長めに許可する（多くの環境でマップ半分程度）
-    float dashStopDistance = 0.1f;      // プレイヤーにかなり近いときだけ止まる
-    int dashLevel = 1;                  // ダッシュレベル（速度へ影響）
+    // Dash tuning
+    float dashSpeedMultiplier = 18.0f;   // even faster dash
+    float dashMaxDuration = 1.0f;       // allow dash for longer time (approx half-map in many setups)
+    float dashStopDistance = 0.1f;      // stop only when extremely close to player
+    int dashLevel = 1;                  // dash level (affects speed)
 
     // Leap（ジャンプ + ダッシュ）調整値
     float leapChargeDuration = 6.0f;      // Leap 前のチャージ時間
@@ -611,8 +612,8 @@ private:
 
     float throwCooldown = 3.0f;
     float currentThrowCooldown = 0.0f;
-    float throwRange = 6.0f;
-    float throwFlyTime = 0.65f;
+    float throwRange = 1.0f;//6
+    float throwFlyTime = 0.1f;//065
 };
 
 // 盲目の通常敵: 左右巡回のみ行い、壁や崖で折り返す

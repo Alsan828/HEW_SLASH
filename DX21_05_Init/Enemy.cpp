@@ -312,10 +312,10 @@ ThrowerEnemy::ThrowerEnemy(float x, float y)
     moveSpeed = MOVE_SPEED * 0.4f;
     detectionRange = 10.0f;
     loseSightRange = 12.0f;
-    throwCooldown = 2.5f;
+    throwCooldown = 5.0f;
     currentThrowCooldown = 0.75f;
-    throwRange = 7.0f;
-    // 飛行時間を長くして、同じ放物線式のまま投擲速度を遅くする
+    throwRange = 10.0f;
+    // Larger flight time => slower projectile speed while keeping the same ballistic arc formula
     throwFlyTime = 0.9f;
 
     // 一撃弱点（上からの攻撃）
@@ -340,11 +340,11 @@ void ThrowerEnemy::TryThrow(MapManager* mapManager) {
     float dist = sqrtf(dx * dx + dy * dy);
     if (dist > throwRange) return;
 
-    // 投擲者の位置に基本敵を生成し、投げ飛ばす。
-    Enemy* thrown = new Enemy(posX, posY, 10.0f);
+    // Spawn a base enemy at thrower's position and launch it.
+    Enemy* thrown = new FlyEnemy(posX, posY);
     g_enemies.push_back(thrown);
 
-    float T = std::max(0.25f, throwFlyTime);
+    float T = std::max(0.01f, throwFlyTime);
     float g = GRAVITY;
 
     // Update（vel * dt * 60）に合わせて、ゲーム単位 / 秒へ変換する
@@ -1712,8 +1712,8 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
     stateTimer += deltaTime;
     switch (bossState) {
     case BOSS_IDLE:
-        // ダッシュか slash のみを選ぶ（leap は無効）
-        if (stateTimer >= 1.0f) {
+        // Choose between dash or slash only (leap disabled)
+        if (stateTimer >= idleDuration) {
             int r = rand() % 2;
             if (r == 0) EnterState(BOSS_DASH_CHARGE);
             else EnterState(BOSS_SLASH_CHARGE);
@@ -2094,15 +2094,18 @@ FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
     SetMaxHealth(250.0f);
     SetHealth(250.0f);
 
-    dashSpeedMultiplier = 25.0f;  // より速いダッシュ
-    chargeDuration = 0.7f;        // 反応しづらい短めのチャージ時間
-    downDuration = 2.0f;          // 短めの脆弱時間
-    timingVariance = 0.15f;       // 読みづらいタイミング変動
+    dashSpeedMultiplier = 25.0f;  // faster dash
+    dashMaxDuration = 0.6f;       // 
+    dashAfterDuration = 0.25f;    //
+    idleDuration = 0.5f;          //
+    chargeDuration = 0.7f;        // shorter charge window (harder to react)
+    downDuration = 2.0f;          // shorter vulnerability window
+    timingVariance = 0.15f;       // less predictable timing
 
     anim.ClearClips();
 
     anim.AddClip("idle", 0, 3, 4, 1, 0.12f, true, g_finalbossIdleTexture);
-    anim.AddClip("dash", 0, 5, 6, 1, 0.05f, false, g_finalbossDashTexture);
+    anim.AddClip("dash", 0, 5, 6, 1, 0.09f, false, g_finalbossDashTexture);
     anim.AddClip("dash_over", 0, 3, 4, 1, 0.06f, false, g_finalbossDashOverTexture);
     anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, true, g_finalbossChargeStage1Texture);
     anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.06f, false, g_finalbossChargeStage2Texture);
