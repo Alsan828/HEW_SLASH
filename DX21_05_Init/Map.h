@@ -7,81 +7,81 @@
 
 class SpatialGrid;
 struct GridCell;
-// Tile information using string-based representation
+// 文字列ベースで表現するタイル情報
 struct TileInfo {
-    std::string code = " ";      // Two-character code, e.g., "G1", "E1", "PF"
-    std::string type = " ";      // Type name: ground, wall, enemy, portal, etc.
-    std::string subtype = " ";   // Subtype: forest, ice, enemy1, etc.
-    bool isSolid = false;          // Whether the tile is solid (collidable)
-    bool isSpawn = false;          // Whether the tile is a spawn point
-    bool isPortal = false;         // Whether the tile is a portal
-    bool isEnemy = false;          // Whether the tile represents an enemy spawn
+    std::string code = " ";      // 2 文字コード。例: "G1"、"E1"、"PF"
+    std::string type = " ";      // 種別名: ground、wall、enemy、portal など
+    std::string subtype = " ";   // サブタイプ: forest、ice、enemy1 など
+    bool isSolid = false;          // 固体タイルかどうか（衝突あり）
+    bool isSpawn = false;          // スポーン地点かどうか
+    bool isPortal = false;         // ポータルかどうか
+    bool isEnemy = false;          // 敵スポーンを表すかどうか
 };
 
-// Map tile structure containing position, size, and tile properties
+// 位置・サイズ・タイル属性を持つマップタイル構造体
 struct MapTile {
-    float posX = 0.0f, posY = 0.0f;      // Tile position coordinates
-    float width = 0.0f, height = 0.0f;   // Tile dimensions
-    TileInfo tileInfo;     // Tile properties using TileInfo instead of TileType
-    std::string targetMap = " "; // Target map for portal tiles
-    int linkedSpawnId = -1;     // Associated spawn point ID
+    float posX = 0.0f, posY = 0.0f;      // タイル位置座標
+    float width = 0.0f, height = 0.0f;   // タイルサイズ
+    TileInfo tileInfo;     // TileType の代わりに TileInfo を使う
+    std::string targetMap = " "; // ポータルタイルの遷移先マップ
+    int linkedSpawnId = -1;     // 関連するスポーンポイント ID
 };
 
-// Player spawn point information
+// プレイヤー用スポーンポイント情報
 struct SpawnPoint {
-    float posX = 0.0f, posY = 0.0f;      // Spawn position coordinates
-    int id = 0;                // Unique spawn point identifier
-    std::string name = " ";      // Descriptive name for the spawn point
+    float posX = 0.0f, posY = 0.0f;      // スポーン位置座標
+    int id = 0;                // 一意なスポーンポイント ID
+    std::string name = " ";      // スポーンポイント名
 };
 
-// Enemy spawn information
+// 敵スポーン情報
 struct EnemySpawnInfo {
     float posX = 0.0f;
-    float posY = 0.0f;      // Enemy spawn position
-    std::string enemyType = " "; // Enemy type code: "E1", "E2", "E3", etc.
-    int enemySubtype = 1;      // Enemy subtype identifier
+    float posY = 0.0f;      // 敵スポーン位置
+    std::string enemyType = " "; // 敵種別コード: "E1"、"E2"、"E3" など
+    int enemySubtype = 1;      // 敵サブタイプ ID
 };
 
-// Map layer types for organizing tiles
+// タイル整理用のマップレイヤー種別
 enum class MapLayer {
-    BACKGROUND = 0,  // Background decorative tiles (non-collidable)
-    MIDGROUND = 1,   // Main gameplay tiles (collidable objects)
-    FOREGROUND = 2   // Foreground decorative tiles (non-collidable)
+    BACKGROUND = 0,  // 背景装飾タイル（非衝突）
+    MIDGROUND = 1,   // メインゲームプレイ用タイル（衝突あり）
+    FOREGROUND = 2   // 前景装飾タイル（非衝突）
 };
 
 
-// Main Map class for managing game maps, tiles, and spawn points
+// ゲームマップ、タイル、スポーンポイントを管理するメイン Map クラス
 class Map {
 private:
-    std::string m_name;                          // Map identifier name
-    std::vector<MapTile> m_backgroundTiles;     // Background layer tiles
-    std::vector<MapTile> m_midgroundTiles;      // Midground layer tiles (main gameplay)
-    std::vector<MapTile> m_foregroundTiles;     // Foreground layer tiles
-    std::vector<SpawnPoint> m_spawnPoints;      // Player spawn points
-    std::vector<EnemySpawnInfo> m_enemySpawns;  // Enemy spawn locations
+    std::string m_name;                          // マップ識別名
+    std::vector<MapTile> m_backgroundTiles;     // 背景レイヤータイル
+    std::vector<MapTile> m_midgroundTiles;      // 中景レイヤータイル（メインゲームプレイ）
+    std::vector<MapTile> m_foregroundTiles;     // 前景レイヤータイル
+    std::vector<SpawnPoint> m_spawnPoints;      // プレイヤースポーンポイント
+    std::vector<EnemySpawnInfo> m_enemySpawns;  // 敵スポーン位置
 
-    float m_gridWidth, m_gridHeight;            // Grid cell dimensions
-    int m_defaultSpawnId;                       // Default spawn point ID
-    SpatialGrid* m_spatialGrid;  // 新增
+    float m_gridWidth, m_gridHeight;            // グリッドセルサイズ
+    int m_defaultSpawnId;                       // 既定スポーンポイント ID
+    SpatialGrid* m_spatialGrid;  // 追加分
 
-    // Tile type lookup dictionary mapping codes to TileInfo
+    // コードから TileInfo を引くための辞書
     std::unordered_map<std::string, TileInfo> m_tileDictionary;
 
-    // Initialize the tile dictionary with all available tile types
+    // 利用可能な全タイル種別で辞書を初期化する
     void InitializeTileDictionary();
 
-    // Convert tile code string to TileInfo structure
+    // タイルコード文字列を TileInfo 構造体へ変換する
     TileInfo ParseTileCode(const std::string& code);
 
-    // Common handler used by grid-loading and incremental tile placement.
-    // Returns true when the tileCode is consumed as spawn/enemy and should not be added to tile list.
+    // グリッド読み込みと逐次タイル配置で共通利用する処理。
+    // tileCode がスポーン / 敵として消費され、タイル一覧へ追加不要なら true を返す。
     bool ProcessSpecialTileCode(float x, float y, const std::string& tileCode, const TileInfo& tileInfo);
 
-    // Portal subtype -> target map name
+    // ポータルのサブタイプ -> 遷移先マップ名
     static const std::unordered_map<std::string, std::string>& GetPortalTargetMapLookup();
 
 public:
-    // Constructor: create a map with specified name and grid dimensions
+    // コンストラクタ: 指定名とグリッドサイズでマップを作成する
     Map(const std::string& name, float gridWidth, float gridHeight);
 
     ~Map();
@@ -89,43 +89,43 @@ public:
     Map& operator=(const Map& other);
     Map(Map&& other) noexcept;
     Map& operator=(Map&& other) noexcept;
-    // 单向平台碰撞检测
+    // 一方向プラットフォーム衝突判定
     bool CheckOneWayPlatformCollision(float x, float y, float width, float height,
         const MapTile& platform, float& penetrationY) const;
 
-    // 获取单向平台列表
+    // 一方向プラットフォーム一覧を取得する
     std::vector<MapTile> GetOneWayPlatforms() const;
     SpatialGrid* GetSpatialGrid() { return m_spatialGrid; }
     void BuildSpatialGrid(float cellSize = 2.0f);
-    // Map loading methods
+    // マップ読み込みメソッド
     void LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLayer layer);
     void AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
         const std::string& targetMap = "", int linkedSpawnId = -1);
 
-    // Get default spawn point ID (returns -1 as placeholder)
+    // 既定スポーンポイント ID を取得する（未設定時は -1）
     int GetDefaultSpawnId() const { return m_defaultSpawnId; }
 
-    // Spawn point management
+    // スポーンポイント管理
     void AddSpawnPoint(float x, float y, int id, const std::string& name = "");
 
-    // Enemy management
+    // 敵管理
     const std::vector<EnemySpawnInfo>& GetEnemySpawns() const { return m_enemySpawns; }
     void ClearEnemySpawns() { m_enemySpawns.clear(); }
 
-    // Map information accessors
+    // マップ情報アクセサ
     const std::string& GetName() const { return m_name; }
     const std::vector<MapTile>& GetTiles(MapLayer layer) const;
     std::vector<MapTile>& GetSolidTiles();
 
-    // Spawn point coordinate retrieval
+    // スポーンポイント座標取得
     bool GetSpawnPoint(int spawnId, float& x, float& y) const;
     bool GetDefaultSpawnPoint(float& x, float& y) const;
 
-    // Portal collision detection and information retrieval
+    // ポータル衝突判定と情報取得
     bool CheckPortalCollision(float x, float y, float width, float height,
         std::string& targetMap, int& portalId, int& linkedSpawnId) const;
 
-    // Predefined map creation methods
+    // 定義済みマップ作成メソッド
     void CreateWorld1Area1Map();
     void CreateWorld1Area2Map();
     void CreateWorld1Area3Map();
@@ -156,65 +156,65 @@ public:
     void CreateWorld3Area7Map();
     //void CreateBoss3Map();
 
-    // Map clearing methods
+    // マップクリア用メソッド
     void ClearLayer(MapLayer layer);
     void ClearAll();
 };
 
-// Map manager class for handling map transitions and current map state
+// マップ遷移と現在マップ状態を管理する MapManager クラス
 class MapManager {
 private:
-    std::vector<Map> m_maps;           // Collection of all available maps
-    Map* m_currentMap;                 // Currently active map
-    Map* m_previousMap;                // Previously loaded map (for transitions)
-    int m_currentPortalId;             // ID of the last used portal
-    int m_enteredSpawnId;              // Spawn point ID used when entering map
+    std::vector<Map> m_maps;           // 利用可能な全マップ
+    Map* m_currentMap;                 // 現在アクティブなマップ
+    Map* m_previousMap;                // 直前のマップ（遷移用）
+    int m_currentPortalId;             // 最後に使ったポータル ID
+    int m_enteredSpawnId;              // 入場時に使ったスポーンポイント ID
 
 public:
     MapManager();
 
-    // Map management methods
+    // マップ管理メソッド
     void AddMap(const Map& map);
     bool SwitchMap(const std::string& mapName, int enterPortalId = 0, int spawnId = -1);
     Map* GetCurrentMap() { return m_currentMap; }
     Map* GetMap(const std::string& name);
 
-    // Enemy creation for current map
+    // 現在マップの敵生成
     void CreateMapEnemies();
 
     void ReloadCurrentMap();
-    // Player respawn functionality
+    // プレイヤー再出現機能
     void RespawnPlayer(int spawnId = -1);
 
-    // Initialize all game maps
+    // 全ゲームマップを初期化する
     void InitializeMaps();
 
-    // State information accessors
+    // 状態情報アクセサ
     const std::string& GetCurrentMapName() const;
     bool IsMapLoaded() const { return m_currentMap != nullptr; }
     int GetLastSpawnId() const { return m_enteredSpawnId; }
 };
 
-// 空间网格单元
+// 空間グリッドセル
 struct GridCell {
-    std::vector<MapTile*> tiles;  // 指向实际的砖块
+    std::vector<MapTile*> tiles;  // 実際のタイルを指す
     int x = 0;
-    int y = 0;                     // 网格坐标
+    int y = 0;                     // グリッド座標
 };
 
 
 
-// 空间网格管理类
+// 空間グリッド管理クラス
 class SpatialGrid {
 private:
-    float m_cellSize;             // 单元格大小
-    float m_worldWidth, m_worldHeight;  // 世界边界
-    float m_minX, m_minY;         // 世界左下角坐标
+    float m_cellSize;             // セルサイズ
+    float m_worldWidth, m_worldHeight;  // ワールド境界
+    float m_minX, m_minY;         // ワールド左下座標
 
-    std::vector<GridCell> m_cells;  // 所有单元格
-    int m_cellsX, m_cellsY;         // 网格维度
+    std::vector<GridCell> m_cells;  // 全セル
+    int m_cellsX, m_cellsY;         // グリッド寸法
 
-    // 从世界坐标转换到网格坐标
+    // ワールド座標をグリッド座標へ変換する
     int WorldToGridX(float worldX) const;
     int WorldToGridY(float worldY) const;
     int WorldToGridIndex(float worldX, float worldY) const;
@@ -223,16 +223,16 @@ public:
     SpatialGrid(float cellSize, float worldMinX, float worldMinY,
         float worldMaxX, float worldMaxY);
 
-    // 将地图砖块添加到网格中
+    // マップタイルをグリッドへ追加する
     void BuildFromMap(Map& map);
 
-    // 获取指定区域内的砖块
+    // 指定領域内のタイルを取得する
     void GetTilesInArea(float x, float y, float width, float height,
         std::vector<MapTile*>& result) const;
 
-    // 重新构建网格（地图变化时调用）
+    // グリッドを再構築する（マップ変更時に呼ぶ）
     void Rebuild(Map& map);
 
-    // 获取单元格信息
+    // セル情報を取得する
     const GridCell& GetCell(int x, int y) const;
 };

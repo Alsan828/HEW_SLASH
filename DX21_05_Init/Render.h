@@ -19,7 +19,7 @@
 #include <assert.h>
 #include <DirectXMath.h>
 
-// Window and screen settings
+// ウィンドウと画面設定
 #define CLASS_NAME   "DX21Smpl"
 #define WINDOW_NAME  "SLASH"
 #define SCREEN_WIDTH (1080)
@@ -28,7 +28,7 @@
 struct VertexV {
 	float x, y, z;
 	float u, v;
-	float r, g, b, a; // for the color
+	float r, g, b, a; // 色用
 };
 
 constexpr int MAX_LINEAR_CLIP_PLANES = 16;
@@ -47,25 +47,25 @@ struct ConstantBuffer
 	DirectX::XMMATRIX worldView;
 	DirectX::XMMATRIX projection;
 
-	// added november 12th
-	DirectX::XMFLOAT4 color; // for the color
-	DirectX::XMMATRIX matrixTex;   	// for the UV //send it to the const buffer
+	// 11 月 12 日追加
+	DirectX::XMFLOAT4 color; // 色用
+	DirectX::XMMATRIX matrixTex;   	// UV 用。定数バッファへ送る
 
-	float fillRatio; // for gauge fill
-	float useGaugeFill; // for gauge fill mode
-	float useLinearClip; // enable arbitrary half-plane clipping
-	float clipPlaneCount; // how many active clip planes are used
+	float fillRatio; // ゲージ充填率
+	float useGaugeFill; // ゲージ充填モード用
+	float useLinearClip; // 任意の半平面クリップを有効にする
+	float clipPlaneCount; // 使用中のクリップ平面数
 	DirectX::XMFLOAT4 clipPlanes[MAX_LINEAR_CLIP_PLANES]; // normal.x, normal.y, centerU, centerV
 
 };
 
-// Use extern to declare global variables (without initialization)
-extern ID3D11Device* g_pDevice;            // Device object
-extern ID3D11DeviceContext* g_pDeviceContext; // Device context
+// extern を使ってグローバル変数を宣言する（初期化はしない）
+extern ID3D11Device* g_pDevice;            // デバイスオブジェクト
+extern ID3D11DeviceContext* g_pDeviceContext; // デバイスコンテキスト
 
-extern ID3D11Buffer* g_pConstantBuffer; // added november 12th
+extern ID3D11Buffer* g_pConstantBuffer; // 11 月 12 日追加
 
-extern ID3D11InputLayout* g_pInputLayout;    // Input layout
+extern ID3D11InputLayout* g_pInputLayout;    // 入力レイアウト
 extern ID3D11ShaderResourceView* pTextureSRV;
 extern ID3D11ShaderResourceView* pTextureSRV2;
 extern ID3D11ShaderResourceView* pTextureSRV3;
@@ -81,11 +81,11 @@ extern ID3D11PixelShader* g_pPixelShader;
 extern D3D11_SAMPLER_DESC sampDesc;
 extern ID3D11SamplerState* pSamplerState;
 
-// Function declarations
+// 関数宣言
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HRESULT RendererInit(HWND hwnd);
-void RendererDrawF();// Called before rendering
-void RendererDrawB();// Called after rendering
+void RendererDrawF();// 描画前に呼ぶ
+void RendererDrawB();// 描画後に呼ぶ
 void RendererUninit();
 HRESULT CreateVertexShader(ID3D11VertexShader** ppVertexShader, ID3D11InputLayout** ppVertexLayout, D3D11_INPUT_ELEMENT_DESC* pLayout, unsigned int numElements, const char* szFileName);
 HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, void** ppShaderObject, int* pShaderObjectSize);
@@ -94,19 +94,19 @@ void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelS
 void RenderNumber(int number, float startX, float startY, float digitWidth, float digitHeight, ID3D11ShaderResourceView* textureSRV, bool enableCulling = true);
 void RenderImage(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV,
 	int frameIndex = 0, int rows = 1, int columns = 1, bool enableCulling = false,
-	float rotation = 0.0f, bool flipHorizontal = false); // added the rotation
+	float rotation = 0.0f, bool flipHorizontal = false); // 回転対応を追加
 
 void RenderImageClipped(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, float texClipRight);
 
 void RenderGaugeFillImage(float posX, float posY, float width, float height,
-	ID3D11ShaderResourceView* textureSRV, float fillRatio); //this is used for the gauge bar when it has the shape of a diamond
+	ID3D11ShaderResourceView* textureSRV, float fillRatio); // ダイヤ形のゲージバー描画用
 
 void SetLinearClipPlanes(const LinearClipPlane* planes, int count);
 void SetLinearClip(bool enabled, float normalX = 0.0f, float normalY = 0.0f,
 	float centerU = 0.5f, float centerV = 0.5f, float keepSide = 1.0f);
 
-void SetColor(float r, float g, float b, float a); // added november 12th
+void SetColor(float r, float g, float b, float a); // 11 月 12 日追加
 
-// Called after the scene has rendered, before Present().
-// Intended for always-on overlay elements (e.g., the global in-game cursor).
+// シーン描画後、Present() 前に呼ばれる。
+// 常時表示オーバーレイ要素（例: グローバルなゲーム内カーソル）向け。
 void RenderOverlay();

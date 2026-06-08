@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 #include "InputSystem.h"
 #include "SceneManager.h"
@@ -11,7 +11,7 @@
 class MenuScene : public SceneBase
 {
 private:
-    SceneManager* sceneManager;  // pointer to the scene manager
+    SceneManager* sceneManager;  // シーンマネージャーへのポインタ
 
     ID3D11ShaderResourceView* backgroundTexture = nullptr;
 
@@ -26,7 +26,7 @@ private:
     ID3D11ShaderResourceView* quitHoverTexture = nullptr;
 
 public:
-    MenuScene(SceneManager* manager); // constructor
+    MenuScene(SceneManager* manager); // コンストラクタ
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -35,6 +35,6 @@ public:
 };
 
 extern Animation paddingTitleAnim;
-extern InputSystem g_inputSystem;   // use the global input system
-extern ID3D11Device* g_pDevice;     // device for texture loading
+extern InputSystem g_inputSystem;   // グローバル入力システムを使う
+extern ID3D11Device* g_pDevice;     // テクスチャ読み込み用デバイス
 

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#define NOMINMAX  // 必须在包含windows.h之前
+#define NOMINMAX  // windows.h を含める前に定義する必要がある
 #include <windows.h>
 #include <cmath>
 #include <algorithm>
@@ -17,66 +17,66 @@ extern float camera_Smoothness;
 extern float camera_LookAhead;
 extern float camera_DeadZone;
 
-// Camera class for smooth player tracking
+// プレイヤーを滑らかに追従するカメラクラス
 class Camera {
 private:
-    float m_posX, m_posY;           // Current camera position
-    float m_targetX, m_targetY;     // Target position (player center)
-    float m_smoothSpeed;            // Smoothing factor (0-1, lower = smoother)
-    float m_lerpFactor;             // Linear interpolation factor
-    float m_shakeTimer;             // Camera shake timer
-    float m_shakeIntensity;         // Camera shake intensity
-    float m_lookAheadFactor;       // Look ahead factor for player movement direction
-    float m_deadZoneRadius;        // Dead zone radius where camera doesn't move
+    float m_posX, m_posY;           // 現在のカメラ位置
+    float m_targetX, m_targetY;     // 目標位置（プレイヤー中心）
+    float m_smoothSpeed;            // スムージング係数（0-1、小さいほど滑らか）
+    float m_lerpFactor;             // 線形補間係数
+    float m_shakeTimer;             // カメラシェイクのタイマー
+    float m_shakeIntensity;         // カメラシェイクの強度
+    float m_lookAheadFactor;       // プレイヤー移動方向に対する先読み係数
+    float m_deadZoneRadius;        // カメラが動かないデッドゾーン半径
 
-    float m_zoomLevel = 1.0f; // 缩放级别
+    float m_zoomLevel = 1.0f; // ズーム倍率
 
-    int m_windowWidth, m_windowHeight; // 添加窗口尺寸记录
+    int m_windowWidth, m_windowHeight; // ウィンドウサイズを保持する
 
 
 public:
     Camera();
 
-    // 获取和设置缩放级别
+    // ズーム倍率の取得と設定
     float GetZoom() const { return m_zoomLevel; }
     void SetZoom(float zoom) {
-        m_zoomLevel = (std::max)(0.1f, (std::min)(zoom, 5.0f)); // 在函数名和括号之间加空格
+        m_zoomLevel = (std::max)(0.1f, (std::min)(zoom, 5.0f)); // ズーム値を有効範囲に制限する
     }
 
     void SetTarget(float x, float y);
     void Update(float deltaTime);
     void Shake(float intensity, float duration);
 
-    // Getters
+    // ゲッター
     float GetX() const { return m_posX; }
     float GetY() const { return m_posY; }
     float GetShakeIntensity() const { return m_shakeIntensity; }
 
-    // Camera configuration
+    // カメラ設定
     void SetSmoothness(float smoothness) { m_smoothSpeed = std::clamp(smoothness, 0.01f, 1.0f); }
     void SetLookAhead(float lookAhead) { m_lookAheadFactor = std::clamp(lookAhead, 0.0f, 1.0f); }
     void SetDeadZone(float radius) { m_deadZoneRadius = (radius > 0.0f) ? radius : 0.0f; }
 
 
-    // 获取屏幕中心的世界坐标
+    // 画面中央のワールド座標を取得する
     void GetScreenCenterWorld(float& centerX, float& centerY) const {
         centerX = m_posX + (m_windowWidth * 0.5f) / (m_zoomLevel * 100.0f);
         centerY = m_posY + (m_windowHeight * 0.5f) / (m_zoomLevel * 100.0f);
     }
 
-    // 世界坐标到屏幕坐标的转换
+    // ワールド座標をスクリーン座標へ変換する
     void WorldToScreen(float worldX, float worldY, int& screenX, int& screenY) const {
         screenX = static_cast<int>((worldX - m_posX) * m_zoomLevel + m_windowWidth * 0.5f);
         screenY = static_cast<int>((worldY - m_posY) * m_zoomLevel + m_windowHeight * 0.5f);
     }
 
-    // 屏幕坐标到世界坐标的转换
+    // スクリーン座標をワールド座標へ変換する
     void ScreenToWorld(int screenX, int screenY, float& worldX, float& worldY) const {
         worldX = (screenX - m_windowWidth * 0.5f) / m_zoomLevel + m_posX;
         worldY = (screenY - m_windowHeight * 0.5f) / m_zoomLevel + m_posY;
     }
 
-    // 获取视口边界（世界坐标）
+    // ビューポート境界をワールド座標で取得する
     void GetViewportBounds(float& left, float& right, float& top, float& bottom) const {
         left = m_posX - (m_windowWidth * 0.5f) / m_zoomLevel;
         right = m_posX + (m_windowWidth * 0.5f) / m_zoomLevel;
@@ -93,33 +93,33 @@ public:
 
 
 
-    // 修复后的可视范围计算（基于窗口尺寸和缩放）
+    // 修正後の可視範囲計算（ウィンドウサイズとズームに基づく）
     void GetVisibleRect(float& left, float& top, float& right, float& bottom) const {
-        // 基于窗口尺寸和缩放计算实际可视范围
+        // ウィンドウサイズとズームから実際の可視範囲を計算する
         float visibleWidth = m_windowWidth / m_zoomLevel;
         float visibleHeight = m_windowHeight / m_zoomLevel;
 
         float halfWidth = visibleWidth * 0.5f;
         float halfHeight = visibleHeight * 0.5f;
 
-        // 修正坐标系：假设Y轴向上
+        // 座標系を補正する：Y 軸は上向きと仮定する
         left = m_posX - halfWidth;
         right = m_posX + halfWidth;
-        top = m_posY + halfHeight;     // 上边界（较大的Y值）
-        bottom = m_posY - halfHeight;  // 下边界（较小的Y值）
+        top = m_posY + halfHeight;     // 上境界（大きい Y 値）
+        bottom = m_posY - halfHeight;  // 下境界（小さい Y 値）
     }
 
-    // 修复后的可见性检测
+    // 修正後の可視判定
     bool IsRectVisible(float x, float y, float width, float height) const {
         float camLeft, camTop, camRight, camBottom;
         GetVisibleRect(camLeft, camTop, camRight, camBottom);
 
         float objLeft = x;
         float objRight = x + width;
-        float objTop = y + height;  // 假设物体原点在左下角
+        float objTop = y + height;  // オブジェクトの原点は左下と仮定する
         float objBottom = y;
 
-        // 正确的AABB相交测试[2](@ref)
+        // 正しい AABB 交差判定
         return !(objRight < camLeft ||
             objLeft > camRight ||
             objBottom > camTop ||

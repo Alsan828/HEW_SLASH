@@ -1,4 +1,4 @@
-#include "CakeScene.h"
+﻿#include "CakeScene.h"
 #include <algorithm>
 #include <cmath>
 
@@ -7,7 +7,7 @@ namespace {
     constexpr float kGeometryEpsilon = 0.0005f;
 }
 
-//the construct
+// コンストラクタ
 CakeScene::CakeScene(SceneManager* manager)
 {
     sceneManager = manager;
@@ -24,7 +24,7 @@ CakeScene::CakeScene(SceneManager* manager)
     ResetCakePieces();
 }
 
-// Initialize the stage
+// ステージを初期化する
 bool CakeScene::Init()
 {
     Audio::PlayBGM(BackgroundMusic::THE_CAKE, true);
@@ -191,7 +191,7 @@ void CakeScene::UpdateCutCenterFromWorldPoint(float worldX, float worldY)
     cutCenterV = std::max(0.0f, std::min(localV, 1.0f));
 }
 
-// for checking if the player hit the cake or not
+// プレイヤーの攻撃がケーキに当たったかを判定する
 bool CakeScene::CheckPlayerAttackHitsCake()
 {
     float startU = 0.0f;
@@ -248,7 +248,7 @@ void CakeScene::UpdateCutVectors()
     cutDirX /= length;
     cutDirY /= length;
 
-    // Split direction is perpendicular to the slash direction.
+    // 分離方向は斬撃方向に対して垂直になる。
     cutNormalX = -cutDirY;
     cutNormalY = cutDirX;
 }
@@ -456,7 +456,7 @@ bool CakeScene::DoesSegmentHitPiece(float startU, float startV, float endU, floa
     return false;
 }
 
-// for when the player cuts the cake
+// プレイヤーがケーキを切ったときの処理
 bool CakeScene::CutCake()
 {
     bool hadExistingCuts = isCakeCut;
@@ -650,7 +650,7 @@ void CakeScene::DrawCakePieces(float centerX, float centerY, float width, float 
     SetLinearClip(false);
 }
 
-// for drawing the cake when I cut it
+// カット時のケーキ描画処理
 void CakeScene::DrawCakeSequence()
 {
     const float screenX = cakeX - g_camera.GetX();
@@ -696,7 +696,7 @@ void CakeScene::Draw()
     DrawCakeSequence();
 }
 
-// Cleanup
+// 後始末
 void CakeScene::Uninit()
 {
     if (cakeTexture)

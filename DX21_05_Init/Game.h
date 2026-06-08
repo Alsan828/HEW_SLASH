@@ -22,58 +22,58 @@
 
 class ProjectileManager;
 
-extern ProjectileManager& g_projectileManager;  // 全局射弹管理器
+extern ProjectileManager& g_projectileManager;  // グローバル射弾管理器
 extern SceneManager sceneManager;
 extern MapManager g_mapManager;
 extern InputSystem g_inputSystem;
 extern Camera g_camera;
 class Enemy;
 
-// Slash-count UI (1x4 spritesheet)
+// Slash-count UI（1x4 スプライトシート）
 extern ID3D11ShaderResourceView* g_slashCountTexture;
 extern Animation g_slashCountAnim;
-// Health follower texture/animation (1x3 spritesheet)
+// 追従型体力アイコンのテクスチャ / アニメーション（1x3 スプライトシート）
 extern ID3D11ShaderResourceView* g_healthTexture;
 extern Animation g_healthAnim;
 
-// Weak-point hit/kill effect spawning (defined in Game.cpp)
+// 弱点ヒット / 撃破エフェクト生成（Game.cpp で定義）
 void SpawnWeakPointHitEffect(float worldX, float worldY);
 void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float scale);
 void SpawnWeakPointKillEffect(float worldX, float worldY);
 
-// When a dash point is restored on enemy death, spawn the follower indicator from that world position.
+// 敵撃破でダッシュポイントが回復したとき、そのワールド座標から追従インジケータを出す。
 extern float g_slashCountSpawnX;
 extern float g_slashCountSpawnY;
 extern bool g_slashCountSpawnPending;
 
-// Game state enumeration
+// ゲーム状態列挙
 enum GameState {
     STATE_PLAYING,
     STATE_GAME_OVER,
     STATE_PAUSED
 };
 
-// Global constant definitions
+// グローバル定数定義
 const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
 const float PLAYER_HEIGHT = 0.12f;
 const float GRAVITY = -0.002f;
 const float JUMP_FORCE = 0.045f;
-// Base move speed (slower than before). The old value was 0.01f.
-// Normal state move speed now is 0.8x of the previous speed.
+// 基本移動速度（以前より遅い）。旧値は 0.01f。
+// 通常状態の移動速度は以前の 0.8 倍。
 const float MOVE_SPEED = 0.008f; 
-const float DASH_SPEED = 0.05f;      // Base dash speed (halved)
-const float DASH_DURATION = 0.16f;   // Base dash duration
-const float DASH_COOLDOWN = 0.0f;    // Dash cooldown time
+const float DASH_SPEED = 0.05f;      // 基本ダッシュ速度（半減）
+const float DASH_DURATION = 0.16f;   // 基本ダッシュ継続時間
+const float DASH_COOLDOWN = 0.0f;    // ダッシュクールダウン時間
 
-// Acceleration (combo) state
-const int ACCEL_COMBO_THRESHOLD = 5;        // comboCount > 5 to enter accelerated state
-const float ACCEL_MOVE_SPEED_MULT = 1.75f;  // accelerated move speed multiplier
-const float ACCEL_ANIM_SPEED_MULT = 1.75f;  // keep animation speed in sync with movement
-const float ACCEL_CHARGE_SPEED_MULT = 1.5f; // accelerated charge speed multiplier
+// 加速（コンボ）状態
+const int ACCEL_COMBO_THRESHOLD = 5;        // comboCount > 5 で加速状態へ入る
+const float ACCEL_MOVE_SPEED_MULT = 1.75f;  // 加速時の移動速度倍率
+const float ACCEL_ANIM_SPEED_MULT = 1.75f;  // アニメ速度も移動に同期させる
+const float ACCEL_CHARGE_SPEED_MULT = 1.5f; // 加速時のチャージ速度倍率
 
-// Player structure
+// プレイヤー構造体
 struct Player {
     float posX = 0.0f;
     float posY = 0.0f;
@@ -82,51 +82,51 @@ struct Player {
     bool isOnGround = false;
     bool isMoving = false;
     bool facingRight = true;
-    // 死亡状态相关
+    // 死亡状態関連
     bool isDead = false;
     float deathTimer = 0.0f;
-    const float DEATH_RESPAWN_TIME = 1.5f;  // 死亡后复活等待时间
-    int deathCount = 0;  // 死亡计数（可选）
+    const float DEATH_RESPAWN_TIME = 1.5f;  // 死亡後の再出現待機時間
+    int deathCount = 0;  // 死亡回数（任意）
 
-    // for the combo UI of the player when attacking
+    // 攻撃中のプレイヤー用コンボ UI
     int comboCount = 0;
-    float comboTimer = 0.0f;   // for the time before the combo resets
-    const float COMBO_RESET_TIME = 2.0f; // 2 seconds without killing, the combo will reset
+    float comboTimer = 0.0f;   // コンボがリセットされるまでの時間
+    const float COMBO_RESET_TIME = 2.0f; // 2 秒撃破がなければコンボをリセット
 
-    // Acceleration state (triggered by combos)
+    // 加速状態（コンボで発動）
     bool isAccelerated = false;
 
-    // for the gauge bar system
-    int gaugePoints = 0;              // current gauge points
-    const int MAX_GAUGE_POINTS = 12;  // maximum gauge points
-    bool isInvincible = false;        // invincibility state
-    float invincibleTimer = 0.0f;     // invincibility timer
-    const float INVINCIBLE_DURATION = 5.0f;  // 5 seconds of invincibility
+    // ゲージバーシステム用
+    int gaugePoints = 0;              // 現在のゲージポイント
+    const int MAX_GAUGE_POINTS = 12;  // 最大ゲージポイント
+    bool isInvincible = false;        // 無敵状態
+    float invincibleTimer = 0.0f;     // 無敵タイマー
+    const float INVINCIBLE_DURATION = 5.0f;  // 無敵時間 5 秒
 
-    // Invincibility source control:
-    // true  -> invincible granted by full gauge / combo reward, use Invincible* animation set
-    // false -> invincible granted by dash/slash window, do NOT switch animation set
+    // 無敵状態の由来制御:
+    // true  -> フルゲージ / コンボ報酬由来の無敵。Invincible* アニメを使う
+    // false -> ダッシュ / 斬撃の無敵窓由来。アニメセットは切り替えない
     bool isGaugeInvincible = false;
-	float g_gaugeEffectTimer = 0.0f;  // gauge effect timer
+    float g_gaugeEffectTimer = 0.0f;  // ゲージエフェクトタイマー
     bool g_gaugeEffectActive = false;
 
 
-    // 生命值系统
+    // 体力システム
     float health = 100.0f;
     float maxHealth = 100.0f;
-    // 攻击系统
-    float attackDamage = 10.0f;  // 基础攻击力
-    bool isAttacking = false;    // 攻击状态
+    // 攻撃システム
+    float attackDamage = 10.0f;  // 基本攻撃力
+    bool isAttacking = false;    // 攻撃状態
     float attackTimer = 0.0f;
     const float ATTACK_DURATION = 0.2f;
 
-    // Dash related variables
+    // ダッシュ関連変数
     bool isDashing = false;
     float dashTimer = 0.0f;
     float dashDirectionX = 0.0f;
     float dashDirectionY = 0.0f;
     int dashLevel = 0; 
-    // 在 Player 结构体中添加以下变量
+    // Player 構造体へ追加した変数
     bool isWallSliding = false;
     int wallSlideDirection = 0; // 0=无, -1=左墙, 1=右墙
     float wallSlideTimer = 0.0f;
@@ -137,7 +137,7 @@ struct Player {
     bool hasMouseTarget = false;
     bool allowMoveWhileCharging = true;
 
-    // Charge dash specific variables
+    // チャージダッシュ専用変数
     bool isCharging = false;
     float chargeTime = 0.0f;
     const float MAX_CHARGE_TIME = 1.0f;
@@ -145,53 +145,53 @@ struct Player {
     const float CHARGE_THRESHOLD_LOW = 0.2f;
     const float CHARGE_THRESHOLD_MID = 0.4f;
     const float CHARGE_THRESHOLD_HIGH = 0.8f;
-    int hitStopTriggered = 0 ;     // 本次冲刺中已触发的顿刀次数
-    float hitStopTimer = 0.0f;       // 顿刀计时器
+    int hitStopTriggered = 0 ;     // 今回のダッシュで発生したヒットストップ回数
+    float hitStopTimer = 0.0f;       // ヒットストップタイマー
 
-    //蓄力层数系统
-    float savedChargeTime = 0.0f;        // 保存的蓄力时间
-    bool hasSavedCharge = false;         // 是否有保存的蓄力
-    float chargeDecayTimer = 0.0f;        // 蓄力衰减计时器
-    const float CHARGE_DECAY_TIME = 1.0f; // 蓄力保存时间
+    // 蓄力段階システム
+    float savedChargeTime = 0.0f;        // 保存した蓄力時間
+    bool hasSavedCharge = false;         // 蓄力を保存しているか
+    float chargeDecayTimer = 0.0f;        // 蓄力減衰タイマー
+    const float CHARGE_DECAY_TIME = 1.0f; // 蓄力保持時間
 
     Animation anim;
-    float animLockTimer = 0.0f; // used for when changing from one animation to another
+    float animLockTimer = 0.0f; // アニメ切り替え時に使う
     float animLockDuration = 0.25f;
 
-    // 冲刺点数系统
+    // ダッシュポイントシステム
     int dashPoints = 3;
     const int MAX_DASH_POINTS = 3;
     float dashPointRecoverTimer = 0.0f;
     const float DASH_POINT_RECOVER_TIME = 0.1f;
 
-    // 单向平台下落宽限：触发一次后，短时间内忽略单向平台碰撞
+    // 一方向プラットフォーム下降猶予: 一度発動後、短時間衝突を無視する
     float oneWayPlatformDropTimer = 0.0f;
     const float ONE_WAY_PLATFORM_DROP_GRACE = 0.18f;
 
-    // 本次冲刺消耗的点数（用于伤害加成计算）
+    // 今回のダッシュで消費したポイント（ダメージ加算計算用）
     int lastDashConsumedPoints = 1;
 
-    // 蓄力消耗点数（蓄力过程中预扣，放出时结算）
-    int chargePendingCost = 0;            // 当前蓄力已累计的消耗点数（0~3）
-    float chargeCostTimer = 0.0f;         // 用于按时间累计消耗
-    const float CHARGE_COST_INTERVAL = 0.25f; // 每隔多少秒增加 1 点消耗
-    bool isChargeCostHighlight = false;   // UI 高亮：蓄力时显示消耗反馈
+    // 蓄力消費ポイント（蓄力中に仮引きし、発動時に確定する）
+    int chargePendingCost = 0;            // 現在の蓄力で累計した消費ポイント（0~3）
+    float chargeCostTimer = 0.0f;         // 時間ごとの消費蓄積用タイマー
+    const float CHARGE_COST_INTERVAL = 0.25f; // 何秒ごとに 1 ポイント消費を増やすか
+    bool isChargeCostHighlight = false;   // UI ハイライト: 蓄力時の消費フィードバック表示
 
-    // 冲刺后硬直状态
+    // ダッシュ後の硬直状態
     bool isInDashAftermath = false;
     float dashAftermathTimer = 0.0f;
     const float DASH_AFTERMATH_DURATION = 0.7f;
 
-    // Dash-end slow-motion (real-time): duration also defines post-dash invincibility window.
+    // ダッシュ終了時のスローモーション（実時間）。継続時間はダッシュ後無敵時間も兼ねる。
     bool isInDashEndSlowMo = false;
     float dashEndSlowMoTimer = 0.0f;
-    // Reduced by 1/3: 0.75s -> 0.5s
+    // 1/3 短縮: 0.75s -> 0.5s
     const float DASH_END_SLOWMO_REALTIME = 0.5f;
     const float DASH_END_SLOWMO_FACTOR = 0.35f;
     
     const float AFTERIMAGE_DURATION = 0.35f;
 
-     // 残像参数
+     // 残像パラメータ
      float afterImageSpawnTimer = 0.0f;
      float afterImageSpawnInterval = 0.025f;
      float afterImageMinSpeed = 0.06f;
@@ -208,17 +208,17 @@ struct Player {
         return isAccelerated ? ACCEL_CHARGE_SPEED_MULT : 1.0f;
     }
 
-    // 新增：攻击检测相关
-    std::vector<Enemy*> hitEnemies; // 本次冲刺已击中的敌人（避免重复伤害）
+    // 追加: 攻撃判定関連
+    std::vector<Enemy*> hitEnemies; // 今回のダッシュで当たった敵（重複ダメージ防止）
 
-    // 重置攻击状态
+    // 攻撃状態をリセットする
     void ResetAttack() {
         isAttacking = false;
         attackTimer = 0.0f;
         hitEnemies.clear();
     }
 
-    // 受到伤害
+    // ダメージを受ける
     void TakeDamage(float damage) {
         if (isDead) return;
 
@@ -226,11 +226,11 @@ struct Player {
         if (health <= 0) {
             health = 0;
             isDead = false;
-            // 玩家死亡处理
+            // プレイヤー死亡処理
         }
     }
 
-    // 获取当前蓄力等级
+    // 現在の蓄力レベルを取得する
     int GetChargeLevel() const {
         if (chargeTime >= CHARGE_THRESHOLD_HIGH) return 3;
         if (chargeTime >= CHARGE_THRESHOLD_MID) return 2;
@@ -238,7 +238,7 @@ struct Player {
         return 0;
     }
 
-    // 保存当前蓄力
+    // 現在の蓄力を保存する
     void SaveCharge() {
         if (chargeTime > MIN_CHARGE_TIME) {
             savedChargeTime = chargeTime;
@@ -247,31 +247,31 @@ struct Player {
         }
     }
 
-    // 加载保存的蓄力
+    // 保存済み蓄力を読み込む
     void LoadSavedCharge() {
         if (hasSavedCharge) {
             chargeTime = savedChargeTime;
-            chargeDecayTimer = CHARGE_DECAY_TIME; // 重置衰减计时器
+            chargeDecayTimer = CHARGE_DECAY_TIME; // 減衰タイマーをリセットする
         }
     }
 
-    // 清空保存的蓄力
+    // 保存済み蓄力を消去する
     void ClearSavedCharge() {
         hasSavedCharge = false;
         savedChargeTime = 0.0f;
         chargeDecayTimer = 0.0f;
     }
 
-    // 更新蓄力衰减
+    // 蓄力減衰を更新する
     void UpdateChargeDecay(float deltaTime) {
         if (hasSavedCharge) {
             chargeDecayTimer -= deltaTime;
             if (chargeDecayTimer <= 0.0f) {
-                ClearSavedCharge(); // 时间到，清空保存的蓄力
+                ClearSavedCharge(); // 時間切れで保存蓄力を消去する
             }
         }
     }
-    // 根据时间获取蓄力等级
+    // 時間から蓄力レベルを取得する
     int GetChargeLevelFromTime(float chargeTime) const {
         if (chargeTime >= CHARGE_THRESHOLD_HIGH) return 3;
         if (chargeTime >= CHARGE_THRESHOLD_MID) return 2;
@@ -281,7 +281,7 @@ struct Player {
 };
 
 
-// for the statistics of the game. deaths, kills, etc
+// ゲーム統計用（死亡数、撃破数など）
 class GameStatistics {
 private:
     int enemiesKilled = 0;

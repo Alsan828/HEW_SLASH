@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 #include "InputSystem.h"
 #include "SceneManager.h"
@@ -10,18 +10,18 @@
 class HowToPlayScene : public SceneBase
 {
 private:
-    SceneManager* sceneManager;   // pointer to the scene manager
+    SceneManager* sceneManager;   // シーンマネージャーへのポインタ
 
     ID3D11ShaderResourceView* backgroundTexture = nullptr;
 
-    SCENE returnScene; // for going to back to then scene I want to
+    SCENE returnScene; // 戻り先のシーン
 
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* backTexture = nullptr;
     ID3D11ShaderResourceView* backHoverTexture = nullptr;
 
 public:
-    HowToPlayScene(SceneManager* manager, SCENE returnTo); // constructor
+    HowToPlayScene(SceneManager* manager, SCENE returnTo); // コンストラクタ
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -29,6 +29,6 @@ public:
     void Uninit() override;
 };
 
-extern InputSystem g_inputSystem;   // use the global input system
-extern ID3D11Device* g_pDevice;     // device for texture loading
+extern InputSystem g_inputSystem;   // グローバル入力システムを使う
+extern ID3D11Device* g_pDevice;     // テクスチャ読み込み用デバイス
 

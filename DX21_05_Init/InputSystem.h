@@ -6,7 +6,7 @@
 #pragma comment (lib, "xinput.lib") //XInputを使うために必要
 
 
-// for controller
+// コントローラー用
 #define XINPUT_A              0x1000
 #define XINPUT_B              0x2000
 #define XINPUT_X              0x4000
@@ -17,12 +17,12 @@
 #define XINPUT_RIGHT          0x0008
 #define XINPUT_START          0x0010
 #define XINPUT_BACK           0x0020
-#define XINPUT_LEFT_THUMB     0x0040 //right stick
-#define XINPUT_RIGHT_THUMB    0x0080 //left stick
-#define XINPUT_LEFT_SHOULDER  0x0100 //L
-#define XINPUT_RIGHT_SHOULDER 0x0200 //R
+#define XINPUT_LEFT_THUMB     0x0040 // 右スティック
+#define XINPUT_RIGHT_THUMB    0x0080 // 左スティック
+#define XINPUT_LEFT_SHOULDER  0x0100 // L
+#define XINPUT_RIGHT_SHOULDER 0x0200 // R
 
-// for keyboard
+// キーボード用
 #define VK_0 0x30
 #define VK_1 0x31
 #define VK_2 0x32
@@ -60,23 +60,23 @@
 #define VK_Y 0x59
 #define VK_Z 0x5A
 
-// Input system class
+// 入力システムクラス
 class InputSystem {
 private:
-    //for keyboard
+    // キーボード用
     BYTE keyState[256] = {};
     BYTE keyState_old[256] = {};
 
-    //for ocntroller
+    // コントローラー用
     XINPUT_STATE controllerState = {};
     XINPUT_STATE controllerState_old = {};
 
-    // Store key states
+    // キー状態を保持する
     std::map<int, bool> m_currentKeyStates;
     std::map<int, bool> m_previousKeyStates;
     std::map<int, bool> m_toggleConsumed;
 
-    // Key mappings
+    // キー割り当て
     int m_moveLeftKey = VK_LEFT;
     int m_moveLeftAltKey = 'A';
     int m_moveRightKey = VK_RIGHT;
@@ -96,20 +96,20 @@ private:
     bool m_mouseLeftReleased = false;
     bool m_prevMouseLeftDown = false;
 
-    bool m_pauseConsumed = false; // for the pause
+    bool m_pauseConsumed = false; // ポーズ用
 
 public:
     InputSystem();
 
-    // Update input state (call every frame)
+    // 入力状態を更新する（毎フレーム呼び出す）
     void Update();
 
-    // Key state queries
+    // キー状態の問い合わせ
     bool IsKeyDown(int key) const;
-    bool IsKeyPressed(int key) const;  // Pressed this frame
-    bool IsKeyReleased(int key) const; // Released this frame
+    bool IsKeyPressed(int key) const;  // このフレームで押された
+    bool IsKeyReleased(int key) const; // このフレームで離された
 
-    // Specific action queries
+    // 特定アクションの問い合わせ
     bool IsMovingLeft() const;
     bool IsMovingRight() const;
     bool IsJumping() const;
@@ -124,14 +124,14 @@ public:
     bool IsMouseLeftPressed() const { return m_mouseLeftPressed; }
     bool IsMouseLeftReleased() const { return m_mouseLeftReleased; }
 
-    // Get movement direction vector
+    // 移動方向ベクトルを取得する
     void GetMoveDirection(float& dirX, float& dirY) const;
 
-    // Modify key bindings (optional functionality)
+    // キー割り当てを変更する（任意機能）
     void RebindKey(int action, int newKey);
 
-    bool IsTogglePressed(int key); // for the pause
+    bool IsTogglePressed(int key); // ポーズ用
 
-    // added december 1st
+    // 12 月 1 日追加
     POINT GetRawMousePosition() const { return m_mousePos; }
 };

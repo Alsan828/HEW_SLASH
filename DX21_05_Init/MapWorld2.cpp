@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 
-// create world2 area1
+// World 2 の Area 1 を作成する
 void Map::CreateWorld2Area1Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -38,7 +38,7 @@ void Map::CreateWorld2Area1Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// create world2 area2
+// World 2 の Area 2 を作成する
 void Map::CreateWorld2Area2Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -72,7 +72,7 @@ void Map::CreateWorld2Area2Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// create world2 area3
+// World 2 の Area 3 を作成する
 void Map::CreateWorld2Area3Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -106,7 +106,7 @@ void Map::CreateWorld2Area3Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// create world2 area4
+// World 2 の Area 4 を作成する
 void Map::CreateWorld2Area4Map() {
     ClearAll();
     m_spawnPoints.clear();

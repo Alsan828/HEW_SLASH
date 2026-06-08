@@ -1,10 +1,10 @@
-#include "Map.h"
+﻿#include "Map.h"
 #include "Game.h"
 #include "Enemy.h"
 #include <cmath>
 #include <algorithm>
 
-// create world3 area1
+// World 3 の Area 1 を作成する
 void Map::CreateWorld3Area1Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -41,7 +41,7 @@ void Map::CreateWorld3Area1Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// create world3 area2
+// World 3 の Area 2 を作成する
 void Map::CreateWorld3Area2Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -66,7 +66,7 @@ void Map::CreateWorld3Area2Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// create world3 area3
+// World 3 の Area 3 を作成する
 void Map::CreateWorld3Area3Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -93,7 +93,7 @@ void Map::CreateWorld3Area3Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// create world3 area4
+// World 3 の Area 4 を作成する
 void Map::CreateWorld3Area4Map() {
     ClearAll();
     m_spawnPoints.clear();

@@ -15,7 +15,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
-    // Set up window class information
+    // ウィンドウクラス情報を設定する
     WNDCLASSEX wc;
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_CLASSDC;
@@ -33,60 +33,60 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_  HINSTANCE hPrevInstance, 
     RegisterClassEx(&wc);
     srand(static_cast<unsigned int>(time(NULL)));
 
-    // Get screen resolution
+    // 画面解像度を取得する
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
     g_windowWidth = screenWidth;
     g_windowHeight = screenHeight;
 
-    // Create borderless window covering entire screen
+    // 画面全体を覆うボーダーレスウィンドウを生成する
     HWND hWnd;
 
     hWnd = CreateWindowEx(0,
         CLASS_NAME,
         WINDOW_NAME,
-        WS_POPUP | WS_VISIBLE,  // Borderless style and immediately visible
-        0, 0,                   // Position at (0,0)
-        screenWidth,            // Width covers entire screen
-        screenHeight,           // Height covers entire screen
+        WS_POPUP | WS_VISIBLE,  // ボーダーレスで即時表示
+        0, 0,                   // 位置は (0, 0)
+        screenWidth,            // 幅は画面全体
+        screenHeight,           // 高さは画面全体
         NULL,
         NULL,
         hInstance,
         NULL);
 
-    // Initialize DirectX before entering game loop
-    RendererInit(hWnd);    // 初始化音频系统
+    // ゲームループに入る前に DirectX を初期化する
+    RendererInit(hWnd);    // レンダラーを初期化する
     SetGameWindowHandle(hWnd);
     SetInGameCursorEnabled(true);
 
     InitGameWorld();
-    sceneManager.Init(TITLE); // start with title
+    sceneManager.Init(TITLE); // タイトル画面から開始する
 
     MSG msg;
 
-    // Game loop
+    // ゲームループ
     while (1)
     {
-        // If there are new messages
+        // 新しいメッセージがある場合
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
-            // Send message to window procedure
+            // ウィンドウプロシージャへメッセージを送る
             DispatchMessage(&msg);
 
-            // Break loop if WM_QUIT message is received
+            // WM_QUIT を受け取ったらループを抜ける
             if (msg.message == WM_QUIT) {
                 break;
             }
         }
         else
         {
-            sceneManager.GameLoop();  // Handle keyboard input and update game
+            sceneManager.GameLoop();  // 入力処理とゲーム更新を行う
         }
     }
 
     CleanUpGameWorld();
-    // Clean up DirectX resources
+    // DirectX リソースを解放する
     RendererUninit();
 
     UnregisterClass(CLASS_NAME, hInstance);
@@ -108,12 +108,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_SETCURSOR:
-		// Don't force the cursor to NULL in the client area.
-		// Cursor visibility is controlled via ShowCursor(TRUE/FALSE) depending on scene.
+        // クライアント領域でカーソルを強制的に NULL にしない。
+        // カーソル表示はシーンに応じて ShowCursor(TRUE/FALSE) で制御する。
         break;
 
     case WM_SIZE: {
-        // 窗口尺寸变化时更新全局变量和相机
+        // ウィンドウサイズ変更時にグローバル変数とカメラを更新する
         g_windowWidth = LOWORD(lParam);
         g_windowHeight = HIWORD(lParam);
         g_camera.SetWindowSize(g_windowWidth, g_windowHeight);

@@ -8,7 +8,7 @@ namespace {
     const std::string kEmptyTileCode = "00";
 }
 
-// Create boss map variant with two bosses (boss2)
+// ボス 2 体版マップ（boss2）を作成する
 void Map::CreateBoss2Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -34,7 +34,7 @@ void Map::CreateBoss2Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// Create boss map variant 3: single red boss with 2x speed
+// ボスマップ variant 3: 2 倍速の赤ボス 1 体を作成する
 void Map::CreateBoss3Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -60,7 +60,7 @@ void Map::CreateBoss3Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// Map class implementation
+// Map クラスの実装
 Map::Map(const std::string& name, float gridWidth, float gridHeight)
     : m_name(name), m_gridWidth(gridWidth), m_gridHeight(gridHeight), m_defaultSpawnId(0), m_spatialGrid(nullptr) {
     InitializeTileDictionary();
@@ -141,17 +141,17 @@ Map& Map::operator=(Map&& other) noexcept {
     return *this;
 }
 
-// Initialize the tile dictionary with all available tile types
+// 利用可能な全タイル種別で辞書を初期化する
 void Map::InitializeTileDictionary() {
-    // Initialize tile type dictionary
+    // タイル種別辞書を初期化する
     m_tileDictionary = {
-        // Empty space
+        // 空き領域
         {"00", {"00", "empty", "none", false, false, false, false}},
 
-        // Ground types
-        {"BB", {"BB", "ground", "black", true, false, false, false}}, // for the black platform
+        // 地面タイプ
+        {"BB", {"BB", "ground", "black", true, false, false, false}}, // 黒い足場用
         {"G1", {"G1", "ground", "grass", true, false, false, false}},
-        {"G2", {"G2", "ground", "top", true, false, false, false}}, // for decoration on top of actual platform
+        {"G2", {"G2", "ground", "top", true, false, false, false}}, // 実際の足場上面の装飾用
         {"G3", {"G3", "ground", "top_corner_left", true, false, false, false}},
         {"G4", {"G4", "ground", "top_corner_right", true, false, false, false}},
         {"G5", {"G5", "ground", "left_side", true, false, false, false}},
@@ -165,16 +165,16 @@ void Map::InitializeTileDictionary() {
         {"C4", {"C4", "ground", "corner_bottom_facing_right", true, false, false, false}},
         {"BD", {"BD", "ground", "boss_decoration", true, false, false, false}},
         
-        // Wall types
+        // 壁タイプ
         {"W1", {"W1", "wall", "brick", true, false, false, false}},
         {"W2", {"W2", "wall", "stone", true, false, false, false}},
        
-        // Platform types
+        // 足場タイプ
         {"P1", {"P1", "platform", "wood", true, false, false, false}},
         {"P2", {"P2", "platform", "metal", true, false, false, false}},
-        {"OP", {"OP", "platform", "one_way", true, false, false, false}},  // 单向平台
+        {"OP", {"OP", "platform", "one_way", true, false, false, false}},  // 一方向足場
 
-        // Enemy types
+        // 敵タイプ
         {"E1", {"E1", "enemy", "normal", false, false, false, true}},
         {"E2", {"E2", "enemy", "shield", false, false, false, true}},
         {"E3", {"E3", "enemy", "mage", false, false, false, true}},
@@ -184,20 +184,20 @@ void Map::InitializeTileDictionary() {
         {"E7", {"E7", "enemy", "beam", false, false, false, true}},
         {"E8", {"E8", "enemy", "thrower", false, false, false, true}},
         {"E9", {"E9", "enemy", "blind_eye", false, false, false, true}},
-        {"BS", {"BS", "enemy", "boss", false, false, false, true}}, // 新增 Boss 敌人码
-        {"BR", {"BR", "enemy", "boss_red", false, false, false, true}}, // 红色 Boss 变种
+        {"BS", {"BS", "enemy", "boss", false, false, false, true}}, // Boss 敵コード
+        {"BR", {"BR", "enemy", "boss_red", false, false, false, true}}, // 赤ボスの派生種
 
-        // Portal/door types
-        // Default behavior: all non-boss doors go to the next area.
+        // ポータル / 扉タイプ
+        // 既定では、ボス扉以外は次のエリアへ進む。
         {"DF", {"DF", "door", "World1Area2", false, false, true, false}},
         {"DI", {"DI", "door", "World1Area3", false, false, true, false}},
         {"D4", {"D4", "door", "World1Area4", false, false, true, false}},
         {"D5", {"D5", "door", "World1Area5", false, false, true, false}},
         {"D6", {"D6", "door", "World1Area6", false, false, true, false}},
         {"D7", {"D7", "door", "World1Area7", false, false, true, false}},
-        {"DB", {"DB", "door", "boss", false, false, true, false}}, // boss door
+        {"DB", {"DB", "door", "boss", false, false, true, false}}, // ボス扉
 
-        // portal types for World2 (stage2)
+        // World2（stage2）用ポータルタイプ
         {"21", {"21", "door", "World2Area1", false, false, true, false}},
         {"22", {"22", "door", "World2Area2", false, false, true, false}},
         {"23", {"23", "door", "World2Area3", false, false, true, false}},
@@ -205,9 +205,9 @@ void Map::InitializeTileDictionary() {
         {"25", {"25", "door", "World2Area5", false, false, true, false}},
         {"26", {"26", "door", "World2Area6", false, false, true, false}},
         {"27", {"27", "door", "World2Area7", false, false, true, false}},
-        //{"B2", {"B2", "door", "boss2", false, false, true, false}}, // for the boss of world 2
+        //{"B2", {"B2", "door", "boss2", false, false, true, false}}, // World2 のボス用
 
-        // portal types for World3 (stage3)
+        // World3（stage3）用ポータルタイプ
         {"31", {"31", "door", "World3Area1", false, false, true, false}},
         {"32", {"32", "door", "World3Area2", false, false, true, false}},
         {"33", {"33", "door", "World3Area3", false, false, true, false}},
@@ -215,13 +215,13 @@ void Map::InitializeTileDictionary() {
         {"35", {"35", "door", "World3Area5", false, false, true, false}},
         {"36", {"36", "door", "World3Area6", false, false, true, false}},
         {"37", {"37", "door", "World3Area7", false, false, true, false}},
-        // maybe add boss stage too
+        // 必要ならボスステージも追加する
 
-        // Spawn point types
+        // スポーン地点タイプ
         {"S1", {"S1", "spawn", "default", false, true, false, false}},
         {"S2", {"S2", "spawn", "secondary", false, true, false, false}},
 
-        // Decoration types (optional)
+        // 装飾タイプ（任意）
         {"B1", {"B1", "decoration", "signWASD", false, false, false, false}},
         {"B2", {"B2", "decoration", "signS", false, false, false, false}},
         {"B3", {"B3", "decoration", "signRight", false, false, false, false}},
@@ -232,15 +232,15 @@ void Map::InitializeTileDictionary() {
         {"B8", {"B8", "decoration", "signClick", false, false, false, false}},
         {"B9", {"B9", "decoration", "signESC", false, false, false, false}}
         ,
-        // Hazard spikes (directional)
+        // 危険なトゲ（方向別）
         {"ddup",   {"ddup",   "hazard", "spike_up",    true, false, false, false}},
         {"ddleft", {"ddleft", "hazard", "spike_left",  true, false, false, false}},
         {"dddown", {"dddown", "hazard", "spike_down",  true, false, false, false}},
         {"ddright",{"ddright","hazard", "spike_right", true, false, false, false}},
-        // Generic spike tile (non-directional)
+        // 汎用トゲタイル（非方向指定）
         {"DD",     {"DD",     "hazard", "spike",       true, false, false, false}},
 
-        // Tutorial trigger tiles
+        // チュートリアルトリガータイル
         {"T1", {"T1", "tutorial", "tutorial_1", false, false, false, false}},
         {"T2", {"T2", "tutorial", "tutorial_2", false, false, false, false}},
         {"T3", {"T3", "tutorial", "tutorial_3", false, false, false, false}},
@@ -248,13 +248,13 @@ void Map::InitializeTileDictionary() {
     };
 }
 
-// Convert tile code string to TileInfo structure
+// タイルコード文字列を TileInfo 構造体へ変換する
 TileInfo Map::ParseTileCode(const std::string& code) {
     auto it = m_tileDictionary.find(code);
     if (it != m_tileDictionary.end()) {
         return it->second;
     }
-    // Return empty tile by default
+    // 見つからない場合は空タイルを返す
     return m_tileDictionary.at(kEmptyTileCode);
 }
 
@@ -284,7 +284,7 @@ const std::unordered_map<std::string, std::string>& Map::GetPortalTargetMapLooku
         {"World3Area6", "World3Area6"},
         {"World3Area7", "World3Area7"},
 
-        // Door codes -> next stage (except boss door)
+        // 扉コード -> 次ステージ（ボス扉を除く）
         {"World1Area2", "World1Area2"},
         {"World1Area3", "World1Area3"},
         {"World1Area4", "World1Area4"},
@@ -301,8 +301,8 @@ bool Map::ProcessSpecialTileCode(float x, float y, const std::string& tileCode, 
         spawn.posX = x;
         spawn.posY = y;
         spawn.enemyType = tileCode;
-        // Some enemy codes are not numeric after the prefix (e.g. "BS").
-        // Avoid crashing on std::stoi.
+        // 一部の敵コードは接頭辞以降が数値ではない（例: "BS"）。
+        // std::stoi で落ちないようにする。
         spawn.enemySubtype = -1;
         if (tileCode.size() > 1) {
             try {
@@ -325,7 +325,7 @@ bool Map::ProcessSpecialTileCode(float x, float y, const std::string& tileCode, 
     return false;
 }
 
-// Load map data from a 2D grid of tile codes
+// 2D タイルコード配列からマップデータを読み込む
 void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLayer layer) {
     ClearLayer(layer);
 
@@ -339,25 +339,25 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
         return;
     }
 
-    // Calculate total map dimensions
+    // マップ全体のサイズを計算する
     float totalWidth = gridCols * m_gridWidth;
     float totalHeight = gridRows * m_gridHeight;
 
-    // Calculate starting position (centered at origin)
+    // 開始位置を計算する（原点中心）
     float startX = -totalWidth * 0.5f;
     float startY = -totalHeight * 0.5f;
 
     tiles.reserve(static_cast<size_t>(gridRows) * static_cast<size_t>(gridCols));
 
-    // Process each cell in the grid
+    // グリッド内の各セルを処理する
     for (int y = 0; y < gridRows; y++) {
         for (int x = 0; x < gridCols; x++) {
             std::string tileCode = grid[y][x];
-            if (tileCode == kEmptyTileCode) continue;  // Skip empty tiles
+            if (tileCode == kEmptyTileCode) continue;  // 空タイルは飛ばす
 
             TileInfo tileInfo = ParseTileCode(tileCode);
 
-            // Calculate tile position
+            // タイル位置を計算する
             float tileX = startX + static_cast<float>(x) * m_gridWidth;
             float tileY = startY + static_cast<float>(gridRows - 1 - y) * m_gridHeight;
 
@@ -365,7 +365,7 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
                 continue;
             }
 
-            // Create regular tile
+            // 通常タイルを作成する
             MapTile tile;
             tile.posX = tileX;
             tile.posY = tileY;
@@ -388,7 +388,7 @@ void Map::LoadFromGrid(const std::vector<std::vector<std::string>>& grid, MapLay
     }
 }
 
-// Add a single tile to the map at specified position
+// 指定位置に 1 枚のタイルを追加する
 void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
     const std::string& targetMap, int linkedSpawnId) {
     TileInfo tileInfo = ParseTileCode(tileCode);
@@ -397,7 +397,7 @@ void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
         return;
     }
 
-    // Create regular tile
+    // 通常タイルを作成する
     MapTile tile;
     tile.posX = x;
     tile.posY = y;
@@ -407,7 +407,7 @@ void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
     tile.targetMap = targetMap;
     tile.linkedSpawnId = linkedSpawnId;
 
-    // Add to appropriate layer
+    // 対応するレイヤーへ追加する
     switch (layer) {
     case MapLayer::BACKGROUND:
         m_backgroundTiles.push_back(tile);
@@ -421,7 +421,7 @@ void Map::AddTile(float x, float y, const std::string& tileCode, MapLayer layer,
     }
 }
 
-// Add a player spawn point to the map
+// プレイヤーのスポーン地点を追加する
 void Map::AddSpawnPoint(float x, float y, int id, const std::string& name) {
     SpawnPoint spawn;
     spawn.posX = x;
@@ -430,13 +430,13 @@ void Map::AddSpawnPoint(float x, float y, int id, const std::string& name) {
     spawn.name = name;
     m_spawnPoints.push_back(spawn);
 
-    // Set as default spawn if this is the first one
+    // 最初のスポーン地点なら既定スポーンにする
     if (m_defaultSpawnId == 0) {
         m_defaultSpawnId = id;
     }
 }
 
-// Clear all tiles from a specific layer
+// 指定レイヤー内のタイルをすべて削除する
 void Map::ClearLayer(MapLayer layer) {
     switch (layer) {
     case MapLayer::BACKGROUND:
@@ -451,7 +451,7 @@ void Map::ClearLayer(MapLayer layer) {
     }
 }
 
-// Clear all map data including tiles, spawn points, and enemy spawns
+// タイル・スポーン地点・敵スポーンを含む全マップデータを消去する
 void Map::ClearAll() {
     m_backgroundTiles.clear();
     m_midgroundTiles.clear();
@@ -463,7 +463,7 @@ void Map::ClearAll() {
     m_spatialGrid = nullptr;
 }
 
-// Get tiles from a specific layer
+// 指定レイヤーのタイルを取得する
 const std::vector<MapTile>& Map::GetTiles(MapLayer layer) const {
     static const std::vector<MapTile> empty;
     switch (layer) {
@@ -474,7 +474,7 @@ const std::vector<MapTile>& Map::GetTiles(MapLayer layer) const {
     }
 }
 
-// Get all solid tiles (collidable tiles from midground layer)
+// すべての固体タイルを取得する（midground の衝突対象タイル）
 std::vector<MapTile>& Map::GetSolidTiles() {
     static std::vector<MapTile> solidTiles;
     solidTiles.clear();
@@ -487,7 +487,7 @@ std::vector<MapTile>& Map::GetSolidTiles() {
     return solidTiles;
 }
 
-// Get spawn point coordinates by ID
+// ID からスポーン地点座標を取得する
 bool Map::GetSpawnPoint(int spawnId, float& x, float& y) const {
     for (const auto& spawn : m_spawnPoints) {
         if (spawn.id == spawnId) {
@@ -499,27 +499,27 @@ bool Map::GetSpawnPoint(int spawnId, float& x, float& y) const {
     return false;
 }
 
-// Get the default spawn point coordinates
+// 既定スポーン地点の座標を取得する
 bool Map::GetDefaultSpawnPoint(float& x, float& y) const {
     return GetSpawnPoint(m_defaultSpawnId, x, y);
 }
 
 
-// 同样可以优化传送门检测
+// ポータル判定も同様に最適化できる
 bool Map::CheckPortalCollision(float x, float y, float width, float height,
     std::string& targetMap, int& portalId, int& linkedSpawnId) const {
 
-    // 回退到原始方法
+    // 元の方法へフォールバックする
     for (const auto& tile : m_midgroundTiles) {
         if (tile.tileInfo.isPortal) {
-            // Door sprite is 1x2. Treat portal collision as 2 tiles tall,
-            // centered one tile higher than the base tile.
+            // 扉スプライトは 1x2。ポータル判定も高さ 2 タイルとして扱い、
+            // 基準タイルより 1 タイル上を中心にする。
             float portalX = tile.posX;
-            // Move portal collision down by half a tile.
-            // Original portal collision was centered 0.5 tile above the base tile (posY + 0.5h).
-            // To move it DOWN by 0.5 tile, shift center by +0.5h -> posY + 1.0h.
-            // If your world Y axis is inverted (down is negative), this will appear reversed.
-            // In that case, use posY + 0.0h for down shift.
+            // ポータル判定を半タイルぶん下へ移動する。
+            // 元の判定中心は基準タイルの 0.5 タイル上（posY + 0.5h）だった。
+            // 0.5 タイル下げるには中心を +0.5h シフトし、posY + 1.0h にする。
+            // ワールド Y 軸が反転している場合（下が負）には逆に見えることがある。
+            // その場合は posY + 0.0h を使う。
             float portalY = tile.posY + (tile.height * 0.0f);
             float portalW = tile.width;
             float portalH = tile.height * 2.0f;
@@ -527,7 +527,7 @@ bool Map::CheckPortalCollision(float x, float y, float width, float height,
             if (CheckCollision(x, y, width, height,
                 portalX, portalY, portalW, portalH)) {
                 targetMap = tile.targetMap;
-                portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
+                portalId = tile.linkedSpawnId; // linkedSpawnId を portalId として使う
                 linkedSpawnId = tile.linkedSpawnId;
                 return true;
             }
@@ -538,7 +538,7 @@ bool Map::CheckPortalCollision(float x, float y, float width, float height,
 }
 
 
-// Create a boss map
+// ボスマップを作成する
 void Map::CreateBossMap() {
     ClearAll();
     m_spawnPoints.clear();
@@ -564,7 +564,7 @@ void Map::CreateBossMap() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// Create a cake map
+// ケーキマップを作成する
 void Map::CreateCakeMap() {
     ClearAll();
     m_spawnPoints.clear();
@@ -593,7 +593,7 @@ void Map::CreateCakeMap() {
 
 
 void Map::BuildSpatialGrid(float cellSize) {
-    // 计算地图边界
+    // マップ境界を計算する
     float minX = 0, minY = 0, maxX = 0, maxY = 0;
     bool first = true;
 
@@ -613,13 +613,13 @@ void Map::BuildSpatialGrid(float cellSize) {
         }
     }
 
-    // 扩展一些边界
+    // 境界に少し余裕を持たせる
     minX -= 5.0f;
     minY -= 5.0f;
     maxX += 5.0f;
     maxY += 5.0f;
 
-    // 创建或重新构建空间网格
+    // 空間グリッドを作成または再構築する
     if (m_spatialGrid) {
         delete m_spatialGrid;
     }
@@ -627,7 +627,7 @@ void Map::BuildSpatialGrid(float cellSize) {
     m_spatialGrid->BuildFromMap(*this);
 }
 
-//GetCell implementation
+// GetCell の実装
 const GridCell& SpatialGrid::GetCell(int x, int y) const {
     if (x < 0 || x >= m_cellsX || y < 0 || y >= m_cellsY) {
         static GridCell emptyCell;
@@ -637,39 +637,39 @@ const GridCell& SpatialGrid::GetCell(int x, int y) const {
     return m_cells[index];
 }
 
-//Rebuild implementation
+// Rebuild の実装
 void SpatialGrid::Rebuild(Map& map) {
-    // 清空现有单元格
+    // 既存セルを空にする
     for (auto& cell : m_cells) {
         cell.tiles.clear();
     }
-    // 重新从地图构建网格
+    // マップからグリッドを再構築する
     BuildFromMap(map);
 }
 
-// 单向平台碰撞检测
+// 一方向足場の衝突判定
 bool Map::CheckOneWayPlatformCollision(float x, float y, float width, float height,
     const MapTile& platform, float& penetrationY) const {
-    // 检测基本AABB碰撞
+    // 基本 AABB 衝突を確認する
     if (x + width <= platform.posX || x >= platform.posX + platform.width ||
         y + height <= platform.posY || y >= platform.posY + platform.height) {
         return false;
     }
 
-    // 计算各边的穿透深度
-    float topPenetration = (y + height) - platform.posY;  // 玩家底部到平台顶部的距离
+    // 各辺のめり込み量を計算する
+    float topPenetration = (y + height) - platform.posY;  // プレイヤー底辺から足場上端までの距離
 
-    // 对于单向平台，只有从上方碰撞才有效
-    // 当玩家的底部在平台顶部附近，并且玩家正在下落时，才视为有效碰撞
-    if (topPenetration > 0 && topPenetration < 0.1f) {  // 设置一个小的容差范围
-        penetrationY = -topPenetration;  // 负值表示向上调整
+    // 一方向足場では上からの衝突だけを有効にする
+    // プレイヤー底辺が足場上端付近にあり、かつ落下中のときだけ有効衝突とみなす
+    if (topPenetration > 0 && topPenetration < 0.1f) {  // 小さな許容範囲を設ける
+        penetrationY = -topPenetration;  // 負値は上方向へ補正することを示す
         return true;
     }
 
     return false;
 }
 
-// 获取所有单向平台
+// すべての一方向足場を取得する
 std::vector<MapTile> Map::GetOneWayPlatforms() const {
     std::vector<MapTile> oneWayPlatforms;
 

@@ -25,7 +25,7 @@ bool MenuScene::Init()
 	LoadTexture(g_pDevice, "asset/UI/menu/quit_normal.png", &quitTexture);
 	LoadTexture(g_pDevice, "asset/UI/menu/quit_hover.png", &quitHoverTexture);
 
-	// because each puase button size is different so the hitbox will be different as well.
+	// 各ポーズボタンのサイズが異なるため、ヒットボックスも個別に調整する。
 	uiButtons.emplace_back(-0.7f, -0.3f, 0.5f, 0.9f, STAGESELECT, startTexture, startHoverTexture);
 	uiButtons.back().SetHitboxScale(0.4f, 0.13f);
 	uiButtons.back().SetHitboxOffset(-0.06f);
@@ -57,7 +57,7 @@ void MenuScene::Update(float deltaTime)
 		{
 			if (btn.GetTargetScene() == QUIT_GAME)
 			{
-				PostQuitMessage(0); // it quits the game
+				PostQuitMessage(0); // ゲームを終了する
 			}
 			else
 			{
@@ -73,7 +73,7 @@ void MenuScene::Update(float deltaTime)
 void MenuScene::Draw()
 {
 	if (backgroundTexture) {
-		// Always set a color before drawing so the texture is visible
+		// テクスチャが見えるように描画前に必ず色を設定する
 		SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, backgroundTexture, 0, 1, 1);
 	}
@@ -87,7 +87,7 @@ void MenuScene::Draw()
 			paddingTitleAnim.GetSplitY());
 	}
 
-	// for the buttons
+	// ボタン描画
 	for (const auto& btn : uiButtons)
 		btn.Draw(0.65f);
 

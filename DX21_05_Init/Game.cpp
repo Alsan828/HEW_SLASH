@@ -1,20 +1,20 @@
 ﻿#include "Game.h"
-// Add to global variable definition section in Game.cpp
+// Game.cpp のグローバル変数定義セクションへ追加
 float g_slowMoTimer = 0.0f;
 float g_slowMoFactor = 1.0f;
 bool g_isSlowMotion = false;
 
-// Tutorial global flag
+// チュートリアル用グローバルフラグ
 bool g_tutorialActive = false;
 
-// added december 4th
-// for the timer of the game
+// 12 月 4 日追加
+// ゲームタイマー用
 float g_gameElapsedTime = 0.0f;
 int g_gameMinutes = 0;
 int g_gameSeconds = 0;
 
 
-// Sound effect instance ID storage
+// 効果音インスタンス ID の保存領域
 int g_jumpSoundId = -1;
 int g_dashSoundId = -1;
 int g_chargeSoundId = -1;
@@ -74,17 +74,17 @@ static std::vector<GaugeKillParticleInstance> g_gaugeKillParticlesRed;
 static float Rand01() {
     return static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 }
-// Clear gauge state and particles (callable from other modules)
+// ゲージ状態とパーティクルをクリアする（他モジュールから呼び出し可）
 void ClearGaugeOnDeath()
 {
-    // Reset player gauge values
+    // プレイヤーのゲージ値をリセットする
     g_player.gaugePoints = 0;
     g_player.isInvincible = false;
     g_player.isGaugeInvincible = false;
     g_player.g_gaugeEffectActive = false;
     g_player.g_gaugeEffectTimer = 0.0f;
 
-    // Clear particles and spawn timer
+    // パーティクルとスポーンタイマーをクリアする
     g_gaugeTrailParticles.clear();
     g_gaugeKillParticlesRed.clear();
     g_gaugeTrailSpawnTimer = 0.0f;
@@ -93,7 +93,7 @@ void ClearGaugeOnDeath()
 void SpawnGaugeKillParticlesRed(float worldX, float worldY) {
     if (!g_gaugeKillParticleRedTexture) return;
 
-    const int count = 4 + (rand() % 4); // 4..7
+    const int count = 4 + (rand() % 4); // 4..7 個
     for (int i = 0; i < count; ++i) {
         GaugeKillParticleInstance p;
         p.x = worldX;
@@ -101,7 +101,7 @@ void SpawnGaugeKillParticlesRed(float worldX, float worldY) {
         p.texture = g_gaugeKillParticleRedTexture;
         p.active = true;
 
-        // Random radial burst
+        // ランダムな放射状バースト
         const float angle = Rand01() * 6.2831853f;
         const float speed = (0.06f + Rand01() * 0.09f) * 10.0f;
         p.vx = cosf(angle) * speed;
@@ -113,20 +113,20 @@ void SpawnGaugeKillParticlesRed(float worldX, float worldY) {
         p.frame = 0;
         p.timer = 0.0f;
         p.frameTimer = 0.0f;
-        // Slow down animation to ~0.6x of current speed (increase frame time)
+        // アニメ速度をおよそ 0.6 倍に落とす（フレーム時間を延ばす）
         p.frameTime = 0.05f / 0.6f;
 
         g_gaugeKillParticlesRed.push_back(p);
     }
 }
 
-// Spawn a larger, more dramatic burst when the gauge is filled (player becomes invincible).
-// This creates more particles with higher speed and wider spread than the regular red kill burst.
+// ゲージ満タン時（プレイヤー無敵化）に、より大きく派手なバーストを出す。
+// 通常の赤い撃破バーストより多くの粒子・高い速度・広い拡散を持たせる。
 void SpawnGaugeFullBurst(float worldX, float worldY) {
-    // Use the trail particle sheet (particle_sheet.png) for a more varied look
+    // より変化のある見た目にするため trail 用パーティクルシートを使う
     if (!g_gaugeTrailParticleTexture) return;
 
-    const int count = 20 + (rand() % 11); // 20..30 particles for a very large burst
+    const int count = 20 + (rand() % 11); // 非常に大きいバースト用に 20..30 個
     for (int i = 0; i < count; ++i) {
         GaugeKillParticleInstance p;
         p.x = worldX;
@@ -134,20 +134,20 @@ void SpawnGaugeFullBurst(float worldX, float worldY) {
         p.texture = g_gaugeTrailParticleTexture; // particle_sheet.png
         p.active = true;
 
-        // Stronger radial burst with wider variation
+        // より強く、ばらつきの大きい放射状バースト
         const float angle = Rand01() * 6.2831853f;
-        const float speed = (0.15f + Rand01() * 0.35f) * 10.0f; // faster
+        const float speed = (0.15f + Rand01() * 0.35f) * 10.0f; // より高速
         p.vx = cosf(angle) * speed;
         p.vy = sinf(angle) * speed;
 
-        // Larger, more varied scale
+        // より大きく、ばらつきのあるスケール
         p.scale = 1.2f * (0.9f + Rand01() * 0.6f);
         p.rotation = (Rand01() * 2.0f - 1.0f) * 3.14159f;
-        p.angularVelocity = (Rand01() * 2.0f - 1.0f) * 12.0f; // stronger spin
+        p.angularVelocity = (Rand01() * 2.0f - 1.0f) * 12.0f; // 強めの回転
         p.frame = 0;
         p.timer = 0.0f;
         p.frameTimer = 0.0f;
-        // Faster animation for a snappier look
+        // キビキビ見えるようアニメを速める
         p.frameTime = 0.035f;
 
         g_gaugeKillParticlesRed.push_back(p);
@@ -163,23 +163,23 @@ static void SpawnGaugeTrailParticle(float worldX, float worldY) {
     p.texture = g_gaugeTrailParticleTexture;
     p.active = true;
 
-    // Natural dispersion:
-    // - random drift direction
-    // - slight bias backwards relative to facing
-    // - random scale + rotation
+    // 自然な拡散:
+    // - ランダムな流れ方向
+    // - 向きに対して少し後方へ寄せる
+    // - ランダムなスケールと回転
     const float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     const float r02 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     const float r03 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     const float r04 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 
-    const float angle = (r01 * 2.0f - 1.0f) * 1.1f; // ~[-1.1, 1.1] rad
+    const float angle = (r01 * 2.0f - 1.0f) * 1.1f; // およそ [-1.1, 1.1] rad
     const float speed = 0.02f + r02 * 0.03f;        // 0.02..0.05
 
     float backBias = g_player.facingRight ? -0.015f : 0.015f;
     p.vx = cosf(angle) * speed + backBias;
     p.vy = sinf(angle) * speed + 0.01f;
 
-    // Size: half of previous (base 1.0 -> 0.5), with small random variation.
+    // サイズ: 以前の半分（基準 1.0 -> 0.5）で、少しランダム差を付ける。
     p.scale = 0.5f * (0.85f + r03 * 0.30f);
     p.rotation = (r04 * 2.0f - 1.0f) * 0.35f;
     p.angularVelocity = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2.0f - 1.0f) * 2.2f;
@@ -199,7 +199,7 @@ void SpawnWeakPointHitEffect(float worldX, float worldY) {
 }
 
 void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float overrideScale /*=0*/) {
-    // Prefer new slash flash textures; fallback to old single texture if needed.
+    // 新しい slash flash テクスチャを優先し、なければ旧単体テクスチャへフォールバックする。
     ID3D11ShaderResourceView* chosen = nullptr;
     int availableCount = 0;
     ID3D11ShaderResourceView* available[4] = { nullptr,nullptr,nullptr,nullptr };
@@ -220,7 +220,7 @@ void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float overrideSca
     HitEffectInstance e;
     e.x = worldX;
     e.y = worldY;
-    // Weak-point slash flash should be more visible than a normal hit.
+    // 弱点用の slash flash は通常ヒットより目立たせる。
     float baseScale = (chosen == g_hitEffectTexture) ? 1.0f : 2.0f;
     if (overrideScale > 0.0f) baseScale = overrideScale;
     e.scale = baseScale;
@@ -230,7 +230,7 @@ void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float overrideSca
     e.active = true;
     e.texture = chosen;
 
-    // Some textures are sprite-sheets (slash flash), others are single images (legacy hit).
+    // テクスチャによってはスプライトシート（slash flash）で、他は単体画像（旧 hit）である。
     if (chosen == g_hitEffectTexture) {
         e.rows = 1;
         e.columns = 1;
@@ -244,9 +244,9 @@ void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float overrideSca
     g_weakPointHitEffects.push_back(e);
 }
 
-// Spawn a larger visual effect for weak-point kills
+// 弱点撃破用に、より大きな視覚エフェクトを生成する
 void SpawnWeakPointKillEffect(float worldX, float worldY) {
-    // Prefer new slash flash textures; fallback to old single texture if needed.
+    // 新しい slash flash テクスチャを優先し、なければ旧単体テクスチャへフォールバックする。
     ID3D11ShaderResourceView* chosen = nullptr;
     int availableCount = 0;
     ID3D11ShaderResourceView* available[4] = { nullptr,nullptr,nullptr,nullptr };
@@ -267,10 +267,10 @@ void SpawnWeakPointKillEffect(float worldX, float worldY) {
     HitEffectInstance e;
     e.x = worldX;
     e.y = worldY;
-    // Make the kill effect larger than a normal weak-point hit
+    // 撃破エフェクトは通常の弱点ヒットより大きくする
     e.scale = (chosen == g_hitEffectTexture) ? 1.5f : 3.0f;
     e.timer = 0.0f;
-    // Slightly slower frame time for a more dramatic kill flash
+    // より劇的に見えるようフレーム時間を少し遅くする
     e.frameTime = 0.10f;
     e.frame = 0;
     e.active = true;
@@ -291,7 +291,7 @@ void SpawnWeakPointKillEffect(float worldX, float worldY) {
 
 HWND g_gameHwnd = nullptr;
 
-// Slash-count follower spawn request (set on enemy kill)
+// slash-count follower のスポーン要求（敵撃破時に設定）
 float g_slashCountSpawnX = 0.0f;
 float g_slashCountSpawnY = 0.0f;
 bool g_slashCountSpawnPending = false;
@@ -304,8 +304,8 @@ GameCursor g_gameCursor;
 
 void GameCursor::Initialize(ID3D11ShaderResourceView* texture) {
     m_texture = texture;
-    // Match the historical cursor placement used by MouseIndicatorSystem.
-    // The cursor texture is drawn with its top-left at the mouse world position.
+    // MouseIndicatorSystem が従来使っていたカーソル配置に合わせる。
+    // カーソルテクスチャはマウスのワールド位置を左上として描画される。
     m_offsetX = -m_width * 0.5f;
     m_offsetY = -m_height * 0.5f;
 }
@@ -329,7 +329,7 @@ void SetInGameCursorEnabled(bool enabled)
 {
     g_gameCursor.SetVisible(enabled);
 
-    // Keep ShowCursor counter stable: call until the desired visibility is reached.
+    // ShowCursor の内部カウンタを安定させるため、望む表示状態になるまで呼び出す。
     const bool showOsCursor = !enabled;
     if (showOsCursor) {
         while (ShowCursor(TRUE) < 0) {}
@@ -339,7 +339,7 @@ void SetInGameCursorEnabled(bool enabled)
     }
 }
 
-// ...existing code...
+// ...既存コード...
 
 static void SpawnPlayerAfterImage() {
     ID3D11ShaderResourceView* tex = g_player.anim.GetCurrentClipTexture();
@@ -363,13 +363,13 @@ static void SpawnPlayerAfterImage() {
     a.splitX = g_player.anim.GetSplitX();
     a.splitY = g_player.anim.GetSplitY();
 
-    // Use the same orientation source as the player render logic.
-    // During wall slide, facingRight can be momentarily out-of-sync with the visual orientation.
+    // プレイヤー描画ロジックと同じ向き情報を使う。
+    // 壁滑り中は facingRight が見た目の向きと一時的にずれることがある。
     bool facingRightForAfterImage = g_player.facingRight;
     if (g_player.isWallSliding && g_player.wallSlideDirection != 0) {
-        // In Player.cpp wall-slide detection:
-        //   left wall  => wallSlideDirection = -1, facingRight = true
-        //   right wall => wallSlideDirection =  1, facingRight = false
+        // Player.cpp の wall-slide 判定では:
+        //   左壁  => wallSlideDirection = -1, facingRight = true
+        //   右壁  => wallSlideDirection =  1, facingRight = false
         facingRightForAfterImage = (g_player.wallSlideDirection == -1);
     }
 
@@ -377,7 +377,7 @@ static void SpawnPlayerAfterImage() {
     g_playerAfterImages.push_back(a);
 }
 
-// Game timer implementation
+// GameTimer の実装
 GameTimer::GameTimer()
 {
     __int64 countsPerSec;
@@ -398,24 +398,24 @@ float GameTimer::GetDeltaTime() const {
     return m_deltaTime;
 }
 
-// Trigger slow motion effect
+// スローモーション効果を発動する
 void TriggerSlowMotion(float duration = 1.0f, float factor = 0.3f) {
     g_isSlowMotion = true;
     g_slowMoTimer = duration;
     g_slowMoFactor = factor;
 }
 
-// ResetGame: perform a soft reset by default. If fullReload is true, also
-// clear enemies and reload the current map (useful for full respawn on death
-// in non-boss stages or when the player requests a manual reset).
+// ResetGame: 既定ではソフトリセットを行う。fullReload が true のときは
+// 敵もクリアして現在のマップを再読込する（非ボスステージでの死亡時の完全復帰や
+// プレイヤーによる手動リセット時に有用）。
 void ResetGame(bool fullReload) {
-    // Always clear transient projectiles and visual effects
+    // 一時的な射弾と視覚効果は常に消す
     g_projectileManager.ClearAll();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
 
     if (fullReload) {
-        // Full cleanup/reload: destroy all enemies and recreate them from map
+        // 完全クリーンアップ / 再読込: 全敵を破棄してマップから再生成する
         CleanupEnemies();
         if (g_mapManager.IsMapLoaded()) {
             g_mapManager.ReloadCurrentMap();
@@ -425,7 +425,7 @@ void ResetGame(bool fullReload) {
     g_player.comboCount = 0;
     g_player.comboTimer = 0.0f;
 
-    // Reset charge (charging / saved charge) state
+    // チャージ状態（現在のチャージ / 保存済みチャージ）をリセットする
     g_player.isCharging = false;
     g_player.chargeTime = 0.0f;
     g_player.hitStopTriggered = 0;
@@ -434,14 +434,14 @@ void ResetGame(bool fullReload) {
     g_player.hasSavedCharge = false;
     g_player.chargeDecayTimer = 0.0f;
 
-    // Preserve gauge points and invincibility state across level transitions.
-    // Do not reset g_player.gaugePoints, g_player.isInvincible, g_player.isGaugeInvincible,
-    // or g_player.invincibleTimer here.
+    // レベル遷移をまたいでゲージポイントと無敵状態を維持する。
+    // ここでは g_player.gaugePoints / g_player.isInvincible / g_player.isGaugeInvincible /
+    // g_player.invincibleTimer をリセットしない。
 
     g_gameState = STATE_PLAYING;
 }
 
-// added december 11th
+// 12 月 11 日追加
 void CleanUpGameWorld()
 {
     g_projectileManager.ClearAll();
@@ -449,14 +449,14 @@ void CleanUpGameWorld()
     g_mouseIndicator.Cleanup();
     g_weakPointHitEffects.clear();
     g_playerAfterImages.clear();
-    // NOTE: preserve gauge-related particles/state when switching maps so
-    // the player's gauge (points and active effects) is not unexpectedly
-    // reset when entering a new level. Do not clear the gauge particle
-    // lists or reset the spawn timer here.
+    // 注意: マップ切替時にゲージ関連のパーティクル / 状態を保持し、
+    // 新しいレベル突入時にプレイヤーのゲージ（ポイントや有効中エフェクト）が
+    // 意図せずリセットされないようにする。ここではゲージ用パーティクル配列や
+    // スポーンタイマーをクリアしない。
 
-    // 释放所有纹理 - 只保留右边纹理
+    // すべてのテクスチャを解放する - 右向きテクスチャのみ残す
     ReleaseTexture(g_playerTexture);
-    // 只保留右边的纹理
+    // 右向き側のテクスチャだけ残す
     ReleaseTexture(g_playerIdleTexture);
     ReleaseTexture(g_playerJumpTexture);
     ReleaseTexture(g_playerRunTexture);
@@ -470,7 +470,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_playerWallSlideTexture);
     ReleaseTexture(g_playerDeathTexture);
 
-    // FOR THE PLAYER WHEN INVINCIBLE
+    // プレイヤー無敵時用
     ReleaseTexture(g_invinciblePlayerIdleTexture);
     ReleaseTexture(g_invinciblePlayerJumpTexture);
     ReleaseTexture(g_invinciblePlayerRunTexture);
@@ -483,7 +483,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_invinciblePlayerGroundChargeTexture);
     ReleaseTexture(g_invinciblePlayerWallSlideTexture);
 
-    // for the ground tiles texture
+    // 地形タイル用テクスチャ
     ReleaseTexture(g_groundBlackTexture);
     ReleaseTexture(g_groundTexture);
     ReleaseTexture(g_groundTopTexture);
@@ -500,7 +500,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_groundCornerFacingBottomRightTexture);
     ReleaseTexture(g_tutorialTexture);
 
-    // for the boss decoration in the boss stage
+    // ボスステージの装飾用
     ReleaseTexture(g_bossDecorationTexture);
 
     ReleaseTexture(g_goalTexture);
@@ -519,7 +519,7 @@ void CleanUpGameWorld()
     ReleaseTexture(g_signRightTexture);
     ReleaseTexture(g_signESCTexture);
 
-    // 解放击中特效纹理
+    // ヒットエフェクト用テクスチャを解放する
     ReleaseTexture(g_hitEffectTexture);
     for (auto& t : g_slashFlashTextures) {
         ReleaseTexture(t);
@@ -531,12 +531,12 @@ void CleanUpGameWorld()
 
     ReleaseTexture(g_escTexture);
 
-    // for the combo texture
+    // コンボ用テクスチャ
     ReleaseTexture(g_comboNumberTexture);
     ReleaseTexture(g_comboXTexture);
     ReleaseTexture(g_comboRemainingTimeTexture);
 
-    // for the gauge bar when there is one
+    // ゲージバー用
     ReleaseTexture(g_gaugeBarTexture);
     ReleaseTexture(g_gaugeBarFilledTexture);
     ReleaseTexture(g_gaugeFullEffectTexture);
@@ -547,18 +547,18 @@ void CleanUpGameWorld()
 
     ReleaseTexture(g_bossHealthBarTexture);
     ReleaseTexture(g_bossInnerHPTexture);
-    // release platform wood background
+    // 木製プラットフォーム背景を解放する
     ReleaseTexture(g_platformWoodTexture);
 }
 
-// Improved collision detection function
+// 改良版衝突判定関数
 bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2) {
     return (x1 < x2 + w2 && x1 + w1 > x2 &&
         y1 < y2 + h2 && y1 + h1 > y2);
 }
 
-// for the combo UI of the player when hitting enemies
+// 敵命中時のプレイヤー用コンボ UI
 void DrawComboUI(void)
 {
     if (g_player.comboCount < 1)
@@ -566,63 +566,63 @@ void DrawComboUI(void)
         return;
     }
 
-    // Combo X symbol UI
+    // コンボ X 記号 UI
     InGameUI comboXUI;
     comboXUI.x = 0.3f;
     comboXUI.y = 0.45f;
     comboXUI.width = 0.45f;
     comboXUI.height = 0.5f;
 
-    // Combo digit UI
+    // コンボ数字 UI
     InGameUI comboDigitUI;
     comboDigitUI.width = 0.15f;
     comboDigitUI.height = 0.35f;
     comboDigitUI.y = 0.55f;
 
-    // Spacing values
+    // 間隔設定
     float spaceBetweenDigits = 0.12f;
     float spaceBetweenXandDigit = 0.08f;
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Draw the "X" symbol
+    // "X" 記号を描画する
     RenderImage(comboXUI.x, comboXUI.y, comboXUI.width, comboXUI.height, g_comboXTexture, 0, 1, 1);
 
     char buffer[32];
-    sprintf_s(buffer, "%d", g_player.comboCount); // it converts the number into digits
+    sprintf_s(buffer, "%d", g_player.comboCount); // 数値を各桁へ変換する
 
-    float digitXaxis = comboXUI.x + (comboXUI.width * 0.5f) + spaceBetweenXandDigit; // for the first number x axis position 
+    float digitXaxis = comboXUI.x + (comboXUI.width * 0.5f) + spaceBetweenXandDigit; // 先頭桁の X 座標
 
-    // Draw combo number
+    // コンボ数を描画する
     for (int i = 0; buffer[i] != '\0'; i++)
     {
-        int digit = buffer[i] - '0';  // 1 for frame 1, 2 for frame 2, 3 for frame 3, etc etc
+        int digit = buffer[i] - '0';  // 1 はフレーム 1、2 はフレーム 2、3 はフレーム 3 ...
         RenderImage(digitXaxis, comboDigitUI.y, comboDigitUI.width, comboDigitUI.height,
             g_comboNumberTexture, digit, 1, 10);
 
-        digitXaxis += spaceBetweenDigits; // Move to next digit position
+        digitXaxis += spaceBetweenDigits; // 次の桁位置へ進める
     }
 
-    // Combo remaining-time bar (under the combo UI)
-    // comboTimer counts down from COMBO_RESET_TIME to 0.
+    // コンボ残り時間バー（コンボ UI の下）
+    // comboTimer は COMBO_RESET_TIME から 0 へ向けて減少する。
     float ratio = 0.0f;
     if (g_player.COMBO_RESET_TIME > 0.0f) {
         ratio = g_player.comboTimer / g_player.COMBO_RESET_TIME;
     }
     ratio = std::clamp(ratio, 0.0f, 1.0f);
 
-    // Combo timer bar UI
+    // コンボタイマーバー UI
     InGameUI comboTimerBarUI;
     comboTimerBarUI.width = 0.28f;
     comboTimerBarUI.height = 0.025f;
     comboTimerBarUI.x = comboXUI.x + 0.2f;
     comboTimerBarUI.y = 0.5f - 0.02f;
 
-    // background
+    // 背景
     SetColor(0.05f, 0.05f, 0.05f, 0.75f);
     RenderImage(comboTimerBarUI.x, comboTimerBarUI.y, comboTimerBarUI.width, comboTimerBarUI.height, g_comboRemainingTimeTexture, 0, 1, 1);
 
-    // fill
+    // 塗り部分
     SetColor(1.0f, 0.0f, 0.0f, 0.95f);
     RenderImage(comboTimerBarUI.x - (comboTimerBarUI.width * (1.0f - ratio) * 0.5f), comboTimerBarUI.y,
         comboTimerBarUI.width * ratio, comboTimerBarUI.height, g_comboRemainingTimeTexture, 0, 1, 1);
@@ -630,35 +630,35 @@ void DrawComboUI(void)
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-// for the gauge bar UI
+// ゲージバー UI 用
 void DrawGaugeUI(void)
 {
-    // for the surrounded of the gauge bar. 
+    // ゲージバー外枠用
     InGameUI gaugeFrameUI;
     gaugeFrameUI.x = -1.0f;
     gaugeFrameUI.y = -0.5f;
     gaugeFrameUI.width = 0.35f;
     gaugeFrameUI.height = 1.15f;
 
-    // for the inner part of the gauge bar
-    float barOffsetX = -0.0015f;  // if positive move right, if negative move left
-    float barOffsetY = 0.32f;    // if positive move up, if negative move down
+    // ゲージバー内側用
+    float barOffsetX = -0.0015f;  // 正なら右、負なら左へ移動
+    float barOffsetY = 0.32f;    // 正なら上、負なら下へ移動
 
-    // Gauge bar UI struct (inner filled part)
+    // ゲージバー UI 構造体（内側の充填部分）
     InGameUI gaugeBarUI;
     gaugeBarUI.width = gaugeFrameUI.width * 0.5f;
     gaugeBarUI.height = gaugeFrameUI.height * 0.49f;
-    // Center horizontally, bottom aligned
+    // 水平方向中央寄せ、下端基準
     gaugeBarUI.x = gaugeFrameUI.x + (gaugeFrameUI.width - gaugeBarUI.width) * 0.5f + barOffsetX;
     gaugeBarUI.y = gaugeFrameUI.y + (gaugeFrameUI.height - gaugeBarUI.height) * 0.0f + barOffsetY;
 
-    // for the surrounding frame of the gauge bar
+    // ゲージバー外枠の描画
     SetColor(1, 1, 1, 1);
     if (g_gaugeBarTexture)
         RenderImage(gaugeFrameUI.x, gaugeFrameUI.y, gaugeFrameUI.width, gaugeFrameUI.height,
             g_gaugeBarTexture, 0, 1, 1);
 
-    // draw the gauge full effect animation when the gauge is full
+    // ゲージ満タン時のエフェクトアニメを描画する
     if (g_player.g_gaugeEffectActive)
     {
         if (g_gaugeEffectAnim.GetClipCount() > 0)
@@ -680,25 +680,25 @@ void DrawGaugeUI(void)
         }
     }
 
-    // for the filled bar calculation
+    // 充填バー計算用
     float fillRatio = 0.0f;
 
-    // Normal gameplay: calculate from gauge points
+    // 通常プレイ時: ゲージポイントから計算する
     if (g_player.MAX_GAUGE_POINTS > 0) {
         fillRatio = (float)g_player.gaugePoints / (float)g_player.MAX_GAUGE_POINTS;
     }
 
-    // If invincible the drain progress will go from top to bottom
+    // 無敵中は減少進行を上から下へ表現する
     if (g_player.isInvincible && g_player.isGaugeInvincible)
     {
         float drainProgress = g_player.invincibleTimer / g_player.INVINCIBLE_DURATION;
-        fillRatio = drainProgress;  // it goes down from top to bottom
+        fillRatio = drainProgress;  // 上から下へ減っていく
         if (fillRatio < 0.0f) {
             fillRatio = 0.0f;
         }
     }
 
-    // draw the filled part of the gauge bar
+    // ゲージバーの充填部分を描画する
     if (fillRatio > 0.0f && g_gaugeBarFilledTexture)
     {
         if (fillRatio > 1.0f) {
@@ -712,7 +712,7 @@ void DrawGaugeUI(void)
     SetColor(1, 1, 1, 1);
 }
 
-// for the score UI
+// スコア UI 用
 void DrawScoreUI(void)
 {
     if (!g_uiNumberTexture) return;
@@ -727,16 +727,16 @@ void DrawScoreUI(void)
 
     int enemyPoints = g_gameStats.GetTotalEnemyPoints();
 
-    // Draw the enemy points
+    // 敵ポイントを描画する
     DrawNumber(enemyPoints, scoreUI.x, scoreUI.y, scoreUI.width, scoreUI.height, g_numberTexture);
 }
 
 
-// Game initialization
+// ゲーム初期化
 void InitGameWorld() {
     g_projectileManager.LoadTextures(g_pDevice);
 
-    // FOR THE PLAYER
+    // プレイヤー用
     LoadTexture(g_pDevice, "asset/character/idle_right.png", &g_playerIdleTexture);
     LoadTexture(g_pDevice, "asset/character/jump_right.png", &g_playerJumpTexture);
     LoadTexture(g_pDevice, "asset/character/run_right.png", &g_playerRunTexture);
@@ -749,7 +749,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character/ground_charge_right.png", &g_playerGroundChargeTexture);
     LoadTexture(g_pDevice, "asset/character/wall_slide_right.png", &g_playerWallSlideTexture);
     LoadTexture(g_pDevice, "asset/character/death_right.png", &g_playerDeathTexture);
-    // 为动画剪辑添加通用名称（不再区分左右）
+    // アニメーションクリップへ共通名を付ける（左右を区別しない）
     g_player.anim.AddClip("Idle", 0, 3, 4, 1, 0.25f, true, g_playerIdleTexture);
     g_player.anim.AddClip("Jump", 0, 10, 11, 1, 0.06f, false, g_playerJumpTexture);
     g_player.anim.AddClip("Run", 0, 3, 4, 1, 0.1f, true, g_playerRunTexture);
@@ -764,7 +764,7 @@ void InitGameWorld() {
     g_player.anim.AddClip("Death", 0, 10, 11, 1, 0.1f, false, g_playerDeathTexture);
 
 
-    // FOR THE PLAYER WHEN INVINCIBLE
+    // プレイヤー無敵時用
     LoadTexture(g_pDevice, "asset/character_invincible/lb_idle_right.png", &g_invinciblePlayerIdleTexture);
     LoadTexture(g_pDevice, "asset/character_invincible/lb_jump_right.png", &g_invinciblePlayerJumpTexture);
     LoadTexture(g_pDevice, "asset/character_invincible/lb_run_right.png", &g_invinciblePlayerRunTexture);
@@ -776,7 +776,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/character_invincible/lb_falling_right.png", &g_invinciblePlayerFallingTexture);
     LoadTexture(g_pDevice, "asset/character_invincible/lb_ground_charge_right.png", &g_invinciblePlayerGroundChargeTexture);
     LoadTexture(g_pDevice, "asset/character_invincible/lb_wall_slide_right.png", &g_invinciblePlayerWallSlideTexture);
-    // 为动画剪辑添加通用名称（不再区分左右）
+    // アニメーションクリップへ共通名を付ける（左右を区別しない）
     g_player.anim.AddClip("InvincibleIdle", 0, 3, 4, 1, 0.25f, true, g_invinciblePlayerIdleTexture);
     g_player.anim.AddClip("InvincibleJump", 0, 10, 11, 1, 0.06f, false, g_invinciblePlayerJumpTexture);
     g_player.anim.AddClip("InvincibleRun", 0, 3, 4, 1, 0.1f, true, g_invinciblePlayerRunTexture);
@@ -789,7 +789,7 @@ void InitGameWorld() {
     g_player.anim.AddClip("InvincibleGroundCharge", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerGroundChargeTexture);
     g_player.anim.AddClip("InvincibleWallSlide", 0, 0, 1, 1, 0.25f, true, g_invinciblePlayerWallSlideTexture);
 
-    // for the ground texture
+    // 地面テクスチャ用
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_black.png", &g_groundBlackTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_groundTexture);
     LoadTexture(g_pDevice, "asset/platform/platformrenga3_up.png", &g_groundTopTexture);
@@ -814,7 +814,7 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/boss_HP/boss_HP.png", &g_bossInnerHPTexture);
     LoadTexture(g_pDevice, "asset/background/1-6background.png", &g_backgroundTexture1);
 
-    // for the signs
+    // 標識用
     LoadTexture(g_pDevice, "asset/UI/sign/sign_wasd.png", &g_signWASDTexture);
     signAnim.AddClip("SignWASD", 0, 3, 1, 4, 0.2f, true, g_signWASDTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_s.png", &g_signSTexture);
@@ -843,12 +843,12 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/UI/combo/combo_number.png", &g_comboNumberTexture);
     LoadTexture(g_pDevice, "asset/UI/combo/combo_X.png", &g_comboXTexture);
 
-    // Dash/slash-count UI (follows player): attack_count.png is a 1x3 sheet
+    // ダッシュ / slash-count UI（プレイヤー追従）: attack_count.png は 1x3 シート
     LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_slashCountTexture);
     g_slashCountAnim.AddClip("SlashCount", 0, 2, 1, 3, 0.12f, true, g_slashCountTexture);
     g_slashCountAnim.SetClip("SlashCount");
 
-    // Health follower spritesheet (1x3)
+    // HP follower 用スプライトシート（1x3）
     LoadTexture(g_pDevice, "asset/UI/Health.png", &g_healthTexture);
     g_healthAnim.AddClip("Health", 0, 2, 1, 3, 0.12f, true, g_healthTexture);
     g_healthAnim.SetClip("Health");
@@ -860,20 +860,20 @@ void InitGameWorld() {
     LoadTexture(g_pDevice, "asset/effect/slash_flash3.png", &g_slashFlashTextures[2]);
     LoadTexture(g_pDevice, "asset/effect/slash_flash4.png", &g_slashFlashTextures[3]);
 
-    // background textures: simple tiled backgrounds
-    LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_backgroundTexture1); // used by world1 and world2
-    LoadTexture(g_pDevice, "asset/platform/platformwood.png", &g_platformWoodTexture); // used by world3
+    // 背景テクスチャ: シンプルなタイル背景
+    LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_backgroundTexture1); // world1 / world2 用
+    LoadTexture(g_pDevice, "asset/platform/platformwood.png", &g_platformWoodTexture); // world3 用
 
-	// for the gauge bar 
+    // ゲージバー用
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_frame.png", &g_gaugeBarTexture);
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_filled.png", &g_gaugeBarFilledTexture);
     LoadTexture(g_pDevice, "asset/UI/gauge/gauge_effect.png", &g_gaugeFullEffectTexture);
     g_gaugeEffectAnim.AddClip("GaugeFull", 0, 9, 10, 1, 0.08f, true, g_gaugeFullEffectTexture);
 
-    // Gauge mode trailing particle (1x5)
+    // ゲージモード用トレイルパーティクル（1x5）
     LoadTexture(g_pDevice, "asset/effect/particle_sheet.png", &g_gaugeTrailParticleTexture);
 
-    // Gauge kill burst particle (1x5)
+    // ゲージ撃破バーストパーティクル（1x5）
     LoadTexture(g_pDevice, "asset/effect/particle_sheet_red.png", &g_gaugeKillParticleRedTexture);
 
     LoadTexture(g_pDevice, "asset/UI/attack_count.png", &g_attackCountTestTexture);
@@ -891,13 +891,13 @@ void InitGameWorld() {
     g_camera.SetDeadZone(camera_DeadZone);
 }
 
-// Modified game update function
+// 修正版ゲーム更新関数
 void UpdateGame(float deltaTime) {
     if (g_gameState != STATE_PLAYING) {
         return;
     }
-    // `animLockDuration` is a constant duration; `animLockTimer` is the running countdown.
-    // Decrementing the duration itself can break the lock/unlock logic and freeze animation transitions.
+    // `animLockDuration` は固定時間、`animLockTimer` は進行中のカウントダウン。
+    // duration 自体を減らすとロック / 解除ロジックが壊れ、アニメ遷移が止まることがある。
     if (g_player.animLockTimer > 0.0f) {
         g_player.animLockTimer -= deltaTime;
         if (g_player.animLockTimer < 0.0f) {
@@ -905,44 +905,44 @@ void UpdateGame(float deltaTime) {
         }
     }
 
-    // Update audio manager
-    g_gameTimer.Tick(); // added december 3rd
+    // オーディオマネージャーを更新する
+    g_gameTimer.Tick(); // 12 月 3 日追加
 
     signAnim.Update(deltaTime);
     g_slashCountAnim.Update(deltaTime);
 
-    // added december 4th
+    // 12 月 4 日追加
     g_gameElapsedTime += deltaTime;
     g_gameMinutes = static_cast<int>(g_gameElapsedTime) / 60;
     g_gameSeconds = static_cast<int>(g_gameElapsedTime) % 60;
 
-    g_gameStats.UpdateTime(g_gameElapsedTime); // track total time
+    g_gameStats.UpdateTime(g_gameElapsedTime); // 総経過時間を記録する
 
     float mouseX, mouseY;
     g_inputSystem.GetMousePosition(mouseX, mouseY);
 
-    // Shoot fireball from player position towards mouse position
+    // プレイヤー位置からマウス位置へ fireball を撃つ
     /*g_projectileManager.CreateFireball(
-        g_player.posX + PLAYER_WIDTH / 2,  // Shoot from player center
+        g_player.posX + PLAYER_WIDTH / 2,  // プレイヤー中心から発射
         g_player.posY + PLAYER_HEIGHT / 2,
         mouseX,
         mouseY,
-        true  // From player
+        true  // プレイヤー発射
     );*/
 
-    // Update slow motion effect
+    // スローモーション効果を更新する
     if (g_isSlowMotion) {
         g_slowMoTimer -= deltaTime;
         if (g_slowMoTimer <= 0.0f) {
             g_isSlowMotion = false;
-            g_slowMoFactor = 1.0f; // Restore normal time
+            g_slowMoFactor = 1.0f; // 通常時間へ戻す
         }
     }
 
-    // Apply time scaling effect (priority: global slow motion > dash-end slow motion > charge effect)
+    // 時間倍率効果を適用する（優先度: 全体スロー > ダッシュ終了スロー > チャージ効果）
     float timeScale = 1.0f;
     if (g_isSlowMotion) {
-        timeScale = g_slowMoFactor; // Use slow motion factor
+        timeScale = g_slowMoFactor; // スローモーション倍率を使う
 
     }
     else if (g_player.isInDashEndSlowMo) {
@@ -955,7 +955,7 @@ void UpdateGame(float deltaTime) {
     }
 
 
-    // for updating the combo timer
+    // コンボタイマー更新用
     if (g_player.comboCount > 0) {
         g_player.comboTimer -= deltaTime;
         if (g_player.comboTimer <= 0.0f) {
@@ -965,17 +965,17 @@ void UpdateGame(float deltaTime) {
         g_gameStats.UpdateMaxCombo(g_player.comboCount);
     }
 
-    // Acceleration state:
-    // - active when comboCount > threshold
-    // - also active during gauge-based invincibility (gauge/full-gauge reward during kill streak)
+    // 加速状態:
+    // - comboCount がしきい値を超えたとき有効
+    // - ゲージ由来無敵中（キル継続報酬のゲージ / フルゲージ中）も有効
     g_player.isAccelerated = (g_player.comboCount > ACCEL_COMBO_THRESHOLD) || (g_player.isInvincible && g_player.isGaugeInvincible);
 
-    // for updating the invincibility timer
+    // 無敵タイマー更新用
     if (g_player.isInvincible) {
         const float prevInvTime = g_player.invincibleTimer;
         g_player.invincibleTimer -= deltaTime;
 
-        // Gauge invincibility: 1-second warning (play once)
+        // ゲージ無敵: 残り 1 秒警告（1 回だけ再生）
         if (g_player.isGaugeInvincible && prevInvTime > 1.0f && g_player.invincibleTimer <= 1.0f) {
             Audio::PlaySE(SoundEffect::INVINCIBLE_WARNING);
         }
@@ -987,7 +987,7 @@ void UpdateGame(float deltaTime) {
         }
     }
 
-    // Auto-activate invincibility when gauge is full
+    // ゲージ満タン時に自動で無敵を発動する
     if (!g_player.isInvincible && g_player.gaugePoints >= g_player.MAX_GAUGE_POINTS) {
         g_player.isInvincible = true;
         g_player.isGaugeInvincible = true;
@@ -997,7 +997,7 @@ void UpdateGame(float deltaTime) {
         g_player.gaugePoints = 0;
 
         Audio::PlaySE(SoundEffect::LIMITBREAK, 2.0f);
-        // Spawn a dramatic particle burst at the player's center when gauge activates
+        // ゲージ発動時、プレイヤー中心へ派手なパーティクルバーストを出す
         {
             float centerX = g_player.posX + PLAYER_WIDTH * 0.5f;
             float centerY = g_player.posY + PLAYER_HEIGHT * 0.5f;
@@ -1005,7 +1005,7 @@ void UpdateGame(float deltaTime) {
         }
     }
 
-	// for the gauge effect timer
+    // ゲージエフェクトタイマー用
     if (g_player.g_gaugeEffectActive) { 
         g_gaugeEffectAnim.Update(deltaTime); 
         g_player.g_gaugeEffectTimer -= deltaTime;
@@ -1019,11 +1019,11 @@ void UpdateGame(float deltaTime) {
 
     float scaledDeltaTime = deltaTime * timeScale;
 
-    // Gauge trail particles: active only during gauge-based invincibility.
+    // ゲージトレイルパーティクル: ゲージ由来無敵中のみ有効
     if (g_player.isInvincible && g_player.isGaugeInvincible && !g_player.isDead) {
         g_gaugeTrailSpawnTimer -= scaledDeltaTime;
         if (g_gaugeTrailSpawnTimer <= 0.0f) {
-            // Spawn around player's body (random within an ellipse around the player).
+            // プレイヤーの体の周囲へ生成する（楕円内ランダム）
             const float r01 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             const float r02 = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
             const float ang = r01 * 6.2831853f;
@@ -1038,7 +1038,7 @@ void UpdateGame(float deltaTime) {
             const float spawnY = g_player.posY + PLAYER_HEIGHT * 0.5f + offsetY;
             SpawnGaugeTrailParticle(spawnX, spawnY);
 
-            // 1.5x spawn rate => interval gets smaller.
+            // 1.5 倍の発生率 => 間隔は短くなる
             g_gaugeTrailSpawnTimer = GAUGE_TRAIL_SPAWN_INTERVAL / GAUGE_TRAIL_SPAWN_RATE_MULT;
         }
     }
@@ -1094,7 +1094,7 @@ void UpdateGame(float deltaTime) {
         }
     }
 
-    // Update / spawn player afterimages
+    // プレイヤー残像の更新 / 生成
     for (auto it = g_playerAfterImages.begin(); it != g_playerAfterImages.end();) {
         it->timer += scaledDeltaTime;
         if (it->timer >= it->duration) {
@@ -1105,8 +1105,8 @@ void UpdateGame(float deltaTime) {
         }
     }
 
-    // Use displacement-based speed so afterimages still spawn even if velocity is
-    // temporarily overridden/reset during input/physics updates.
+    // 入力 / 物理更新で速度が一時的に上書き・リセットされても残像が出るよう、
+    // 変位ベースの速度を使う。
     static float s_prevPlayerX = g_player.posX;
     static float s_prevPlayerY = g_player.posY;
     float dtForSpeed = (scaledDeltaTime > 1e-6f) ? scaledDeltaTime : 1e-6f;
@@ -1116,19 +1116,19 @@ void UpdateGame(float deltaTime) {
     s_prevPlayerX = g_player.posX;
     s_prevPlayerY = g_player.posY;
 
-    // Afterimages:
-    // - Always during dash.
-    // - Also during accelerated state (combo) while moving/running.
-    // - When not accelerated, dash afterimages spawn at half rate (interval doubled).
+    // 残像:
+    // - ダッシュ中は常に出す
+    // - 加速状態（コンボ）では移動 / 走行中にも出す
+    // - 非加速時のダッシュ残像は半分の頻度で出す（間隔 2 倍）
     bool shouldSpawnAfterImage = !g_player.isDead && (g_player.isDashing || g_player.isAccelerated);
     if (shouldSpawnAfterImage) {
         float interval = g_player.afterImageSpawnInterval;
-        // Only slow down afterimage rate for non-accelerated dash.
+        // 非加速ダッシュ時のみ残像発生率を下げる
         if (g_player.isDashing && !g_player.isAccelerated) {
             interval *= 2.0f;
         }
 
-        // If we're only accelerated (not dashing), require actual movement.
+        // 加速だけでダッシュしていない場合は、実際の移動があるときだけ出す
         if (!g_player.isDashing && g_player.isAccelerated && !g_player.isMoving) {
             g_player.afterImageSpawnTimer = 0.0f;
         }
@@ -1167,24 +1167,24 @@ void UpdateGame(float deltaTime) {
     g_camera.Update(scaledDeltaTime);
 	g_player.hitStopTimer -= scaledDeltaTime;
     if (g_player.hitStopTimer <= 0.0f) {
-        // Update game logic using adjusted time
+        // 調整後時間でゲームロジックを更新する
         UpdateDash(deltaTime);
         UpdatePlayerPhysics(scaledDeltaTime);
 
         UpdateEnemies(scaledDeltaTime, &g_mapManager);
-        // Update all projectiles
+        // すべての射弾を更新する
         g_projectileManager.Update(scaledDeltaTime, &g_mapManager, g_enemies);
-        // 在UpdateGame函数中修改动画设置部分
+        // UpdateGame 関数内のアニメ設定部分
         if (g_player.animLockTimer <= 0.0f)
         {
-            // Only use invincible animation set during gauge-based invincibility.
-            // Dash/slash post-invincibility should not override current animation.
+            // 無敵アニメセットはゲージ由来無敵中にだけ使う。
+            // ダッシュ / slash 後の短い無敵では現在アニメを上書きしない。
             if (g_player.isInvincible && g_player.isGaugeInvincible)
             {
-                // INVINCIBLE ANIMATIONS
+                // 無敵時アニメーション
                 if (g_player.isDead)
                 {
-                    // Death animation stays normal (no invincible death texture)
+                    // 死亡アニメは通常版のまま（無敵用 death テクスチャは使わない）
                     if (g_player.anim.GetCurrentClipName() != "Death") {
                         g_player.anim.SetClip("Death");
                     }
@@ -1203,7 +1203,7 @@ void UpdateGame(float deltaTime) {
                 }
                 else if (g_player.isDashing)
                 {
-                    // Determine slash direction
+                    // slash の方向を判定する
                     float dx = g_player.dashDirectionX;
                     float dy = g_player.dashDirectionY;
 
@@ -1213,16 +1213,16 @@ void UpdateGame(float deltaTime) {
 
                     const char* clip;
                     if (dy > 0.0f && ady >= adx * DIAG_RATIO) {
-                        clip = "InvincibleSlash2";  // Up
+                        clip = "InvincibleSlash2";  // 上
                     }
                     else if (dy < 0.0f && ady >= adx * DIAG_RATIO) {
-                        clip = "InvincibleSlash4";  // Down
+                        clip = "InvincibleSlash4";  // 下
                     }
                     else if (adx >= ady * DIAG_RATIO) {
-                        clip = "InvincibleSlash3";  // Side
+                        clip = "InvincibleSlash3";  // 横
                     }
                     else {
-                        clip = "InvincibleSlash1";  // Diagonal
+                        clip = "InvincibleSlash1";  // 斜め
                     }
 
                     if (g_player.anim.GetCurrentClipName() != clip) {
@@ -1238,13 +1238,13 @@ void UpdateGame(float deltaTime) {
                 }
                 else if (!g_player.isOnGround)
                 {
-                    if (g_player.velocityY < 0.0f) // Falling
+                    if (g_player.velocityY < 0.0f) // 落下中
                     {
                         if (g_player.anim.GetCurrentClipName() != "InvincibleFalling") {
                             g_player.anim.SetClip("InvincibleFalling");
                         }
                     }
-                    else // Jumping
+                    else // ジャンプ中
                     {
                         if (g_player.anim.GetCurrentClipName() != "InvincibleJump") {
                             g_player.anim.SetClip("InvincibleJump");
@@ -1257,7 +1257,7 @@ void UpdateGame(float deltaTime) {
                         g_player.anim.SetClip("InvincibleRun");
                     }
                 }
-                else // Idle
+                else // 待機
                 {
                     if (g_player.anim.GetCurrentClipName() != "InvincibleIdle") {
                         g_player.anim.SetClip("InvincibleIdle");
@@ -1266,37 +1266,37 @@ void UpdateGame(float deltaTime) {
             }
             else
             {
-                if (g_player.isDead) // for when dying
+                if (g_player.isDead) // 死亡時
                 {
                     if (g_player.anim.GetCurrentClipName() != "Death") {
                         g_player.anim.SetClip("Death");
                     }
                 }
 
-                else if (g_player.isCharging) // 如果玩家正在蓄力
+                else if (g_player.isCharging) // プレイヤーがチャージ中なら
                 {
-                    if (!g_player.isOnGround) // 如果玩家在空中蓄力
+                    if (!g_player.isOnGround) // 空中チャージ中なら
                     {
                         if (g_player.anim.GetCurrentClipName() != "AirCharge") {
                             g_player.anim.SetClip("AirCharge");
                         }
                     }
-                    else // 如果玩家在地面蓄力
+                    else // 地上チャージ中なら
                     {
                         if (g_player.anim.GetCurrentClipName() != "GroundCharge") {
                             g_player.anim.SetClip("GroundCharge");
                         }
                     }
                 }
-                else if (g_player.isDashing) // 如果玩家正在冲刺
+                else if (g_player.isDashing) // プレイヤーがダッシュ中なら
                 {
-                    // Slash clip depends on dash direction.
-                    // Classify into 4 sectors with 45° boundaries:
-                    //   Up:    |dy| dominates and dy > 0  -> Slash2
-                    //   Down:  |dy| dominates and dy < 0  -> Slash4
-                    //   Side:  otherwise, |dx| dominates -> Slash3
-                    //   DiagDown-ish fallback            -> Slash1
-                    // Left/right is handled by facing/flip.
+                    // slash クリップはダッシュ方向で決まる。
+                    // 45° 境界で 4 区分する:
+                    //   上:    |dy| 優勢かつ dy > 0  -> Slash2
+                    //   下:    |dy| 優勢かつ dy < 0  -> Slash4
+                    //   横:    それ以外で |dx| 優勢 -> Slash3
+                    //   斜め下寄りのフォールバック   -> Slash1
+                    // 左右は facing / flip で処理する。
                     float dx = g_player.dashDirectionX;
                     float dy = g_player.dashDirectionY;
 
@@ -1315,7 +1315,7 @@ void UpdateGame(float deltaTime) {
                         clip = "Slash3";
                     }
                     else {
-                        // diagonal-ish: choose a dedicated diagonal-down slash
+                        // 斜め寄りなら専用の斜め下 slash を選ぶ
                         clip = "Slash1";
                     }
 
@@ -1329,28 +1329,28 @@ void UpdateGame(float deltaTime) {
                         g_player.anim.SetClip("WallSlide");
                     }
                 }
-                else if (!g_player.isOnGround) // 玩家不在地面上
+                else if (!g_player.isOnGround) // プレイヤーが地上にいないなら
                 {
-                    if (g_player.velocityY < 0.0f) // 下落
+                    if (g_player.velocityY < 0.0f) // 落下
                     {
                         if (g_player.anim.GetCurrentClipName() != "Falling") {
                             g_player.anim.SetClip("Falling");
                         }
                     }
-                    else // 跳跃
+                    else // ジャンプ
                     {
                         if (g_player.anim.GetCurrentClipName() != "Jump") {
                             g_player.anim.SetClip("Jump");
                         }
                     }
                 }
-                else if (g_player.isMoving) // 玩家在移动
+                else if (g_player.isMoving) // プレイヤーが移動中なら
                 {
                     if (g_player.anim.GetCurrentClipName() != "Run") {
                         g_player.anim.SetClip("Run");
                     }
                 }
-                else // 玩家站立
+                else // プレイヤーが静止中なら
                 {
                     if (g_player.anim.GetCurrentClipName() != "Idle") {
                         g_player.anim.SetClip("Idle");
@@ -1359,14 +1359,14 @@ void UpdateGame(float deltaTime) {
             }
         }
 
-        // Keep animation speed in sync with accelerated state
+        // アニメ速度を加速状態と同期させる
         g_player.anim.Update(scaledDeltaTime * g_player.GetAnimSpeedMultiplier());
         UpdatePlayerDeath(scaledDeltaTime);
     }
     g_mouseIndicator.Update(scaledDeltaTime);
 }
 
-// Helper function: Get texture based on tile code
+// 補助関数: タイルコードに応じたテクスチャを取得する
 ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
     if (tileCode == "G1" ) {
         return g_groundTexture;
@@ -1455,14 +1455,14 @@ ID3D11ShaderResourceView* GetTextureForTile(const std::string& tileCode) {
         return g_oneWayPlatformTexture;
     }
     else if (tileCode == "T1" || tileCode == "T2" || tileCode == "T3" || tileCode == "T4") {
-        return g_tutorialTexture; // ground texture for tutorial tiles
+        return g_tutorialTexture; // チュートリアルタイル用の地面テクスチャ
     }
     else {
         return g_groundTexture;
     }
 }
 
-// Helper function: Set color based on tile code
+// 補助関数: タイルコードに応じて色を設定する
 void SetTileColor(const std::string& tileCode) {
     if (tileCode == "G1") {
         //SetColor(0.4f, 0.8f, 0.3f, 1.0f);
@@ -1507,51 +1507,50 @@ void SetTileColor(const std::string& tileCode) {
 }
 
 void DrawGame() {
-    // Draw simple tiled scrolling background based on current map
-    // Draw tiled background with optional parallax and tile scaling.
-    // parallax: 1.0 = follows camera exactly, <1.0 = moves slower (distant)
-    // tileScale: scale tiles larger (useful for distant layer to reduce repetition)
+    // 現在マップに応じたシンプルなタイル背景を描画する
+    // 視差やタイル拡大率を指定できるタイル背景描画。
+    // parallax: 1.0 = カメラに完全追従、<1.0 = より遅く動く（遠景）
+    // tileScale: タイルを大きく描画する（遠景層の繰り返し軽減に有効）
     auto DrawTiledBackground = [&](ID3D11ShaderResourceView* tex, float tileWorldW, float tileWorldH, float parallax = 1.0f, float tileScale = 1.0f) {
         if (!tex) return;
 
-        // Center around the camera so the background tiles align with the
-        // visible viewport. This prevents off-center tiling when camera looks ahead.
-        // When using parallax (<1.0), the background should be centered using
-        // the parallax-adjusted camera position so tiles remain around the
-        // screen even as the parallax offset increases.
+        // 背景タイルが見えているビューポートにそろうよう、カメラ中心基準で配置する。
+        // これにより、カメラ先読み時でも背景タイルがずれにくくなる。
+        // parallax (<1.0) 使用時は、視差補正後のカメラ位置を使って中心を求め、
+        // オフセット増加時も画面周囲にタイルが残るようにする。
         float camX = g_camera.GetX();
         float camY = g_camera.GetY();
-        // Use parallax-adjusted center for tile selection to avoid the
-        // background tiles drifting away from the camera when parallax != 1.0
+        // parallax != 1.0 のとき背景タイルがカメラから流れないよう、
+        // 視差補正後の中心を使ってタイル選択する
         float centerWorldX = camX * parallax;
         float centerWorldY = camY * parallax;
 
-        // Compute visible rect in WORLD UNITS (pixel->world scale ~=100)
+        // 表示矩形をワールド単位で計算する（pixel->world スケールはおよそ 100）
         float visibleW = static_cast<float>(g_camera.GetWidth()) / (g_camera.GetZoom() * 100.0f);
         float visibleH = static_cast<float>(g_camera.GetHeight()) / (g_camera.GetZoom() * 100.0f);
 
-        // Apply tile scaling
+        // タイル拡大率を適用する
         float tw = tileWorldW * tileScale;
         float th = tileWorldH * tileScale;
 
-        // Center tile indices around player
+        // タイルインデックス中心をプレイヤー周辺へ合わせる
         int centerX = static_cast<int>(std::floor(centerWorldX / tw));
         int centerY = static_cast<int>(std::floor(centerWorldY / th));
 
-        // How many tiles roughly fit across/height (half-extent)
+        // 横 / 縦に何枚入るかのおおよその半径を求める
         int halfTilesX = static_cast<int>(std::ceil((visibleW / tw) * 0.5f)) + 1;
         int halfTilesY = static_cast<int>(std::ceil((visibleH / th) * 0.5f)) + 1;
 
-        // Increase radius to render more tiles (user requested ~2x)
-        const int MAX_RADIUS = 8; // (2*8+1)^2 = 289 tiles max
+        // 描画タイル数を増やすため半径を広げる（要望: およそ 2 倍）
+        const int MAX_RADIUS = 8; // (2*8+1)^2 = 最大 289 タイル
         halfTilesX = std::min(halfTilesX, MAX_RADIUS);
         halfTilesY = std::min(halfTilesY, MAX_RADIUS);
 
-        // Darken background (kept here so effect applies equally to layers)
-        // Lowered from 0.45 to 0.25 to make the background noticeably darker
+        // 背景を暗くする（ここに置くことで全レイヤーに同じ効果が掛かる）
+        // 0.45 から 0.25 に下げ、背景がより暗く見えるようにした
         SetColor(0.25f, 0.25f, 0.25f, 1.0f);
 
-        // Parallax adjustment: background should move slower than camera.
+        // 視差補正: 背景はカメラより遅く動くべき
         float parCamX = camX * parallax;
         float parCamY = camY * parallax;
 
@@ -1564,20 +1563,20 @@ void DrawGame() {
             }
         }
 
-        // Restore color
+        // 色を元へ戻す
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     };
 
-    // choose background texture per current map
+    // 現在マップに応じて背景テクスチャを選ぶ
     if (g_mapManager.IsMapLoaded()) {
         const std::string& mapName = g_mapManager.GetCurrentMapName();
         if (!mapName.empty()) {
             if (mapName.rfind("World3", 0) == 0) {
-                // world3: only draw a distant parallax layer (near layer removed)
+                // world3: 遠景の parallax レイヤーだけ描画する（近景レイヤーは削除済み）
                 DrawTiledBackground(g_platformWoodTexture, 0.15f, 0.15f, 0.6f, 1.4f);
             }
             else {
-                // world1/2: only draw distant parallax layer
+                // world1/2: 遠景 parallax レイヤーのみ描画する
                 DrawTiledBackground(g_backgroundTexture1, 0.15f, 0.15f, 0.6f, 1.4f);
             }
         }
@@ -1594,12 +1593,12 @@ void DrawGame() {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    // Advance health icon animation
+    // HP アイコンアニメを進める
     g_healthAnim.Update(g_gameTimer.GetDeltaTime());
 
-    // Draw slash-count icons will be rendered later (moved down) so they are not occluded by terrain
+    // slash-count アイコンは地形に隠れないよう、後で描画する
 
-    // Draw player afterimages (behind player)
+    // プレイヤー残像を描画する（プレイヤーの背後）
     for (const auto& a : g_playerAfterImages) {
         if (!a.texture) continue;
         float t = (a.duration <= 0.0f) ? 1.0f : std::clamp(a.timer / a.duration, 0.0f, 1.0f);
@@ -1612,19 +1611,19 @@ void DrawGame() {
     }
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Draw gauge trail particles (behind player)
+    // ゲージトレイルパーティクルを描画する（プレイヤーの背後）
     for (const auto& pInst : g_gaugeTrailParticles) {
         if (!pInst.active || !pInst.texture) continue;
 
         float t = static_cast<float>(pInst.frame) / static_cast<float>(GaugeTrailParticleInstance::frameCount);
         t = std::clamp(t, 0.0f, 1.0f);
-        // Ease-out fade, looks more "natural" than linear.
+        // イーズアウトで減衰させ、線形より自然に見せる
         float alpha = (1.0f - t);
         alpha = alpha * alpha;
         alpha *= 0.9f;
         auto p = worldToScreen(pInst.x, pInst.y);
 
-        // Slightly bluish-white to match gauge vibe.
+        // ゲージ演出に合わせて少し青白くする
         SetColor(0.85f, 0.95f, 1.0f, alpha);
         float w = PLAYER_WIDTH * 0.9f * pInst.scale;
         float h = PLAYER_HEIGHT * 0.9f * pInst.scale;
@@ -1644,9 +1643,9 @@ void DrawGame() {
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         float size = 0.25f * 1.5f * e.scale;
 
-        // Hit effects are stored in WORLD coordinates, but `RenderImage` draws in SCREEN coordinates.
-        // Convert to screen space before rendering, otherwise the effect appears offset by camera.
-        // Disable culling here because culling uses world-space camera checks.
+        // ヒットエフェクトはワールド座標保持だが、`RenderImage` はスクリーン座標描画である。
+        // そのため描画前にスクリーン座標へ変換しないとカメラ分だけずれて見える。
+        // ここでは culling も無効化する。culling はワールド座標カメラ判定を使うため。
         auto p = worldToScreen(e.x - size * 0.5f, e.y - size * 0.5f);
         RenderImage(p.first, p.second,
             size, size, e.texture,
@@ -1654,14 +1653,14 @@ void DrawGame() {
             false);
     }
 
-    // Background disabled temporarily for debugging visibility
-    // (was: parallax background draw)
+    // デバッグ視認性のため背景を一時的に無効化していた
+    // （元は parallax 背景描画）
 
-    // Use new map system to draw tiles
+    // 新しいマップシステムでタイルを描画する
     if (g_mapManager.IsMapLoaded()) {
         Map* currentMap = g_mapManager.GetCurrentMap();
 
-        // Draw background layer tiles
+        // 背景レイヤータイルを描画する
         auto& bgTiles = currentMap->GetTiles(MapLayer::BACKGROUND);
         for (const auto& tile : bgTiles) {
             if (tile.tileInfo.code == "00") continue;
@@ -1671,7 +1670,7 @@ void DrawGame() {
             RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
         }
 
-        // Draw midground layer tiles (player activity layer)
+        // 中景レイヤータイルを描画する（プレイヤー活動レイヤー）
         auto& mgTiles = currentMap->GetTiles(MapLayer::MIDGROUND);
         for (const auto& tile : mgTiles) {
             if (tile.tileInfo.code == "00") continue;
@@ -1682,18 +1681,18 @@ void DrawGame() {
             SetTileColor(tile.tileInfo.code);
             //RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
            
-            // for the goal
+            // ゴール扉用
 			if (tile.tileInfo.code == "DF" || tile.tileInfo.code == "DI" || tile.tileInfo.code == "D4" || tile.tileInfo.code == "D5" || 
                 tile.tileInfo.code == "D6" || tile.tileInfo.code == "D7" || tile.tileInfo.code == "DB" || tile.tileInfo.code == "21" || tile.tileInfo.code == "22" || 
                 tile.tileInfo.code == "23" || tile.tileInfo.code == "24" || tile.tileInfo.code == "25" || tile.tileInfo.code == "26" || tile.tileInfo.code == "27" ||
                 tile.tileInfo.code == "31" || tile.tileInfo.code == "32" || tile.tileInfo.code == "33" || tile.tileInfo.code == "34" || tile.tileInfo.code == "35" ||
                 tile.tileInfo.code == "36" || tile.tileInfo.code == "37") {
-                // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
-                float renderScale = 2.0f;  // Adjust this to match your collision size
-                float renderWidth = tile.width; // no change
+                // 実際のゲーム内ブロックサイズに合わせ、当たり判定と見た目を調整する
+                float renderScale = 2.0f;  // 当たり判定サイズに合わせて調整する
+                float renderWidth = tile.width; // 変更なし
                 float renderHeight = tile.height * renderScale;
 
-                // center the sprite on the tile position
+                // スプライトをタイル位置の中央へ合わせる
                 float offsetX = (tile.width - renderWidth) * 0.5f;
                 float offsetY = (tile.height - renderHeight) * 0.1f;
 
@@ -1701,14 +1700,14 @@ void DrawGame() {
                     renderWidth, renderHeight, texture, 0, 1, 1);
             }
 
-            //// for one way platforms. they will be a bit smaller to match collision with character. might change later
+            //// 一方向足場用。キャラクター当たり判定に合わせて少し小さくしている。後で変える可能性あり
             //else if (tile.tileInfo.code == "OP") {
-            //    // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
-            //    float renderScale = 0.67f;  // Adjust this to match your collision size
-            //    float renderWidth = tile.width; // no change
+            //    // 実際のゲーム内ブロックサイズに合わせて当たり判定へ寄せる
+            //    float renderScale = 0.67f;  // 当たり判定サイズに合わせて調整する
+            //    float renderWidth = tile.width; // 変更なし
             //    float renderHeight = tile.height * renderScale;
 
-            //    // center the sprite on the tile position
+            //    // スプライトをタイル位置の中央へ合わせる
             //    float offsetX = (tile.width - renderWidth) * 0.5f;
             //    float offsetY = (tile.height - renderHeight) * 0.5f;
 
@@ -1716,19 +1715,19 @@ void DrawGame() {
             //        renderWidth, renderHeight, texture, 0, 1, 1);
             //}
             
-            // for the animation of the signs
+            // 標識アニメ用
             else if (tile.tileInfo.code == "B1" || tile.tileInfo.code == "B2" || tile.tileInfo.code == "B3" || tile.tileInfo.code == "B4" || tile.tileInfo.code == "B5" ||
                      tile.tileInfo.code == "B6" || tile.tileInfo.code == "B7" || tile.tileInfo.code == "B8" || tile.tileInfo.code == "B9") {
                
-                // for getting the right texture depending on the sign
+                // 標識に応じた正しいテクスチャを取得する
                 ID3D11ShaderResourceView* signTexture = signAnim.GetCurrentClipTexture();
-                int numFrames = 4; // default if 4 frames
+                int numFrames = 4; // 4 フレームならこれが既定
 
                 if (tile.tileInfo.code == "B1") signTexture = g_signWASDTexture;
                 else if (tile.tileInfo.code == "B2") signTexture = g_signSTexture;
                 else if (tile.tileInfo.code == "B3") {
                     signTexture = g_signRightTexture;
-                    numFrames = 5; // only this sign is 5 frames instead of 4
+                    numFrames = 5; // この標識だけ 4 ではなく 5 フレーム
                 }
                 else if (tile.tileInfo.code == "B4") signTexture = g_signReleaseTexture;
                 else if (tile.tileInfo.code == "B5") signTexture = g_signRedTexture;
@@ -1745,10 +1744,10 @@ void DrawGame() {
                         signAnim.GetSplitY());
                 }*/
                 if (signTexture) {
-                    // calculate the frames
+                    // フレームを計算する
                     int currentFrame = signAnim.GetCurrentFrame() % numFrames;
 
-                    RenderImage(screenPos.first, screenPos.second, tile.width, tile.height * 2.0f, // *2.0f so it will be the correct size for the sign (twice as a big ad the actual tile)
+                    RenderImage(screenPos.first, screenPos.second, tile.width, tile.height * 2.0f, // 標識として正しいサイズにするため高さを 2 倍にする
                         signTexture,
                         currentFrame,
                         signAnim.GetSplitX(),
@@ -1756,12 +1755,12 @@ void DrawGame() {
                 }
             }
             else {
-                // Normal rendering for all other tiles
+                // それ以外のタイルは通常描画する
                 RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
             }
         }
 
-        // Draw foreground layer tiles
+        // 前景レイヤータイルを描画する
         auto& fgTiles = currentMap->GetTiles(MapLayer::FOREGROUND);
         for (const auto& tile : fgTiles) {
             if (tile.tileInfo.code == "00") continue;
@@ -1772,7 +1771,7 @@ void DrawGame() {
         }
     }
 
-    // Draw charge effect
+    // チャージエフェクトを描画する
     if (g_player.isCharging && !g_player.isDead) {
         float chargeRatio = g_player.chargeTime / g_player.MAX_CHARGE_TIME;
         float effectSize = PLAYER_WIDTH * (1.0f + chargeRatio * 1.0f);
@@ -1790,7 +1789,7 @@ void DrawGame() {
         RenderImage(effectPos.first, effectPos.second, effectSize, effectSize, g_chargeEffectTexture, 0, 1, 1);
     }
 
-    // Draw dash effect
+    // ダッシュエフェクトを描画する
     if (g_player.isDashing && !g_player.isDead) {
         float dashProgress = 1.0f - (g_player.dashTimer / DASH_DURATION);
         float effectSize = PLAYER_WIDTH * (1.2f + dashProgress * 0.3f);
@@ -1805,7 +1804,7 @@ void DrawGame() {
         RenderImage(dashPos.first, dashPos.second, effectSize, effectSize, g_dashEffectTexture, 0, 1, 1);
     }
 
-    // Draw gauge-kill red particles (burst)
+    // ゲージ撃破用の赤パーティクル（バースト）を描画する
     for (const auto& p : g_gaugeKillParticlesRed) {
         if (!p.active || !p.texture) continue;
 
@@ -1827,8 +1826,8 @@ void DrawGame() {
     g_mouseIndicator.Render(g_camera.GetX(), g_camera.GetY());
 
     g_projectileManager.Render(g_camera);
-    // Draw slash-count icons (followers) here so they render after tiles and are not occluded by terrain
-    // Hide during gauge-based invincibility.
+    // slash-count アイコン（followers）はここで描画し、タイル後ろに隠れないようにする
+    // ゲージ由来無敵中は非表示にする。
     if (!(g_player.isInvincible && g_player.isGaugeInvincible) && g_slashCountTexture) {
         const int count = std::clamp(g_player.dashPoints, 0, g_player.MAX_DASH_POINTS);
         if (count > 0) {
@@ -1840,18 +1839,18 @@ void DrawGame() {
 
             static Follower s_follow[3];
 
-            // Sprite size in world units
+            // ワールド単位でのスプライトサイズ
             const float iconW = 0.065f;
             const float iconH = 0.065f;
             const float spacing = iconW * 0.60f;
 
-            // Target anchor: one grid tile behind player (respect facing)
+            // 目標アンカー: プレイヤーの 1 グリッド後方（向きを考慮）
             const float behind = GRID_WIDTH;
             const float baseTargetX = g_player.posX + (g_player.facingRight ? -behind : behind);
             const float baseTargetY = g_player.posY + PLAYER_HEIGHT * 0.55f;
 
-            // Per-icon offsets (so they don't overlap and are not aligned)
-            const float xDir = g_player.facingRight ? -1.0f : 1.0f; // extend further behind
+            // アイコンごとのオフセット（重なり・一直線を避ける）
+            const float xDir = g_player.facingRight ? -1.0f : 1.0f; // さらに後方へ広げる
             const float xOffset[3] = { 0.0f, spacing * xDir, spacing * 2.0f * xDir };
             const float yOffset[3] = { -iconH * 0.18f, 0.0f, iconH * 0.18f };
             const float rotOffset[3] = { -0.08f, 0.0f, 0.08f };
@@ -1868,14 +1867,13 @@ void DrawGame() {
 
             int frame = g_slashCountAnim.GetCurrentFrame() % 3;
 
-            // Compute preview-based pending cost so follower highlights stay
-            // perfectly in sync with the arrow preview. We take the maximum
-            // of the actual accumulated pending cost and the preview derived
-            // from the current/saved charge time.
+            // follower 強調表示が矢印プレビューと完全同期するよう、
+            // プレビュー由来の予約消費を計算する。
+            // 実際の累積予約消費と、現在 / 保存チャージ時間から導いたプレビュー値の最大を使う。
             int actualPending = std::clamp(g_player.chargePendingCost, 0, g_player.MAX_DASH_POINTS);
             int previewPending = 0;
 
-            // Determine effective charge time used for preview (matches MouseIndicatorSystem logic)
+            // プレビューに使う有効チャージ時間を決める（MouseIndicatorSystem と一致させる）
             float effectiveChargeTime = 0.0f;
             if (g_player.isCharging) {
                 const bool willChainSavedCharge =
@@ -1889,8 +1887,8 @@ void DrawGame() {
                 effectiveChargeTime = g_player.savedChargeTime;
             }
 
-            // Preview pending: when actively charging, UI should only show a single
-            // pending consumption (one red follower) regardless of charge amount.
+            // プレビュー予約消費: 実際にチャージ中はチャージ量に関係なく
+            // 1 個分の予約消費（赤 follower 1 個）だけ表示する。
             if (g_player.isCharging) {
                 previewPending = 1;
             }
@@ -1961,29 +1959,29 @@ void DrawGame() {
         }
     }
 
-    // Draw player
+    // プレイヤーを描画する
     if (!g_player.isDead) {
-        // Normal drawing when alive
+        // 生存中の通常描画
         std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
 
-        // for the size of the character
+        // キャラクターサイズ用
         float scale = 6.6f;
         float width = PLAYER_WIDTH * scale;
         float height = PLAYER_HEIGHT * scale;
 
-        // center the bigger sprite on collision box
+        // 大きいスプライトを当たり判定の中心へ合わせる
         float offsetX = (width - PLAYER_WIDTH) * 0.5f;
         float offsetY = (height - PLAYER_HEIGHT) * 0.5f;
 
-        // 获取当前动画剪辑的纹理
+        // 現在のアニメーションクリップのテクスチャを取得する
         ID3D11ShaderResourceView* currentTexture = g_player.anim.GetCurrentClipTexture();
         int frameIndex = g_player.anim.GetCurrentFrame();
         int splitX = g_player.anim.GetSplitX();
         int splitY = g_player.anim.GetSplitY();
 
-        // 根据朝向决定是否水平翻转
-        // 如果facingRight为true（面向右），不翻转
-        // 如果facingRight为false（面向左），水平翻转
+        // 向きに応じて水平反転を決める
+        // facingRight が true（右向き）なら反転しない
+        // facingRight が false（左向き）なら水平反転する
         bool flipHorizontal = !g_player.facingRight;
 
 
@@ -1991,18 +1989,18 @@ void DrawGame() {
         RenderImage(playerPos.first - offsetX, playerPos.second - offsetY, width, height,
             currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
 
-        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Reset color after being invincible
+        SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // 無敵描画後に色をリセットする
 
 
 
 
-        // for the attack count 
+        // attack count 用
         
-        //// Position top left of the player
+        //// プレイヤー左上へ配置する
         //float countWidth = 0.1f;   
         //float countHeight = 0.15f; 
-        //float offsetCountX = -0.08f;  // hozirontal
-        //float offsetCountY = PLAYER_HEIGHT /*+ 0.01f*/; // vertical
+        //float offsetCountX = -0.08f;  // 水平
+        //float offsetCountY = PLAYER_HEIGHT /*+ 0.01f*/; // 垂直
 
         //float countXPos = g_player.posX + offsetCountX;
         //float countYPos = g_player.posY + offsetCountY;
@@ -2011,13 +2009,13 @@ void DrawGame() {
 
         //int frameIndexC = 0;
         //if (g_player.dashPoints == 3) {
-        //    frameIndexC = 0;  // Show 3 triangles
+        //    frameIndexC = 0;  // 三角 3 個を表示
         //}
         //else if (g_player.dashPoints == 2) {
-        //    frameIndexC = 1;  // Show 2 triangles
+        //    frameIndexC = 1;  // 三角 2 個を表示
         //}
         //else {
-        //    frameIndexC = 2;  // Show 1 triangle (for dashPoints 1 or 0)
+        //    frameIndexC = 2;  // 三角 1 個を表示（dashPoints 1 または 0 用）
         //}
 
         //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -2038,7 +2036,7 @@ void DrawGame() {
 
     }
     else {
-        // Death animation
+        // 死亡アニメーション
         std::pair<float, float> playerPos = worldToScreen(g_player.posX, g_player.posY);
 
         float scale = 6.6f;
@@ -2048,7 +2046,7 @@ void DrawGame() {
         float offsetX = (width - PLAYER_WIDTH) * 0.5f;
         float offsetY = (height - PLAYER_HEIGHT) * 0.5f;
 
-        // Get death animation texture and frame
+        // 死亡アニメのテクスチャとフレームを取得する
         ID3D11ShaderResourceView* currentTexture = g_player.anim.GetCurrentClipTexture();
         int frameIndex = g_player.anim.GetCurrentFrame();
         int splitX = g_player.anim.GetSplitX();
@@ -2056,7 +2054,7 @@ void DrawGame() {
 
         bool flipHorizontal = !g_player.facingRight;
 
-        // Render death animation
+        // 死亡アニメを描画する
         SetColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderImage(playerPos.first - offsetX, playerPos.second - offsetY, width, height,
             currentTexture, frameIndex, splitY, splitX, true, 0.0f, flipHorizontal);
@@ -2066,9 +2064,9 @@ void DrawGame() {
     DrawGaugeUI();
     DrawScoreUI();
 
-    // for the esc texture
+    // ESC テクスチャ用
     if (g_escTexture) {
-        // ESC button UI
+        // ESC ボタン UI
         InGameUI escUI;
         escUI.x = -0.95f;
         escUI.y = -0.95f;
@@ -2085,8 +2083,8 @@ void HandleInput() {
         ResetGame();
     }
 
-    // During death animation (death happens on hit), disable all gameplay inputs.
-    // Otherwise movement input below would still flip `g_player.facingRight`.
+    // 死亡アニメ中（被弾で死亡）はすべてのゲーム入力を無効にする。
+    // そうしないと下の移動入力で `g_player.facingRight` が変わってしまう。
     if (g_player.isDead) {
         g_player.velocityX = 0.0f;
         g_player.isMoving = false;
@@ -2098,27 +2096,27 @@ void HandleInput() {
    /* if (g_inputSystem.IsMouseRightDown()) {
         CancelChargeDash();
     }*/
-    // Right click: keep as cancel-charge only (invincibility is now auto-triggered)
+    // 右クリック: チャージキャンセル専用として扱う（無敵発動は自動化済み）
     if (g_inputSystem.IsMouseRightDown()) {
         CancelChargeDash();
     }
-    // for pausing the game press P or Esc key
+    // ゲーム一時停止は P または Esc キーで行う
     if (g_inputSystem.IsTogglePressed(VK_P) || g_inputSystem.IsTogglePressed(VK_ESCAPE))
     {
         SCENE currentScene = sceneManager.GetCurrentSceneType();
 
-        if (currentScene == GAMEPLAY || currentScene == CAKE) // the areas and the cake scene
+        if (currentScene == GAMEPLAY || currentScene == CAKE) // エリアとケーキシーン
         {
             sceneManager.SaveBGMPath(Audio::GetCurrentBGMPath());
-            sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
+            sceneManager.SwitchScene(PAUSE);  // どのステージでも一時停止できる
             Audio::PauseBGM();
         }
 
-        // if you press P or Esc key again you can go back to the stage (you can use the mouse and click the continue button
+        // P または Esc をもう一度押すとステージへ戻れる（マウスで continue を押してもよい）
         else if (currentScene == PAUSE)
         {
             SCENE previousScene = sceneManager.GetOriginalPausedScene();
-            if (previousScene == GAMEPLAY || previousScene == CAKE) // the areas and the cake scene
+            if (previousScene == GAMEPLAY || previousScene == CAKE) // エリアとケーキシーン
             {
                 sceneManager.SwitchScene(previousScene);
                 //Audio::ResumeBGM();
@@ -2136,38 +2134,38 @@ void HandleInput() {
         }
     }
 
-    // If the current active scene is the pause scene, do not process any
-    // further gameplay inputs (movement, dash, jump, mouse charge, etc.).
-    // Pause toggle handling above still executes so player can resume.
+    // 現在のアクティブシーンが pause なら、これ以降のゲーム入力
+    // （移動、ダッシュ、ジャンプ、マウスチャージ等）は処理しない。
+    // ただし上の pause 切替処理は実行済みなので再開は可能。
     if (sceneManager.GetCurrentSceneType() == PAUSE) {
         return;
     }
 
-    // Get mouse input state
+    // マウス入力状態を取得する
     bool isMouseLeftPressed = g_inputSystem.IsMouseLeftPressed();
     bool isMouseLeftDown = g_inputSystem.IsMouseLeftDown();
     bool isMouseLeftReleased = g_inputSystem.IsMouseLeftReleased();
 
-    // Charge-dash input mode (VK_T):
-    // - true (default): always dash on release even if a saved charge exists.
-    // - false: if a saved charge exists, mouse press dashes immediately.
+    // チャージダッシュ入力モード（VK_T）:
+    // - true（既定）: 保存済みチャージがあっても、離した時に必ずダッシュする
+    // - false: 保存済みチャージがあれば、マウス押下で即ダッシュする
     if (g_inputSystem.IsTogglePressed(VK_T)) {
         g_releaseDashChargeMode = !g_releaseDashChargeMode;
     }
 
-    // Dash aftermath behavior toggle (VK_G):
-    // - false (default): aftermath uses existing gravity/physics behavior.
-    // - true: aftermath ignores gravity; movement input breaks aftermath (already).
+    // ダッシュ後硬直の挙動切替（VK_G）:
+    // - false（既定）: 後硬直は既存の重力 / 物理挙動を使う
+    // - true: 後硬直中は重力を無視する。移動入力で後硬直は解除される（既存仕様）
     if (g_inputSystem.IsTogglePressed(VK_G)) {
         g_noGravityAftermathMode = !g_noGravityAftermathMode;
     }
 
     static bool wasMouseLeftDown = false;
 
-    // Pure mouse control: press to start charging
+    // マウスのみ操作: 押してチャージ開始
     if (isMouseLeftPressed) {
         if (!g_releaseDashChargeMode) {
-            // Legacy: if we already have a saved charge, pressing dashes immediately.
+            // 旧仕様: 保存済みチャージがあるなら、押した瞬間にダッシュする
             if (g_player.hasSavedCharge && !g_player.isCharging) {
                 StartMouseChargeDash();
                 g_player.chargeTime = 0.0f;
@@ -2178,23 +2176,23 @@ void HandleInput() {
             }
         }
         else {
-            // New mode: always start charging, dash will happen on release.
+            // 新モード: 常にチャージ開始し、ダッシュは離した時に発生する
             StartMouseChargeDash();
         }
     }
 
-    // Pure mouse control: release to execute dash
+    // マウスのみ操作: 離してダッシュ実行
     if (isMouseLeftReleased && wasMouseLeftDown && g_player.isCharging) {
         if (g_releaseDashChargeMode) {
-            // Hold < 0.2s: chain previous saved charge (if any).
-            // Hold >= 0.2s: use the new charge (override saved).
+            // 長押し < 0.2 秒: 以前の保存済みチャージを連携使用する（あれば）
+            // 長押し >= 0.2 秒: 新しいチャージを使い、保存分を上書きする
             if (g_player.chargeTime < g_player.CHARGE_THRESHOLD_LOW) {
                 if (g_player.hasSavedCharge) {
                     g_player.LoadSavedCharge();
                 }
             }
             else {
-                // Force_execute uses current charge by making sure we don't fall back to saved.
+                // Force_execute は saved へ戻らないようにして現在チャージを使わせる
                 g_player.ClearSavedCharge();
             }
         }
@@ -2202,14 +2200,14 @@ void HandleInput() {
         ExecuteMouseChargeDash();
     }
 
-    // Cancel charging
+    // チャージをキャンセルする
     if (!isMouseLeftDown && g_player.isCharging) {
         CancelChargeDash();
     }
 
     wasMouseLeftDown = isMouseLeftDown;
 
-    // Movement control
+    // 移動操作
     bool moving = false;
     if (g_inputSystem.IsMovingLeft()) {
         if (!g_player.isDashing) {
@@ -2228,9 +2226,8 @@ void HandleInput() {
         moving = true;
     }
 
-    // Requested: movement should interrupt dash-end slow motion.
-    // Note: movement input is handled here directly (not always via MovePlayerLeft/Right),
-    // so break the state at the input level.
+    // 要望対応: 移動入力でダッシュ終了後スローモーションを中断する。
+    // 注: 移動入力はここで直接処理しているため、入力段階で状態を切る。
     if (moving && g_player.isInDashEndSlowMo) {
         g_player.isInDashEndSlowMo = false;
         g_player.dashEndSlowMoTimer = 0.0f;
@@ -2241,16 +2238,16 @@ void HandleInput() {
         g_player.isMoving = false;
     }
 
-    // Jump control
-    // Allow both Space and W to trigger a jump (including while wall-sliding).
+    // ジャンプ操作
+    // Space と W の両方でジャンプ可能にする（壁滑り中も含む）。
     static bool wasSpacePressed = false;
     static bool wasWPressed = false;
 
     bool spaceDown = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
     bool wDown = (GetAsyncKeyState('W') & 0x8000) != 0;
 
-    // Trigger jump on edge (pressed this frame but not previous). If both are
-    // pressed simultaneously, only call Jump() once.
+    // エッジ入力（このフレームで押され、前フレームでは押されていない）でジャンプする。
+    // 両方同時押しでも Jump() は 1 回だけ呼ぶ。
     if ((spaceDown && !wasSpacePressed) || (wDown && !wasWPressed)) {
         Jump();
     }
@@ -2259,7 +2256,7 @@ void HandleInput() {
     wasWPressed = wDown;
 }
 
-// MouseIndicatorSystem implementation
+// MouseIndicatorSystem の実装
 void MouseIndicatorSystem::Initialize() {
     m_mouseIndicatorTexture = g_chargeEffectTexture;
     m_cursorTexture = g_cursorTexture;
@@ -2291,13 +2288,13 @@ void MouseIndicatorSystem::Update(float deltaTime) {
 
 void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     //if (!m_showMouseIndicator) return;
-    //// Do not show mouse indicator if protagonist is dead
+    //// 主人公が死亡しているならマウスインジケータを表示しない
     //if (g_player.isDead) return;
     auto worldToScreen = [cameraX, cameraY](float worldX, float worldY) -> std::pair<float, float> {
         return { worldX - cameraX, worldY - cameraY };
         };
 
-    // Draw mouse position indicator
+    // マウス位置インジケータを描画する
     float cursorWidth = 0.04f;
     float cursorHeight = 0.12f;
     auto mousePos = worldToScreen(m_mouseWorldX - cursorWidth / 2, m_mouseWorldY - cursorHeight / 2);
@@ -2305,11 +2302,11 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
     RenderImage(mousePos.first, mousePos.second, cursorWidth, cursorHeight,
         m_cursorTexture, 0, 1, 1, false, 0);
-    // Mouse cursor is rendered by `g_gameCursor` globally.
+    // マウスカーソル自体は `g_gameCursor` がグローバルに描画する
 
-    // (Removed fixed numeric dash-points UI — followers still render above player.)
+    // （固定数値の dash-points UI は削除済み。followers は引き続きプレイヤー上に描画される）
 
-    // (Removed debug numeric toggle UI for T/G modes)
+    // （T/G モード用のデバッグ数値 UI は削除済み）
 
     
     float uiX = -1.0f;
@@ -2318,19 +2315,19 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     float uiHeight = 1.0f;
     RenderImage(uiX, uiY, uiWidth, uiHeight, g_uiNumberTexture, 0, 1, 1);
 
-    // for the timer counting
-    float timerX = -0.768f;  // position x axis
-    float timerY = 0.78f;   // position y axis
-    float timerDigitWidth = 0.03f;  // width
-    float timerDigitHeight = 0.07f; // height
+    // タイマー表示用
+    float timerX = -0.768f;  // X 座標
+    float timerY = 0.78f;   // Y 座標
+    float timerDigitWidth = 0.03f;  // 幅
+    float timerDigitHeight = 0.07f; // 高さ
 
-    // for the minutes
+    // 分表示用
     int minuteTens = g_gameMinutes / 10;
     int minuteOnes = g_gameMinutes % 10;
     RenderNumber(minuteTens, timerX, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
     RenderNumber(minuteOnes, timerX + timerDigitWidth * 0.8f, timerY, timerDigitWidth, timerDigitHeight, pTextureNum);
 
-    // for the seconds
+    // 秒表示用
     int secondTens = g_gameSeconds / 10;
     int secondOnes = g_gameSeconds % 10;
     float secondsStartX = timerX + timerDigitWidth * 2.2f;
@@ -2340,10 +2337,10 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
     //SetColor(1.0f, 1.0f, 1.0f, 1.0f); 
 
     if (!m_showMouseIndicator) return;
-    // Do not show mouse indicator if protagonist is dead
+    // 主人公が死亡しているならマウスインジケータを表示しない
     if (g_player.isDead) return;
 
-    // Draw direction arrow
+    // 方向矢印を描画する
 
     if (g_player.isCharging || g_player.hasSavedCharge)
     {
@@ -2358,9 +2355,9 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
             float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f + centerOffsetY;
             float arrowWidth = 0.15f;
 
-            // Get effective charge time for arrow preview.
-            // When chaining (short hold) and a saved charge exists, the dash will actually use the saved charge.
-            // So the arrow must preview that saved charge, otherwise it looks too short on the second dash.
+            // 矢印プレビュー用の有効チャージ時間を取得する。
+            // 連携（短押し）で saved charge がある場合、実際のダッシュはそれを使う。
+            // そのため矢印も saved charge を反映しないと 2 回目のダッシュが短く見えてしまう。
             float chargeTime = 0.0f;
             if (g_player.isCharging) {
                 const bool willChainSavedCharge =
@@ -2374,7 +2371,7 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
                 chargeTime = g_player.savedChargeTime;
             }
 
-            // Determine charge level and use the same multipliers as in ExecuteMouseChargeDash
+            // チャージ段階を求め、ExecuteMouseChargeDash と同じ倍率を使う
             int chargeLevelPreview = g_player.GetChargeLevelFromTime(chargeTime);
 
             float speedMultiplier = 1.0f;
@@ -2398,13 +2395,13 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
                 break;
             }
 
-            // ExecuteMouseChargeDash and DashToMouse apply an extra 1.3x multiplier
-            // for short (no-charge) dashes; the preview should match that behavior.
-            // Only apply the extra multiplier when the previewed charge level is 0.
+            // ExecuteMouseChargeDash と DashToMouse は短距離（無チャージ）ダッシュへ
+            // 追加で 1.3 倍を掛けるため、プレビューもその挙動へ合わせる。
+            // この追加倍率はプレビュー段階が 0 のときだけ適用する。
             const float SHORT_DASH_EXTRA = (chargeLevelPreview == 0) ? 1.3f : 1.0f;
 
-            // Calculate the ACTUAL world distance the player will travel
-            // Distance = velocity × time × 60.0 (matching UpdatePlayerPhysics)
+            // プレイヤーが実際に移動するワールド距離を計算する
+            // 距離 = 速度 × 時間 × 60.0（UpdatePlayerPhysics と一致）
             float dashSpeed = DASH_SPEED * speedMultiplier * SHORT_DASH_EXTRA;
             float dashDuration = DASH_DURATION * durationMultiplier;
             float arrowLength = dashSpeed * dashDuration * 60.0f;
@@ -2412,37 +2409,37 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
             float tailX = playerCenterX;
             float tailY = playerCenterY;
 
-            // Calculate the center of the arrow (midpoint between tail and head)
+            // 矢印の中心（尾と先端の中点）を計算する
             float arrowCenterX = tailX + cosf(m_arrowAngle) * (arrowLength * 0.5f);
             float arrowCenterY = tailY + sinf(m_arrowAngle) * (arrowLength * 0.5f);
 
-            // Position calculation for screen rendering
+            // 画面描画用の位置計算
             auto arrowScreenPos = worldToScreen(arrowCenterX - arrowLength * 0.5f, arrowCenterY - arrowWidth * 0.5f);
 
-            // Get charge level for color display
+            // 色表示用にチャージ段階を取得する
             int chargeLevel = g_player.GetChargeLevelFromTime(chargeTime);
 
-            // Display different colors based on charge level
+            // チャージ段階に応じて色を変える
             if (chargeLevel >= 3) {
-                //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+                //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // 赤
             }
             else if (chargeLevel >= 2) {
-                //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+                //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // 濃い青
             }
             else if (chargeLevel >= 1) {
-                //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+                //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // 青
             }
 
             SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-            // The arrow texture is a 1x3 spritesheet: frames 0 and 1 are body segments, frame 2 is the head.
-            // Instead of stretching the whole image, repeat frames 0/1 to form the shaft, then draw frame 2 as the head.
+            // 矢印テクスチャは 1x3 のスプライトシートで、0 / 1 が胴体、2 が先端。
+            // 画像全体を引き伸ばす代わりに、0 / 1 を繰り返して軸を作り、2 を先端として描画する。
             float dirX = cosf(m_arrowAngle);
             float dirY = sinf(m_arrowAngle);
 
-            // Choose head width in world units. Keep head height equal to arrowWidth.
-            float headWidth = arrowWidth; // try to keep head unscaled horizontally relative to its height
+            // ワールド単位で先端幅を決める。先端高さは arrowWidth と同じにする。
+            float headWidth = arrowWidth; // 高さに対して横方向は極力等倍に近づける
 
-            // If arrow is too short, fall back to original stretched rendering
+            // 矢印が短すぎる場合は元の引き伸ばし描画へフォールバックする
             if (arrowLength <= headWidth * 1.1f) {
                 RenderImage(arrowScreenPos.first, arrowScreenPos.second, arrowLength, arrowWidth,
                     g_arrowTexture, 0, 1, 1, false, m_arrowAngle);
@@ -2450,13 +2447,13 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
             else {
                 float bodyLength = arrowLength - headWidth;
 
-                // Determine number of body segments. Use headWidth as a nominal segment unit to keep visuals consistent.
+                // 胴体セグメント数を決める。headWidth を基準単位として見た目をそろえる。
                 int segmentCount = (int)ceilf(bodyLength / headWidth);
                 if (segmentCount < 1) segmentCount = 1;
 
                 float segmentWidth = bodyLength / (float)segmentCount;
 
-                // Draw each body segment, alternating frames 0 and 1
+                // 各胴体セグメントを描画し、フレーム 0 / 1 を交互に使う
                 for (int i = 0; i < segmentCount; ++i) {
                     float segCenterDist = (segmentWidth * (i + 0.5f));
                     float segCenterX = tailX + dirX * segCenterDist;
@@ -2464,12 +2461,12 @@ void MouseIndicatorSystem::Render(float cameraX, float cameraY) {
 
                     auto segScreenPos = worldToScreen(segCenterX - segmentWidth * 0.5f, segCenterY - arrowWidth * 0.5f);
 
-                    int frame = (i % 2 == 0) ? 0 : 1; // alternate frame 0 and 1
+                    int frame = (i % 2 == 0) ? 0 : 1; // フレーム 0 と 1 を交互に使う
                     RenderImage(segScreenPos.first, segScreenPos.second, segmentWidth, arrowWidth,
                         g_arrowTexture, frame, 1, 3, false, m_arrowAngle);
                 }
 
-                // Draw head at the tip
+                // 先端に head を描画する
                 float headCenterDist = bodyLength + headWidth * 0.5f;
                 float headCenterX = tailX + dirX * headCenterDist;
                 float headCenterY = tailY + dirY * headCenterDist;
@@ -2489,13 +2486,13 @@ void MouseIndicatorSystem::Cleanup() {
 
 void MouseIndicatorSystem::ShowMouseIndicator(bool i) {
 
-    // Legacy API: cursor visibility is now controlled by the global in-game cursor.
-    // Keep this so existing scene code doesn't need to manage cursor visibility.
+    // 旧 API: カーソル表示は現在グローバルな in-game cursor が管理している。
+    // 既存シーンコードが表示制御を意識しなくて済むよう、この API は残しておく。
     SetInGameCursorEnabled(i);
 }
 
 
-// Reset all statistics
+// 全統計をリセットする
 void GameStatistics::Reset() {
     enemiesKilled = 0;
     weakPointKills = 0;
@@ -2515,7 +2512,7 @@ void GameStatistics::Reset() {
     lifetimeWeakKills = 0;
 }
 
-// Increment kill counter
+// キルカウンタを増やす
 void GameStatistics::IncrementKills() {
     enemiesKilled++;
     currentKills++;
@@ -2523,7 +2520,7 @@ void GameStatistics::IncrementKills() {
     AddEnemyPoints(10);
 }
 
-// Increment weak point kill counter
+// 弱点キルカウンタを増やす
 void GameStatistics::IncrementWeakPointKills() {
     weakPointKills++;
     currentWeakKills++;
@@ -2531,11 +2528,11 @@ void GameStatistics::IncrementWeakPointKills() {
     AddEnemyPoints(30);
 }
 
-// Increment death counter
+// 死亡カウンタを増やす
 void GameStatistics::IncrementDeaths() {
     totalDeaths++;
 
-    //erase later
+    // 後で削除
     char debugMsg[256];
     sprintf_s(debugMsg, "\n====== PLAYER DIED ======\n");
     OutputDebugStringA(debugMsg);
@@ -2548,27 +2545,27 @@ void GameStatistics::IncrementDeaths() {
 
     ResetAreaProgress();
 
-    // erase later
+    // 後で削除
     sprintf_s(debugMsg, "Remaining Total Points: %d\n", totalEnemyPoints);
     OutputDebugStringA(debugMsg);
     OutputDebugStringA("==========================\n\n");
 
 }
 
-// for updating the maximum combo
+// 最大コンボ更新用
 void GameStatistics::UpdateMaxCombo(int combo) {
     if (combo > maxCombo) {
         maxCombo = combo;
     }
     if (combo > currentMaxCombo) {
-        currentMaxCombo = combo; // current max combo
+        currentMaxCombo = combo; // 現在の最大コンボ
     }
 }
-//  when player dies, resets the area progress
+// プレイヤー死亡時にエリア進行状況をリセットする
 void GameStatistics::ResetAreaProgress() {
-    //totalEnemyPoints -= currentAreaEnemyPoints; // Subtract current area points from total
-    currentAreaEnemyPoints = 0; // Reset current area progress
-    //maxCombo = 0;  // Reset max combo on death
+    //totalEnemyPoints -= currentAreaEnemyPoints; // 現在エリア分のポイントを総計から引く
+    currentAreaEnemyPoints = 0; // 現在エリア進行をリセットする
+    //maxCombo = 0;  // 死亡時に最大コンボをリセットする
     currentMaxCombo = 0;
 }
 
@@ -2580,38 +2577,38 @@ void GameStatistics::AddEnemyPoints(int points) {
     lifetimeEnemyPoints += points;
 }
 
-// Update total time
+// 総時間を更新する
 void GameStatistics::UpdateTime(float time) {
     totalTime = time;
 }
 
-// Calculate the final score based on kills, time, and deaths
+// キル数・時間・死亡数に基づいて最終スコアを計算する
 void GameStatistics::CalculateFinalScore() {
-    int comboMultiplier = std::max(1, maxCombo);  // Minimum combo is 1
+    int comboMultiplier = std::max(1, maxCombo);  // 最低コンボ倍率は 1
 
-    // Convert time to 4-digit number (total seconds)
+    // 時間を 4 桁数値へ変換する（総秒数ベース）
     //int timeInSeconds = static_cast<int>(totalTime);
     int minutes = static_cast<int>(totalTime) / 60;
     int seconds = static_cast<int>(totalTime) % 60;
-    int timeInMMSS = (minutes * 100) + seconds;  // MMSS format
+    int timeInMMSS = (minutes * 100) + seconds;  // MMSS 形式
 
-    // Cap deaths at 50 for penalty calculation
+    // ペナルティ計算用に死亡数上限を 50 にする
     int cappedDeaths = std::min(50, totalDeaths);
     int deathPenalty = cappedDeaths * 50;
 
-    // Calculate base score
+    // 基本スコアを計算する
     int baseScore = lifetimeEnemyPoints * comboMultiplier;
 
-    // Calculate penalty
+    // ペナルティを計算する
     int penalty = timeInMMSS + deathPenalty;
 
-    int penaltyMultiplied = static_cast<int>(penalty * 1.5f); // so it gives me an integrer number
+    int penaltyMultiplied = static_cast<int>(penalty * 1.5f); // 整数値になるようにする
     totalScore = baseScore - penaltyMultiplied;
 
-    // Ensure score doesn't go negative
+    // スコアが負にならないようにする
     totalScore = std::max(0, totalScore);
 
-    // erase later
+    // 後で削除
     char debugMsg[512];
     sprintf_s(debugMsg, "\n========== FINAL SCORE CALCULATION ==========\n");
     OutputDebugStringA(debugMsg);
@@ -2662,7 +2659,7 @@ void GameStatistics::CalculateFinalScore() {
 void GameStatistics::AddScore(int points) {
     totalScore += points;
     if (totalScore < 0) {
-        totalScore = 0; // so there will not be negative score
+        totalScore = 0; // 負のスコアにならないようにする
     }
 }
 

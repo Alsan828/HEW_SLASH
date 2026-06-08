@@ -4,14 +4,14 @@
 #include <cmath>
 #include <algorithm>
 
-// Create a world1 area1
+// World 1 の Area 1 を作成する
 void Map::CreateWorld1Area1Map() {
     ClearAll();
     m_spawnPoints.clear();
     m_enemySpawns.clear();
     m_defaultSpawnId = 1;
 
-    // Define map layout using tile codes
+    // タイルコードを使ってマップレイアウトを定義する
     std::vector<std::vector<std::string>> midgroundGrid = {
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","G1","00","00","00","00","00","G1","G1","00","00","00","00"},
         {"00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","G1","00","00","00","00","00","G1","G1","00","00","00","00"},
@@ -32,7 +32,7 @@ void Map::CreateWorld1Area1Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// Create a world1 area2
+// World 1 の Area 2 を作成する
 void Map::CreateWorld1Area2Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -62,7 +62,7 @@ void Map::CreateWorld1Area2Map() {
     LoadFromGrid(midgroundGrid, MapLayer::MIDGROUND);
 }
 
-// Create a world1 area3
+// World 1 の Area 3 を作成する
 void Map::CreateWorld1Area3Map() {
     ClearAll();
     m_spawnPoints.clear();
@@ -96,7 +96,7 @@ void Map::CreateWorld1Area3Map() {
     AddTile(0.7f, -0.8f, "PT", MapLayer::MIDGROUND, "World1Area1", 1);
 }
 
-// Create a world1 area4
+// World 1 の Area 4 を作成する
 void Map::CreateWorld1Area4Map() {
     ClearAll();
     m_spawnPoints.clear();

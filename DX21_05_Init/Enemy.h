@@ -7,58 +7,58 @@
 #include <cmath>
 #include <vector>
 
-// 前向声明
+// 前方宣言
 struct Player;
 class MapManager;
 
 bool CheckCollision(float x1, float y1, float w1, float h1,
     float x2, float y2, float w2, float h2);
 
-// for the direction of the projectiles when the enemy throws them after dying
+// 敵が死亡時に射弾を放つときの方向定義
 struct ProjectileDirection 
 {
     float x;
     float y;
 };
 
-// for 4 direction projectile
+// 4 方向射弾用
 const ProjectileDirection FOUR_DIRECTIONS[4] = 
 {
-    {1.0f, 0.0f},    // right
-    {-1.0f, 0.0f},   // left
-    {0.0f, 1.0f},    // up
-    {0.0f, -1.0f}    // down
+    {1.0f, 0.0f},    // 右
+    {-1.0f, 0.0f},   // 左
+    {0.0f, 1.0f},    // 上
+    {0.0f, -1.0f}    // 下
 };
 
-// for 8 direction projectile
+// 8 方向射弾用
 const ProjectileDirection EIGHT_DIRECTIONS[8] = 
 {
-    {1.0f, 0.0f},       // right
-    {-1.0f, 0.0f},      // left
-    {0.0f, 1.0f},       // up
-    {0.0f, -1.0f},      // down
-    {0.707f, 0.707f},   // up right
-    {-0.707f, 0.707f},  // up left
-    {0.707f, -0.707f},  // down right
-    {-0.707f, -0.707f}  // down left
+    {1.0f, 0.0f},       // 右
+    {-1.0f, 0.0f},      // 左
+    {0.0f, 1.0f},       // 上
+    {0.0f, -1.0f},      // 下
+    {0.707f, 0.707f},   // 右上
+    {-0.707f, 0.707f},  // 左上
+    {0.707f, -0.707f},  // 右下
+    {-0.707f, -0.707f}  // 左下
 };
 
-// 伤害数字结构 - 独立于敌人
+// ダメージ数値構造体 - 敵本体とは独立
 struct DamageNumber {
     float posX, posY;
     int value;
     float timer;
     float velocityY;
     bool isCritical;
-    float lifeTime; // 总生存时间
+    float lifeTime; // 総生存時間
 
     DamageNumber(float x, float y, int damage, bool critical = false)
         : posX(x), posY(y), value(damage), timer(0.0f), velocityY(0.5f),
         isCritical(critical), lifeTime(1.5f) {
-    } // 生存1.5秒
+    } // 1.5 秒間生存する
 };
 
-// 独立的伤害数字管理器
+// 独立したダメージ数値管理器
 class DamageNumberManager {
 public:
     static void AddDamageNumber(float x, float y, int damage, bool isCritical = false);
@@ -70,25 +70,25 @@ private:
     static std::vector<DamageNumber> damageNumbers;
 };
 
-// 方向枚举 - 使用前后上下概念
+// 方向列挙 - 前後上下の概念で扱う
 enum Direction {
     DIR_FRONT = 0,      // 正面
     DIR_FRONT_UP,       // 前上
-    DIR_UP,             // 上方
-    DIR_BACK_UP,        // 后上
+    DIR_UP,             // 上
+    DIR_BACK_UP,        // 後上
     DIR_BACK,           // 背面
-    DIR_BACK_DOWN,      // 后下
-    DIR_DOWN,           // 下方
+    DIR_BACK_DOWN,      // 後下
+    DIR_DOWN,           // 下
     DIR_FRONT_DOWN      // 前下
 };
 
-// AI状态枚举 - 只保留巡逻和追逐
+// AI 状態列挙 - 巡回と追跡のみを残す
 enum AIState { PATROL, CHASE };
 
-// 敌人类声明
+// 敵クラス宣言
 class Enemy {
 public:
-    // this is for a test of the boss fight so I can change the HP of the boss for testing
+    // ボス戦テスト用に HP を変更できるようにしている
     void SetHealth(float hp) {
         health = hp;
         //maxHealth = hp;
@@ -101,37 +101,37 @@ public:
     Enemy(float x, float y, float hp = 10.0f);
     virtual ~Enemy() = default;
     
-    // 设置伤害系数
+    // ダメージ倍率を設定する
     void SetDamageMultiplier(Direction dir, float multiplier);
 
-    // 添加可见性检测方法
+    // 可視判定メソッド
     bool IsVisible(const Camera& camera) const {
         return camera.IsRectVisible(posX, posY, width, height);
     }
 
-    // 获取离开屏幕的时间
+    // 画面外に出ている時間を取得する
     float GetOffScreenTime() const { return offScreenTimer; }
 
-    // 重置离开屏幕计时器
+    // 画面外タイマーをリセットする
     void ResetOffScreenTimer() { offScreenTimer = 0.0f; }
 
-    // 检查敌人是否进入深度休眠（完全停止更新）
+    // 敵が深い休眠状態に入ったかを確認する（完全に更新停止）
     bool IsFullySleeping(const Camera& camera) const {
         return !IsVisible(camera) && offScreenTimer > MAX_OFFSCREEN_TIME;
     }
 
     void UpdateMinimal(float deltaTime);
-    // 检查是否需要最小更新（即使不在屏幕内）
+    // 画面外でも最小更新が必要かを確認する
     void UpdateAIMinimal(float deltaTime);
     bool NeedsMinimalUpdate() const {
         return offScreenTimer < MAX_OFFSCREEN_TIME ||
             currentState == CHASE || isHit || health < maxHealth;
     }
-    // 伤害处理
+    // ダメージ処理
     float GetDamageMultiplier(float attackAngle);
     virtual void TakeDamage(int damage, float attackAngle);
 
-    // 状态更新
+    // 状態更新
     virtual void Update(float deltaTime, MapManager* mapManager = nullptr);
     virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera);
     void RenderHealthBar(const Camera& camera);
@@ -146,21 +146,21 @@ public:
     // Per-enemy followers (one per 10 HP segment of maxHealth)
     std::vector<HealthFollower> healthFollowers;
 
-    // 攻击角度计算
+    // 攻撃角度計算
     int CalculateDamageFromPlayer(int baseDamage, float playerDashAngle);
 
-    // 获取敌人面向方向（true=右, false=左）
+    // 敵の向きを取得する（true=右、false=左）
     bool IsFacingRight() const { return facingRight; }
 
-    // 判断相对角度
+    // 相対角度を判定する
     float GetRelativeAngle(float attackAngle) const;
 
-    // 碰撞检测
+    // 衝突判定
     bool CheckPlayerCollision();
     bool CheckCollisionWithTiles(MapManager* mapManager);
 
     bool CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* mapManager);
-    // 获取属性
+    // プロパティ取得
     float GetX() const { return posX; }
     float GetY() const { return posY; }
     float GetHealth() const { return health; }
@@ -168,48 +168,48 @@ public:
     bool IsAlive() const { return isAlive; }
     float GetWidth() const { return width; }
     float GetHeight() const { return height; }
-    bool IsMarkedForDeletion() const { return markedForDeletion; } // added december 22nd
+    bool IsMarkedForDeletion() const { return markedForDeletion; } // 12 月 22 日追加
 
-    // Minimal setters (used by special behaviors like being thrown)
+    // 最小限のセッター（投げられる等の特殊挙動で使用）
     void SetPosition(float x, float y) { posX = x; posY = y; }
     void SetVelocity(float vx, float vy) { velocityX = vx; velocityY = vy; }
     void SetFacingRight(bool right) { facingRight = right; }
-    // Visual-only scaling (does not change collision box)
+    // 見た目のみの拡大縮小（衝突ボックスは変えない）
     void SetScale(float s) { scale = s; }
 
-    // Tint for rendering (default white)
+    // 描画用の色味（既定は白）
     void SetTint(float r, float g, float b) { tintR = r; tintG = g; tintB = b; }
 
-    // Whether this enemy can deal damage to the player by simple contact (collision).
-    // Default enemies can damage on contact; special types (e.g. boss) may override.
+    // 接触だけでプレイヤーへダメージを与えられるかどうか。
+    // 通常敵は接触ダメージあり。特殊敵（例: ボス）は上書き可能。
     virtual bool CanDamageOnContact() const { return true; }
 
-    // Returns true if the enemy is currently performing an attack that should
-    // be able to hurt the player (even if contact damage is normally disabled).
+    // 現在の攻撃動作がプレイヤーにダメージを与えるべき状態なら true を返す。
+    // （通常は接触ダメージが無効でも攻撃中なら有効にできる）
     virtual bool IsCurrentlyAttacking() const { return false; }
 
-    Animation anim;  // 动画系统
+    Animation anim;  // アニメーションシステム
 
-    // Allow resetting runtime state for subclasses (no-op for base).
+    // サブクラスが実行時状態をリセットできるようにする（基底は no-op）
     virtual void ResetState() {}
 
 protected:
-    // turning/facing cooldown
+    // 向き変更クールダウン
     static constexpr float TURN_COOLDOWN_SECONDS = 1.0f;
     float turnCooldownTimer = 0.0f;
     bool useTurnCooldown = true;
 
-    // AI行为方法
+    // AI 挙動メソッド
     virtual void PatrolBehavior(float deltaTime);
     virtual void ChaseBehavior(float deltaTime);
 
-    // 工具函数
+    // 補助関数
     float NormalizeAngle(float angle);
     int AngleToDirectionIndex(float angle);
     void UpdateAI(float deltaTime);
     void WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera);
 
-    // 水平碰撞检测
+    // 水平衝突判定
     bool CheckHorizontalCollision(MapManager* mapManager, float oldX, float oldY) {
         if (!mapManager || !mapManager->GetCurrentMap()) {
             return false;
@@ -258,7 +258,7 @@ protected:
             for (const auto& tile : solidTiles) {
                 if (CheckCollision(posX, posY, width, height,
                     tile.posX, tile.posY, tile.width, tile.height)) {
-                    // 检查是否站在地面上
+                    // 地面に立っているかを確認する
                     return true;
                 }
             }
@@ -278,68 +278,68 @@ protected:
             if (tile->tileInfo.isSolid &&
                 CheckCollision(posX, posY, width, height,
                     tile->posX, tile->posY, tile->width, tile->height)) {
-                // 检查是否站在地面上
+                // 地面に立っているかを確認する
                 return true;
             }
         }
         return false;
     }
 
-    // 虚函数
+    // 仮想関数
     virtual void OnDeath();
     virtual void OnHit(int damage);
 
-    // 碰撞检测辅助函数
+    // 衝突判定補助関数
     bool CheckCollisionWithTile(const MapTile& tile);
-    // 基本属性
+    // 基本プロパティ
     float posX, posY;
     float width, height;
     float health;
     float maxHealth;
     float moveSpeed;
-    // tint color
+    // 色味
     float tintR = 1.0f;
     float tintG = 1.0f;
     float tintB = 1.0f;
     bool isAlive;
-    bool markedForDeletion = false; // to see the animation after I kill the enemy
-    bool wasVisible = false;  // 上次更新时是否可见
-    float offScreenTimer = 0.0f;  // 离开屏幕的时间计时器
-    static constexpr float MAX_OFFSCREEN_TIME = 5.0f;  // 最大离开屏幕时间
-    bool isDying = false;  // 新增：是否正在播放死亡动画
+    bool markedForDeletion = false; // 倒した後もアニメーション表示のために保持する
+    bool wasVisible = false;  // 前回更新時に可視だったか
+    float offScreenTimer = 0.0f;  // 画面外にいる時間のタイマー
+    static constexpr float MAX_OFFSCREEN_TIME = 5.0f;  // 最大画面外時間
+    bool isDying = false;  // 追加: 死亡アニメーション再生中か
 
-    // 移动相关
+    // 移動関連
     float velocityX;
     float velocityY;
-    bool facingRight;  // true=右, false=左
+    bool facingRight;  // true=右、false=左
     bool weakSpotDeath = false;
 
-    // 伤害系统
+    // ダメージシステム
     float damageMultipliers[8];
 
-    float attackRange = 0.0f;  // 攻击范围，0表示近战
-    // AI行为状态
+    float attackRange = 0.0f;  // 攻撃範囲。0 は近接を表す
+    // AI 挙動状態
     AIState currentState;
     float patrolMinX, patrolMaxX;
 
-    // 巡逻相关参数
+    // 巡回関連パラメータ
     float patrolDirection = 1.0f;
     float patrolTimer = 0.0f;
 
-    // 检测范围
+    // 検知範囲
     float detectionRange = 3.0f;
     float loseSightRange = 5.0f;
 
-    // 受击状态
+    // 被弾状態
     bool isHit = false;
     float hitTimer = 0.0f;
     const float HIT_DURATION = 0.01f;
 
-    // default to 3.0, so I can change the scale of the enemy later if needed
+    // 既定値は 3.0。必要なら後で敵スケールを変えられるようにする
     float scale = 3.0f;
 };
 
-// 飞行敌人类
+// 飛行敵クラス
 class FlyEnemy : public Enemy {
 public:
     FlyEnemy(float x, float y);
@@ -352,13 +352,13 @@ protected:
     virtual void OnDeath() override;
 
 private:
-    float patrolAltitude;  // 巡逻高度
-    float targetAltitude;  // 目标高度
-    float altitudeChangeTimer = 0.0f;  // 高度变化计时器
-    float altitudeChangeRate = 0.05f;  // 高度变化速度
+    float patrolAltitude;  // 巡回高度
+    float targetAltitude;  // 目標高度
+    float altitudeChangeTimer = 0.0f;  // 高度変化タイマー
+    float altitudeChangeRate = 0.05f;  // 高度変化速度
 };
 
-// 法师敌人类
+// 魔法敵クラス
 class MageEnemy : public Enemy {
 public:
     MageEnemy(float x, float y);
@@ -368,18 +368,18 @@ protected:
     virtual void ChaseBehavior(float deltaTime) override;
 
 private:
-    void CastProjectile();  // 发射射弹
+    void CastProjectile();  // 射弾を放つ
 
-    // 射弹相关参数
+    // 射弾関連パラメータ
     float spellCooldown = 3.0f;
     float currentSpellCooldown = 0.0f;
     float lastAttackTime = 0.0f;
-    float attackCooldown = 1.5f;  // 攻击冷却时间
-    float projectileSpeed = 2.0f;  // 射弹速度
-    float projectileDamage = 20.0f;  // 射弹伤害
+    float attackCooldown = 1.5f;  // 攻撃クールダウン
+    float projectileSpeed = 2.0f;  // 射弾速度
+    float projectileDamage = 20.0f;  // 射弾ダメージ
 };
 
-// 快速敌人类
+// 高速敵クラス
 class FastEnemy : public Enemy {
 public:
     FastEnemy(float x, float y);
@@ -389,14 +389,14 @@ protected:
     virtual void ChaseBehavior(float deltaTime) override;
 
 private:
-    void DashAttack();  // 冲刺攻击
+    void DashAttack();  // ダッシュ攻撃
 
     float dashCooldown = 2.0f;
     float currentDashCooldown = 0.0f;
-    float attackRange = 0.5f;  // 近战攻击范围
+    float attackRange = 0.5f;  // 近接攻撃範囲
 };
 
-// 炸弹敌人类
+// 爆弾敵クラス
 class BombEnemy : public Enemy {
 public:
     BombEnemy(float x, float y);
@@ -408,17 +408,17 @@ protected:
     virtual void OnDeath() override;
 
 private:
-    void Explode();  // 爆炸
-    void CreateProjectiles();  // 创建射弹
+    void Explode();  // 爆発する
+    void CreateProjectiles();  // 射弾を生成する
 
-    // 爆炸相关参数
+    // 爆発関連パラメータ
     float pulseTimer = 0.0f;
     float baseSize = 1.0f;
-    float explosionRadius = 1.5f;  // 爆炸半径
-    float explosionDamage = 50.0f;  // 爆炸伤害
+    float explosionRadius = 1.5f;  // 爆発半径
+    float explosionDamage = 50.0f;  // 爆発ダメージ
 };
 
-// for the boss enemy
+// ボス敵クラス
 class BossEnemy : public Enemy 
 {
 public:
@@ -427,16 +427,16 @@ public:
     virtual void TakeDamage(int damage, float attackAngle) override;
     virtual void Render(ID3D11ShaderResourceView* texture, const Camera& camera) override;
 
-    // Boss overrides contact damage behavior: boss does not damage by simple contact.
+    // ボスは接触ダメージ挙動を上書きする: 単純接触ではダメージを与えない。
     virtual bool CanDamageOnContact() const override;
     virtual bool IsCurrentlyAttacking() const override;
 
-    // 调整技能速度的接口
+    // スキル速度調整用インターフェース
     void SetDashSpeedMultiplier(float mul) { dashSpeedMultiplier = mul; }
     void SetSlashSpeed(float frameTimeSeconds) { slashFrameTime = frameTimeSeconds; }
     void SetChargeDuration(float seconds) { chargeDuration = seconds; }
-    // Reset boss internal state to initial values (used when respawning at checkpoint)
-    // Default implementation does nothing; bosses may override.
+    // ボス内部状態を初期値へ戻す（チェックポイント再出現時に使用）
+    // 既定実装は何もしない。必要ならボス側で上書きする。
     virtual void ResetState() {}
 
 protected:
@@ -445,15 +445,15 @@ protected:
     virtual void OnDeath() override;
 
 protected:
-    //write here anything related to the boss (phases, types of attacks if there are, attack cooldown, etc....)
-    void SpecialAttack(); // special attack if there is one
+    // ボス関連の処理（フェーズ、攻撃種類、クールダウンなど）を書く
+    void SpecialAttack(); // 特殊攻撃がある場合に使う
 
-    // Boss stats
+    // ボスステータス
     float specialAttackCooldown = 5.0f;
     float currentSpecialCooldown = 0.0f;
-    int phase = 1;  // Boss phases
+    int phase = 1;  // ボスフェーズ
 
-    // Spec-driven boss behavior
+    // 仕様ベースのボス挙動
     enum BossState {
         BOSS_IDLE,
         BOSS_DASH_CHARGE,
@@ -471,43 +471,43 @@ protected:
 
     BossState bossState = BOSS_IDLE;
     float stateTimer = 0.0f;
-    int hitsTaken = 0;               // total hits received
-    bool inDownImmortal = false;     // cannot die during down
-    int weakCycleIndex = 0;          // weakline direction cycle
-    bool hasSpawnedSlashProjectiles = false; // slash barrage spawn guard
+    int hitsTaken = 0;               // 被弾回数の合計
+    bool inDownImmortal = false;     // ダウン中は死亡しない
+    int weakCycleIndex = 0;          // 弱点方向の循環インデックス
+    bool hasSpawnedSlashProjectiles = false; // 斬撃連射の生成ガード
 
-    // Facing lock during attack release
+    // 攻撃発動中の向き固定
     bool facingLocked = false;
     bool fixedFacingRight = true;
 
-    // Tunable timings
-    float chargeDuration = 1.0f;     // even faster charge (2x faster than previous)
-    float dashAfterDuration = 0.5f;  // faster recovery after dash
-    float slashActiveFrames = 2.0f;  // 3 frames window
-    float slashFrameTime = 0.045f;    // 斩击动画的每帧时间，影响斩击释放速度
-    float downDuration = 3.0f;       // shorter down time
+    // 調整可能な時間設定
+    float chargeDuration = 1.0f;     // さらに高速なチャージ（以前の 2 倍速）
+    float dashAfterDuration = 0.5f;  // ダッシュ後の回復を速くする
+    float slashActiveFrames = 2.0f;  // 3 フレーム相当の受付時間
+    float slashFrameTime = 0.045f;    // 斬撃アニメーション 1 フレーム時間。発動速度に影響する
+    float downDuration = 3.0f;       // 短めのダウン時間
 
-    // Randomized timing targets (to avoid robotic repeated behavior)
-    float timingVariance = 0.25f; // fraction: +/-25% by default
+    // 機械的な繰り返しを避けるためのランダム時間設定
+    float timingVariance = 0.25f; // 既定で ±25%
     float randomizedIdleDuration = 1.0f;
     float randomizedChargeDuration = 1.0f;
     float randomizedDashMovingDuration = 1.0f;
     float randomizedDashAfterDuration = 0.5f;
     float randomizedDownDuration = 3.0f;
 
-    // Dash tuning
-    float dashSpeedMultiplier = 20.0f;   // even faster dash
-    float dashMaxDuration = 6.0f;       // allow dash for longer time (approx half-map in many setups)
-    float dashStopDistance = 0.1f;      // stop only when extremely close to player
-    int dashLevel = 1;                  // dash level (affects speed)
+    // ダッシュ調整値
+    float dashSpeedMultiplier = 20.0f;   // さらに高速なダッシュ
+    float dashMaxDuration = 6.0f;       // 長めに許可する（多くの環境でマップ半分程度）
+    float dashStopDistance = 0.1f;      // プレイヤーにかなり近いときだけ止まる
+    int dashLevel = 1;                  // ダッシュレベル（速度へ影響）
 
-    // Leap (jump + dash) tuning
-    float leapChargeDuration = 6.0f;      // charge before leap
-    float leapInitialVy = -6.0f;          // upward velocity (negative = up)
-    float leapDashSpeedMultiplier = 1.0f; // faster horizontal dash while airborne
-    float leapAirDuration = 1.2f;         // max air time for leap1
+    // Leap（ジャンプ + ダッシュ）調整値
+    float leapChargeDuration = 6.0f;      // Leap 前のチャージ時間
+    float leapInitialVy = -6.0f;          // 上向き速度（負値 = 上）
+    float leapDashSpeedMultiplier = 1.0f; // 空中ダッシュ時の横速度倍率
+    float leapAirDuration = 1.2f;         // Leap1 の最大空中時間
 
-    // Helpers
+    // 補助メソッド
     void EnterState(BossState s);
     void UpdateDashCharge(float dt);
     void UpdateDashMoving(float dt, MapManager* mapManager);
@@ -523,7 +523,7 @@ protected:
     void RecomputeWeakMultipliers();
 };
 
-// for the ifnla boss enemy class
+// 最終ボス敵クラス
 class FinalBossEnemy : public BossEnemy 
 {
 public:
@@ -532,7 +532,7 @@ public:
     virtual void ResetState() override;
 };
 
-// for the square enemy class
+// 四角敵クラス
 class SquareEnemy : public Enemy 
 {
 public:
@@ -544,13 +544,13 @@ protected:
     virtual void OnDeath() override;
 
 private:
-    // Square enemy doesn't move, just stays in place
-    float pulseTimer = 0.0f;  // Optional: for pulsing animation effect
+    // 四角敵は移動せず、その場に留まる
+    float pulseTimer = 0.0f;  // 任意: 脈動アニメーション効果用
 };
 
 
-// for the beam enemy
-// todo: needs to be improved
+// ビーム敵クラス
+// todo: 改善が必要
 class BeamEnemy : public Enemy {
 public:
     BeamEnemy(float x, float y);
@@ -568,17 +568,17 @@ private:
         BEAM_POST_ATTACK
     };
 
-    void CheckBeamDamage(); // damages the player
-    void CreateDeathExplosion(); // Damages other enemies but not the player
+    void CheckBeamDamage(); // プレイヤーへダメージを与える
+    void CreateDeathExplosion(); // 他の敵にはダメージを与えるがプレイヤーには与えない
 
-    // Beam parameters - separate horizontal and vertical!
-    float beamHitboxWidth = 0.1f;        // make it wider as you want
-    float beamHorizontalLength = 0.8f;    // make it lager horiontally
-    float beamVerticalLength = 0.86f;      // make it larger vertically
+    // ビーム用パラメータ - 横と縦を分離する
+    float beamHitboxWidth = 0.1f;        // 必要に応じて太くできる
+    float beamHorizontalLength = 0.8f;    // 横方向の長さ
+    float beamVerticalLength = 0.86f;      // 縦方向の長さ
     float deathExplosionRadius = 0.75f;    
-    float deathExplosionDamage = 100000.0f; // change this as you want
+    float deathExplosionDamage = 100000.0f; // 必要に応じて変更できる
 
-    // Attack state machine
+    // 攻撃状態マシン
     BeamState beamState = BEAM_IDLE;
     float attackCooldown = 3.0f;
     float currentCooldown = 0.0f;
@@ -587,15 +587,15 @@ private:
     float postAttackDuration = 0.5f;
     float stateTimer = 0.0f;
 
-    // Death animation tracking
+    // 死亡アニメーション管理
     int deathAnimationPhase = 0;
     bool hasExploded = false;
-    bool hasKilledPlayerThisAttack = false;  // Prevent multiple kills per attack
+    bool hasKilledPlayerThisAttack = false;  // 1 回の攻撃で複数回倒さないようにする
 
     float pulseTimer = 0.0f;
 };
 
-// 投掷者敌人：瞄准玩家，抛物线扔出一个基础敌人
+// 投擲敵: プレイヤーを狙い、放物線で基本敵を投げる
 class ThrowerEnemy : public Enemy {
 public:
     ThrowerEnemy(float x, float y);
@@ -615,7 +615,7 @@ private:
     float throwFlyTime = 0.65f;
 };
 
-// 盲眼普通敌人：只会左右巡逻，遇到墙/悬崖掉头
+// 盲目の通常敵: 左右巡回のみ行い、壁や崖で折り返す
 class BlindEyeEnemy : public Enemy {
 public:
     BlindEyeEnemy(float x, float y);
@@ -631,11 +631,11 @@ private:
 
 
 
-// 敌人管理函数声明
+// 敵管理関数宣言
 void InitEnemies();
 void UpdateEnemies(float deltaTime, MapManager* mapManager = nullptr);
 void RenderEnemies(const Camera& camera);
 void CleanupEnemies();
 
-// 全局敌人列表和纹理
+// グローバル敵リストとテクスチャ
 extern std::vector<Enemy*> g_enemies;

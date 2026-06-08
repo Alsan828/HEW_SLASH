@@ -9,13 +9,13 @@ HowToPlayScene::HowToPlayScene(SceneManager* manager, SCENE returnTo)
 
 bool HowToPlayScene::Init()
 {
-	LoadTexture(g_pDevice, "asset/UI/control/control2.png", &backgroundTexture);      // abckground texture
+	LoadTexture(g_pDevice, "asset/UI/control/control2.png", &backgroundTexture);      // 背景テクスチャ
 
-	LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // for the button
+	LoadTexture(g_pDevice, "asset/UI/back/back_normal.png", &backTexture); // ボタン用
 	LoadTexture(g_pDevice, "asset/UI/back/back_hover.png", &backHoverTexture);
 
 	uiButtons.emplace_back(0.8f, -0.9f, 0.4f, 0.8f, MENU, backTexture, backHoverTexture);
-	uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // change this values if needed depending on the size of the button
+	uiButtons.back().SetHitboxScale(0.25f, 0.13f);  // ボタンサイズに応じて必要なら調整する
 	uiButtons.back().SetHitboxOffset(-0.06f);
 
 
@@ -29,7 +29,7 @@ void HowToPlayScene::Update(float deltaTime)
 {
 	g_inputSystem.Update();
 
-	// for the buttons
+	// ボタン処理
 	for (auto& btn : uiButtons)
 	{
 		if (btn.Process() == UIButtonResult::Clicked)
@@ -43,7 +43,7 @@ void HowToPlayScene::Update(float deltaTime)
 void HowToPlayScene::Draw()
 {
 	if (backgroundTexture) {
-		// Always set a color before drawing so the texture is visible
+		// テクスチャが見えるように描画前に必ず色を設定する
 		SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 		RenderImage(-1.0f, -1.0f, 2.0f, 2.0f, backgroundTexture, 0, 1, 1);
 	}

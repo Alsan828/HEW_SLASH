@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 #include "InputSystem.h"
 #include "SceneManager.h"
@@ -7,17 +7,17 @@
 #include "Game.h"
 #include "UIButton.h"
 
-// used for stage select for World 2 (8 areas including boss)
+// World 2 用のステージ選択（ボスを含む 8 エリア）
 class StageSelect2 : public SceneBase
 {
 private:
-    SceneManager* sceneManager;   // pointer to the scene manager
+    SceneManager* sceneManager;   // シーンマネージャーへのポインタ
 
     ID3D11ShaderResourceView* backgroundTexture;
 
-    SCENE returnScene; // for going to back to then scene I want to
+    SCENE returnScene; // 戻り先のシーン
 
-    // added december 1st
+    // 12 月 1 日追加
     std::vector<UIButton> uiButtons;
     ID3D11ShaderResourceView* buttonTexture = nullptr;       
     ID3D11ShaderResourceView* buttonHoverTexture = nullptr;  
@@ -27,12 +27,12 @@ private:
     ID3D11ShaderResourceView* backTexture = nullptr;
     ID3D11ShaderResourceView* backHoverTexture = nullptr;
 
-    // for the arrow to go to next stageselect screens
+    // 次のステージ選択画面へ移動する矢印用
     ID3D11ShaderResourceView* arrowTexture = nullptr;
     ID3D11ShaderResourceView* arrowHoverTexture = nullptr;
 
 public:
-    StageSelect2(SceneManager* manager, SCENE returnTo); // constructor
+    StageSelect2(SceneManager* manager, SCENE returnTo); // コンストラクタ
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -42,6 +42,6 @@ public:
     void DrawAreaNumber(int world, int stage, float x, float y, float width, float height, float space);
 };
 
-extern InputSystem g_inputSystem;   // use the global input system
-extern ID3D11Device* g_pDevice;     // device for texture loading
+extern InputSystem g_inputSystem;   // グローバル入力システムを使う
+extern ID3D11Device* g_pDevice;     // テクスチャ読み込み用デバイス
 

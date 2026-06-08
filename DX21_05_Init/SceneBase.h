@@ -1,15 +1,15 @@
-#pragma once
+﻿#pragma once
 
-//==========================================
-//         BASE OF ALL SCENES
-//==========================================
+// ==========================================
+//           すべてのシーンの基底クラス
+// ==========================================
 
 class SceneBase 
 {
 public:
-    // I dont need the construct because its pure a virtual class
-    //virtual ~SceneBase() {} // since there is not construct, I can do {} because nothing will be destructed
-                            // right now I dont have .cpp for this
+    // 純粋仮想クラスなのでコンストラクタは不要。
+    //virtual ~SceneBase() {} // 専用の破棄処理がないため空実装でもよい。
+                            // 現在はこのクラス用の .cpp は存在しない。
 
     virtual bool Init() = 0;    
     virtual void Update(float deltaTime) = 0;

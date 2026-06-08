@@ -1,7 +1,7 @@
-#pragma once
+﻿#pragma once
 #include <string>
 
-// used for the information about all the stages (areas)
+// すべてのステージ（エリア）情報を保持する
 class StageInfo
 {
 private:
@@ -10,7 +10,7 @@ private:
     std::string m_mapName;
 
 public:
-    // the constructor
+    // コンストラクタ
     StageInfo(int world = 1, int area = 1);
 
     int GetWorld() const { return m_world; }
@@ -18,11 +18,11 @@ public:
     std::string GetMapName() const { return m_mapName; }
 
     
-    bool IsBoss() const { return m_area == 8; } // check if its the boss or not
+    bool IsBoss() const { return m_area == 8; } // ボスかどうかを確認する
 
-    void SetWorld(int world); // for setting the world
-    void SetArea(int stage); // for setting the area
+    void SetWorld(int world); // ワールドを設定する
+    void SetArea(int stage); // エリアを設定する
 
-    void GenerateMapName(); // in order to generate map name
+    void GenerateMapName(); // マップ名を生成する
     
 };

@@ -5,19 +5,19 @@
 
 struct AnimationClip
 {
-    std::string name;           // ��������
-    int startFrame;            // ��ʼ֡����
-    int endFrame;              // ����֡����
-    int splitX;                // ˮƽ�ָ���
-    int splitY;                // ��ֱ�ָ���
-    int currentFrame;          // ��ǰ֡
-    int frameCount;            // ��֡��
-    float frameTime;           // ÿ֡ʱ��E
-    float elapsedTime;         // �ѹ�ʱ��E
-    bool loop;                 // �Ƿ�ѭ��
-    ID3D11ShaderResourceView* textureSRV; // ������Դ��ͼ
-    bool verticalSlicing;      // 竖向剪切（按列优先）
-    bool reverse;              // 反向播放（startFrame > endFrame）
+    std::string name;           // アニメーションクリップ名
+    int startFrame;            // 開始フレーム番号
+    int endFrame;              // 終了フレーム番号
+    int splitX;                // 横方向の分割数
+    int splitY;                // 縦方向の分割数
+    int currentFrame;          // 現在のフレーム
+    int frameCount;            // 総フレーム数
+    float frameTime;           // 1フレームあたりの時間
+    float elapsedTime;         // 経過時間
+    bool loop;                 // ループするかどうか
+    ID3D11ShaderResourceView* textureSRV; // テクスチャリソースビュー
+    bool verticalSlicing;      // 縦方向の分割（列優先）
+    bool reverse;              // 逆再生（startFrame > endFrame）
 
     AnimationClip()
         : startFrame(0), endFrame(0), splitX(1), splitY(1)
@@ -77,13 +77,13 @@ struct AnimationClip
     DirectX::XMFLOAT2 GetUVOffset() const
     {
         if (!verticalSlicing) {
-            // 横向剪切（按行优先，左到右，上到下）
+            // 横方向の分割（行優先、左から右、上から下）
             return DirectX::XMFLOAT2(
                 (float)(currentFrame % splitX) / splitX,
                 (float)(currentFrame / splitX) / splitY
             );
         } else {
-            // 竖向剪切（按列优先，上到下，左到右）
+            // 縦方向の分割（列優先、上から下、左から右）
             int col = currentFrame / splitY;
             int row = currentFrame % splitY;
             return DirectX::XMFLOAT2(

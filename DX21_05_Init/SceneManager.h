@@ -6,23 +6,23 @@ enum SCENE
 {
     TITLE,
     MENU,
-    GAMEPLAY, // this is for all the areas (8 areas) I have including the boss area 
+    GAMEPLAY, // ボスエリアを含むすべてのエリア（全 8 エリア）用
     CAKE,
     RESULT,
     PAUSE,
     HOWTOPLAY,
-    STAGESELECT,   // for stage1 (world 1)
-    STAGESELECT2,  // for stage2 (world 2)
-    STAGESELECT3,  // for stage3 (world 3)
+    STAGESELECT,   // stage1（world 1）用
+    STAGESELECT2,  // stage2（world 2）用
+    STAGESELECT3,  // stage3（world 3）用
     QUIT_GAME = -1
 
-    // ADD MORE HERE LATER IF NEEDED
+    // 必要なら後で追加する
 };
 
 class SceneManager 
 {
 private:
-    SceneBase* currentScene = nullptr; // this is for for the current scene. It starts empty until a scene is loaded
+    SceneBase* currentScene = nullptr; // 現在のシーン。読み込まれるまでは空のまま
     SCENE currentSceneType = GAMEPLAY;
 
     SceneBase* previousScene = nullptr;
@@ -32,7 +32,7 @@ private:
 
     bool comingFromStageSelect = false;
 
-    StageInfo currentStageInfo; //new test
+    StageInfo currentStageInfo; // 新しいテスト用
 
     SCENE stageSelectOrigin = TITLE;
 
@@ -45,12 +45,12 @@ public:
     void Uninit();
     bool SwitchScene(SCENE newScene);
 
-    bool SwitchToStage(int world, int stage); //new test
+    bool SwitchToStage(int world, int stage); // 新しいテスト用
 
-    // Game loop
+    // ゲームループ
     void GameLoop();
 
-    // helper to access previous scene
+    // 直前のシーンにアクセスするための補助関数
     SCENE GetCurrentSceneType() const { return currentSceneType; }
     SceneBase* GetPreviousScene() const { return previousScene; }
     SCENE GetPreviousSceneType() const { return previousSceneType; }
@@ -58,7 +58,7 @@ public:
     SCENE GetOriginalPausedScene() const { return originalPausedScene; }
     void SetOriginalPausedScene(SCENE scene) { originalPausedScene = scene; }
 
-    StageInfo GetCurrentStageInfo() const { return currentStageInfo; } //new test
+    StageInfo GetCurrentStageInfo() const { return currentStageInfo; } // 新しいテスト用
     SCENE GetStageSelectForCurrentStage();
 
     void SaveBGMPath(const std::string& path) { savedBGMPath = path; }

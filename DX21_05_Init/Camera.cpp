@@ -1,7 +1,7 @@
 ﻿#include "Camera.h"
 #include "Game.h"
 
-// Camera implementation
+// カメラ実装
 Camera::Camera()
     : m_posX(0.0f), m_posY(0.0f)
     , m_targetX(0.0f), m_targetY(0.0f)
@@ -24,11 +24,11 @@ void Camera::SetTarget(float x, float y) {
 }
 
 void Camera::Update(float deltaTime) {
-    // Calculate player center position
+    // プレイヤー中心座標を計算する
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
-    // During charge, keep updating the stored mouse world position so camera bias follows cursor.
+    // チャージ中は保存済みのマウスワールド座標を更新し、カメラの偏りがカーソルに追従するようにする。
     if (g_player.isCharging) {
         float mx, my;
         g_inputSystem.GetMousePosition(mx, my);
@@ -37,12 +37,12 @@ void Camera::Update(float deltaTime) {
         g_player.hasMouseTarget = true;
     }
 
-    // Make the player appear more centered on screen (less bottom-heavy framing)
-    // Shift camera target upward a bit in world units.
+    // プレイヤーが画面中央寄りに見えるようにする（下寄りの構図を弱める）。
+    // カメラの目標位置をワールド座標で少し上へずらす。
     const float centerBiasY = 0.12f;
     playerCenterY += centerBiasY;
 
-    // Apply look-ahead based on player movement direction
+    // プレイヤーの移動方向に応じて先読みオフセットを適用する
     float lookAheadX = 0.0f;
     float lookAheadY = 0.0f;
 
@@ -51,12 +51,12 @@ void Camera::Update(float deltaTime) {
         lookAheadY = g_player.velocityY * 0.2f * m_lookAheadFactor;
     }
 
-    // While charging, slightly bias camera towards mouse direction.
-    // This makes aiming feel better without fully centering on the cursor.
+    // チャージ中はカメラをマウス方向へ少しだけ寄せる。
+    // カーソルを完全に中央にしなくても狙いやすくなる。
     float chargeLookX = 0.0f;
     float chargeLookY = 0.0f;
     if (g_player.isCharging && g_player.hasMouseTarget) {
-        // The mouse target is stored in world coords.
+        // マウス目標位置はワールド座標で保存されている。
         float dxm = g_player.mouseTargetX - playerCenterX;
         float dym = g_player.mouseTargetY - playerCenterY;
         float len = sqrtf(dxm * dxm + dym * dym);
@@ -65,9 +65,9 @@ void Camera::Update(float deltaTime) {
             dym /= len;
         }
 
-        // Amount in world units (tuned to be subtle).
-        // Increase with charge time but keep an upper bound.
-        // Requested: double the camera offset while charging.
+        // ワールド座標系でのオフセット量（控えめになるよう調整済み）。
+        // チャージ時間に応じて増やすが、上限は超えない。
+        // 要望により、チャージ中のカメラオフセットを強めている。
         const float baseOffset = 0.20f;
         const float maxOffset = 0.44f;
         float t = 0.0f;
@@ -80,22 +80,22 @@ void Camera::Update(float deltaTime) {
         chargeLookY = dym * offset;
     }
 
-    // Update target position with look-ahead
+    // 先読みオフセットを反映して目標位置を更新する
     m_targetX = playerCenterX + lookAheadX + chargeLookX;
     m_targetY = playerCenterY + lookAheadY + chargeLookY;
 
-    // Calculate distance from current camera position to target
+    // 現在のカメラ位置から目標までの距離を計算する
     float dx = m_targetX - m_posX;
     float dy = m_targetY - m_posY;
     float distance = sqrtf(dx * dx + dy * dy);
 
-    // Only move camera if outside dead zone
+    // デッドゾーンの外にいる場合のみカメラを動かす
     if (distance > m_deadZoneRadius) {
-        // Apply smooth interpolation
-        float smoothFactor = m_smoothSpeed * deltaTime * 60.0f; // Frame-rate independent
+        // スムーズ補間を適用する
+        float smoothFactor = m_smoothSpeed * deltaTime * 60.0f; // フレームレート非依存
 
-        // Distance-based boost: when the camera is far away, it catches up faster.
-        // Close range keeps the original behavior.
+        // 距離に応じた加速：遠いほど早く追いつくようにする。
+        // 近距離では元の挙動を維持する。
         const float boostStartDist = m_deadZoneRadius * 2.0f;
         const float boostFullDist = m_deadZoneRadius * 10.0f;
         float boostT = 0.0f;
@@ -104,18 +104,18 @@ void Camera::Update(float deltaTime) {
         }
         float boostedSmoothFactor = smoothFactor * (1.0f + 2.5f * boostT);
 
-        // Allow the camera to catch up faster.
-        smoothFactor = std::clamp(boostedSmoothFactor, 0.01f, 0.98f); // Clamp to reasonable values
+        // カメラがより早く追いつけるようにする。
+        smoothFactor = std::clamp(boostedSmoothFactor, 0.01f, 0.98f); // 妥当な範囲に制限する
 
         m_posX += dx * smoothFactor;
         m_posY += dy * smoothFactor;
     }
 
-    // Apply camera shake if active
+    // カメラシェイクが有効なら適用する
     if (m_shakeTimer > 0.0f) {
         m_shakeTimer -= deltaTime;
 
-        // Reduce intensity over time
+        // 時間経過とともに強度を弱める
         m_shakeIntensity *= 0.9f;
 
         if (m_shakeTimer <= 0.0f) {
@@ -123,7 +123,7 @@ void Camera::Update(float deltaTime) {
             m_shakeIntensity = 0.0f;
         }
         else {
-            // Apply random offset for shake effect
+            // シェイク用のランダムオフセットを適用する
             float shakeX = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f * m_shakeIntensity;
             float shakeY = (static_cast<float>(rand()) / RAND_MAX - 0.5f) * 2.0f * m_shakeIntensity;
 

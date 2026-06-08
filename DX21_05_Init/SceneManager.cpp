@@ -11,17 +11,17 @@
 #include "StageSelect3.h"
 #include "Result.h"
 
-//for initializing it
+// 初期化処理
 bool SceneManager::Init(SCENE startScene) 
 {
     return SwitchScene(startScene);
 }
 
-//for switching between scenes
+// シーン切り替え処理
 bool SceneManager::SwitchScene(SCENE newScene) 
 {
-    SceneBase* oldScene = currentScene;  // used for the pause menu
-    SCENE caller = currentSceneType;     // save who called us (the scene type) before overwriting it
+    SceneBase* oldScene = currentScene;  // ポーズメニュー用に保持する
+    SCENE caller = currentSceneType;     // 上書き前に呼び出し元のシーン種別を保存する
     
    
     if (currentScene)
@@ -35,18 +35,18 @@ bool SceneManager::SwitchScene(SCENE newScene)
         }
     }
    
-    // this is to initialize the new scene
+    // 新しいシーンを初期化するための準備
     currentSceneType = newScene;
 
-    // Initialize the new scene
+    // 新しいシーンを初期化する
     switch (newScene) 
     {
     case TITLE:
-        currentScene = new TitleScene(this); // for the title
+        currentScene = new TitleScene(this); // タイトル用
         return currentScene->Init();
         break;
 
-    case GAMEPLAY:  // for all the areas (stages) including the boss
+    case GAMEPLAY:  // ボスを含むすべてのエリア（ステージ）用
         if (caller == PAUSE && previousScene)
         {
             currentScene = previousScene;
@@ -71,7 +71,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             g_gameElapsedTime = 0.0f;
             g_gameMinutes = 0;
             g_gameSeconds = 0;
-            // so I can play the bgm from the beginning if I start a new stage
+            // 新しいステージ開始時は BGM を最初から再生できるようにする
             Audio::StopBGM();
             ClearSavedBGMPath();
 
@@ -98,7 +98,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
             previousScene = nullptr;
         }
 
-        // Reset gauge bar if coming from stage select
+        // ステージ選択から来た場合はゲージをリセットする
         if (comingFromStageSelect)
         {
             g_player.gaugePoints = 0;
@@ -115,7 +115,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
         break;
 
     case MENU:
-        if (caller == PAUSE)  // if you come from pause scene, start the stage from the beginning
+        if (caller == PAUSE)  // ポーズ画面から来た場合はステージを最初から始める
         { 
             if (previousScene) 
             {
@@ -125,22 +125,22 @@ bool SceneManager::SwitchScene(SCENE newScene)
             }
         }
 
-        currentScene = new MenuScene(this); // for the prototype stage
+        currentScene = new MenuScene(this); // メニュー用
         return currentScene->Init();
         break;
 
     case HOWTOPLAY:
-        if (caller == PAUSE) // if in pause
+        if (caller == PAUSE) // ポーズ中の場合
         { 
-            currentScene = new HowToPlayScene(this, PAUSE); // go back to pause
+            currentScene = new HowToPlayScene(this, PAUSE); // ポーズへ戻る
         }
-        else if (caller == MENU) // if in menu
+        else if (caller == MENU) // メニュー中の場合
         { 
-            currentScene = new HowToPlayScene(this, MENU);// go back to menu
+            currentScene = new HowToPlayScene(this, MENU);// メニューへ戻る
         }
         else 
         {
-            currentScene = new HowToPlayScene(this, TITLE); // for default in case there is an error
+            currentScene = new HowToPlayScene(this, TITLE); // エラー時の既定戻り先
         }
         return currentScene->Init();
         break;
@@ -148,7 +148,7 @@ bool SceneManager::SwitchScene(SCENE newScene)
     case PAUSE:
         if (caller == GAMEPLAY || caller == CAKE)
         {
-            // so you can preserve the gameplay scene for when you resume the game
+            // 再開時のためにゲームプレイシーンを保持する
             previousScene = oldScene;                
             originalPausedScene = caller;  
             currentScene = new PauseScene(this, previousScene, originalPausedScene);
@@ -156,19 +156,19 @@ bool SceneManager::SwitchScene(SCENE newScene)
         }
         else if (caller == HOWTOPLAY) 
         {
-            // if coming bak from howtoplay scene,you can continue from you were in the stage
+            // HowToPlay から戻る場合は元のステージの続きから再開する
             currentScene = new PauseScene(this, previousScene, originalPausedScene);
             return currentScene->Init();
         }
         else if (caller == STAGESELECT || caller == STAGESELECT2 || caller == STAGESELECT3)
         {   
-            // if coming bak from stageselect scene,you can continue from you were in the stage
+            // StageSelect から戻る場合は元のステージの続きから再開する
             currentScene = new PauseScene(this, previousScene, originalPausedScene); 
             return currentScene->Init(); 
         }
         else 
         {
-            // there is no gameplay. you still have the preserved scene
+            // ゲームプレイ中でなくても保持済みシーンは確認する
             if (previousScene) 
             {
                 previousScene->Uninit();

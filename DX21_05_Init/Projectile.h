@@ -6,29 +6,29 @@
 #include <vector>
 
 class Enemy;
-// 射弹类型枚举
+// 射弾タイプ列挙
 enum class ProjectileType {
-    FIREBALL,       // 火莵E- 直线飞行，碰撞爆炸
-    ICE_SHARD,      // 冰箭 - 直线飞行，减速效箒E
-    MAGIC_MISSILE,  // 魔法飞弹 - 跟踪敌人
-    LIGHTNING,      // 闪祦E- 瞬间脕E?
-    POISON_DART,    // 毒丒 - 持续伤害
-    HOLY_BOLT,       // 圣光箭 - 对亡灵特效
+    FIREBALL,       // ファイアボール - 直進し、命中で爆発する
+    ICE_SHARD,      // 氷片 - 直進し、減速効果を与える
+    MAGIC_MISSILE,  // 魔法弾 - 敵を追尾する
+    LIGHTNING,      // 雷撃 - 短時間だけ存在する
+    POISON_DART,    // 毒ダーツ - 継続ダメージを与える
+    HOLY_BOLT,       // 聖光弾 - アンデッドに特効
     BULLET
 };
 
-// 射弹效果结构
+// 射弾効果構造体
 struct ProjectileEffect {
     float damage = 10.0f;
-    float burnDamage = 0.0f;      // 燃烧持续伤害
-    float slowEffect = 0.0f;      // 减速效箒E(0-1)
-    float stunDuration = 0.0f;    // 眩晕时紒E
-    bool pierce = false;          // 是否穿透
-    int maxPierceCount = 0;       // 畜穿透数量
-    float areaRadius = 0.0f;      // 范围爆炸皝E?
+    float burnDamage = 0.0f;      // 燃焼の継続ダメージ
+    float slowEffect = 0.0f;      // 減速効果 (0-1)
+    float stunDuration = 0.0f;    // スタン時間
+    bool pierce = false;          // 貫通するかどうか
+    int maxPierceCount = 0;       // 最大貫通数
+    float areaRadius = 0.0f;      // 範囲爆発半径
 };
 
-// 射弹纴E
+// 射弾クラス
 class Projectile {
 public:
     Projectile(ProjectileType type, float startX, float startY,
@@ -40,20 +40,20 @@ public:
     bool IsActive() const { return isActive; }
     void Deactivate() { isActive = false; }
 
-    // Check collision with an arbitrary rectangle (used by player slash to hit projectiles)
+    // 任意の矩形との衝突を確認する（プレイヤーの斬撃で射弾を消すため）
     bool CheckCollisionWithRect(float rectX, float rectY, float rectW, float rectH) const;
-    // Called when a player successfully hits this projectile
+    // プレイヤーがこの射弾に命中したときに呼ばれる
     void OnHitByPlayer();
-    // Returns true if this projectile is hostile (not from player) and is aimed at the player
+    // 敵性射弾で、かつプレイヤーを狙っている場合に true を返す
     bool IsHostileAndAimedAtPlayer() const;
 
-    // 获取射弹信息
+    // 射弾情報を取得する
     float GetDamage() const { return effect.damage; }
     bool IsFromPlayer() const { return fromPlayer; }
     ProjectileType GetType() const { return type; }
 
 private:
-    // 射弹属性
+    // 射弾属性
     ProjectileType type;
     float posX, posY;
     float velocityX, velocityY;
@@ -63,20 +63,20 @@ private:
     bool isActive;
     bool fromPlayer;
 
-    // 视觉 
+    // 見た目関連
     float size = 0.5f;
     float rotation;
     float scaleEffect;
 
-    // 射弹效箒E
+    // 射弾効果
     ProjectileEffect effect;
 
-    // 跟踪相关
+    // 追尾関連
     Enemy* homingTarget;
     float homingStrength = 0.0f;
     int currentPierceCount;
 
-    // 辅助方法
+    // 補助メソッド
     void Move(float deltaTime);
     bool CheckMapCollision(MapManager* mapManager);
     void CheckEnemyCollision(std::vector<Enemy*>& enemies);
@@ -87,7 +87,7 @@ private:
     float CalculateDirectionAngle()const;
     float GetRotationAngle()const;
     void SetRotation(float r);
-    // 类型特定行为
+    // タイプ固有の挙動
     void UpdateFireball(float deltaTime);
     void UpdateBullet(float deltaTime);
     void UpdateIceShard(float deltaTime);
@@ -97,7 +97,7 @@ private:
     void UpdateHolyBolt(float deltaTime);
 };
 
-// 射弹管历怊纴E
+// 射弾管理クラス
 class ProjectileManager {
 public:
     static ProjectileManager& GetInstance();
@@ -110,11 +110,11 @@ public:
     void Render(const Camera& camera);
     void ClearAll();
 
-    // Called when player slash should try to hit enemy projectiles
+    // プレイヤーの斬撃で敵射弾に当たり判定を行うときに呼ばれる
     void HandlePlayerSlashHitRect(float rectX, float rectY, float rectW, float rectH);
     void HandlePlayerSlashHitCircle(float centerX, float centerY, float radius);
 
-    // 工具函数：创建预定义效果的射弹
+    // 補助関数: 定義済み効果の射弾を生成する
     void CreateFireball(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
     void CreateIceShard(float startX, float startY, float targetX, float targetY, bool fromPlayer = true);
     void CreateMagicMissile(float startX, float startY, Enemy* target, bool fromPlayer = true);
@@ -129,7 +129,7 @@ private:
     ProjectileManager() = default;
     std::vector<Projectile> projectiles;
 
-    // 射弹纹纴E
+    // 射弾テクスチャ
     ID3D11ShaderResourceView* fireballTexture = nullptr;
     ID3D11ShaderResourceView* bulletTexture = nullptr;
     ID3D11ShaderResourceView* iceShardTexture = nullptr;

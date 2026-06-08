@@ -3,7 +3,7 @@
 
 #include <d3d11.h>
 
-// 全局常量定义
+// グローバル定数定義
 const float GRID_WIDTH = 0.0625f;
 const float GRID_HEIGHT = 0.085f;
 const float PLAYER_WIDTH = 0.08f;
@@ -15,7 +15,7 @@ const float DASH_SPEED = 0.15f;
 const float DASH_DURATION = 0.05f;
 const float DASH_COOLDOWN = 0.2f;
 
-// 枚举定义
+// 列挙定義
 enum DashType {
     DASH_INSTANT,
     DASH_CHARGE

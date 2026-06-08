@@ -13,7 +13,7 @@ Animation::~Animation()
     m_currentClip = nullptr;
 }
 
-// 铁赜动画片段
+// アニメーションクリップを追加
 void Animation::AddClip(const std::string& name, int startFrame, int endFrame,
     int splitX, int splitY, float frameTime, bool loop,
     ID3D11ShaderResourceView* textureSRV)
@@ -28,7 +28,7 @@ void Animation::AddClip(const std::string& name, int startFrame, int endFrame,
     }
 }
 
-// 设置当前动画片段
+// 現在のアニメーションクリップを設定
 void Animation::SetClip(const std::string& name)
 {
     auto it = m_clips.find(name);
@@ -39,7 +39,7 @@ void Animation::SetClip(const std::string& name)
     }
 }
 
-// 获取当前动画片段名称
+// 現在のアニメーションクリップ名を取得
 std::string Animation::GetCurrentClipName() const
 {
     if (m_currentClip)
@@ -49,7 +49,7 @@ std::string Animation::GetCurrentClipName() const
     return "";
 }
 
-// 获取当前动画片段纹纴E
+// 現在のクリップのテクスチャを取得
 ID3D11ShaderResourceView* Animation::GetCurrentClipTexture() const
 {
     if (m_currentClip)
@@ -59,7 +59,7 @@ ID3D11ShaderResourceView* Animation::GetCurrentClipTexture() const
     return nullptr;
 }
 
-// 竵E露?
+// アニメーションを更新
 void Animation::Update(float deltaTime)
 {
     if (m_paused || !m_currentClip)
@@ -71,13 +71,13 @@ void Animation::Update(float deltaTime)
     m_uvOffset = m_currentClip->GetUVOffset();
 }
 
-// 获取UV偏移
+// UVオフセットを取得
 DirectX::XMFLOAT2 Animation::GetUVOffset() const
 {
     return m_uvOffset;
 }
 
-// 重置当前动画
+// 現在のアニメーションをリセット
 void Animation::Reset()
 {
     if (m_currentClip)
@@ -86,7 +86,7 @@ void Animation::Reset()
     }
 }
 
-// 紒E槭欠窠崾丒
+// 現在のアニメーションが終了したかを確認
 bool Animation::IsFinished() const
 {
     if (m_currentClip)
@@ -96,7 +96,7 @@ bool Animation::IsFinished() const
     return true;
 }
 
-// 获取当前帧
+// 現在のフレームを取得
 int Animation::GetCurrentFrame() const
 {
     if (m_currentClip)
@@ -106,7 +106,7 @@ int Animation::GetCurrentFrame() const
     return 0;
 }
 
-// 暂停/恢复
+// アニメーションを一時停止
 void Animation::Pause()
 {
     m_paused = true;
@@ -122,7 +122,7 @@ bool Animation::IsPaused() const
     return m_paused;
 }
 
-// 获取分耕炫息
+// 分割情報を取得
 int Animation::GetSplitX() const
 {
     if (m_currentClip)
@@ -141,19 +141,19 @@ int Animation::GetSplitY() const
     return 1;
 }
 
-// 紒E槎欠翊嬖?
+// 指定したクリップが存在するかを確認
 bool Animation::HasClip(const std::string& name) const
 {
     return m_clips.find(name) != m_clips.end();
 }
 
-// 获取动画片段数量
+// アニメーションクリップ数を取得
 size_t Animation::GetClipCount() const
 {
     return m_clips.size();
 }
 
-// 清空所有动画
+// すべてのアニメーションをクリア
 void Animation::ClearClips()
 {
     m_clips.clear();

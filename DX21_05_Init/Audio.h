@@ -14,7 +14,7 @@ namespace Audio
 	void ResumeBGM();
 	void PlaySE(const std::string& filePath, float volume01 = 1.0f);
 
-	void PreloadSE(const std::string& filePath); // use this we we make sure the SE will play instantly and there will not be any delay
+	void PreloadSE(const std::string& filePath); // SE を事前に読み込み、再生遅延を防ぐ
 
 	std::string GetCurrentBGMPath();
 	bool IsBGMPlaying();

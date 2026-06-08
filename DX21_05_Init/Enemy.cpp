@@ -4,17 +4,17 @@
 #include "Map.h"
 #include "Projectile.h"
 
-// 初始化伤害数字管理器
+// ダメージ数字マネージャーを初期化する
 std::vector<DamageNumber> DamageNumberManager::damageNumbers;
 
-// 定义敌人纹理
+// 敵テクスチャを定義する
 ID3D11ShaderResourceView* g_enemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_enemyDeathTexture = nullptr;
 
 ID3D11ShaderResourceView* g_blindEyeEnemyIdleTexture = nullptr;
 
-ID3D11ShaderResourceView* g_flyEnemyIdleTexture = nullptr;  // 改为飞行敌人纹理
-ID3D11ShaderResourceView* g_flyEnemyDeathTexture = nullptr;  // 改为飞行敌人死亡纹理
+ID3D11ShaderResourceView* g_flyEnemyIdleTexture = nullptr;  // 飛行敵テクスチャ
+ID3D11ShaderResourceView* g_flyEnemyDeathTexture = nullptr;  // 飛行敵の死亡テクスチャ
 
 ID3D11ShaderResourceView* g_mageEnemyIdleTexture = nullptr;
 ID3D11ShaderResourceView* g_mageEnemyAttackTexture = nullptr;
@@ -37,7 +37,7 @@ ID3D11ShaderResourceView* g_beamEnemyPreDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_beamEnemyDeathTexture = nullptr;
 ID3D11ShaderResourceView* g_beamEnemyPostDeathTexture = nullptr;
 
-// Boss textures are defined in `Globals.cpp`.
+// ボステクスチャは `Globals.cpp` で定義されている。
 
 namespace {
     struct ThrownEnemyState {
@@ -119,7 +119,7 @@ namespace {
 
             e->SetPosition(posX, landed ? newY : posY);
 
-            // Simple facing based on horizontal velocity
+            // 水平方向速度に基づく簡易向き更新
             if (fabs(s.vx) > 0.001f) {
                 e->SetFacingRight(s.vx > 0.0f);
             }
@@ -138,30 +138,30 @@ namespace {
     }
 }
 
-// 修改InitEnemies函数，加载所有纹理
+// InitEnemies 関数: 全テクスチャを読み込む
 void InitEnemies() {
-    // 加载敌人纹理
-    // 普通敌人
+    // 敵テクスチャを読み込む
+    // 通常敵
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_idle.png", &g_enemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/enemy_001_eye_death.png", &g_enemyDeathTexture);
 
-    // 盲眼普通敌人（idle/普通动画共用同一张图；死亡复用普通敌人死亡）
+    // 盲目通常敵（idle と通常アニメは同一画像、死亡は通常敵の死亡を流用）
     LoadTexture(g_pDevice, "asset/enemy/enemy_001_eye/blind_eye.png", &g_blindEyeEnemyIdleTexture);
 
-    // 飞行敌人
+    // 飛行敵
     LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_right.png", &g_flyEnemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_004_wing/enemy_004_wing_death.png", &g_flyEnemyDeathTexture);
 
-    // 法师敌人
+    // 魔法使い敵
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_idle.png", &g_mageEnemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_attack.png", &g_mageEnemyAttackTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_003_fort/enemy_003_fort_death.png", &g_mageEnemyDeathTexture);
 
-    // 快速敌人
+    // 高速敵
     LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant/enemy_002_ant_right.png", &g_fastEnemyRunTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_002_ant/enemy_002_ant_death.png", &g_fastEnemyDeathTexture);
 
-    // 炸弹敌人
+    // 爆弾敵
     LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_idle.png", &g_bombEnemyIdleTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_005_thorn/enemy_005_thorn_death.png", &g_bombEnemyDeathTexture);
 
@@ -178,14 +178,14 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack.png", &g_beamEnemyDeathTexture);
     LoadTexture(g_pDevice, "asset/enemy/enemy_007_beam/enemy_007_beam_death_attack_after.png", &g_beamEnemyPostDeathTexture);
 
-    // Boss 敌人纹理（请替换为你自己的资源路径）
+    // ボス敵テクスチャ（必要に応じて自分のリソースパスへ差し替える）
     LoadTexture(g_pDevice, "asset/boss/boss_idle.png", &g_bossIdleTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_attack.png", &g_bossAttackTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_death.png", &g_bossDeathTexture);
-    // Load boss charge textures (provide correct file paths for your images)
+    // ボスのチャージ用テクスチャを読み込む（各画像の正しいパスを指定する）
     LoadTexture(g_pDevice, "asset/boss/boss_charge_stage1.png", &g_bossChargeStage1Texture);
     LoadTexture(g_pDevice, "asset/boss/boss_charge_stage2.png", &g_bossChargeStage2Texture);
-    // Load boss dash (2 frames) sprite
+    // ボスのダッシュ用スプライト（2 フレーム）を読み込む
     LoadTexture(g_pDevice, "asset/boss/boss_dash.png", &g_bossDashTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_dash_over.png", &g_bossDashOverTexture);
     LoadTexture(g_pDevice, "asset/boss/boss_slash_prep.png", &g_bossSlashPrepTexture);
@@ -196,10 +196,10 @@ void InitEnemies() {
     LoadTexture(g_pDevice, "asset/boss_final/boss_idle.png", &g_finalbossIdleTexture);
     LoadTexture(g_pDevice, "asset/boss_final/boss_attack.png", &g_finalbossAttackTexture);
     LoadTexture(g_pDevice, "asset/boss_final/boss_death.png", &g_finalbossDeathTexture);
-    // Load boss charge textures (provide correct file paths for your images)
+    // 最終ボスのチャージ用テクスチャを読み込む（各画像の正しいパスを指定する）
     LoadTexture(g_pDevice, "asset/boss_final/boss_charge_stage1.png", &g_finalbossChargeStage1Texture);
     LoadTexture(g_pDevice, "asset/boss_final/boss_charge_stage2.png", &g_finalbossChargeStage2Texture);
-    // Load boss dash (2 frames) sprite
+    // 最終ボスのダッシュ用スプライト（2 フレーム）を読み込む
     LoadTexture(g_pDevice, "asset/boss_final/boss_dash.png", &g_finalbossDashTexture);
     LoadTexture(g_pDevice, "asset/boss_final/boss_dash_over.png", &g_finalbossDashOverTexture);
     LoadTexture(g_pDevice, "asset/boss_final/boss_slash_prep.png", &g_finalbossSlashPrepTexture);
@@ -211,26 +211,26 @@ void InitEnemies() {
 // ========== BlindEyeEnemy ==========
 BlindEyeEnemy::BlindEyeEnemy(float x, float y)
     : Enemy(x, y, 10.0f) {
-    // 盲眼敌人不追人，巡逻逻辑自己处理转向，不需要朝向冷却
+    // 盲目敵は追跡しない。巡回処理内で自前で向きを変えるため、向き変更クールダウンは不要。
     useTurnCooldown = false;  
 detectionRange = 0.0f;
     loseSightRange = 0.0f;
 
     anim.ClearClips();
-    // idle/普通：使用同一张图（单帧/单格）
+    // idle / 通常: 同じ画像を使う（単フレーム / 単セル）
     anim.AddClip("idle", 0, 0, 1, 1, 0.1f, true, g_blindEyeEnemyIdleTexture);
-    // 死亡动画：复用普通敌人死亡
+    // 死亡アニメ: 通常敵の死亡を流用する
     anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_enemyDeathTexture);
     anim.SetClip("idle");
 
-    // initial weakpoint: front takes double damage
+    // 初期弱点: 正面からは 2 倍ダメージ
     SetDamageMultiplier(DIR_FRONT, 2.0f);
 
-    // 轻微慢一点，符合“普通”巡逻敌人
+    // 少し遅めにして「普通の巡回敵」らしくする
     moveSpeed = MOVE_SPEED * 0.55f;
     patrolDirection = 1.0f;
 
-    // Make a clear weakpoint (one-hit kill) for testing: hit from above
+    // テスト用に明確な弱点を用意する（上から当てると一撃）
     SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
@@ -239,7 +239,7 @@ void BlindEyeEnemy::Update(float deltaTime, MapManager* mapManager) {
 }
 
 void BlindEyeEnemy::ChaseBehavior(float deltaTime) {
-    // 不追逐
+    // 追跡しない
     currentState = PATROL;
 }
 
@@ -248,7 +248,7 @@ bool BlindEyeEnemy::IsGroundAhead(MapManager* mapManager, float directionSign) c
         return true;
     }
 
-    // 在脚下前方做一个小探测点，判断是否还有地面
+    // 足元の少し前方に小さな探査点を置き、地面が続いているか確認する
     const float aheadX = posX + (directionSign > 0.0f ? width : 0.0f) + directionSign * 0.02f;
     const float probeY = posY - 0.02f;
     const float probeW = 0.02f;
@@ -280,16 +280,16 @@ bool BlindEyeEnemy::IsGroundAhead(MapManager* mapManager, float directionSign) c
 void BlindEyeEnemy::PatrolBehavior(float deltaTime) {
     if (!isAlive || isDying) return;
 
-    // 盲眼敌人只巡逻：遇墙或悬崖掉头
+    // 盲目敵は巡回のみ: 壁か崖に当たったら反転する
     MapManager* mapManager = &g_mapManager;
     const float dir = patrolDirection;
 
-    // 1) 前方是否还有地面（悬崖检测）
+    // 1) 前方に地面があるか（崖判定）
     if (!IsGroundAhead(mapManager, dir)) {
         patrolDirection = -patrolDirection;
     }
     else {
-        // 2) 墙壁检测：在预测位置放一个小偏移，若会撞墙则掉头
+        // 2) 壁判定: 予測位置に少しオフセットを置き、壁に当たるなら反転する
         float nextX = posX + dir * moveSpeed * 0.5f * deltaTime * 60.0f;
         if (CheckCollisionWithTilesAt(nextX, posY, mapManager)) {
             patrolDirection = -patrolDirection;
@@ -303,7 +303,7 @@ void BlindEyeEnemy::PatrolBehavior(float deltaTime) {
 // ========== ThrowerEnemy ==========
 ThrowerEnemy::ThrowerEnemy(float x, float y)
     : Enemy(x, y, 40.0f) {
-    // Reuse mage/"projectile" enemy texture as requested.
+    // 要望どおり、魔法使い / projectile 敵のテクスチャを再利用する。
     anim.ClearClips();
     anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_mageEnemyIdleTexture);
     anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_mageEnemyDeathTexture);
@@ -315,10 +315,10 @@ ThrowerEnemy::ThrowerEnemy(float x, float y)
     throwCooldown = 2.5f;
     currentThrowCooldown = 0.75f;
     throwRange = 7.0f;
-    // Larger flight time => slower projectile speed while keeping the same ballistic arc formula
+    // 飛行時間を長くして、同じ放物線式のまま投擲速度を遅くする
     throwFlyTime = 0.9f;
 
-    // One-hit weakpoint (top attack)
+    // 一撃弱点（上からの攻撃）
     SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
@@ -340,15 +340,15 @@ void ThrowerEnemy::TryThrow(MapManager* mapManager) {
     float dist = sqrtf(dx * dx + dy * dy);
     if (dist > throwRange) return;
 
-    // Spawn a base enemy at thrower's position and launch it.
+    // 投擲者の位置に基本敵を生成し、投げ飛ばす。
     Enemy* thrown = new Enemy(posX, posY, 10.0f);
     g_enemies.push_back(thrown);
 
     float T = std::max(0.25f, throwFlyTime);
     float g = GRAVITY;
 
-    // Convert to game units per second such that Update (vel * dt * 60)
-    // => one-second displacement is vel * 60.
+    // Update（vel * dt * 60）に合わせて、ゲーム単位 / 秒へ変換する
+    // => 1 秒あたりの移動量は vel * 60 になる。
     float vx = dx / (T * 60.0f);
     float vy = (dy - 0.5f * g * (T * 60.0f) * (T * 60.0f)) / (T * 60.0f);
 
@@ -372,7 +372,7 @@ void ThrowerEnemy::ChaseBehavior(float deltaTime) {
     float dx = g_player.posX - posX;
     facingRight = (dx >= 0.0f);
 
-    // Keep some distance; do not chase too aggressively.
+    // 距離を少し保ち、強く追い過ぎないようにする。
     if (fabs(dx) > 1.5f) {
         velocityX = (dx > 0 ? 1.0f : -1.0f) * moveSpeed;
     }
@@ -389,23 +389,23 @@ void ThrowerEnemy::Update(float deltaTime, MapManager* mapManager) {
 
     currentThrowCooldown -= deltaTime;
 
-    // Update thrown enemies first so they can land this frame.
+    // 投げた敵を先に更新し、このフレーム内で着地できるようにする。
     UpdateThrownEnemies(deltaTime, mapManager);
 
     Enemy::Update(deltaTime, mapManager);
 
-    // Throw after movement logic so aiming uses current position.
+    // 移動処理の後で投げることで、照準に現在位置を使えるようにする。
     if (currentState == CHASE) {
         TryThrow(mapManager);
     }
 }
 
-// Enemy类实现
+// Enemy クラス実装
 Enemy::Enemy(float x, float y, float hp)
     : posX(x), posY(y), health(hp), maxHealth(hp), isAlive(true),
     currentState(PATROL), patrolMinX(-1.0f), patrolMaxX(1.0f), weakSpotDeath(false), attackRange(0.0f) {
 
-    // 普通敌人的碰撞盒不要比贴图大一圈：缩小并保持中心点不变
+    // 通常敵の当たり判定がスプライトより大きくなり過ぎないよう、縮小して中心を維持する
     const float oldWidth = PLAYER_WIDTH * 1.2f;
     const float oldHeight = PLAYER_HEIGHT * 1.2f;
     width = PLAYER_WIDTH * 1.0f;
@@ -414,17 +414,17 @@ Enemy::Enemy(float x, float y, float hp)
     posY += (oldHeight - height) * 0.5f;
     moveSpeed = MOVE_SPEED * 0.65f;
 
-    // 为基类敌人添加默认动画剪辑
+    // 基底 Enemy 用の既定アニメーションクリップを追加する
     anim.AddClip("idle", 0, 1, 1, 1, 0.1f, true, g_enemyIdleTexture);
     anim.AddClip("death", 0, 4, 1, 5, 0.06f, false, g_enemyDeathTexture);
 
     anim.SetClip("idle");
 
-    facingRight = true;  // 默认面向右边
+    facingRight = true;  // 初期状態では右向き
     velocityX = 0.0f;
     velocityY = 0.0f;
 
-    // 设置基础的8方向伤害倍率
+    // 基本となる 8 方向ダメージ倍率を設定する
     SetDamageMultiplier(DIR_FRONT, 1.0f);
     SetDamageMultiplier(DIR_FRONT_UP, 1.0f);
     SetDamageMultiplier(DIR_UP, 1.0f);
@@ -434,19 +434,19 @@ Enemy::Enemy(float x, float y, float hp)
     SetDamageMultiplier(DIR_DOWN, 1.0f);
     SetDamageMultiplier(DIR_FRONT_DOWN, 1.0f);
 
-    // 初始化AI参数
+    // AI パラメータを初期化する
     patrolDirection = 1.0f;
     patrolTimer = 0.0f;
-    detectionRange = 3.0f;  // 检测范围
-    loseSightRange = 8.0f;  // 丢失视野范围
+    detectionRange = 3.0f;  // 検知範囲
+    loseSightRange = 8.0f;  // 見失う範囲
 
-    // base/normal enemy uses turn cooldown by default
+    // 基本 / 通常敵は既定で向き変更クールダウンを使う
     useTurnCooldown = true;
 }
 
 void Enemy::SetDamageMultiplier(Direction dir, float multiplier) {
     if (dir >= DIR_FRONT && dir <= DIR_FRONT_DOWN) {
-        // Enforce a minimum damage multiplier of 1.0f so enemies never take reduced damage
+        // ダメージ倍率の下限を 1.0f にして、敵が減衰ダメージを受けないようにする
         if (multiplier < 1.0f) multiplier = 1.0f;
         damageMultipliers[static_cast<int>(dir)] = multiplier;
     }
@@ -458,29 +458,29 @@ float Enemy::GetDamageMultiplier(float attackAngle) {
     return damageMultipliers[directionIndex];
 }
 
-// 计算相对角度（基于敌人面向方向）
+// 相対角度を計算する（敵の向き基準）
 float Enemy::GetRelativeAngle(float attackAngle) const {
-    // 面向右时，0度为正面；面向左时，180度为正面
+    // 右向きなら 0 度が正面、左向きなら 180 度が正面
     float enemyFrontAngle = facingRight ? 0.0f : 3.14159f;
     float relativeAngle = attackAngle - enemyFrontAngle;
 
-    // 标准化到[-π, π]
+    // [-π, π] に正規化する
     while (relativeAngle > 3.14159f) relativeAngle -= 2 * 3.14159f;
     while (relativeAngle < -3.14159f) relativeAngle += 2 * 3.14159f;
 
     return relativeAngle;
 }
 
-// 转换角度到方向索引（8方向）
+// 角度を方向インデックスへ変換する（8 方向）
 int Enemy::AngleToDirectionIndex(float relativeAngle) {
-    // 标准化相对角度到[0, 2π]
+    // 相対角度を [0, 2π] に正規化する
     float angle = relativeAngle;
     if (angle < 0) angle += 2 * 3.14159f;
 
-    // 8个方向，每个45度
+    // 8 方向で各 45 度
     float sector = 3.14159f / 4.0f;
 
-    // 计算方向索引
+    // 方向インデックスを計算する
     int index = static_cast<int>((angle + sector / 2) / sector) % 8;
     return index;
 }
@@ -491,13 +491,13 @@ float Enemy::NormalizeAngle(float angle) {
     return angle;
 }
 
-// 根据攻击角度计算伤害
+// 攻撃角度からダメージを計算する
 int Enemy::CalculateDamageFromPlayer(int baseDamage, float playerDashAngle) {
     float multiplier = GetDamageMultiplier(playerDashAngle);
     return (int)(baseDamage * multiplier);
 }
 
-// 在TakeDamage方法中使用DamageNumberManager
+// TakeDamage 内で DamageNumberManager を使用する
 void Enemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
@@ -506,26 +506,26 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // 使用独立的伤害数字管理器
+    // 独立したダメージ数字マネージャーを使う
     bool isCritical = (multiplier > 1.5f);
     DamageNumberManager::AddDamageNumber(
-        posX + width * 0.5f,  // 敌人中心X
-        posY + height,        // 敌人顶部
+        posX + width * 0.5f,  // 敵の中心 X
+        posY + height,        // 敵の上端
         actualDamage,
         isCritical
     );
 
-    // Always spawn hit effect on any successful hit.
-    // Use a stable hit anchor (same convention as damage numbers): X=center, Y=top.
-    // Slightly offset down so the flash appears on the body rather than above the head.
+    // 命中が成功したら必ずヒットエフェクトを出す。
+    // 安定したヒット基準点を使う（ダメージ数字と同じで X=中心、Y=上端）。
+    // 頭上ではなく胴体に見えるよう少し下へずらす。
     SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.85f);
 
     if (isCritical) {
-        // Slightly stronger shake on weak-point/critical hit
+        // 弱点 / クリティカル命中時は少し強めに揺らす
         g_camera.Shake(0.08f, 0.6f);
     }
     else {
-        // Subtle shake on normal hit
+        // 通常ヒットでは控えめに揺らす
         g_camera.Shake(0.05f, 0.5f);
     }
 
@@ -541,7 +541,7 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
         /*if (multiplier >= 2.0f) {
             weakSpotDeath = true;
         }*/
-        if (multiplier > 1.5f) {  // CHANGED FROM >= 2.0f to > 1.5f
+        if (multiplier > 1.5f) {  // >= 2.0f から > 1.5f に変更
             weakSpotDeath = true;
         }
         OnDeath();
@@ -550,18 +550,18 @@ void Enemy::TakeDamage(int damage, float attackAngle) {
 }
 
 void Enemy::OnHit(int damage) {
-    // 基础敌人被击中时没有特殊行为
+    // 基本敵は被弾時に特別な処理を行わない
 }
 
 void Enemy::OnDeath() {
-    if (isDying) return;  // 避免重复触发
+    if (isDying) return;  // 重複発火を防ぐ
 
     isAlive = false;
     isDying = true;
-    // 确保切换到死亡动画
+    // 死亡アニメへ確実に切り替える
     anim.SetClip("death");
 
-    // 重置动画到第一帧
+    // アニメを先頭フレームへ戻す
     anim.Reset();
 	Audio::PlaySE(SoundEffect::ENEMY_DEATH);
 
@@ -570,7 +570,7 @@ void Enemy::OnDeath() {
     //g_player.comboTimer = 5.0f; // it resets the timer
 
     OnEnemyDefeated(weakSpotDeath, posX + width * 0.5f, posY + height * 0.5f);
-    //erase later
+    // 後で削除
     char debugMsg[256];
     sprintf_s(debugMsg, "Total Enemy Points: %d\n", g_gameStats.GetTotalEnemyPoints());
     OutputDebugStringA(debugMsg);
@@ -585,7 +585,7 @@ void Enemy::OnDeath() {
 
     //OnEnemyDefeated();
     g_gameStats.UpdateMaxCombo(g_player.comboCount);
-    //eraee later
+    // 後で削除
     
     sprintf_s(debugMsg, "=== ENEMY KILLED ===\n");
     OutputDebugStringA(debugMsg);
@@ -600,24 +600,24 @@ void Enemy::OnDeath() {
 }
 
 void Enemy::Update(float deltaTime, MapManager* mapManager) {
-    // 优先处理死亡状态
+    // 死亡状態を優先して処理する
     if (isDying) {
-        anim.Update(deltaTime);  // 确保死亡动画得到更新
+        anim.Update(deltaTime);  // 死亡アニメを確実に更新する
 
-        // 检查动画是否播放完毕
+        // アニメの再生終了を確認する
         if (anim.IsFinished()) {
             markedForDeletion = true;
         }
-        return;  // 死亡动画期间不执行其他逻辑
+        return;  // 死亡アニメ中は他の処理を行わない
     }
 
     if (!isAlive) {
-        // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+        // すでに死亡していて死亡アニメが未開始なら開始する
         OnDeath();
         return;
     }
 
-    // 可见性检测和优化逻辑
+    // 可視性判定と最適化処理
     bool isCurrentlyVisible = IsVisible(g_camera);
 
     if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
@@ -642,7 +642,7 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
 
     anim.Update(deltaTime);
 
-    // 受击状态处理
+    // 被弾状態の処理
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -650,35 +650,35 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // 应用重力
+    // 重力を適用する
     velocityY += GRAVITY * deltaTime * 60.0f;
 
-    // 保存旧位置用于碰撞检测
+    // 衝突判定用に前フレーム位置を保存する
     float oldX = posX;
     float oldY = posY;
 
-    // 水平移动
+    // 水平移動
     posX += velocityX * deltaTime * 60.0f;
     if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
         posX = oldX;
         velocityX = 0.0f;
     }
 
-    // 垂直移动
+    // 垂直移動
     posY += velocityY * deltaTime * 60.0f;
     if (CheckVerticalCollision(mapManager, oldX, oldY)) {
         posY = oldY;
         velocityY = 0.0f;
     }
 
-    // 边界检查
+    // 境界チェック
     if (posY < -5.0f) {
         isAlive = false;
-        OnDeath();  // 触发死亡动画
+        OnDeath();  // 死亡アニメを開始する
         return;
     }
 
-    // AI更新
+    // AI を更新する
     UpdateAI(deltaTime);
 
     if (!isCurrentlyVisible) {
@@ -689,34 +689,34 @@ void Enemy::Update(float deltaTime, MapManager* mapManager) {
     }
 }
 
-// 简化更新（对需要更新的屏幕外敌人）
+// 簡易更新（更新が必要な画面外の敵向け）
 void Enemy::UpdateMinimal(float deltaTime) {
-    // 简化的AI更新（只处理状态转换，不进行路径计算等）
+    // 簡易 AI 更新（状態遷移のみ処理し、経路計算などは行わない）
     UpdateAIMinimal(deltaTime);
 
-    // 更新离屏计时器
+    // 画面外タイマーを更新する
     offScreenTimer += deltaTime;
 }
 
-// 简化的AI更新
+// 簡易 AI 更新
 void Enemy::UpdateAIMinimal(float deltaTime) {
-    // 只处理基本状态维护，不进行复杂计算
+    // 基本的な状態維持のみ行い、複雑な計算はしない
     float dx = g_player.posX - posX;
 
-    // 更新面向方向
+    // 向きを更新する
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // 简化状态机：只处理超时或关键状态转换
+    // 簡易ステートマシン: タイムアウトや重要な状態遷移のみ処理する
     static float stateTimer = 0.0f;
     stateTimer += deltaTime;
 
-    // 每5秒检查一次状态转换（减少频率）
+    // 5 秒ごとに状態遷移を確認する（頻度を下げる）
     if (stateTimer >= 5.0f) {
         float distance = fabs(dx);
 
-        // 简化状态转换逻辑
+        // 状態遷移ロジックを簡略化する
         switch (currentState) {
         case PATROL:
             if (distance < detectionRange) currentState = CHASE;
@@ -740,7 +740,7 @@ void Enemy::UpdateAI(float deltaTime) {
         if (turnCooldownTimer < 0.0f) turnCooldownTimer = 0.0f;
     }
 
-    // 更新面向方向（普通敌人受冷却限制；其他敌人保持原本“立即转向”）
+    // 向きを更新する（通常敵はクールダウン制限あり。他は即時反転）
     if (dx != 0) {
         bool desiredFacingRight = (dx > 0);
         if (useTurnCooldown) {
@@ -754,7 +754,7 @@ void Enemy::UpdateAI(float deltaTime) {
         }
     }
 
-    // 状态机逻辑
+    // ステートマシン処理
     switch (currentState) {
     case PATROL:
         PatrolBehavior(deltaTime);
@@ -774,20 +774,20 @@ void Enemy::UpdateAI(float deltaTime) {
 void Enemy::PatrolBehavior(float deltaTime) {
     patrolTimer += deltaTime;
 
-    // 每2秒检查一次是否需要改变方向
+    // 2 秒ごとに向きを変える必要があるか確認する
     if (patrolTimer >= 2.0f) {
         if (posX <= patrolMinX) {
-            patrolDirection = 1.0f;  // 向右走
+            patrolDirection = 1.0f;  // 右へ進む
         }
         else if (posX >= patrolMaxX) {
-            patrolDirection = -1.0f;  // 向左走
+            patrolDirection = -1.0f;  // 左へ進む
         }
         patrolTimer = 0.0f;
     }
 
     velocityX = patrolDirection * moveSpeed * 0.5f;
 
-    // 添加小的垂直速度变化避免完全静止
+    // 完全停止を避けるため小さな垂直速度を加える
     if (velocityY == 0) {
         velocityY = 0.01f;
     }
@@ -795,27 +795,27 @@ void Enemy::PatrolBehavior(float deltaTime) {
 
 void Enemy::ChaseBehavior(float deltaTime) {
     float dx = g_player.posX - posX;
-    float dy = g_player.posY - posY;  // 添加垂直方向计算
-    float distance = sqrt(dx * dx + dy * dy);  // 使用实际距离
+    float dy = g_player.posY - posY;  // 垂直方向も含めて計算する
+    float distance = sqrt(dx * dx + dy * dy);  // 実際の距離を使う
 
-    // 只有远程敌人才在攻击范围内停止移动
+    // 遠距離敵だけが攻撃範囲内で停止する
     if (attackRange > 0 && distance <= attackRange) {
-        // 远程敌人在攻击范围内停止移动
+        // 遠距離敵は攻撃範囲内で停止する
         velocityX = 0;
     }
     else {
-        // 普通敌人：一直按自己当前面向方向移动（不再根据玩家位置改变移动方向）
+        // 通常敵: 現在の向きのまま移動する（プレイヤー位置で移動方向は変えない）
         velocityX = (facingRight ? 1.0f : -1.0f) * moveSpeed;
     }
 }
 
 void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, float& screenY, const Camera& camera) {
-    // 获取相机位置（相机中心坐标）
+    // カメラ位置（カメラ中心座標）を取得する
     float cameraX = camera.GetX();
     float cameraY = camera.GetY();
 
-    // 将世界坐标转换为屏幕坐标（相对坐标）
-    // 假设渲染系统使用屏幕中心作为原点(0,0)
+    // ワールド座標をスクリーン座標（相対座標）へ変換する
+    // レンダリングシステムは画面中心を原点 (0,0) と仮定する
     screenX = worldX - cameraX;
     screenY = worldY - cameraY;
 }
@@ -823,26 +823,26 @@ void Enemy::WorldToScreenPosition(float worldX, float worldY, float& screenX, fl
 void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive && !isDying) return;
 
-    // Apply tint if set (default white)
+    // tint が設定されていれば適用する（既定は白）
     SetColor(tintR, tintG, tintB, 1.0f);
 
-    // 将世界坐标转换为屏幕坐标
+    // ワールド座標をスクリーン座標へ変換する
     float screenX, screenY;
     WorldToScreenPosition(posX, posY, screenX, screenY, camera);
 
-    // NOTE: health bar is rendered after the enemy so it appears on top
+    // 注: HP バーは敵の後で描画し、前面に見えるようにする
 
-    // 获取UV偏移用于精灵表动画
+    // スプライトシートアニメ用の UV オフセットを取得する
     DirectX::XMFLOAT2 uvOffset = anim.GetUVOffset();
 
-    // Apply scale to sprite size
+    // スケールをスプライトサイズへ反映する
     float renderWidth = width * scale;
     float renderHeight = height * scale;
-    // Center the bigger sprite on collision box
+    // 拡大したスプライトを当たり判定の中心に合わせる
     float offsetX = (renderWidth - width) * 0.5f;
     float offsetY = (renderHeight - height) * 0.5f;
 
-    // 渲染敌人精灵
+    // 敵スプライトを描画する
     RenderImage(
         screenX - offsetX,
         screenY - offsetY,
@@ -854,13 +854,13 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
         anim.GetSplitY(),
         false,             // enableCulling
         0.0f,              // rotation
-        !facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
+        !facingRight       // flipHorizontal: 座標系次第で !facingRight が適切か確認する
     );
 
     // Boss may use its own tint
     SetColor(tintR, tintG, tintB, 1.0f);
 
-    // 如果不是死亡状态，渲染血条（包括血量小于等于10的敌人）
+    // 死亡中でなければ HP バーを描画する（HP 10 以下の敵も含む）
     if (!isDying) {
         RenderHealthBar(camera);
     }
@@ -869,7 +869,7 @@ void Enemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
 void BossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) {
     if (!isAlive && !isDying) return;
 
-    // Apply per-enemy tint (allows BR variant to render red when SetTint was used)
+    // 敵ごとの tint を適用する（BR 派生を SetTint 時に赤く描画できる）
     SetColor(tintR, tintG, tintB, 1.0f);
 
     float screenX, screenY;
@@ -894,39 +894,39 @@ void BossEnemy::Render(ID3D11ShaderResourceView* texture, const Camera& camera) 
         facingRight
     );
 
-    // Restore draw color to white after rendering the boss
+    // ボス描画後に描画色を白へ戻す
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Boss uses the HUD-mounted health bar (rendered by GameplayScene).
-    // Do not render the above-head health bar for the boss to avoid duplicate UI.
+    // ボスは HUD 固定の HP バーを使う（GameplayScene 側で描画）。
+    // UI 重複を避けるため、頭上 HP バーは描画しない。
 }
 
 void Enemy::RenderHealthBar(const Camera& camera) {
-    // Follower-style health icons (using asset/UI/Health.png 1x3 spritesheet)
-    // Compute how many icons to show: one per 10 HP (ceil)
+    // follower 風の HP アイコン（asset/UI/Health.png の 1x3 シートを使用）
+    // 表示するアイコン数を計算する: HP 10 ごとに 1 個（切り上げ）
     int icons = std::max(0, (int)std::ceil(maxHealth / 10.0f));
     if (icons <= 0) return;
 
-    // Ensure healthFollowers vector has the right size
+    // healthFollowers ベクタのサイズを適正に保つ
     if ((int)healthFollowers.size() != icons) {
         healthFollowers.clear();
         healthFollowers.resize(icons);
     }
 
-    // World-to-screen base anchor: above enemy
+    // ワールド→スクリーン変換用の基準アンカー: 敵の上方
     float baseWorldX = posX + width * 0.5f;
     float baseWorldY = posY + height + 0.02f;
 
-    // Per-icon layout
-    // Keep icon size constant; only reduce spacing to fit within enemy width
-    const float iconW = width * 0.28f; // base icon size relative to enemy width
+    // アイコンごとのレイアウト
+    // アイコンサイズは固定し、敵幅に収めるため間隔だけを縮める
+    const float iconW = width * 0.28f; // 敵幅に対する基準アイコンサイズ
     const float iconH = iconW;
-    // Reduce default spacing significantly so indicators are closer together
-    float spacing = iconW * 0.12f; // much smaller spacing
-    const float minSpacing = width * 0.01f; // absolute minimum spacing
+    // 既定の間隔をかなり縮めて、インジケータ同士を近づける
+    float spacing = iconW * 0.12f; // かなり小さい間隔
+    const float minSpacing = width * 0.01f; // 絶対的な最小間隔
 
-    // Ensure the total indicator area does not exceed the enemy width
-    // leave a small margin so edges do not go beyond the enemy size
+    // インジケータ全体の幅が敵幅を超えないようにする
+    // 端がはみ出さないよう少し余白を残す
     const float margin = width * 0.05f;
     const float maxBarWidth = std::max(0.0f, width - margin * 2.0f);
     float totalWidth = icons * iconW + (icons - 1) * spacing;
@@ -941,28 +941,28 @@ void Enemy::RenderHealthBar(const Camera& camera) {
         totalWidth = icons * iconW + (icons - 1) * spacing;
     }
 
-    // Use real delta time for smoothing
+    // 補間には実際の delta time を使う
     const float dt = std::max(0.0f, g_gameTimer.GetDeltaTime());
 
     for (int i = 0; i < icons; ++i) {
         auto& hf = healthFollowers[i];
 
-        // target position stacked horizontally centered above the enemy
+        // 横並びで敵の真上中央に置く目標位置
         float totalWidth = icons * iconW + (icons - 1) * spacing;
         float startX = baseWorldX - totalWidth * 0.5f;
         float targetX = startX + i * (iconW + spacing);
         float targetY = baseWorldY;
 
-        // Directly snap follower to target position so health icons are fixed above the head
+        // follower を目標位置へ直接合わせ、頭上に固定表示する
         hf.x = targetX;
         hf.y = targetY;
         hf.init = true;
 
-        // Convert to screen coords
+        // スクリーン座標へ変換する
         float sx, sy;
         WorldToScreenPosition(hf.x, hf.y, sx, sy, camera);
 
-        // Determine visibility: each icon represents 10 HP (strict). Show icon i when health > i*10
+        // 表示可否を判定する: 各アイコンは厳密に HP 10 を表し、health > i*10 のとき表示する
         float threshold = i * 10.0f;
         bool visible = (health > threshold + 0.0001f);
 
@@ -979,16 +979,16 @@ void Enemy::RenderHealthBar(const Camera& camera) {
 }
 
 bool Enemy::CheckPlayerCollision() {
-    // Basic bounding box overlap
+    // 基本的な矩形重なり判定
     bool overlap = CheckCollision(posX, posY, width, height,
         g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT);
 
     if (!overlap) return false;
 
-    // If overlapping, only count as a damaging collision when either:
-    //  - this enemy type allows contact damage (CanDamageOnContact()) and
-    //    the player is not dashing (dashing is considered an attack), OR
-    //  - the enemy is currently executing an explicit attack (IsCurrentlyAttacking()).
+    // 重なっていても、ダメージ衝突とみなすのは次のどちらかの場合だけ:
+    //  - この敵種が接触ダメージを持ち（CanDamageOnContact()）、かつ
+    //    プレイヤーがダッシュ中でない場合（ダッシュは攻撃扱い）、または
+    //  - 敵が明示的な攻撃動作中である場合（IsCurrentlyAttacking()）。
     if (IsCurrentlyAttacking()) return true;
 
     if (CanDamageOnContact() && !g_player.isDashing) return true;
@@ -996,7 +996,7 @@ bool Enemy::CheckPlayerCollision() {
     return false;
 }
 
-// 检查与特定区域的碰撞
+// 特定領域との衝突を確認する
 bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) {
         return false;
@@ -1004,7 +1004,7 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
 
     SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
     if (!grid) {
-        // 回退到原始方法
+        // 元の方法へフォールバックする
         auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
         for (const auto& tile : solidTiles) {
             if (CheckCollision(checkX, checkY, GetWidth(), GetHeight(),
@@ -1015,7 +1015,7 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
         return false;
     }
 
-    // 使用空间网格优化
+    // 空間グリッドで最適化する
     std::vector<MapTile*> nearbyTiles;
     grid->GetTilesInArea(
         checkX - 0.5f,
@@ -1036,17 +1036,17 @@ bool Enemy::CheckCollisionWithTilesAt(float checkX, float checkY, MapManager* ma
     return false;
 }
 
-// 更新碰撞检测，使用空间网格优化
+// 衝突判定を更新し、空間グリッドで最適化する
 bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) {
         return false;
     }
 
-    // 缓存空间网格指针
+    // 空間グリッドへのポインタを保持する
     SpatialGrid* grid = mapManager->GetCurrentMap()->GetSpatialGrid();
-    // 使用空间网格优化
+    // 空間グリッドで最適化する
     std::vector<MapTile*> nearbyTiles;
-    float padding = 0.5f;  // 稍微扩展检测范围
+    float padding = 0.5f;  // 判定範囲を少し広げる
     grid->GetTilesInArea(
         posX - padding,
         posY - padding,
@@ -1065,7 +1065,7 @@ bool Enemy::CheckCollisionWithTiles(MapManager* mapManager) {
 }
 
 bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
-    // For hazard spikes, use a smaller collision box (one third), centered
+    // 危険トゲは中央寄せした小さめの当たり判定（1/3 サイズ）を使う
     if (tile.tileInfo.type == std::string("hazard")) {
         float shrinkFactor = 1.0f / 3.0f;
         float hw = tile.width * shrinkFactor;
@@ -1078,12 +1078,12 @@ bool Enemy::CheckCollisionWithTile(const MapTile& tile) {
         tile.posX, tile.posY, tile.width, tile.height);
 }
 
-// FlyEnemy实现 - 飞行敌人，不受重力影响
+// FlyEnemy 実装 - 飛行敵で、重力の影響を受けない
 FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
-    // 飞行敌人：空中单位
+    // 飛行敵: 空中ユニット
 	targetAltitude = y;
-    attackRange = 0.0f;  // 近战敌人
+    attackRange = 0.0f;  // 近接敵
     SetDamageMultiplier(DIR_FRONT, 0.8f);
     SetDamageMultiplier(DIR_FRONT_UP, 0.8f);
     SetDamageMultiplier(DIR_FRONT_DOWN, 0.8f);
@@ -1093,7 +1093,7 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     SetDamageMultiplier(DIR_UP, 1.2f);
     SetDamageMultiplier(DIR_DOWN, 1.2f);
 
-    // 添加动画剪辑
+    // アニメーションクリップを追加する
     anim.AddClip("idle", 0, 3, 1, 4, 0.15f, true, g_flyEnemyIdleTexture);
     anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_flyEnemyDeathTexture);
 
@@ -1101,17 +1101,17 @@ FlyEnemy::FlyEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     width = PLAYER_WIDTH * 1.5f;
     moveSpeed = MOVE_SPEED * 0.8f;
 
-    // 飞行敌人特定参数
-    patrolMinX = x - 2.0f;  // 扩大巡逻范围
+    // 飛行敵専用パラメータ
+    patrolMinX = x - 2.0f;  // 巡回範囲を広げる
     patrolMaxX = x + 2.0f;
-    detectionRange = 5.0f;  // 更远的探测距离
-    patrolAltitude = y;  // 巡逻高度
+    detectionRange = 5.0f;  // より広い検知距離
+    patrolAltitude = y;  // 巡回高度
     altitudeChangeTimer = 0.0f;
-    altitudeChangeRate = 0.05f;  // 高度变化速度
+    altitudeChangeRate = 0.05f;  // 高度変化速度
 
     scale = 3.0f;
 
-    // ensure there is a clear weak direction (back) for one-shot testing
+    // 一撃テスト用に、明確な弱点方向（背面）を用意する
     SetDamageMultiplier(DIR_BACK, 100.0f);
 }
 
@@ -1120,22 +1120,22 @@ void FlyEnemy::PatrolBehavior(float deltaTime) {
     patrolTimer += deltaTime;
     altitudeChangeTimer += deltaTime;
 
-    // 每2秒检查是否需要改变水平方向
+    // 2 秒ごとに水平方向変更が必要か確認する
     if (patrolTimer >= 2.0f) {
         if (posX <= patrolMinX) {
-            patrolDirection = 1.0f;  // 向右走
+            patrolDirection = 1.0f;  // 右へ進む
         }
         else if (posX >= patrolMaxX) {
-            patrolDirection = -1.0f;  // 向左走
+            patrolDirection = -1.0f;  // 左へ進む
         }
         patrolTimer = 0.0f;
     }
 
-    // 垂直漂浮效果
+    // 垂直方向の浮遊演出
     float altitudeVariation = sin(altitudeChangeTimer * 2.0f) * 0.1f;
     targetAltitude = patrolAltitude + altitudeVariation;
 
-    // 平滑移动到目标高度
+    // 目標高度へ滑らかに移動する
     if (fabs(posY - targetAltitude) > 0.01f) {
         if (posY < targetAltitude) {
             velocityY = altitudeChangeRate;
@@ -1148,7 +1148,7 @@ void FlyEnemy::PatrolBehavior(float deltaTime) {
         velocityY = 0.0f;
     }
 
-    velocityX = patrolDirection * moveSpeed * 0.3f;  // 巡逻时较慢
+    velocityX = patrolDirection * moveSpeed * 0.3f;  // 巡回中は遅め
 }
 
 
@@ -1157,38 +1157,38 @@ void FlyEnemy::ChaseBehavior(float deltaTime) {
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // 如果玩家在检测范围内，直接向玩家移动
+    // プレイヤーが検知範囲内なら直接向かう
     if (distance > 0.1f) {
-        // 归一化方向向量
+        // 方向ベクトルを正規化する
         dx /= distance;
         dy /= distance;
 
-        // 飞行敌人直接向玩家移动，无视地形
+        // 地形を無視して直接プレイヤーへ向かう
         velocityX = dx * moveSpeed;
         velocityY = dy * moveSpeed;
     }
     else {
-        // 接近时稍微减速
+        // 接近したら少し減速する
         velocityX *= 0.5f;
         velocityY *= 0.5f;
     }
 }
 
 void FlyEnemy::OnHit(int damage) {
-    // 飞行敌人被击中时会有短暂硬直
+    // 飛行敵は被弾時に短い硬直が入る
     velocityX *= 0.5f;
     velocityY = 0.0f;
 }
 
 void FlyEnemy::OnDeath() {
     Enemy::OnDeath();
-    // 飞行敌人死亡时可能会有特殊效果
+    // 飛行敵死亡時に特殊演出を入れられる
 }
 
-// MageEnemy实现
+// MageEnemy 実装
 MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
-    // 法师敌人：顶部和底部为弱点（一击必杀）
+    // 魔法使い敵: 上下が弱点（一撃必殺）
     SetDamageMultiplier(DIR_UP, 100.0f);
     SetDamageMultiplier(DIR_DOWN, 100.0f);
     SetDamageMultiplier(DIR_FRONT, 0.7f);
@@ -1196,30 +1196,30 @@ MageEnemy::MageEnemy(float x, float y) : Enemy(x, y, 10.0f) {
 
     spellCooldown = 3.0f;
     currentSpellCooldown = 0.0f;
-    detectionRange = 4.0f;  // 更远的探测距离
-    attackRange = 2.5f;  // 射弹攻击范围
+    detectionRange = 4.0f;  // より広い検知距離
+    attackRange = 2.5f;  // 射撃攻撃範囲
     moveSpeed = MOVE_SPEED * 0.4f;
 
-    // 添加动画剪辑
+    // アニメーションクリップを追加する
     anim.AddClip("idle", 0, 1, 1, 2, 0.2f, true, g_mageEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_mageEnemyDeathTexture); // 敵撃破時の死亡アニメ用
     anim.SetClip("idle");
 
 
-    // 射弹相关参数
+    // 射弾関連パラメータ
     projectileSpeed = 2.0f;
     lastAttackTime = 0.0f;
-    attackCooldown = 1.5f;  // 攻击冷却时间
+    attackCooldown = 1.5f;  // 攻撃クールダウン
     projectileDamage = 20.0f;
 
     scale = 3.0f;
 
-    // expose a weakpoint direction for one-shot testing
+    // 一撃テスト用に弱点方向を明示する
     SetDamageMultiplier(DIR_BACK, 100.0f);
 }
 
 void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
-    // 死亡动画期间不应再产生新射弹
+    // 死亡アニメ中は新しい射弾を生成しない
     if (isDying) {
         anim.Update(deltaTime);
         if (anim.IsFinished()) {
@@ -1230,15 +1230,15 @@ void MageEnemy::Update(float deltaTime, MapManager* mapManager) {
 
     Enemy::Update(deltaTime, mapManager);
 
-    // Enemy::Update 可能在死亡/离屏最小更新等情况下提前返回，
-    // 这里再兜底一次，确保不会在这些状态下继续发射射弹。
+    // Enemy::Update は死亡時や画面外の簡易更新時に早期 return する可能性があるため、
+    // ここでもう一度確認し、その状態で射弾が出ないことを保証する。
     if (!isAlive) {
         return;
     }
 
     lastAttackTime += deltaTime;
 
-    // 在追逐状态下发射射弹
+    // 追跡状態で射弾を発射する
     if (currentState == CHASE && lastAttackTime >= attackCooldown) {
         CastProjectile();
         lastAttackTime = 0.0f;
@@ -1249,25 +1249,25 @@ void MageEnemy::ChaseBehavior(float deltaTime) {
     float dx = g_player.posX - posX;
     float distance = fabs(dx);
 
-    // 法师在追逐时保持距离
+    // 魔法使いは追跡時に距離を保つ
     if (distance > attackRange) {
         if (dx > 0) {
-            velocityX = moveSpeed * 0.5f;  // 移动较慢
+            velocityX = moveSpeed * 0.5f;  // ゆっくり移動する
         }
         else {
             velocityX = -moveSpeed * 0.5f;
         }
     }
     else {
-        velocityX = 0;  // 在攻击距离内停止移动
+        velocityX = 0;  // 攻撃距離内では停止する
     }
 }
 
 void MageEnemy::CastProjectile() {
-    //如果死亡
+    // 死亡していたら
     if (!isAlive) return;
 
-    // Aim at player's center, and fire from enemy center (body)
+    // プレイヤー中心を狙い、敵の体中心から発射する
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
@@ -1276,34 +1276,34 @@ void MageEnemy::CastProjectile() {
     float distance = sqrt(dx * dx + dy * dy);
 
     if (distance > 0.1f) {
-        // 获取ProjectileManager实例
+        // ProjectileManager インスタンスを取得する
         ProjectileManager& projectileManager = ProjectileManager::GetInstance();
 
-        // 创建魔法射弹配置
+        // 魔法射弾の設定を作成する
         ProjectileEffect magicEffect;
         magicEffect.damage = projectileDamage;
         magicEffect.areaRadius = 0.2f;
         magicEffect.pierce = false;
 
-        // 计算射弹目标位置为玩家中心
+        // 射弾の目標位置をプレイヤー中心にする
         float targetX = playerCenterX;
         float targetY = playerCenterY;
 
-        // 发射魔法射弹：从敌人身体中心发射
+        // 魔法射弾を発射する: 敵の体中心から撃つ
         projectileManager.CreateBullet(
-            posX + width * 0.5f,  // 从身体中心发射
-            posY + height * 0.5f,  // 从敌人中心Y
+            posX + width * 0.5f,  // 体の中心から発射
+            posY + height * 0.5f,  // 敵中心の Y 座標
             targetX,
             targetY,
             false
         );
 
-        // 播放攻击动画
+        // 攻撃アニメを再生する
         //PlayAnimation("attack");
     }
 }
 
-// FastEnemy实现
+// FastEnemy 実装
 FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
     moveSpeed = MOVE_SPEED * 1.5f;
@@ -1312,18 +1312,18 @@ FastEnemy::FastEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     detectionRange = 4.0f;
     attackRange = 0.5f;
 
-    attackRange = 0.0f;  // 近战敌人
+    attackRange = 0.0f;  // 近接敵
     anim.AddClip("run", 0, 3, 1, 4, 0.05f, true, g_fastEnemyRunTexture);
     anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_fastEnemyDeathTexture);
     anim.SetClip("run");
 
     scale = 3.0f;
 
-    // one-hit weakpoint from above for testing
+    // テスト用に上方向からの一撃弱点を設定する
     SetDamageMultiplier(DIR_UP, 100.0f);
 }
 
-// 添加这个函数实现
+// この関数実装を追加する
 void FastEnemy::Update(float deltaTime, MapManager* mapManager) {
     Enemy::Update(deltaTime, mapManager);
 
@@ -1339,22 +1339,22 @@ void FastEnemy::Update(float deltaTime, MapManager* mapManager) {
 
 void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {  
     if (isDying) {
-        anim.Update(deltaTime);  // 确保死亡动画得到更新
+        anim.Update(deltaTime);  // 死亡アニメを確実に更新する
 
-        // 检查动画是否播放完毕
+        // アニメの再生終了を確認する
         if (anim.IsFinished()) {
             markedForDeletion = true;
         }
-        return;  // 死亡动画期间不执行其他逻辑
+        return;  // 死亡アニメ中は他の処理を行わない
     }
 
     if (!isAlive) {
-        // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+        // すでに死亡していて死亡アニメが未開始なら開始する
         OnDeath();
         return;
     }
 
-    // 可见性检测和优化逻辑
+    // 可視性判定と最適化処理
     bool isCurrentlyVisible = IsVisible(g_camera);
 
     if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
@@ -1379,7 +1379,7 @@ void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {
 
     anim.Update(deltaTime);
 
-    // 受击状态处理
+    // 被弾状態の処理
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -1387,16 +1387,16 @@ void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // AI更新
+    // AI を更新する
     UpdateAI(deltaTime);
 
-    // 应用水平移动
+    // 水平移動を適用する
     posX += velocityX * deltaTime * 60.0f;
 
-    // 飞行敌人的垂直移动（漂浮效果）
+    // 飛行敵の垂直移動（浮遊演出）
     posY += velocityY * deltaTime * 60.0f;
 
-    // 边界检查（防止飞出世界）
+    // 境界チェック（ワールド外へ飛び出すのを防ぐ）
     if (posY < -50.0f) {
         isAlive = false;
         return;
@@ -1413,9 +1413,9 @@ void FlyEnemy::Update(float deltaTime, MapManager* mapManager) {
 void FastEnemy::ChaseBehavior(float deltaTime) {
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
-    float distance = sqrt(dx * dx + dy * dy);  // 使用实际距离
+    float distance = sqrt(dx * dx + dy * dy);  // 実際の距離を使う
 
-    // 快速敌人一直向玩家移动
+    // 高速敵は常にプレイヤーへ向かう
     if (dx > 0) {
         velocityX = moveSpeed;
     }
@@ -1423,22 +1423,22 @@ void FastEnemy::ChaseBehavior(float deltaTime) {
         velocityX = -moveSpeed;
     }
 
-    // 冲刺攻击
-    if (currentDashCooldown <= 0 && distance < 2.0f) {  // 冲刺距离阈值
+    // ダッシュ攻撃
+    if (currentDashCooldown <= 0 && distance < 2.0f) {  // ダッシュ距離しきい値
         DashAttack();
         currentDashCooldown = dashCooldown;
     }
 }
 
 void FastEnemy::DashAttack() {
-    // 快速敌人向前冲刺
+    // 高速敵が前方へダッシュする
     velocityX = (g_player.posX > posX ? 1.0f : -1.0f) * moveSpeed * 2.5f;
 }
 
-// BombEnemy实现
+// BombEnemy 実装
 BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 30.0f) {
     useTurnCooldown = false;
-    // 炸弹敌人：顶部和底部为弱点（一击必杀），其他方向减少伤害
+    // 爆弾敵: 上下が弱点（一撃必殺）、他方向はダメージ軽減
     SetDamageMultiplier(DIR_UP, 100.0f);
     SetDamageMultiplier(DIR_DOWN, 100.0f);
     SetDamageMultiplier(DIR_FRONT, 0.7f);
@@ -1450,7 +1450,7 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 30.0f) {
 
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
-    moveSpeed = 0.0f;  // 不移动
+    moveSpeed = 0.0f;  // 移動しない
     detectionRange = 2.0f;
 
     anim.AddClip("idle", 0, 0, 1, 1, 0.3f, true, g_bombEnemyIdleTexture);
@@ -1466,44 +1466,44 @@ BombEnemy::BombEnemy(float x, float y) : Enemy(x, y, 30.0f) {
     scale = 3.0f;
 }
 
-// 覆盖TakeDamage函数，添加爆炸检测
+// TakeDamage をオーバーライドし、爆発判定を追加する
 void BombEnemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
 
-    // 获取伤害倍率
+    // ダメージ倍率を取得する
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // 使用独立的伤害数字管理器
+    // 独立したダメージ数字マネージャーを使う
     bool isCritical = (multiplier > 1.5f);
     DamageNumberManager::AddDamageNumber(
-        posX + width * 0.5f,  // 敌人中心X
-        posY + height,        // 敌人顶部
+        posX + width * 0.5f,  // 敵の中心 X
+        posY + height,        // 敵の上端
         actualDamage,
-        multiplier >= 10.0f  // 如果从顶部/底部方向，显示为暴击
+        multiplier >= 10.0f  // 上下方向からならクリティカル表示
     );
 
-    // 检查是否从顶部或底部攻击
+    // 上下からの攻撃かどうかを確認する
     float relativeAngle = GetRelativeAngle(attackAngle);
     int directionIndex = AngleToDirectionIndex(relativeAngle);
     bool isVerticalAttack = (directionIndex == DIR_UP || directionIndex == DIR_DOWN);
 
-    // 如果从顶部或底部攻击，立即死亡并触发爆炸
+    // 上下からの攻撃なら即死して爆発を発生させる
     if (multiplier >= 10.0f) {
-        health = 0;  // 立即死亡
-        // mark as weak-spot death so kill rewards & effects apply
+        health = 0;  // 即死させる
+        // 撃破報酬や演出が有効になるよう、弱点撃破として記録する
         weakSpotDeath = true;
         isAlive = false;
-        OnDeath();  // 触发爆炸
-        return;     // 直接返回，跳过后续逻辑
+        OnDeath();  // 爆発を発生させる
+        return;     // 後続処理を飛ばして終了する
     }
 
-    // 非致命/非垂直一击时，播放普通的击中反馈（特效与音效）
+    // 致命でも垂直ヒットでもない場合は通常の被弾演出を出す
     SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.85f);
     Audio::PlaySE(SoundEffect::ENEMY_HIT);
     g_camera.Shake(0.05f, 0.5f);
 
-    // 非垂直攻击，正常处理伤害
+    // 垂直以外の攻撃は通常どおりダメージ処理する
     health -= actualDamage;
     isHit = true;
     hitTimer = HIT_DURATION;
@@ -1516,23 +1516,23 @@ void BombEnemy::TakeDamage(int damage, float attackAngle) {
     }
 }
 
-void BombEnemy::Update(float deltaTime, MapManager* mapManager) {    // 优先处理死亡状态
+void BombEnemy::Update(float deltaTime, MapManager* mapManager) {    // 死亡状態を優先して処理する
     if (isDying) {
-        anim.Update(deltaTime);  // 确保死亡动画得到更新
+        anim.Update(deltaTime);  // 死亡アニメを確実に更新する
 
-        // 检查动画是否播放完毕
+        // アニメの再生終了を確認する
         if (anim.IsFinished()) {
             markedForDeletion = true;
         }
-        return;  // 死亡动画期间不执行其他逻辑
+        return;  // 死亡アニメ中は他の処理を行わない
     }
 
     if (!isAlive) {
-        // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+        // すでに死亡していて死亡アニメが未開始なら開始する
         OnDeath();
         return;
     }
-    // 调用基类的受击状态更新
+    // 基底クラスの被弾状態更新を呼ぶ
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -1540,30 +1540,30 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {    // 优先�
         }
     }
 
-    // 脉动效果
+    // 脈動エフェクト
     pulseTimer += deltaTime;
     float pulseEffect = sin(pulseTimer * 3.0f) * 0.1f;
     baseSize = 1.0f + pulseEffect;
 
-    // 简单AI：只检测玩家距离
+    // 簡単な AI: プレイヤー距離だけを見る
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // 更新面向方向
+    // 向きを更新する
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // 简单状态机
+    // 簡易ステートマシン
     if (distance < detectionRange) {
-        currentState = CHASE;  // 当玩家接近时进入追逐状态
+        currentState = CHASE;  // プレイヤー接近時は追跡状態へ入る
     }
     else {
-        currentState = PATROL;  // 否则保持巡逻状态（静止）
+        currentState = PATROL;  // それ以外は巡回状態（静止）を保つ
     }
 
-    // 死亡时触发爆炸
+    // 死亡時に爆発を発生させる
     if (health <= 0 && isAlive) {
         isAlive = false;
         OnDeath();
@@ -1571,45 +1571,45 @@ void BombEnemy::Update(float deltaTime, MapManager* mapManager) {    // 优先�
 }
 
 void BombEnemy::ChaseBehavior(float deltaTime) {
-    // 在追逐状态下，如果玩家在爆炸范围内，就自爆
+    // 追跡状態でプレイヤーが爆発範囲内なら自爆する
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
     if (distance < explosionRadius) {
-        OnDeath();  // 触发爆炸
+        OnDeath();  // 爆発を発生させる
     }
 }
 
 void BombEnemy::OnDeath() {
-    // 先调用基类的OnDeath
+    // 先に基底クラスの OnDeath を呼ぶ
     Explode();
     Enemy::OnDeath();
 }
 
 void BombEnemy::Explode() {
-    // 播放爆炸音效
+    // 爆発音を再生する
     // PlaySound("explosion.wav");
 
-    // 创建爆炸效果
+    // 爆発エフェクトを作成する
     // CreateExplosionEffect(posX, posY);
 
-    // 创建射弹向左右发射
+    // 左右へ射弾を発射する
     CreateProjectiles();
 }
 
-// so the enemy throw projectiles in 8 directions 
+// 敵が 8 方向へ射弾を投げるようにする
 void BombEnemy::CreateProjectiles() {
-    // Get ProjectileManager instance
+    // ProjectileManager インスタンスを取得する
     ProjectileManager& projectileManager = ProjectileManager::GetInstance();
 
-    float distance = 10.0f;  // How far to target
+    float distance = 10.0f;  // 目標までの距離
 
-    // Calculate center position of the enemy
+    // 敵の中心位置を計算する
     float centerX = posX + width * 0.5f;
-    float centerY = posY + height * 0.3f;  // 从敌人高度30%处发射（原来是0.5f，降低了20%）
+    float centerY = posY + height * 0.3f;  // 敵の高さ 30% 地点から発射する（元は 0.5f）
 
-    // for the 8 directions pattern
+    // 8 方向パターン用
     for (int i = 0; i < 8; i++) {
         float targetX = centerX + EIGHT_DIRECTIONS[i].x * distance;
         float targetY = centerY + EIGHT_DIRECTIONS[i].y * distance;
@@ -1619,7 +1619,7 @@ void BombEnemy::CreateProjectiles() {
             centerY,
             targetX,
             targetY,
-            true  // will not hurt the player
+            true  // プレイヤーへはダメージを与えない
         );
     }
 }
@@ -1631,8 +1631,8 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 150.0f)
     SetMaxHealth(150.0f); 
     SetHealth(150.0f);
 
-    // Boss: collision box and sprite are both 3x
-    // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
+    // ボスは当たり判定もスプライトも 3 倍サイズ
+    // Enemy(x,y,...) で基準サイズは設定済みなので、中心を保ったまま拡大する。
     const float oldW = width;
     const float oldH = height;
 
@@ -1645,43 +1645,43 @@ BossEnemy::BossEnemy(float x, float y) : Enemy(x, y, 150.0f)
     moveSpeed = MOVE_SPEED * 0.3f;
 
     anim.ClearClips();
-    // idle: 4列1行，按需调整
+    // idle: 4 列 1 行。必要に応じて調整する
     anim.AddClip("idle",   0, 3, 4, 1, 0.12f, true,  g_bossIdleTexture);
 
-	// dash: 2帧（按你的图），循环用于“重复播放4次”
+    // dash: 2 フレーム（画像に合わせる）。4 回繰り返し再生用
 	anim.AddClip("dash", 0, 1, 2, 1, 0.05f, true, g_bossDashTexture);
-	// dash over: 1x4，播放完回到下一段
+    // dash over: 1x4。再生後に次段階へ戻る
 	anim.AddClip("dash_over", 0, 3, 4, 1, 0.06f, false, g_bossDashOverTexture);
 
-    // 充能/蓄力（保持原有）
+    // チャージ / 溜め（従来仕様を維持）
     anim.AddClip("charge_stage1", 0, 3, 4, 1, 0.10f, true, g_bossChargeStage1Texture);
     anim.AddClip("charge_stage2", 0, 2, 3, 1, 0.06f, false, g_bossChargeStage2Texture);
 
-    // 新增：slash 准备与激活，来自你提供的两张图
-    // 图片5：4帧，从右到左播放 => start=3, end=0, splitX=4, splitY=1
+    // 追加: slash の準備と発動。提供された 2 枚の画像を使う
+    // 画像 5: 4 フレームを右から左へ再生 => start=3, end=0, splitX=4, splitY=1
     anim.AddClip("slash_prep",   3, 0, 4, 1, 0.06f, true, g_bossSlashPrepTexture);
-	// 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
-	// Slow down to 0.5x speed (double frame time)
+    // 画像 6: 8 フレームを右から左へ再生 => start=7, end=0, splitX=8, splitY=1
+    // 速度を 0.5 倍に落とす（フレーム時間を 2 倍にする）
     anim.AddClip("slash_active", 0, 7, 8, 1, slashFrameTime, false, g_bossSlashActiveTexture);
 
-    // Down before => down
+    // down_before から down へ
     anim.AddClip("down_before", 0, 4, 5, 1, 0.06f, false, g_bossDownBeforeTexture);
     anim.AddClip("down_hori", 0, 0, 1, 1, 0.1f, false, g_bossDownHorizontalTexture);
 
-    // death: 5帧示例
+    // death: 5 フレームの例
     anim.AddClip("death",  0, 14, 15, 1, 0.06f, false, g_bossDeathTexture);
 
     anim.SetClip("idle");
 }
 
-// Boss should not deal damage by simple collision/contact.
+// ボスは単純な接触だけではダメージを与えないようにする
 bool BossEnemy::CanDamageOnContact() const {
     return false;
 }
 
 void BossEnemy::Update(float deltaTime, MapManager* mapManager)
 {
-    // Handle death state
+    // 死亡状態を処理する
     if (isDying) {
         anim.Update(deltaTime);
         if (anim.IsFinished()) {
@@ -1695,24 +1695,24 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
         return;
     }
 
-    // Phase change example
+    // フェーズ変化の例
     float healthPercent = health / maxHealth;
     if (healthPercent < 0.3f && phase == 1) {
         phase = 2;
         moveSpeed *= 1.5f;
     }
 
-    // Update facing towards player unless locked during release
+    // 解放中に固定されていない限り、プレイヤー方向へ向きを更新する
     if (!facingLocked) {
         float dxFace = g_player.posX - posX;
         if (dxFace != 0) facingRight = (dxFace > 0);
     }
 
-    // State machine
+    // ステートマシン
     stateTimer += deltaTime;
     switch (bossState) {
     case BOSS_IDLE:
-        // Choose between dash or slash only (leap disabled)
+        // ダッシュか slash のみを選ぶ（leap は無効）
         if (stateTimer >= 1.0f) {
             int r = rand() % 2;
             if (r == 0) EnterState(BOSS_DASH_CHARGE);
@@ -1745,9 +1745,9 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
         break;
     }
 
-    // During leap moving, motion and gravity are handled in UpdateLeapMoving.
-    // Skipping base movement here prevents double-integration which can cause disappearing.
-    // Gravity and movement like base Enemy
+    // leap 移動中の運動と重力は UpdateLeapMoving で処理される。
+    // ここで基底移動を重ねると二重積分となり、消失の原因になるため避ける。
+    // それ以外は基底 Enemy と同様に重力と移動を処理する
     velocityY += GRAVITY * deltaTime * 60.0f;
 
     float oldX = posX;
@@ -1771,7 +1771,7 @@ void BossEnemy::ChaseBehavior(float deltaTime) {
     float dx = g_player.posX - posX;
     float distance = fabs(dx);
 
-    // Boss moves toward player
+    // ボスはプレイヤーへ向かって移動する
     if (distance > attackRange) {
         if (dx > 0) {
             velocityX = moveSpeed;
@@ -1781,32 +1781,31 @@ void BossEnemy::ChaseBehavior(float deltaTime) {
         }
     }
     else {
-        velocityX = 0;  // Stop at attack range
+        velocityX = 0;  // 攻撃範囲で停止する
     }
 }
 
 void BossEnemy::SpecialAttack() {
-    // Boss special attack - shoot multiple projectiles, etc.
-    // Use ProjectileManager to create attacks
+    // ボスの特殊攻撃 - 複数射弾の発射など
+    // ProjectileManager を使って攻撃を生成する
 }
 
 void BossEnemy::OnHit(int damage) {
     Enemy::OnHit(damage);
-    // Boss hit reaction
+    // ボス被弾リアクション
 }
 
 void BossEnemy::OnDeath() {
     Enemy::OnDeath();
-    // Boss death - maybe trigger cutscene or level completion
+    // ボス死亡時 - カットシーンやステージクリアを起動する想定
 }
 
-// Boss takes damage: mitigate during DOWN and change weakline after N hits
+// ボスの被ダメージ処理: DOWN 中は軽減し、一定回数被弾後に弱点ラインを変更する
 void BossEnemy::TakeDamage(int damage, float attackAngle) {
     if (!isAlive) return;
-    // If the boss is performing the active slash and is within the
-    // vulnerability window (first five frames), immediately enter the
-    // down sequence. This makes hitting the boss early in the slash
-    // cause a guaranteed knockdown.
+    // ボスが active slash 中で、かつ脆弱ウィンドウ内
+    // （最初の数フレーム）なら、即座に down シーケンスへ入る。
+    // これにより slash 序盤で攻撃を当てると確定でダウンする。
     if (bossState == BOSS_SLASH_ACTIVE) {
         int curFrame = anim.GetCurrentFrame();
         if (curFrame < 3) {
@@ -1818,15 +1817,15 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // During down: reduced damage and cannot die
+    // down 中: ダメージ軽減かつ死亡しない
     if (bossState == BOSS_DOWN) {
-        actualDamage = std::max(1, actualDamage / 4); // reduce
+        actualDamage = std::max(1, actualDamage / 4); // 軽減する
         inDownImmortal = true;
     }
 
     DamageNumberManager::AddDamageNumber(posX + width * 0.5f, posY + height, actualDamage, multiplier > 1.5f);
 
-    // Hit feedback (same as normal enemies)
+    // ヒット時の演出（通常敵と同じ）
     Audio::PlaySE(SoundEffect::ENEMY_HIT);
     SpawnWeakPointHitEffect(posX + width * 0.5f, posY + height * 0.5f);
 
@@ -1836,13 +1835,13 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
 
     hitsTaken++;
     if (bossState != BOSS_DOWN && (hitsTaken == 15 || multiplier > 1.5f)) {
-        // Enter down sequence
+        // down シーケンスへ入る
         EnterState(BOSS_DOWN_BEFORE);
     }
 
     if (health <= 0) {
         if (inDownImmortal) {
-            // Clamp to small positive HP during down
+            // down 中は小さな正の HP に丸める
             health = std::max(1.0f, health);
         } else {
             health = 0;
@@ -1852,11 +1851,11 @@ void BossEnemy::TakeDamage(int damage, float attackAngle) {
     }
 }
 
-// ===== Boss helpers =====
+// ===== ボス補助関数群 =====
 void BossEnemy::EnterState(BossState s) {
     bossState = s;
     stateTimer = 0.0f;
-    // Randomize some durations when entering states to make behavior less predictable
+    // 状態突入時の各種時間を少し乱数化し、行動を読みづらくする
     auto Randomize = [this](float base) {
         float v = timingVariance;
         float r = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f; // [-1,1]
@@ -1869,30 +1868,30 @@ void BossEnemy::EnterState(BossState s) {
         facingLocked = false;
         break;
     case BOSS_DASH_CHARGE:
-        // Start charge animation using stage1
+        // stage1 を使ってチャージアニメを開始する
         if (anim.GetCurrentClipName() != "charge_stage1") {
             Audio::PlaySE(SoundEffect::BOSS_CHARGE);
             anim.SetClip("charge_stage1");
         }
         velocityX = 0.0f;
-        // Lock facing at start of charge
+        // チャージ開始時に向きを固定する
         fixedFacingRight = facingRight;
-        // Prevent changing facing once the dash direction is chosen
+        // ダッシュ方向決定後は向きを変えない
         facingLocked = true;
-        // randomized charge duration
+        // ランダム化したチャージ時間
         randomizedChargeDuration = Randomize(chargeDuration);
         break;
     case BOSS_DASH_MOVING:
         Audio::PlaySE(SoundEffect::BOSS_DASH);
         anim.SetClip("dash");
-        // Maintain locked facing during dash movement
+        // ダッシュ移動中は固定した向きを維持する
         facingRight = fixedFacingRight;
         facingLocked = true;
-        // randomized dash moving duration (cap by dashMaxDuration later)
+        // ランダム化したダッシュ移動時間（後で dashMaxDuration でも制限）
         randomizedDashMovingDuration = Randomize(dashMaxDuration * 0.25f);
         break;
     case BOSS_DASH_AFTER:
-        // Play dash_over first, then return to idle when finished
+        // まず dash_over を再生し、完了後に idle へ戻る
         anim.SetClip("dash_over");
         velocityX = 0.0f;
         facingLocked = false;
@@ -1902,21 +1901,21 @@ void BossEnemy::EnterState(BossState s) {
         Audio::PlaySE(SoundEffect::BOSS_CHARGE2);
         anim.SetClip("slash_prep");
         velocityX = 0.0f;
-        // Lock facing at start of slash
+        // slash 開始時に向きを固定する
         fixedFacingRight = facingRight;
         facingLocked = true;
-        // use same charge duration randomness for slash
+        // slash でも同じチャージ時間ランダム化を使う
         randomizedChargeDuration = Randomize(chargeDuration);
         break;
     case BOSS_SLASH_ACTIVE:
         Audio::PlaySE(SoundEffect::BOSS_SLASH1);
         anim.SetClip("slash_active");
         hasSpawnedSlashProjectiles = false;
-        // Maintain locked facing
+        // 固定した向きを維持する
         facingRight = fixedFacingRight;
-        // When entering active slash, mark as attacking so collision can hurt the player
-        // (IsCurrentlyAttacking will report true during the active window)
-        // We will use state and animation frame checks in IsCurrentlyAttacking.
+        // active slash 突入時は攻撃中扱いにし、接触でプレイヤーへダメージを与えられるようにする
+        // （IsCurrentlyAttacking は active 中に true を返す）
+        // 実際の判定は状態とアニメフレームで行う。
         break;
     case BOSS_DOWN_BEFORE:
         Audio::PlaySE(SoundEffect::BOSS_DOWN);
@@ -1928,7 +1927,7 @@ void BossEnemy::EnterState(BossState s) {
         anim.SetClip("down_hori");
         velocityX = 0.0f;
         inDownImmortal = true;
-        facingLocked = true; // keep facing fixed during down
+        facingLocked = true; // down 中は向きを固定する
         randomizedDownDuration = Randomize(downDuration);
         break;
     case BOSS_DOWN_AFTER:
@@ -1941,34 +1940,34 @@ void BossEnemy::EnterState(BossState s) {
 }
 
 void BossEnemy::UpdateDashCharge(float dt) {
-    // While charging, advance animation from stage1 to stage2 midway
+    // チャージ中、途中で stage1 から stage2 へ進める
     float half = randomizedChargeDuration * 0.6f;
     if (stateTimer >= half && anim.GetCurrentClipName() == std::string("charge_stage1")) {
         anim.SetClip("charge_stage2");
     }
     if (stateTimer >= randomizedChargeDuration * 0.9f) {
         EnterState(BOSS_DASH_MOVING);
-        // Move quickly in the locked facing direction (ensure dash direction matches facing)
+        // 固定した向きへ高速移動する（見た目の向きと一致させる）
         float dir = fixedFacingRight ? 1.0f : -1.0f;
         float dashMul = dashSpeedMultiplier * (1.0f + 0.25f * (dashLevel - 1));
         velocityX = dir * moveSpeed * dashMul;
-        // Make sure the visual facing matches the dash
+        // 見た目の向きがダッシュ方向と一致するようにする
         facingRight = fixedFacingRight;
     }
 }
 
 void BossEnemy::UpdateDashMoving(float dt, MapManager* mapManager) {
-    // Repeat dash animation loops before moving to dash_over.
-    // Calculate a requiredTime but allow randomized shorter/longer durations.
+    // dash_over へ移る前にダッシュアニメのループを繰り返す。
+    // 必要時間を計算しつつ、短め / 長めのランダム化も許可する。
     constexpr float kDashLoopSeconds = 2.0f * 0.05f;
     constexpr int kDashLoops = 4;
     const float requiredTime = kDashLoopSeconds * kDashLoops;
 
     float allowedTime = requiredTime;
-    // Use randomizedDashMovingDuration when set (fallback to a quarter of dashMaxDuration)
+    // randomizedDashMovingDuration があれば使い、なければ dashMaxDuration の 1/4 を使う
     if (randomizedDashMovingDuration > 0.0f) allowedTime = randomizedDashMovingDuration;
 
-    // Keep dashing for the required/randomized time, but still allow a max duration guard.
+    // 必要時間 / ランダム時間のあいだダッシュを続けつつ、最大時間でも打ち切る
     if (stateTimer >= allowedTime || stateTimer > dashMaxDuration) {
         EnterState(BOSS_DASH_AFTER);
         velocityX = 0.0f;
@@ -1977,47 +1976,46 @@ void BossEnemy::UpdateDashMoving(float dt, MapManager* mapManager) {
 }
 
 void BossEnemy::UpdateDashAfter(float dt) {
-    // `dash_over` is non-looping; when it finishes or after a short timeout, go back to idle.
+    // `dash_over` は非ループ。再生終了または短いタイムアウト後に idle へ戻る
     if (anim.IsFinished() || stateTimer >= randomizedDashAfterDuration) {
         EnterState(BOSS_IDLE);
     }
 }
 
 void BossEnemy::UpdateSlashCharge(float dt) {
-    // After prep animation finishes (or a fallback duration), enter active slash
+    // 準備アニメ完了後（またはフォールバック時間経過後）に active slash へ入る
     if (stateTimer >= randomizedChargeDuration * 0.5) {        //(anim.IsFinished() || stateTimer >= chargeDuration)
         EnterState(BOSS_SLASH_ACTIVE);
     }
 }
 
 void BossEnemy::UpdateSlashActive(float dt) {
-    // Deal damage on the second-to-last frame.
-    // With startFrame=7 and endFrame=0 (reverse playback), the second-to-last frame is 1.
+    // ダメージは最後から 2 番目のフレームで与える。
+    // startFrame=7 / endFrame=0 の逆再生では、そのフレームは 1 になる。
     if (anim.GetCurrentFrame() == 1) {
         float range = 0.25f;
         float hx = facingRight ? (posX + width) : (posX - range);
         float hw = range;
         float hy = posY;
         float hh = height;
-        // Only kill the player if they are not already dead, not currently
-        // invincible (gauge or dash), and not dashing (dashing is an attack
-        // state and should not be interrupted). Match the beam enemy checks
-        // to avoid inconsistent behavior.
+        // プレイヤーが未死亡・無敵でない・ダッシュ中でない場合のみ倒す。
+        // （ダッシュは攻撃状態なので中断させない）
+        // beam enemy 側の条件とそろえ、挙動差を防ぐ。
         if (CheckCollision(hx, hy, hw, hh, g_player.posX, g_player.posY, PLAYER_WIDTH, PLAYER_HEIGHT)
             && !g_player.isDead && !g_player.isInvincible && !g_player.isDashing) {
             g_player.health = 0.0f;
             OnPlayerDeath();
         }
-        // Spawn projectile barrage once
+        // 射弾ばら撒きを 1 回だけ生成する
         if (!hasSpawnedSlashProjectiles) {
             hasSpawnedSlashProjectiles = true;
             ProjectileManager& pm = ProjectileManager::GetInstance();
             float originX = posX + width * 0.5f;
             float originY = posY + height * 0.5f;
-            // Fan-shaped barrage fired along boss facing direction
+            // ボスの向きに沿って扇状弾幕を撃つ
             const int bulletCount = 9;
-            const float totalSpread = 0.9f; // radians, wider fan
-            // Use fixed/locked facing if available, else current facing
+            const float totalSpread = 0.9f; // ラジアン。広めの扇形
+            // 固定向きが有効ならそれを使い、なければ現在の向きを使う
             bool faceRight = facingLocked ? fixedFacingRight : facingRight;
             float baseAngle = faceRight ? 0.0f : 3.14159f;
             for (int i = 0; i < bulletCount; ++i) {
@@ -2031,19 +2029,19 @@ void BossEnemy::UpdateSlashActive(float dt) {
             }
         }
     }
-    // End slash when the clip finishes.
+    // クリップが終わったら slash を終了する
     if (anim.IsFinished()) {
         EnterState(BOSS_IDLE);
     }
 }
 
 bool BossEnemy::IsCurrentlyAttacking() const {
-    // Slash attack: damage occurs on the specific frame (frame 1)
+    // slash 攻撃: ダメージは特定フレーム（frame 1）で発生する
     if (bossState == BOSS_SLASH_ACTIVE) {
         return (anim.GetCurrentFrame() == 1);
     }
 
-    // Dash movement: treat the boss as attacking for contact damage while moving in dash state
+    // ダッシュ移動中: dash 状態では接触ダメージありの攻撃中として扱う
     if (bossState == BOSS_DASH_MOVING) {
         return true;
     }
@@ -2066,23 +2064,22 @@ void BossEnemy::UpdateDown(float dt) {
 
 void BossEnemy::UpdateDownAfter(float dt) {
     if (stateTimer >= 0.5f) {
-        // When the boss finishes the down-after recovery and gets up,
-        // clear the accumulated hit counter so the next down-phase
-        // requires fresh hits.
+        // ボスが down-after 復帰を終えて立ち上がったら、
+        // 累積ヒット数をリセットし、次の down には新たな被弾が必要にする。
         hitsTaken = 0;
         EnterState(BOSS_IDLE);
     }
 }
 
 void BossEnemy::RecomputeWeakMultipliers() {
-    // Cycle weak direction to simulate changing weakline
+    // 弱点方向を巡回させ、弱点ラインが変化するように見せる
     weakCycleIndex = (weakCycleIndex + 1) % 4;
-    // Reset all to 1.0
+    // すべて 1.0 に戻す
     SetDamageMultiplier(DIR_FRONT, 1.0f);
     SetDamageMultiplier(DIR_BACK, 1.0f);
     SetDamageMultiplier(DIR_UP, 1.0f);
     SetDamageMultiplier(DIR_DOWN, 1.0f);
-    // Make one direction very weak each time
+    // 毎回 1 方向だけ大きな弱点にする
     switch (weakCycleIndex) {
     case 0: SetDamageMultiplier(DIR_FRONT, 2.0f); break;
     case 1: SetDamageMultiplier(DIR_BACK, 2.0f); break;
@@ -2097,10 +2094,10 @@ FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
     SetMaxHealth(250.0f);
     SetHealth(250.0f);
 
-    dashSpeedMultiplier = 25.0f;  // faster dash
-    chargeDuration = 0.7f;        // shorter charge window (harder to react)
-    downDuration = 2.0f;          // shorter vulnerability window
-    timingVariance = 0.15f;       // less predictable timing
+    dashSpeedMultiplier = 25.0f;  // より速いダッシュ
+    chargeDuration = 0.7f;        // 反応しづらい短めのチャージ時間
+    downDuration = 2.0f;          // 短めの脆弱時間
+    timingVariance = 0.15f;       // 読みづらいタイミング変動
 
     anim.ClearClips();
 
@@ -2130,10 +2127,10 @@ void FinalBossEnemy::ResetState()
 
 
 
-// SquareEnemy implementation - stationary enemy
+// SquareEnemy 実装 - 静止する敵
 SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 10.0f) {
     useTurnCooldown = false;
-    // Square enemy: takes normal damage from all directions
+    // Square enemy: 全方向から通常ダメージを受ける
     SetDamageMultiplier(DIR_FRONT, 1.0f);
     SetDamageMultiplier(DIR_BACK, 1.0f);
     SetDamageMultiplier(DIR_UP, 1.0f);
@@ -2145,13 +2142,13 @@ SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 10.0f) {
 
     width = PLAYER_WIDTH * 1.0f;
     height = PLAYER_HEIGHT * 1.0f;
-    moveSpeed = 0.0f;  // Doesn't move
-    detectionRange = 0.0f;  // Doesn't chase
-    attackRange =  0.0f;  // Contact damage only
+    moveSpeed = 0.0f;  // 移動しない
+    detectionRange = 0.0f;  // 追跡しない
+    attackRange =  0.0f;  // 接触ダメージのみ
 
-    // Add animations (adjust frame counts based on your sprites)
+    // アニメーションを追加する（フレーム数はスプライトに応じて調整）
     anim.AddClip("idle", 0, 7, 1, 8, 0.15f, true, g_squareEnemyIdleTexture);
-    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_squareEnemyDeathTexture); // Adjust frames as needed
+    anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_squareEnemyDeathTexture); // 必要に応じてフレーム数調整
 
     anim.SetClip("idle");
 
@@ -2160,7 +2157,7 @@ SquareEnemy::SquareEnemy(float x, float y) : Enemy(x, y, 10.0f) {
 }
 
 void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
-    // Handle death state first
+    // まず死亡状態を処理する
     if (isDying) {
         anim.Update(deltaTime);
 
@@ -2175,7 +2172,7 @@ void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
         return;
     }
 
-    // Visibility detection
+    // 可視性判定
     bool isCurrentlyVisible = IsVisible(g_camera);
 
     if (!isCurrentlyVisible && !NeedsMinimalUpdate()) {
@@ -2200,7 +2197,7 @@ void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
 
     anim.Update(deltaTime);
 
-    // Handle hit state
+    // 被弾状態を処理する
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -2208,14 +2205,14 @@ void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
         }
     }
 
-    // Square enemy doesnt move
+    // Square enemy は移動しない
     velocityX = 0.0f;
     velocityY = 0.0f;
 
-    // Pulse effect for visual feedback
+    // 視覚フィードバック用の脈動エフェクト
     pulseTimer += deltaTime;
 
-    // just stay in place
+    // その場に留まるだけ
     currentState = PATROL;
 
     if (!isCurrentlyVisible) {
@@ -2227,18 +2224,18 @@ void SquareEnemy::Update(float deltaTime, MapManager* mapManager) {
 }
 
 void SquareEnemy::OnHit(int damage) {
-    // Square enemy has no special behavior when hit
+    // Square enemy は被弾時の特殊挙動を持たない
     Enemy::OnHit(damage);
 }
 
 void SquareEnemy::OnDeath() {
-    // Call base death logic
+    // 基底の死亡処理を呼ぶ
     Enemy::OnDeath();
 }
 
 
 BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 30.0f) {
-    // Weak points: Vertical and Horizontal lines (one-hit weakpoints)
+    // 弱点: 縦線と横線（一撃弱点）
     SetDamageMultiplier(DIR_UP, 100.0f);
     SetDamageMultiplier(DIR_DOWN, 100.0f);
     SetDamageMultiplier(DIR_FRONT, 100.0f);
@@ -2247,9 +2244,9 @@ BeamEnemy::BeamEnemy(float x, float y) : Enemy(x, y, 30.0f) {
     width = PLAYER_WIDTH * 1.3f;
     height = PLAYER_HEIGHT * 1.3f;
     moveSpeed = 0.0f;
-    detectionRange = 0.6f;  // change this depending on the range you want
+    detectionRange = 0.6f;  // 必要な範囲に応じて調整する
 
-    // for the animation
+    // アニメーション用
     anim.AddClip("idle", 0, 2, 1, 3, 0.25f, true, g_beamEnemyIdleTexture);
     anim.AddClip("pre_attack", 0, 3, 1, 4, 0.8f, false, g_beamEnemyPreAttackTexture);
     anim.AddClip("attack", 0, 3, 1, 4, 0.06f, true, g_beamEnemyAttackTexture);
@@ -2276,7 +2273,7 @@ void BeamEnemy::TakeDamage(int damage, float attackAngle) {
     float multiplier = GetDamageMultiplier(attackAngle);
     int actualDamage = (int)(damage * multiplier);
 
-    // Show damage number
+    // ダメージ数字を表示する
     bool isCritical = (multiplier >= 8.0f);
     DamageNumberManager::AddDamageNumber(
         posX + width * 0.5f,
@@ -2285,7 +2282,7 @@ void BeamEnemy::TakeDamage(int damage, float attackAngle) {
         isCritical
     );
 
-    // If hit on weak points, instant death
+    // 弱点に当たったら即死
     if (multiplier >= 8.0f) {
         health = 0;
         isAlive = false;
@@ -2293,7 +2290,7 @@ void BeamEnemy::TakeDamage(int damage, float attackAngle) {
         return;
     }
 
-    // Normal damage
+    // 通常ダメージ
     health -= actualDamage;
     isHit = true;
     hitTimer = HIT_DURATION;
@@ -2307,11 +2304,11 @@ void BeamEnemy::TakeDamage(int damage, float attackAngle) {
 }
 
 void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
-    // Handle death animation sequence
+    // 死亡アニメシーケンスを処理する
     if (isDying) {
         anim.Update(deltaTime);
 
-        // Phase 0: pre_death animation
+        // Phase 0: pre_death アニメ
         if (deathAnimationPhase == 0) {
             if (anim.GetCurrentClipName() != "pre_death") {
                 anim.SetClip("pre_death");
@@ -2321,9 +2318,9 @@ void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
                 anim.SetClip("death");
             }
         }
-        // Phase 1: main death with explosion
+        // Phase 1: 爆発付きの本死亡アニメ
         else if (deathAnimationPhase == 1) {
-            // Trigger the explosion
+    // 爆発を発生させる
             if (!hasExploded && anim.GetCurrentFrame() >= 1) {
                 CreateDeathExplosion();
                 hasExploded = true;
@@ -2333,7 +2330,7 @@ void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
                 anim.SetClip("post_death");
             }
         }
-        // Phase 2: post_death animation (beam fading)
+        // Phase 2: post_death アニメ（ビームが消えていく）
         else if (deathAnimationPhase == 2) {
             if (anim.IsFinished()) {
                 markedForDeletion = true;
@@ -2348,7 +2345,7 @@ void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
         return;
     }
 
-    // Handle hit state
+    // 被弾状態を処理する
     if (isHit) {
         hitTimer -= deltaTime;
         if (hitTimer <= 0.0f) {
@@ -2360,32 +2357,32 @@ void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
     velocityY = 0.0f;
     pulseTimer += deltaTime;
 
-    // Calculate distance to player
+    // プレイヤーまでの距離を計算する
     float dx = g_player.posX - posX;
     float dy = g_player.posY - posY;
     float distance = sqrt(dx * dx + dy * dy);
 
-    // Update facing direction
+    // 向きを更新する
     if (dx != 0) {
         facingRight = (dx > 0);
     }
 
-    // Get current frame (declare before switch to avoid scoping issues)
+    // 現在フレームを取得する（switch 前に宣言してスコープ問題を避ける）
     int currentFrame = anim.GetCurrentFrame();
 
-    // State machine for beam attack cycle
+    // beam 攻撃サイクル用のステートマシン
     switch (beamState) {
     case BEAM_IDLE:
         if (anim.GetCurrentClipName() != "idle") {
             anim.SetClip("idle");
         }
 
-        // Cooldown timer
+        // クールダウンタイマー
         if (currentCooldown > 0.0f) {
             currentCooldown -= deltaTime;
         }
 
-        // Check if player is in range and cooldown is done
+        // プレイヤーが範囲内かつクールダウン終了か確認する
         if (distance < detectionRange && currentCooldown <= 0.0f) {
             beamState = BEAM_PRE_ATTACK;
             stateTimer = 0.0f;
@@ -2396,9 +2393,9 @@ void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
     case BEAM_PRE_ATTACK:
         stateTimer += deltaTime;
 
-        hasKilledPlayerThisAttack = false; // Reset kill flag when starting new attack
+        hasKilledPlayerThisAttack = false; // 新しい攻撃開始時に撃破フラグをリセットする
 
-        // After charging animation completes, start attack
+        // 溜めアニメ完了後に攻撃開始する
         if (stateTimer >= preAttackDuration || anim.IsFinished()) {
             beamState = BEAM_ATTACKING;
             stateTimer = 0.0f;
@@ -2409,9 +2406,9 @@ void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
     case BEAM_ATTACKING:
         stateTimer += deltaTime;
 
-        CheckBeamDamage(); // Check beam damage EVERY frame during attack, not just specific frames
+        CheckBeamDamage(); // ビームダメージは特定フレームだけでなく攻撃中毎フレーム確認する
 
-        // After attack duration, start post-attack
+        // 攻撃時間終了後に後隙段階へ入る
         if (stateTimer >= attackDuration) {
             beamState = BEAM_POST_ATTACK;
             stateTimer = 0.0f;
@@ -2422,23 +2419,23 @@ void BeamEnemy::Update(float deltaTime, MapManager* mapManager) {
     case BEAM_POST_ATTACK:
         stateTimer += deltaTime;
 
-        // After post-attack animation, return to idle
+        // 後隙アニメ後に idle へ戻る
         if (stateTimer >= postAttackDuration || anim.IsFinished()) {
             beamState = BEAM_IDLE;
-            currentCooldown = attackCooldown;  // Reset cooldown
+            currentCooldown = attackCooldown;  // クールダウンをリセットする
             anim.SetClip("idle");
         }
         break;
     }
 
-    anim.Update(deltaTime);  // Update animation
+    anim.Update(deltaTime);  // アニメを更新する
 }
 
 void BeamEnemy::CheckBeamDamage() {
-    // so the enemy kills one time per attack to the player kill once per attack
+    // 1 回の攻撃につきプレイヤーを 1 回だけ倒すようにする
     if (hasKilledPlayerThisAttack) return;
 
-    // Get centers
+    // 中心座標を取得する
     float centerX = posX + width * 0.5f;
     float centerY = posY + height * 0.5f;
 
@@ -2451,24 +2448,24 @@ void BeamEnemy::CheckBeamDamage() {
     bool hitHorizontal = false;
     bool hitVertical = false;
 
-    // Check horizontal beam (left-right line)
+    // 水平ビーム（左右の線）を確認する
     if (distanceY < beamHitboxWidth && distanceX < beamHorizontalLength) {
         hitHorizontal = true;
     }
 
-    // Check vertical beam (up-down line)
+    // 垂直ビーム（上下の線）を確認する
     if (distanceX < beamHitboxWidth && distanceY < beamVerticalLength) {
         hitVertical = true;
     }
 
-    // Create a small safe zone in the very center
+    // ど真ん中に小さな安全地帯を作る
     float centerSafeZone = 0.15f;
     bool inCenterSafeZone = (distanceX < centerSafeZone && distanceY < centerSafeZone);
 
-    // Hit if touching either line, but NOT in the center safe zone
+    // どちらかの線に触れていれば命中。ただし中央安全地帯内は除く
     bool hit = (hitHorizontal || hitVertical) && !inCenterSafeZone;
 
-    // the player dies instantly
+    // プレイヤーは即死する
     if (hit && !g_player.isDead && !g_player.isInvincible && !g_player.isDashing) {
         g_player.health = 0.0f;
         OnPlayerDeath();
@@ -2479,20 +2476,20 @@ void BeamEnemy::CheckBeamDamage() {
 void BeamEnemy::OnDeath() {
     if (isDying) return;
 
-    // Start death animation sequence
+    // 死亡アニメシーケンスを開始する
     Enemy::OnDeath();
-    deathAnimationPhase = 0;  // Start with pre_death animation
+    deathAnimationPhase = 0;  // pre_death アニメから始める
     hasExploded = false;
 }
 
 void BeamEnemy::CreateDeathExplosion() {
-    // Damages other enemies but not the player
-    // the center position of this beam enemy
+    // プレイヤーではなく他の敵だけにダメージを与える
+    // この beam enemy の中心位置
     float centerX = posX + width * 0.5f;
     float centerY = posY + height * 0.5f;
 
-    // the explosion is really big like a big circle OLD VERSION
-    // Damage nearby enemies
+    // 以前の大きな円形爆発版
+    // 周囲の敵へダメージを与える
     /*for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive() || enemy == this) continue;
 
@@ -2506,39 +2503,39 @@ void BeamEnemy::CreateDeathExplosion() {
         }
     }*/
 
-    // with this the explosion is like "+" which is the laser shape when the beam enemy is killed
+    // こちらは beam enemy 撃破時に「+」型レーザー爆発になる版
     for (auto& enemy : g_enemies) {
         if (!enemy->IsAlive() || enemy == this) continue;
 
-        // calculates the center position of the enemies
+        // 敵の中心位置を計算する
         float enemyCenterX = enemy->GetX() + enemy->GetWidth() * 0.5f;
         float enemyCenterY = enemy->GetY() + enemy->GetHeight() * 0.5f;
 
-        // for the horizontal and vertical distances between the two centers (the center is the beam enemy)
-        // fabs so the value is always positive
+        // 2 つの中心間の水平距離・垂直距離を求める（中心は beam enemy）
+        // fabs により常に正の値になる
         float distanceX = fabs(enemyCenterX - centerX);
         float distanceY = fabs(enemyCenterY - centerY);
 
         bool hitHorizontal = false;
         bool hitVertical = false;
 
-        // Check horizontal beam (left and right line)
+        // 水平ビーム（左右の線）を確認する
         if (distanceY < beamHitboxWidth && distanceX < deathExplosionRadius) {
             hitHorizontal = true;
         }
 
-        // Check vertical beam (up and down line)
+        // 垂直ビーム（上下の線）を確認する
         if (distanceX < beamHitboxWidth && distanceY < deathExplosionRadius) {
             hitVertical = true;
         }
 
-        // Hit if touching either line
+        // どちらかの線に触れていれば命中
         bool hit = (hitHorizontal || hitVertical);
 
         if (hit) {
             float dx = enemyCenterX - centerX;
             float dy = enemyCenterY - centerY;
-            float angle = atan2(dy, dx); // calculates the angle in radians  from one point to another from the beam enemy when hitting other enemies
+            float angle = atan2(dy, dx); // beam enemy から他敵への角度（ラジアン）を計算する
             enemy->TakeDamage((int)deathExplosionDamage, angle);
         }
     }
@@ -2546,23 +2543,23 @@ void BeamEnemy::CreateDeathExplosion() {
 
 
 
-// 敌人更新函数
+// 敵更新関数
 void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     DamageNumberManager::Update(deltaTime);
 
     int visibleEnemyCount = 0;
     int totalEnemyCount = (int)g_enemies.size();
 
-    // NOTE:
-    // Some enemies (e.g., ThrowerEnemy) can spawn new enemies during Update().
-    // Using a range-for over std::vector while it is modified can invalidate
-    // references/iterators and crash. Iterate by index over the initial count.
+    // 注意:
+    // 一部の敵（例: ThrowerEnemy）は Update() 中に新しい敵を生成することがある。
+    // 変更中の std::vector を range-for で回すと参照 / イテレータが無効化されて
+    // クラッシュする可能性があるため、初期個数をインデックスで走査する。
     const size_t initialCount = g_enemies.size();
     for (size_t i = 0; i < initialCount; ++i) {
         Enemy* enemy = g_enemies[i];
         if (!enemy) continue;
 
-        // 调试信息：计数可见敌人
+        // デバッグ情報: 可視敵数を数える
         if (enemy->IsVisible(g_camera)) {
             visibleEnemyCount++;
         }
@@ -2570,7 +2567,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
         enemy->Update(deltaTime, mapManager);
     }
 
-    // 调试输出（可选）
+    // デバッグ出力（任意）
     static float debugTimer = 0.0f;
     debugTimer += deltaTime;
     if (debugTimer > 2.0f) {
@@ -2582,7 +2579,7 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
         debugTimer = 0.0f;
     }
 
-    // 移除死亡的敌人
+    // 死亡した敵を取り除く
     g_enemies.erase(
         std::remove_if(g_enemies.begin(), g_enemies.end(),
             [](Enemy* e) {
@@ -2599,12 +2596,12 @@ void UpdateEnemies(float deltaTime, MapManager* mapManager) {
     );
 }
 
-// 修改RenderEnemies函数
+// RenderEnemies 関数を修正する
 void RenderEnemies(const Camera& camera) {
     for (auto& enemy : g_enemies) {
-        ID3D11ShaderResourceView* texture = g_enemyIdleTexture;  // 默认纹理
+        ID3D11ShaderResourceView* texture = g_enemyIdleTexture;  // 既定テクスチャ
 
-        if (dynamic_cast<FlyEnemy*>(enemy)) {  // 改为FlyEnemy
+        if (dynamic_cast<FlyEnemy*>(enemy)) {  // FlyEnemy を使う
             texture = g_flyEnemyIdleTexture;
         }
         else if (dynamic_cast<MageEnemy*>(enemy)) {
@@ -2626,7 +2623,7 @@ void RenderEnemies(const Camera& camera) {
             texture = g_bossIdleTexture;
         }
 
-        enemy->Render(texture, camera); // 传递相机参数
+        enemy->Render(texture, camera); // カメラ引数を渡す
     }
     DamageNumberManager::Render(camera);
 }

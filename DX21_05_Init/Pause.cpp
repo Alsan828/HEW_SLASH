@@ -1,39 +1,39 @@
 ﻿#include "Pause.h"
 #include "Audio.h"
 
-// construct
+// コンストラクタ
 PauseScene::PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE)
 {
     sceneManager = manager;
-    underlyingScene = stage; // keep pointer to StageScene
+    underlyingScene = stage; // StageScene へのポインタを保持する
     pausedSceneType = PAUSE;
 }
 
 bool PauseScene::Init()
 {
 	SetInGameCursorEnabled(true);
-    LoadTexture(g_pDevice, "asset/UI/pause/background.png", &g_pauseTexture); // Load the pause background texture
+    LoadTexture(g_pDevice, "asset/UI/pause/background.png", &g_pauseTexture); // ポーズ背景テクスチャを読み込む
 
-    LoadTexture(g_pDevice, "asset/UI/pause/pause_black.png", &blackTexture); // so when in pause, I see the stage part transparent
+    LoadTexture(g_pDevice, "asset/UI/pause/pause_black.png", &blackTexture); // ポーズ中にステージを半透明で見せるため
     
-    // for continue button
+        // 続行ボタン用
     LoadTexture(g_pDevice, "asset/UI/pause/continue_normal.png", &continueTexture);
     LoadTexture(g_pDevice, "asset/UI/pause/continue_hover.png", &continueHoverTexture);
 
-    // for control button
-    LoadTexture(g_pDevice, "asset/UI/pause/control_normal.png", &controlTexture); // for the button
+        // 操作説明ボタン用
+        LoadTexture(g_pDevice, "asset/UI/pause/control_normal.png", &controlTexture); // ボタン用
     LoadTexture(g_pDevice, "asset/UI/pause/control_hover.png", &controlHoverTexture);
 
-    // for select stage button
-    LoadTexture(g_pDevice, "asset/UI/pause/select_normal.png", &selectTexture); // for the button
+        // ステージ選択ボタン用
+        LoadTexture(g_pDevice, "asset/UI/pause/select_normal.png", &selectTexture); // ボタン用
     LoadTexture(g_pDevice, "asset/UI/pause/select_hover.png", &selectHoverTexture);
 
-    // for quit button
-    LoadTexture(g_pDevice, "asset/UI/pause/quit_normal.png", &quitTexture); // for the button
+        // 終了ボタン用
+        LoadTexture(g_pDevice, "asset/UI/pause/quit_normal.png", &quitTexture); // ボタン用
     LoadTexture(g_pDevice, "asset/UI/pause/quit_hover.png", &quitHoverTexture);
 
 
-    // because each puase button size is different so the hitbox will be different as well.
+        // 各ポーズボタンのサイズが異なるため、ヒットボックスも個別に調整する。
     uiButtons.emplace_back(0.3f, -0.3f, 1.0f, 1.5f, pausedSceneType, continueTexture, continueHoverTexture);
     uiButtons.back().SetHitboxScale(0.27f, 0.1f);
     uiButtons.back().SetHitboxOffset(-0.03f);
@@ -41,7 +41,7 @@ bool PauseScene::Init()
     uiButtons.emplace_back(0.34f, -0.53f, 1.0f, 1.5f, HOWTOPLAY, controlTexture, controlHoverTexture);
     uiButtons.back().SetHitboxScale(0.35f, 0.1f);
     uiButtons.back().SetHitboxOffset(-0.03f);
-                                                     // so I go to stage select 1,2 or 3 depending on the area I was at.
+                                                        // 現在いるエリアに応じて StageSelect 1/2/3 に戻る。
     uiButtons.emplace_back(0.50f, -0.65f, 1.0f, 1.5f, sceneManager->GetStageSelectForCurrentStage()/*STAGESELECT*/, selectTexture, selectHoverTexture);
     uiButtons.back().SetHitboxScale(0.7f, 0.1f);
     uiButtons.back().SetHitboxOffset(-0.0f);
@@ -59,7 +59,7 @@ bool PauseScene::Init()
 
 void PauseScene::Update(float deltaTime)
 {
-    // resume game
+    // ゲームを再開する処理
     g_inputSystem.Update();
 
     for (auto& btn : uiButtons)
@@ -71,7 +71,7 @@ void PauseScene::Update(float deltaTime)
 
             if (target == QUIT_GAME)
             {
-                PostQuitMessage(0);// it quits the game
+                PostQuitMessage(0);// ゲームを終了する
                 return;
             }
             else
@@ -80,7 +80,7 @@ void PauseScene::Update(float deltaTime)
 				{
 					Audio::PlaySE(SoundEffect::RESUME);
 
-                    // so it resumes the bgm if pressing the button continue in pause scene
+                    // ポーズ画面で continue を押したら BGM を再開する
                     std::string savedPath = sceneManager->GetSavedBGMPath();
                     if (!Audio::IsBGMPlaying() && !savedPath.empty())
                     {
@@ -110,25 +110,25 @@ void PauseScene::Draw()
  
     if (underlyingScene) 
     {
-        underlyingScene->Draw(); // draw the stage frozen so I can see it in the background
+        underlyingScene->Draw(); // 背景で止まったステージを描画する
     }
 
-    // this is for the back (the stage) so when you pause it, the stage part looks transparent
-    SetColor(0.0f, 0.0f, 0.0f, 0.4f); // makes the blackTexture transparent
+    // 背景のステージを半透明に見せるための描画
+    SetColor(0.0f, 0.0f, 0.0f, 0.4f); // blackTexture を半透明にする
     RenderImage(-1, -1, 2, 2, blackTexture, 0, 1, 1);
-    SetColor(1, 1, 1, 1); // resets the blackTexture to normal
+    SetColor(1, 1, 1, 1); // 描画色を通常に戻す
 
     if (g_pauseTexture) 
     {
-        // render pause background semi-transparent (alpha = 0.75)
+        // ポーズ背景を半透明で描画する
         //SetColor(1, 1, 1, 0.55f);
         RenderImage(-1, -1, 2, 2, g_pauseTexture, 0, 1, 1);
-        // reset color to opaque for UI elements
+        // UI 要素用に不透明な色へ戻す
         SetColor(1, 1, 1, 1.0f);
     }
 
 
-    // for the buttons
+    // ボタン描画
     for (const auto& btn : uiButtons)
         btn.Draw(0.65f);
    
@@ -142,13 +142,13 @@ void PauseScene::Uninit()
         g_pauseTexture = nullptr;
     }
 
-    // for the black texture
+    // 黒背景テクスチャ用
     if (blackTexture) {
         blackTexture->Release();
         blackTexture = nullptr;
     }
 
-    // for continue button
+    // 続行ボタン用
     if (continueTexture)
     {
         continueTexture->Release();
@@ -160,7 +160,7 @@ void PauseScene::Uninit()
         continueHoverTexture = nullptr;
     }
 
-    // for control button
+    // 操作説明ボタン用
     if (controlTexture)
     {
         controlTexture->Release();
@@ -172,7 +172,7 @@ void PauseScene::Uninit()
         controlHoverTexture = nullptr;
     }
 
-    // for select stage button
+    // ステージ選択ボタン用
     if (selectTexture)
     {
         selectTexture->Release();
@@ -184,7 +184,7 @@ void PauseScene::Uninit()
         selectHoverTexture = nullptr;
     }
 
-    // for quit button
+    // 終了ボタン用
     if (quitTexture)
     {
         quitTexture->Release();

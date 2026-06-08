@@ -1,28 +1,28 @@
-﻿//================================
-//      TITLE
-//================================
+﻿// ================================
+//            TITLE
+// ================================
 
 #include "TitleScene.h"
-#include "SceneManager.h" // for switching scenes
+#include "SceneManager.h" // シーン切り替え用
 
-// construct
+// コンストラクタ
 TitleScene::TitleScene(SceneManager* manager) 
 {
     sceneManager = manager;
 	tex = nullptr;
 }
 
-//it initializes the objects in title
+// タイトル画面のオブジェクトを初期化する
 bool TitleScene::Init() 
 {
 	SetInGameCursorEnabled(true);
     LoadTexture(g_pDevice, "asset/UI/title/UI_title_background_animation_v8.png", &tex);
     LoadTexture(g_pDevice, "asset/UI/title/padding_animation.png", &g_paddingTitleAnim);
 
-    //InitGameWorld(); // I added this in the main.cpp
-    m_titleAnim.AddClip("titleScene",0,13,1,14, 0.08f, false, tex); // 0.06s per frame. lower number is faster
-	m_titleAnim.SetClip("titleScene");
-	m_titleAnim.Pause(); // start paused, will play when mouse is clicked
+    //InitGameWorld(); // main.cpp で追加した処理
+    m_titleAnim.AddClip("titleScene",0,13,1,14, 0.08f, false, tex); // 1 フレーム 0.06 秒。小さいほど速い
+    m_titleAnim.SetClip("titleScene");
+    m_titleAnim.Pause(); // 最初は一時停止し、マウスクリックで再生する
 
    
     paddingTitleAnim.AddClip("padddingAnimation", 0, 13, 1, 14, 0.09f, true, g_paddingTitleAnim);
@@ -34,7 +34,7 @@ bool TitleScene::Init()
     return true;
 }
 
-//it updates the objects in tile
+// タイトル画面のオブジェクトを更新する
 void TitleScene::Update(float deltaTime) 
 {
     g_inputSystem.Update();
@@ -48,10 +48,10 @@ void TitleScene::Update(float deltaTime)
     m_titleAnim.Update(deltaTime);
     paddingTitleAnim.Update(deltaTime);
 
-    // switch as soon as the animation finishes
+    // アニメーションが終わったらすぐに切り替える
     if (m_playing && m_titleAnim.IsFinished()) 
     {
-        sceneManager->SwitchScene(MENU); // and then it goes to mneu scene
+        sceneManager->SwitchScene(MENU); // その後メニューシーンへ移動する
         return;
     }
 
@@ -59,7 +59,7 @@ void TitleScene::Update(float deltaTime)
 
 }
 
-//it draws the objects in title
+// タイトル画面のオブジェクトを描画する
 void TitleScene::Draw() 
 {
 
@@ -80,7 +80,7 @@ void TitleScene::Draw()
     }
 }
 
-//it erases the objects in title
+// タイトル画面のオブジェクトを解放する
 void TitleScene::Uninit() 
 {
     if (tex)
@@ -95,11 +95,11 @@ void TitleScene::Uninit()
         g_paddingTitleAnim = nullptr;
     }
 
-    // clean up the texture for the animation
+    // アニメーション用テクスチャを解放する
     m_titleAnim.ClearClips();
     paddingTitleAnim.ClearClips();
 
-    // clean up the buttons
+    // ボタンを解放する
     uiButtons.clear();
     g_mouseIndicator.Cleanup();
 }

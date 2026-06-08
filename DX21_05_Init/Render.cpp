@@ -10,11 +10,11 @@
 #define SAFE_RELEASE(p) { if( NULL != p ) { p->Release(); p = NULL; } }
 
 
-// Define global variables (initialization allowed)
+// グローバル変数を定義する（ここでは初期化可）
 ID3D11Device* g_pDevice = nullptr;
 ID3D11DeviceContext* g_pDeviceContext = nullptr;
 
-ID3D11Buffer* g_pConstantBuffer = nullptr; // added november 12th
+ID3D11Buffer* g_pConstantBuffer = nullptr; // 11 月 12 日追加
 
 ID3D11InputLayout* g_pInputLayout = nullptr;
 ID3D11ShaderResourceView* pTextureSRV = nullptr;
@@ -74,24 +74,24 @@ HRESULT RendererInit(HWND hwnd) {
 	HRESULT hr = S_OK;
 	Audio::Init();
 
-	// only preload the most used SE in the game (like player and enemies SEs)
+	// ゲーム内でよく使う SE だけ先に読み込む（プレイヤーや敵の SE など）
 	Audio::PreloadSE(SoundEffect::ENEMY_HIT);
 	Audio::PreloadSE(SoundEffect::ENEMY_DEATH);
 	Audio::PreloadSE(SoundEffect::DASH);
 	Audio::PreloadSE(SoundEffect::SHOOT);
 	Audio::PreloadSE(SoundEffect::JUMP);
 
-	// Get actual client area size of window
+	// 実際のウィンドウクライアント領域サイズを取得する
 	RECT clientRect;
 	GetClientRect(hwnd, &clientRect);
 	UINT windowWidth = clientRect.right - clientRect.left;
 	UINT windowHeight = clientRect.bottom - clientRect.top;
 
-	// Create device and swap chain
+	// デバイスとスワップチェーンを作成する
 	DXGI_SWAP_CHAIN_DESC swapChainDesc{};
 	swapChainDesc.BufferCount = 1;
-	swapChainDesc.BufferDesc.Width = windowWidth;      // Use actual window width
-	swapChainDesc.BufferDesc.Height = windowHeight;    // Use actual window height
+	swapChainDesc.BufferDesc.Width = windowWidth;      // 実際のウィンドウ幅を使う
+	swapChainDesc.BufferDesc.Height = windowHeight;    // 実際のウィンドウ高を使う
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
 	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
@@ -99,9 +99,9 @@ HRESULT RendererInit(HWND hwnd) {
 	swapChainDesc.OutputWindow = hwnd;
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.SampleDesc.Quality = 0;
-	swapChainDesc.Windowed = TRUE;  // Keep as windowed mode (borderless fullscreen)
+	swapChainDesc.Windowed = TRUE;  // ウィンドウモードのままにする（ボーダーレス全画面）
 
-	// Call function to create device and swap chain simultaneously
+	// デバイスとスワップチェーンを同時に作成する
 	hr = D3D11CreateDeviceAndSwapChain(NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
@@ -116,7 +116,7 @@ HRESULT RendererInit(HWND hwnd) {
 		&g_pDeviceContext);
 	if (FAILED(hr)) return hr;
 
-	// Create render target view
+	// レンダーターゲットビューを作成する
 	ID3D11Texture2D* renderTarget;
 	hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&renderTarget);
 	if (FAILED(hr)) return hr;
@@ -124,11 +124,11 @@ HRESULT RendererInit(HWND hwnd) {
 	renderTarget->Release();
 	if (FAILED(hr)) return hr;
 
-	// Create depth stencil buffer
+	// 深度ステンシルバッファを作成する
 	ID3D11Texture2D* depthStencile{};
 	D3D11_TEXTURE2D_DESC textureDesc{};
-	textureDesc.Width = windowWidth;   // Use actual window width
-	textureDesc.Height = windowHeight; // Use actual window height
+	textureDesc.Width = windowWidth;   // 実際のウィンドウ幅を使う
+	textureDesc.Height = windowHeight; // 実際のウィンドウ高を使う
 	textureDesc.MipLevels = 1;
 	textureDesc.ArraySize = 1;
 	textureDesc.Format = DXGI_FORMAT_D16_UNORM;
@@ -140,7 +140,7 @@ HRESULT RendererInit(HWND hwnd) {
 	hr = g_pDevice->CreateTexture2D(&textureDesc, NULL, &depthStencile);
 	if (FAILED(hr)) return hr;
 
-	// Create depth stencil view
+	// 深度ステンシルビューを作成する
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc{};
 	depthStencilViewDesc.Format = textureDesc.Format;
 	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
@@ -149,7 +149,7 @@ HRESULT RendererInit(HWND hwnd) {
 	if (FAILED(hr)) return hr;
 	depthStencile->Release();
 
-	// Create viewport (using actual window dimensions)
+	// ビューポートを作成する（実際のウィンドウサイズを使用）
 	D3D11_VIEWPORT viewport;
 	viewport.Width = (FLOAT)windowWidth;
 	viewport.Height = (FLOAT)windowHeight;
@@ -161,23 +161,23 @@ HRESULT RendererInit(HWND hwnd) {
 	// Create input layout
 	D3D11_INPUT_ELEMENT_DESC layout[]
 	{
-		// Inform that position coordinates exist
+		// 位置座標要素があることを示す
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		// Inform that texture coordinates exist
+		// テクスチャ座標要素があることを示す
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		// for the color part
+		// 色成分用
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	unsigned int numElements = ARRAYSIZE(layout);
 
-	// Create vertex shader object, simultaneously create vertex layout
+	// 頂点シェーダーを作成し、同時に頂点レイアウトも作成する
 	hr = CreateVertexShader(&g_pVertexShader, &g_pInputLayout, layout, numElements, "VertexShader.hlsl");
 	if (FAILED(hr)) {
 		MessageBoxA(NULL, "CreateVertexShader error", "error", MB_OK);
 		return hr;
 	}
 
-	// Create pixel shader object
+	// ピクセルシェーダーを作成する
 	hr = CreatePixelShader(&g_pPixelShader, "PixelShader.hlsl");
 	if (FAILED(hr)) {
 		MessageBoxA(NULL, "CreatePixelShader error", "error", MB_OK);
@@ -186,19 +186,19 @@ HRESULT RendererInit(HWND hwnd) {
 
 	hr = LoadTexture(g_pDevice, "asset/back_img_01.png", &pTextureSRV2);
 	if (FAILED(hr)) {
-		// Handle error		
+		// エラー処理
 		MessageBoxA(NULL, "OP error", "error", MB_OK);
 		return hr;
 	}
 
 	hr = LoadTexture(g_pDevice, "asset/UI/number.png", &pTextureNum);
 	if (FAILED(hr)) {
-		// Handle error		
+		// エラー処理
 		MessageBoxA(NULL, "OP error", "error", MB_OK);
 		return hr;
 	}
 
-	// Create sampler state
+	// サンプラーステートを作成する
 	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -206,16 +206,16 @@ HRESULT RendererInit(HWND hwnd) {
 	g_pDevice->CreateSamplerState(&sampDesc, &pSamplerState);
 
 	D3D11_BLEND_DESC blendDesc = {};
-	blendDesc.AlphaToCoverageEnable = FALSE; // Disable alpha to coverage
-	blendDesc.IndependentBlendEnable = FALSE; // Disable independent blending
-	blendDesc.RenderTarget[0].BlendEnable = TRUE; // Enable blending for render target
-	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; // Source blend factor
-	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA; // Destination blend factor
-	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; // Blend operation
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE; // Alpha source blend factor
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; // Alpha destination blend factor
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; // Alpha blend operation
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // Write all color channels
+	blendDesc.AlphaToCoverageEnable = FALSE; // Alpha to Coverage を無効化
+	blendDesc.IndependentBlendEnable = FALSE; // 独立ブレンドを無効化
+	blendDesc.RenderTarget[0].BlendEnable = TRUE; // レンダーターゲットのブレンドを有効化
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; // ソースのブレンド係数
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA; // デスティネーションのブレンド係数
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; // ブレンド演算
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE; // Alpha のソース係数
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; // Alpha のデスティネーション係数
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; // Alpha ブレンド演算
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // 全カラー成分を書き込む
 	hr = g_pDevice->CreateBlendState(&blendDesc, &g_pBlendState);
 	if (FAILED(hr)) {
 		MessageBoxA(NULL, "CreateBlendState error", "error", MB_OK);
@@ -226,18 +226,18 @@ HRESULT RendererInit(HWND hwnd) {
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc = {};
 	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
 	depthStencilDesc.DepthEnable = FALSE;
-	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // Depth write mask
-	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS; // Depth comparison function
+	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // 深度書き込みマスク
+	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS; // 深度比較関数
 	hr = g_pDevice->CreateDepthStencilState(&depthStencilDesc, &depthStencilState);
 	if (FAILED(hr)) {
 		MessageBoxA(NULL, "CreateDepthStencilState error", "error", MB_OK);
 		return hr;
 	}
-	g_pDeviceContext->OMSetDepthStencilState(depthStencilState, 1); // Set depth stencil state
+	g_pDeviceContext->OMSetDepthStencilState(depthStencilState, 1); // 深度ステンシルステートを設定する
 
 
-	// added november 12th
-	// for the constant buffer for shader
+	// 11 月 12 日追加
+	// シェーダー用定数バッファ
 	D3D11_BUFFER_DESC cbDesc = {};
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	cbDesc.ByteWidth = sizeof(ConstantBuffer);
@@ -267,14 +267,14 @@ HRESULT RendererInit(HWND hwnd) {
 
 void RendererDrawF()
 {
-	// Screen fill color
-	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; //red,green,blue,alpha
+	// 画面クリア色
+	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; // red, green, blue, alpha
 
-	// Specify the drawing target canvas and depth buffer to use
+	// 描画先のレンダーターゲットと深度バッファを指定する
 	g_pDeviceContext->OMSetRenderTargets(1, &g_pRenderTargetView, g_pDepthStencilView);
-	// Fill the drawing target canvas
+	// 描画先をクリアする
 	g_pDeviceContext->ClearRenderTargetView(g_pRenderTargetView, clearColor);
-	// Reset the depth buffer
+	// 深度バッファをリセットする
 	g_pDeviceContext->ClearDepthStencilView(g_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	UINT strides = sizeof(VertexV);
@@ -285,26 +285,26 @@ void RendererDrawF()
 	g_pDeviceContext->VSSetShader(g_pVertexShader, NULL, 0);
 	g_pDeviceContext->PSSetShader(g_pPixelShader, NULL, 0);
 
-	g_pDeviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF); // Set blend state (use default blend state)
+	g_pDeviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF); // ブレンドステートを設定する（既定を使用）
 
-	//BackGround: pTextureSRV2
+	// 背景: pTextureSRV2
 	RenderImage(-1.f, -1.f, 4.75f, 4.75f, pTextureSRV2, 0, 1, 1);
-	// Set sampler state
+	// サンプラーステート設定
 
 }
 
 void RendererDrawB()
 {
     RenderOverlay();
-	// Switch double buffer and update screen
+	// ダブルバッファを切り替えて画面を更新する
 	g_pSwapChain->Present(0, 0);
 
 }
 
 void RenderOverlay()
 {
-    // Render the custom cursor on top of everything.
-    // In gameplay we want it to be camera-aware; in other scenes it should behave like UI.
+	// カスタムカーソルをすべての上に描画する。
+	// ゲームプレイ中はカメラ追従、それ以外のシーンでは UI として扱う。
     if (g_gameState == STATE_PLAYING) {
         g_gameCursor.Render(g_camera.GetX(), g_camera.GetY());
     }
@@ -316,7 +316,7 @@ void RenderOverlay()
 void RendererUninit()
 {
 	Audio::Shutdown();
-	// ※DirectX features must be released when the application ends after creation
+	// ※ 作成した DirectX リソースはアプリ終了時に必ず解放する
 	if (g_pDeviceContext) g_pDeviceContext->ClearState();
 	SAFE_RELEASE(g_pPixelShader);
 	SAFE_RELEASE(g_pVertexShader);
@@ -329,48 +329,48 @@ void RendererUninit()
 	SAFE_RELEASE(g_pDevice);
 	SAFE_RELEASE(pTextureSRV);
 	SAFE_RELEASE(pTextureSRV2);
-	SAFE_RELEASE(g_uiNumberTexture); // for the ui number texture
+	SAFE_RELEASE(g_uiNumberTexture); // UI 数字用テクスチャ
 	SAFE_RELEASE(pTextureNum);
-	SAFE_RELEASE(g_pConstantBuffer); // added november 12th
+	SAFE_RELEASE(g_pConstantBuffer); // 11 月 12 日追加
 	SAFE_RELEASE(g_pBlendState);
 	SAFE_RELEASE(pSamplerState);
 }
 
 HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, void** ppShaderObject, int* pShaderObjectSize)
 {
-	// Create .cso filename
+	// .cso ファイル名を作成する
 	char csoFileName[256];
-	const char* dot = strrchr(szFileName, '.');  // Find last '.'
+	const char* dot = strrchr(szFileName, '.');  // 最後の '.' を探す
 	if (dot) {
 		int basenameLen = (int)(dot - szFileName);
-		strncpy(csoFileName, szFileName, basenameLen); // Copy filename without extension if extension exists
-		csoFileName[basenameLen] = '\0';   // Add terminator
+		strncpy(csoFileName, szFileName, basenameLen); // 拡張子がある場合は拡張子なしの名前をコピー
+		csoFileName[basenameLen] = '\0';   // 終端文字を追加
 	}
 	else {
-		strcpy(csoFileName, szFileName);   // Copy as is if no extension
+		strcpy(csoFileName, szFileName);   // 拡張子がなければそのままコピー
 	}
-	strcat(csoFileName, ".cso");// Append ".cso" extension
+	strcat(csoFileName, ".cso");// ".cso" 拡張子を付ける
 
-	// Open .cso file if exists
+	// .cso ファイルがあれば開く
 	FILE* fp;
 	int ret = fopen_s(&fp, csoFileName, "rb");
 	if (ret == 0)
 	{
-		// Get file size
+		// ファイルサイズを取得する
 		fseek(fp, 0, SEEK_END);
 		int size = ftell(fp);
 		fseek(fp, 0, SEEK_SET);
 
-		// Allocate memory for reading binary data
+		// バイナリ読み込み用メモリを確保する
 		unsigned char* byteArray = new unsigned char[size];
 		fread(byteArray, size, 1, fp);
 		fclose(fp);
 
-		// Pass pointer and size to caller
+		// ポインタとサイズを呼び出し元へ返す
 		*ppShaderObject = byteArray;
 		*pShaderObjectSize = size;
 	}
-	// If .cso file doesn't exist, compile .hlsl file
+	// .cso が存在しない場合は .hlsl をコンパイルする
 	else
 	{
 		HRESULT hr = S_OK;
@@ -378,33 +378,33 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 		size_t 	wLen = 0;
 		int err = 0;
 
-		// Convert character encoding from Shift-JIS to UTF-16
-		setlocale(LC_ALL, "japanese");  // Set locale (Windows specific)
+		// 文字コードを Shift-JIS から UTF-16 へ変換する
+		setlocale(LC_ALL, "japanese");  // ロケール設定（Windows 固有）
 		err = mbstowcs_s(&wLen, filename, 512, szFileName, _TRUNCATE);
 
-		// Set shader compile options
+		// シェーダーコンパイルオプションを設定する
 		DWORD dwShaderFlags = D3DCOMPILE_ENABLE_STRICTNESS;
 #if defined( DEBUG ) || defined( _DEBUG )
-		dwShaderFlags |= D3DCOMPILE_DEBUG; // Include debug info for debug builds
+		dwShaderFlags |= D3DCOMPILE_DEBUG; // デバッグビルド用にデバッグ情報を含める
 #endif
 
-		// Blob for storing compile results and error information
+		// コンパイル結果とエラー情報を保持する Blob
 		ID3DBlob* pErrorBlob = nullptr;
 		ID3DBlob* pBlob = nullptr;
 
-		// Compile HLSL file
+		// HLSL ファイルをコンパイルする
 		hr = D3DCompileFromFile(
-			filename,							// Filename
-			nullptr,							// No macro definitions 
-			D3D_COMPILE_STANDARD_FILE_INCLUDE,	// Support #include 
-			szEntryPoint,						// Entry point name
-			szShaderModel,						// Shader model
-			dwShaderFlags,						// Compile flags
-			0,									// Effect flags
-			&pBlob,								// Compile result on success
-			&pErrorBlob);						// Compile error output
+			filename,							// ファイル名
+			nullptr,							// マクロ定義なし
+			D3D_COMPILE_STANDARD_FILE_INCLUDE,	// #include をサポート
+			szEntryPoint,						// エントリーポイント名
+			szShaderModel,						// シェーダーモデル
+			dwShaderFlags,						// コンパイルフラグ
+			0,									// エフェクトフラグ
+			&pBlob,								// 成功時のコンパイル結果
+			&pErrorBlob);						// コンパイルエラー出力
 
-		// Display error message on compile failure
+		// コンパイル失敗時はエラーメッセージを表示する
 		if (FAILED(hr))
 		{
 			if (pErrorBlob != nullptr) {
@@ -415,10 +415,10 @@ HRESULT CompileShader(const char* szFileName, LPCSTR szEntryPoint, LPCSTR szShad
 			return E_FAIL;
 		}
 
-		// Release error blob if exists
+		// エラー Blob があれば解放する
 		if (pErrorBlob) pErrorBlob->Release();
 
-		// Pass compiled binary data to caller on success
+		// 成功時はコンパイル済みバイナリを呼び出し元へ返す
 		*ppShaderObject = (pBlob)->GetBufferPointer();
 		*pShaderObjectSize = (int)(pBlob)->GetBufferSize();
 	}
@@ -431,14 +431,14 @@ HRESULT CreateVertexShader(ID3D11VertexShader** ppVertexShader, ID3D11InputLayou
 	void* ShaderObject;
 	int	ShaderObjectSize;
 
-	// Compile according to file extension
+	// ファイル拡張子に応じてコンパイルする
 	HRESULT hr = CompileShader(szFileName, "main", "vs_5_0", &ShaderObject, &ShaderObjectSize);
 	if (FAILED(hr)) return E_FAIL;
 
-	// Create vertex shader using device
+	// デバイスで頂点シェーダーを作成する
 	hr = g_pDevice->CreateVertexShader(ShaderObject, ShaderObjectSize, NULL, ppVertexShader);
 
-	// Create vertex layout using device
+	// デバイスで頂点レイアウトを作成する
 	g_pDevice->CreateInputLayout(pLayout, numElements, ShaderObject, ShaderObjectSize, ppVertexLayout);
 
 	return S_OK;
@@ -449,21 +449,21 @@ HRESULT CreatePixelShader(ID3D11PixelShader** ppPixelShader, const char* szFileN
 	void* ShaderObject;
 	int	ShaderObjectSize;
 
-	// Compile according to file extension
+	// ファイル拡張子に応じてコンパイルする
 	HRESULT hr = CompileShader(szFileName, "main", "ps_5_0", &ShaderObject, &ShaderObjectSize);
 	if (FAILED(hr)) return hr;
 
-	// Create pixel shader
+	// ピクセルシェーダーを作成する
 	hr = g_pDevice->CreatePixelShader(ShaderObject, ShaderObjectSize, nullptr, ppPixelShader);
 	if (FAILED(hr)) return hr;
 
 	return S_OK;
 }
 
-// Quad drawing function
+// 四角形描画関数
 void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelShader* pPS)
 {
-	// Create temporary vertex buffer 
+	// 一時的な頂点バッファを作成する
 	ID3D11Buffer* pQuadBuffer = nullptr;
 	D3D11_BUFFER_DESC bufferDesc{};
 	bufferDesc.ByteWidth = sizeof(VertexV) * 4;
@@ -475,13 +475,13 @@ void RenderQuad(const VertexV vertices[4], ID3D11VertexShader* pVS, ID3D11PixelS
 	initData.pSysMem = vertices;
 	g_pDevice->CreateBuffer(&bufferDesc, &initData, &pQuadBuffer);
 
-	// Set rendering pipeline state 
+	// レンダリングパイプライン状態を設定する
 	UINT stride = sizeof(VertexV);
 	UINT offset = 0;
-	// Execute draw command 
+	// 描画コマンドを実行する
 	g_pDeviceContext->Draw(4, 0);
 
-	// Release temporary resources
+	// 一時リソースを解放する
 	SAFE_RELEASE(pQuadBuffer);
 }
 
@@ -494,20 +494,20 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 		return;
 	}
 
-	// Calculate size of each frame in sprite sheet (texture coordinates)
+	// スプライトシート内の 1 フレームサイズを計算する（テクスチャ座標）
 	float frameWidth = 1.0f / columns;
 	float frameHeight = 1.0f / rows;
 
-	// Calculate current frame position in sprite sheet
-	// rows = vertical count, columns = horizontal count
+	// スプライトシート内の現在フレーム位置を計算する
+	// rows = 縦分割数、columns = 横分割数
 	int col = frameIndex % columns;
 	int row = frameIndex / columns;
 
-	// Calculate texture coordinate range for current frame
-	float u0 = col * frameWidth;       // Left boundary
-	float u1 = (col + 1) * frameWidth; // Right boundary
-	float v0 = row * frameHeight;      // Top boundary
-	float v1 = (row + 1) * frameHeight; // Bottom boundary
+	// 現在フレームのテクスチャ座標範囲を計算する
+	float u0 = col * frameWidth;       // 左端
+	float u1 = (col + 1) * frameWidth; // 右端
+	float v0 = row * frameHeight;      // 上端
+	float v1 = (row + 1) * frameHeight; // 下端
 
 	// 应用水平翻转
 	if (flipHorizontal) {
@@ -516,26 +516,26 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 		u1 = temp;
 	}
 
-	// Quad center for rotation
+	// 回転用の矩形中心
 	float centerX = posX + width * 0.5f;
 	float centerY = posY + height * 0.5f;
 
 	D3D11_SUBRESOURCE_DATA initData;
-	// 如果没有旋转，使用更简单的计算
+	// 回転がない場合は簡単な計算を使う
 	if (rotation == 0.0f) {
-		// 不旋转时直接计算顶点位置
+		// 回転なしなら頂点位置を直接計算する
 		VertexV vertices[4] = {
-			{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
-			{ posX + width, posY,           0.5f, u1, v1 }, // Bottom right
-			{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
-			{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
+			{ posX + width, posY + height, 0.5f, u1, v0 }, // 右上
+			{ posX + width, posY,           0.5f, u1, v1 }, // 右下
+			{ posX,         posY + height, 0.5f, u0, v0 }, // 左上
+			{ posX,         posY,          0.5f, u0, v1 }  // 左下
 		};
 
 		initData.pSysMem = vertices;
-		// 创建和使用顶点缓冲区...
+		// 頂点バッファを作成して使用する...
 	}
 	else {
-		// 有旋转时计算旋转后的顶点位置
+		// 回転ありの場合は回転後の頂点位置を計算する
 		float cosA = cosf(rotation);
 		float sinA = sinf(rotation);
 
@@ -548,31 +548,31 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 			);
 			};
 
-		// Original corners (unrotated)
-		float x0 = posX;         float y0 = posY;          // bottom left
-		float x1 = posX + width; float y1 = posY;          // bottom right
-		float x2 = posX;         float y2 = posY + height; // top left
-		float x3 = posX + width; float y3 = posY + height; // top right
+		// 元の四隅（未回転）
+		float x0 = posX;         float y0 = posY;          // 左下
+		float x1 = posX + width; float y1 = posY;          // 右下
+		float x2 = posX;         float y2 = posY + height; // 左上
+		float x3 = posX + width; float y3 = posY + height; // 右上
 
-		// Apply rotation
-		auto p0 = rotatePoint(x3, y3); // top right
-		auto p1 = rotatePoint(x1, y1); // bottom right
-		auto p2 = rotatePoint(x2, y2); // top left
-		auto p3 = rotatePoint(x0, y0); // bottom left
+		// 回転を適用する
+		auto p0 = rotatePoint(x3, y3); // 右上
+		auto p1 = rotatePoint(x1, y1); // 右下
+		auto p2 = rotatePoint(x2, y2); // 左上
+		auto p3 = rotatePoint(x0, y0); // 左下
 
 		VertexV vertices[4] = {
-			{ p0.first, p0.second, 0.5f, u1, v0 }, // Top right
-			{ p1.first, p1.second, 0.5f, u1, v1 }, // Bottom right
-			{ p2.first, p2.second, 0.5f, u0, v0 }, // Top left
-			{ p3.first, p3.second, 0.5f, u0, v1 }  // Bottom left
+			{ p0.first, p0.second, 0.5f, u1, v0 }, // 右上
+			{ p1.first, p1.second, 0.5f, u1, v1 }, // 右下
+			{ p2.first, p2.second, 0.5f, u0, v0 }, // 左上
+			{ p3.first, p3.second, 0.5f, u0, v1 }  // 左下
 		};
 		initData.pSysMem = vertices;
 
-		// 创建和使用顶点缓冲区...
+		// 頂点バッファを作成して使用する...
 	}
 
-	// 后续创建缓冲区、设置资源、绘制等代码保持不变...
-	// Create temporary vertex buffer
+	// この後のバッファ生成・リソース設定・描画コードはそのまま...
+	// 一時的な頂点バッファを作成する
 	ID3D11Buffer* pDynamicBuffer = nullptr;
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = sizeof(VertexV) * 4;
@@ -587,31 +587,31 @@ void RenderImage(float posX, float posY, float width, float height, ID3D11Shader
 
 	HRESULT hr = g_pDevice->CreateBuffer(&desc, &initData, &pDynamicBuffer);
 	if (FAILED(hr)) {
-		// Error handling
+		// エラー処理
 		return;
 	}
 
-	// Bind vertex buffer
+	// 頂点バッファをバインドする
 	UINT stride = sizeof(VertexV);
 	UINT offset = 0;
 	g_pDeviceContext->IASetVertexBuffers(0, 1, &pDynamicBuffer, &stride, &offset);
 
-	// Bind texture resource
+	// テクスチャリソースをバインドする
 	g_pDeviceContext->PSSetShaderResources(0, 1, &textureSRV);
 
-	// Set sampler state
+	// サンプラーステートを設定する
 	g_pDeviceContext->PSSetSamplers(0, 1, &pSamplerState);
 
-	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF); // Set blend state
+	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF); // ブレンドステートを設定する
 
-	// Draw quad
+	// 四角形を描画する
 	g_pDeviceContext->Draw(4, 0);
 
-	// Release temporary resources
+	// 一時リソースを解放する
 	SAFE_RELEASE(pDynamicBuffer);
 }
 
-// used for the gauge in the game
+// ゲーム内のゲージ描画用
 void RenderGaugeFillImage(float posX, float posY, float width, float height,
 	ID3D11ShaderResourceView* textureSRV, float fillRatio)
 {
@@ -628,38 +628,38 @@ void RenderGaugeFillImage(float posX, float posY, float width, float height,
 	ResetLinearClipState();
 	UploadConstantBufferState();
 
-	// Render normally
+	// 通常描画する
 	RenderImage(posX, posY, width, height, textureSRV, 0, 1, 1, false, 0.0f, false);
 
-	// Disable gauge fill for next renders
+	// 次回描画のためにゲージ塗り設定を無効化する
 	g_renderConstantData.fillRatio = 0.0f;
 	g_renderConstantData.useGaugeFill = 0.0f;
 	UploadConstantBufferState();
 }
 
-// render image vertical so it doesnt shift left
+// 左へずれないように縦方向クリップで描画する
 void RenderImageClipped(float posX, float posY, float width, float height, ID3D11ShaderResourceView* textureSRV, float fillRatio)
 {
-	// Shrink the quad from the right while keeping left edge fixed
-	float renderWidth = width * fillRatio;  // Actual width to render
+	// 左端を固定したまま右側から縮める
+	float renderWidth = width * fillRatio;  // 実際に描画する幅
 
-	// Texture coordinates - crop from the right to match render width
-	float u0 = 0.0f;              // Left boundary
-	float u1 = fillRatio;         // Right boundary - crop texture to match
-	float v0 = 0.0f;              // Top boundary
-	float v1 = 1.0f;              // Bottom boundary
+	// テクスチャ座標 - 描画幅に合わせて右側を切り取る
+	float u0 = 0.0f;              // 左端
+	float u1 = fillRatio;         // 右端 - 幅に合わせてトリミング
+	float v0 = 0.0f;              // 上端
+	float v1 = 1.0f;              // 下端
 
 	D3D11_SUBRESOURCE_DATA initData;
 	VertexV vertices[4] = {
-		{ posX + renderWidth, posY + height, 0.5f, u1, v0 }, // Top right
-		{ posX + renderWidth, posY,          0.5f, u1, v1 }, // Bottom right
-		{ posX,               posY + height, 0.5f, u0, v0 }, // Top left
-		{ posX,               posY,          0.5f, u0, v1 }  // Bottom left
+		{ posX + renderWidth, posY + height, 0.5f, u1, v0 }, // 右上
+		{ posX + renderWidth, posY,          0.5f, u1, v1 }, // 右下
+		{ posX,               posY + height, 0.5f, u0, v0 }, // 左上
+		{ posX,               posY,          0.5f, u0, v1 }  // 左下
 	};
 
 	initData.pSysMem = vertices;
 
-	// Create temporary vertex buffer
+	// 一時的な頂点バッファを作成する
 	ID3D11Buffer* pDynamicBuffer = nullptr;
 	D3D11_BUFFER_DESC desc;
 	desc.ByteWidth = sizeof(VertexV) * 4;
@@ -677,22 +677,22 @@ void RenderImageClipped(float posX, float posY, float width, float height, ID3D1
 		return;
 	}
 
-	// Bind vertex buffer
+	// 頂点バッファをバインドする
 	UINT stride = sizeof(VertexV);
 	UINT offset = 0;
 	g_pDeviceContext->IASetVertexBuffers(0, 1, &pDynamicBuffer, &stride, &offset);
 
-	// Bind texture resource
+	// テクスチャリソースをバインドする
 	g_pDeviceContext->PSSetShaderResources(0, 1, &textureSRV);
 
-	// Set sampler state
+	// サンプラーステートを設定する
 	g_pDeviceContext->PSSetSamplers(0, 1, &pSamplerState);
 	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF);
 
-	// Draw quad
+	// 四角形を描画する
 	g_pDeviceContext->Draw(4, 0);
 
-	// Release temporary resources
+	// 一時リソースを解放する
 	SAFE_RELEASE(pDynamicBuffer);
 }
 
@@ -702,32 +702,32 @@ void RenderNumber(int number, float startX, float startY, float digitWidth, floa
 	if (enableCulling && !g_camera.IsRectVisible(startX, startY, digitWidth, digitHeight)) {
 		return;
 	}
-	if (number < 0) return; // Only support non-negative numbers
+	if (number < 0) return; // 非負の数のみ対応
 
-	// Calculate total number of digits (e.g., 123 has 3 digits)
+	// 桁数を計算する（例: 123 は 3 桁）
 	int numDigits = 0;
 	int temp = number;
 	while (temp > 0) {
 		temp /= 10;
 		numDigits++;
 	}
-	if (numDigits == 0) numDigits = 1; // Handle case of 0
+	if (numDigits == 0) numDigits = 1; // 0 の場合を処理する
 
-	// Render digits from right to left (right-aligned)
-	float currentX = startX + (numDigits - 1) * digitWidth; // Right alignment starting point
+	// 右から左へ描画する（右揃え）
+	float currentX = startX + (numDigits - 1) * digitWidth; // 右揃えの開始位置
 	temp = number;
 	for (int i = 0; i < numDigits; i++) {
-		int digit = temp % 10; // Get current digit (ones place)
-		temp /= 10;            // Remove processed digit
+		int digit = temp % 10; // 現在の桁を取得（一の位）
+		temp /= 10;            // 処理済みの桁を削る
 
-		// Render current digit
+		// 現在の桁を描画する
 		RenderImage(currentX, startY, digitWidth, digitHeight, textureSRV, digit, 1, 10);
-		currentX -= digitWidth; // Move left one digit
+		currentX -= digitWidth; // 1 桁分左へ移動
 	}
 }
 
 
-// added november 12th
+	// 11 月 12 日追加
 void SetColor(float r, float g, float b, float a)
 {
 	g_renderConstantData.color = DirectX::XMFLOAT4(r, g, b, a);

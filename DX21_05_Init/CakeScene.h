@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 #include "SceneManager.h"
 #include "Game.h"
@@ -6,7 +6,7 @@
 #include "Render.h"
 #include <vector>
 
-// added November 14th
+// 11 月 14 日追加
 class CakeScene : public SceneBase
 {
 private:
@@ -33,18 +33,18 @@ private:
     float cutAnimTimer = 0.0f;
     float worldSplitProgress = 0.0f;
     bool wasAttackActive = false;
-    const float CUT_ANIM_DURATION = 1.0f; // after the last cut, wait a bit before showing the plate
+    const float CUT_ANIM_DURATION = 1.0f; // 最後のカット後、少し待ってから皿を表示する
     const float CUT_FEEDBACK_DURATION = 0.16f;
     const float WORLD_SPLIT_DISTANCE = 0.06f;
     const float PLATE_SPLIT_DISTANCE = 0.12f;
 
-    // Cake position and size
+    // ケーキの位置とサイズ
     float cakeX = 0.0f;
     float cakeY = -0.5f;
     float cakeWidth = 0.4f;
     float cakeHeight = 0.4f;
 
-    float cutAngle = 0.0f;    // world-space angle of the slash / cut line
+    float cutAngle = 0.0f;    // 斬撃 / カットラインのワールド空間での角度
     float cutDirX = 1.0f;
     float cutDirY = 0.0f;
     float cutNormalX = 0.0f;
@@ -62,7 +62,7 @@ public:
     void Uninit() override;
 
 private:
-    bool CheckPlayerAttackHitsCake(); // for checking if the player hit the cake or not
+    bool CheckPlayerAttackHitsCake(); // プレイヤーの攻撃がケーキに当たったかを判定する
     void ResetCakePieces();
     bool CutCake();
     void DrawCakeSequence();

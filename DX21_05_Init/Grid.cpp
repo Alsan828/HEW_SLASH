@@ -10,11 +10,11 @@ SpatialGrid::SpatialGrid(float cellSize, float worldMinX, float worldMinY,
     , m_worldWidth(worldMaxX - worldMinX)
     , m_worldHeight(worldMaxY - worldMinY) {
 
-    // 计算网格维度
+    // グリッドの寸法を計算する
     m_cellsX = static_cast<int>(std::ceil(m_worldWidth / m_cellSize));
     m_cellsY = static_cast<int>(std::ceil(m_worldHeight / m_cellSize));
 
-    // 初始化所有单元格
+    // すべてのセルを初期化する
     m_cells.resize(m_cellsX * m_cellsY);
     for (int y = 0; y < m_cellsY; ++y) {
         for (int x = 0; x < m_cellsX; ++x) {
@@ -42,23 +42,23 @@ int SpatialGrid::WorldToGridIndex(float worldX, float worldY) const {
 }
 
 void SpatialGrid::BuildFromMap(Map& map) {
-    // 清空所有单元格
+    // すべてのセルを空にする
     for (auto& cell : m_cells) {
         cell.tiles.clear();
     }
 
-    // 只处理中间层（固体砖块）
+    // 中間レイヤー（固体タイル）のみ処理する
     const auto& midgroundTiles = map.GetTiles(MapLayer::MIDGROUND);
 
     for (const auto& tile : midgroundTiles) {
         if (tile.tileInfo.isSolid) {
-            // 计算砖块覆盖的网格范围
+            // タイルが覆うグリッド範囲を計算する
             int minX = WorldToGridX(tile.posX);
             int maxX = WorldToGridX(tile.posX + tile.width);
             int minY = WorldToGridY(tile.posY);
             int maxY = WorldToGridY(tile.posY + tile.height);
 
-            // 将砖块添加到它覆盖的所有单元格中
+            // タイルを覆っているすべてのセルに追加する
             for (int y = minY; y <= maxY; ++y) {
                 for (int x = minX; x <= maxX; ++x) {
                     int index = y * m_cellsX + x;
@@ -73,16 +73,16 @@ void SpatialGrid::GetTilesInArea(float x, float y, float width, float height,
     std::vector<MapTile*>& result) const {
     result.clear();
 
-    // 计算查询区域的网格范围
+    // 問い合わせ範囲のグリッド領域を計算する
     int minX = WorldToGridX(x);
     int maxX = WorldToGridX(x + width);
     int minY = WorldToGridY(y);
     int maxY = WorldToGridY(y + height);
 
-    // 去重集合
+    // 重複排除用の集合
     std::unordered_set<MapTile*> uniqueTiles;
 
-    // 收集覆盖区域内的所有单元格中的砖块
+    // 対象領域内のすべてのセルからタイルを集める
     for (int gridY = minY; gridY <= maxY; ++gridY) {
         for (int gridX = minX; gridX <= maxX; ++gridX) {
             int index = gridY * m_cellsX + gridX;

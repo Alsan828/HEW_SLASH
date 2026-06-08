@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 #include "InputSystem.h"
 #include "SceneManager.h"
@@ -7,7 +7,7 @@
 #include "UIButton.h"
 //#include "Animation.h"
 
-// title background structure
+// タイトル背景用の構造体
 struct Background 
 {
     float posX, posY;
@@ -17,11 +17,11 @@ struct Background
 class TitleScene : public SceneBase 
 {
 private:
-    SceneManager* sceneManager;   // pointer to the scene manager
+    SceneManager* sceneManager;   // シーンマネージャーへのポインタ
 
     //ID3D11ShaderResourceView* backgroundTexture;
 
-    // for the title intro animation
+    // タイトル導入アニメーション用
     std::vector<ID3D11ShaderResourceView*> frames;
     ID3D11ShaderResourceView* tex;
 
@@ -31,7 +31,7 @@ private:
     std::vector<UIButton> uiButtons;
 
 public:
-    TitleScene(SceneManager* manager); // constructor
+    TitleScene(SceneManager* manager); // コンストラクタ
 
     bool Init() override;
     void Update(float deltaTime) override;
@@ -40,5 +40,5 @@ public:
 };
 
 extern Animation paddingTitleAnim;
-extern InputSystem g_inputSystem;   // use the global input system
-extern ID3D11Device* g_pDevice;     // device for texture loading
+extern InputSystem g_inputSystem;   // グローバル入力システムを使う
+extern ID3D11Device* g_pDevice;     // テクスチャ読み込み用デバイス

@@ -1,7 +1,7 @@
 ﻿// Projectile.cpp
 #include "Projectile.h"
 
-// Global projectile manager instance
+// グローバル射弹マネージャーのインスタンス
 ProjectileManager& ProjectileManager::GetInstance() {
     static ProjectileManager instance;
     return instance;
@@ -10,7 +10,7 @@ ProjectileManager& ProjectileManager::GetInstance() {
 bool Projectile::CheckCollisionWithRect(float rectX, float rectY, float rectW, float rectH) const {
     if (!isActive) return false;
 
-    // posX/posY are stored as the projectile center. Use that directly.
+    // posX/posY は射弹の中心座標として保持されているので、そのまま使う。
     float visualSize = size * scaleEffect;
     float centerX = posX;
     float centerY = posY;
@@ -27,27 +27,27 @@ bool Projectile::CheckCollisionWithRect(float rectX, float rectY, float rectW, f
 }
 
 void Projectile::OnHitByPlayer() {
-    // Trigger visual/sound effects on hit
-    // spawn weak point hit effect at projectile position
-    // Use 0.75 scale for projectile hit effects
-    // posX/posY represent the projectile center
+    // 命中時の視覚・音響エフェクトを発生させる
+    // 射弹位置に弱点ヒットエフェクトを生成する
+    // 射弹ヒット用エフェクトは 0.75 倍で使う
+    // posX/posY は射弹の中心を表す
     SpawnWeakPointHitEffectScaled(posX, posY, 0.75f);
 
-    // Shorter hit-stop and weaker camera shake compared to enemy hit
-    g_player.hitStopTimer = 0.025f; // shorter than normal
+    // 敵命中時より短いヒットストップと弱めのカメラシェイクにする
+    g_player.hitStopTimer = 0.025f; // 通常より短い
     if (!g_player.isInvincible) {
         g_camera.Shake(0.01f, 0.03f);
     }
 
-    // Deactivate projectile
+    // 射弹を無効化する
     isActive = false;
 }
 
 bool Projectile::IsHostileAndAimedAtPlayer() const {
-    // We only consider projectiles that are from enemies (not from player)
+    // 敵が撃った射弹だけを対象にする（プレイヤー弾は除外）
     if (fromPlayer) return false;
 
-    // Compute direction to player
+    // プレイヤーへの方向を計算する
     float playerCenterX = g_player.posX + PLAYER_WIDTH * 0.5f;
     float playerCenterY = g_player.posY + PLAYER_HEIGHT * 0.5f;
 
@@ -57,17 +57,17 @@ bool Projectile::IsHostileAndAimedAtPlayer() const {
     float dx = playerCenterX - projCenterX;
     float dy = playerCenterY - projCenterY;
     float len = sqrtf(dx * dx + dy * dy);
-    if (len <= 0.001f) return true; // very close -> probably aimed
+    if (len <= 0.001f) return true; // 非常に近いなら狙っているとみなす
 
     dx /= len; dy /= len;
 
-    // projectile travel direction
+    // 射弹の進行方向
     float pvlen = sqrtf(velocityX * velocityX + velocityY * velocityY);
     if (pvlen <= 0.001f) return false;
     float pvx = velocityX / pvlen;
     float pvy = velocityY / pvlen;
 
-    // dot product: if the projectile is roughly heading towards the player, dot > cos(60deg)=0.5
+    // 内積: 射弹がだいたいプレイヤー方向へ向かっていれば dot > cos(60度)=0.5
     float dot = dx * pvx + dy * pvy;
     return dot > 0.5f;
 }
@@ -82,7 +82,7 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
     fromPlayer(fromPlayer), isActive(true), homingTarget(nullptr),
     currentPierceCount(0), rotation(0.0f), scaleEffect(1.0f) {
 
-    // Calculate direction vector
+    // 方向ベクトルを計算する
     float dx = targetX - startX;
     float dy = targetY - startY;
     float distance = sqrt(dx * dx + dy * dy);
@@ -104,7 +104,7 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
         rotation = 0.0f;
     }
 
-    // Set initial properties based on type
+    // 種類ごとに初期プロパティを設定する
     switch (type) {
     case ProjectileType::FIREBALL:
         size = 0.08f;
@@ -128,7 +128,7 @@ Projectile::Projectile(ProjectileType type, float startX, float startY,
         break;
     case ProjectileType::LIGHTNING:
         size = 0.02f;
-        maxLifeTime = 0.5f; // Lightning has very short duration
+        maxLifeTime = 0.5f; // ライトニングは持続時間が非常に短い
         homingStrength = 0.0f;
         break;
     case ProjectileType::POISON_DART:
@@ -151,7 +151,7 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
 
     lifeTime += deltaTime;
 
-    // Check lifetime
+    // 生存時間を確認する
     if (lifeTime >= maxLifeTime) {
         isActive = false;
         CreateImpactEffect();
@@ -162,7 +162,7 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
     float oldVelocityX = velocityX;
     float oldVelocityY = velocityY;
 
-    // Type-specific update logic
+    // 種類ごとの更新処理
     switch (type) {
     case ProjectileType::FIREBALL:
         UpdateFireball(deltaTime);
@@ -206,10 +206,10 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
         }
     }
 
-    // Movement and collision detection
+    // 移動と当たり判定
     Move(deltaTime);
 
-    // Check map collision
+    // マップとの衝突を確認する
     if (CheckMapCollision(mapManager)) {
         isActive = false;
         CreateImpactEffect();
@@ -218,14 +218,14 @@ void Projectile::Update(float deltaTime, MapManager* mapManager, std::vector<Ene
     CheckPlayerCollision();
     CheckEnemyCollision(enemies);
 }
-// Check collision with player
+// プレイヤーとの衝突を確認する
 void  Projectile::CheckPlayerCollision() {
-    // Only check player collision if projectile is not from player
+    // プレイヤー弾でない場合のみプレイヤーとの衝突を確認する
     if (!isActive || fromPlayer) {
         return;
     }
 
-    // Get player position and size
+    // プレイヤーの位置とサイズを取得する
     float playerX = g_player.posX;
     float playerY = g_player.posY;
     float playerWidth = PLAYER_WIDTH;
@@ -260,28 +260,28 @@ void  Projectile::CheckPlayerCollision() {
     // 碰撞半径
     // 敌人射弹判定略微缩小，避免贴图较大导致“擦边也算命中”。
     // 注意：这里只影响碰撞，不影响渲染。
-    // Shrink enemy projectile hitbox more to avoid accidental grazing hits
+    // 敵射弹の当たり判定をさらに縮小して、かすっただけの誤判定を減らす
     constexpr float ENEMY_PROJECTILE_HITBOX_SCALE = 0.80f;
     float collisionRadius = (actualSize + std::min(playerWidth, playerHeight)) * 0.5f * ENEMY_PROJECTILE_HITBOX_SCALE;
 
     if (distance < collisionRadius)
     {
         //if (!g_player.isDashing && !g_player.isDead) {
-        //    // Apply effect to player
+        //    // プレイヤーに効果を適用する
         //    OnPlayerDeath();
-        //    isActive = false; // 射弹命中后应该消失
+        //    isActive = false; // 射弹は命中後に消えるべき
         //}
         
-        // so the player doesnt die also if invincible
+        // 無敵中はプレイヤーが死亡しないようにする
         if (!g_player.isDashing && !g_player.isDead && !g_player.isInvincible) {
-            // Apply effect to player
+            // プレイヤーに効果を適用する
             OnPlayerDeath();
-            isActive = false; // 射弹命中后应该消失
+            isActive = false; // 射弹は命中後に消えるべき
         }
     }
 }
 void Projectile::UpdateFireball(float deltaTime) {
-    // Fireball: gradually grows larger and accelerates
+    // Fireball: 時間経過で大きくなり、加速する
     scaleEffect = 1.0f + lifeTime * 0.5f;
     speed += deltaTime * 2.0f;
     // 火球的自转效果保留
@@ -289,19 +289,19 @@ void Projectile::UpdateFireball(float deltaTime) {
 }
 
 void Projectile::UpdateBullet(float deltaTime) {
-    // Bullet: simple projectile with slight rotation
-    // Disable rotation for BULLET: keep rotation fixed
+    // Bullet: シンプルな射弹
+    // BULLET の回転は無効化し、常に固定しておく
     rotation = 0.0f;
-    // No scaling effect - keeps constant size
+    // 拡縮効果なし - 常に同じ大きさを保つ
 }
 
 void Projectile::UpdateIceShard(float deltaTime) {
     // Ice Shard: 基础方向 + 自转效果
     rotation += deltaTime * 15.0f;
 
-    // Ice trail effect
+    // 氷の軌跡エフェクト
     if (fmod(lifeTime, 0.1f) < 0.05f) {
-        // Could add ice particle effects here
+        // ここで氷のパーティクルを追加できる
     }
 }
 
@@ -325,17 +325,17 @@ void Projectile::UpdateHolyBolt(float deltaTime) {
     // 圣光箭不自转，旋转角度来自基础方向
 }
 void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemies) {
-    // Magic Missile: homes to the nearest enemy
+    // Magic Missile: 最も近い敵を追尾する
     if (homingTarget && !homingTarget->IsAlive()) {
         homingTarget = nullptr;
     }
 
     if (!homingTarget) {
-        // Find the nearest enemy
+        // 最も近い敵を探す
         float closestDistance = 1000.0f;
         for (auto& enemy : enemies) {
             if (enemy->IsAlive()) {
-                // Use Get methods to get enemy position
+                // Get メソッドで敵の位置を取得する
                 float enemyX = enemy->GetX();
                 float enemyY = enemy->GetY();
 
@@ -351,24 +351,24 @@ void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemie
         }
     }
 
-    // 保存旧的旋转角度
+    // 以前の回転角度を保持する
     float oldDirectionAngle = CalculateDirectionAngle();
 
-    // Home towards target
+    // ターゲットへ追尾する
     if (homingTarget && homingStrength > 0) {
         float dx = homingTarget->GetX() - posX;
         float dy = homingTarget->GetY() - posY;
         float distance = sqrt(dx * dx + dy * dy);
 
         if (distance > 0) {
-            // Gradually adjust direction
+            // 徐々に向きを補正する
             float targetVX = (dx / distance) * speed;
             float targetVY = (dy / distance) * speed;
 
             velocityX += (targetVX - velocityX) * homingStrength * deltaTime;
             velocityY += (targetVY - velocityY) * homingStrength * deltaTime;
 
-            // Normalize velocity
+            // 速度を正規化する
             float currentSpeed = sqrt(velocityX * velocityX + velocityY * velocityY);
             velocityX = (velocityX / currentSpeed) * speed;
             velocityY = (velocityY / currentSpeed) * speed;
@@ -376,19 +376,19 @@ void Projectile::UpdateMagicMissile(float deltaTime, std::vector<Enemy*>& enemie
             // 计算新的方向角度
             float newDirectionAngle = CalculateDirectionAngle();
 
-            // 平滑过渡旋转角度
+            // 回転角度を滑らかに補間する
             float angleDiff = newDirectionAngle - oldDirectionAngle;
 
             // 将角度差标准化到[-π, π]范围内
             while (angleDiff > 3.14159f) angleDiff -= 2 * 3.14159f;
             while (angleDiff < -3.14159f) angleDiff += 2 * 3.14159f;
 
-            // 使用插值平滑旋转过渡
+            // 補間で回転遷移を滑らかにする
             rotation += angleDiff * 0.5f;
         }
     }
     else {
-        // 如果没有跟踪目标，保持原有的自转
+        // 追尾対象がいない場合は元の自転を維持する
         rotation += deltaTime * 8.0f;
     }
 }
@@ -401,14 +401,14 @@ bool Projectile::CheckMapCollision(MapManager* mapManager) {
     if (!mapManager || !mapManager->GetCurrentMap()) return false;
 
     auto& solidTiles = mapManager->GetCurrentMap()->GetSolidTiles();
-    // Only count as collision when the projectile's center point intersects a solid tile.
-    // posX/posY are stored as the projectile center.
+    // 射弹の中心点が固体タイルに入った場合だけ衝突とみなす。
+    // posX/posY は射弹の中心として保持されている。
     float visualSize = size * scaleEffect;
     float centerX = posX;
     float centerY = posY;
 
     for (const auto& tile : solidTiles) {
-        // Check if center point lies within the tile rectangle
+        // 中心点がタイル矩形内にあるか確認する
         if (centerX >= tile.posX && centerX <= tile.posX + tile.width &&
             centerY >= tile.posY && centerY <= tile.posY + tile.height) {
             return true;
@@ -418,20 +418,20 @@ bool Projectile::CheckMapCollision(MapManager* mapManager) {
 }
 
 void Projectile::CheckEnemyCollision(std::vector<Enemy*>& enemies) {
-    // Check enemy collision if projectile is from player
+    // プレイヤー弾の場合のみ敵との衝突を確認する
     if (!isActive || !fromPlayer) {
         return;
     }
     for (auto& enemy : enemies) {
         if (!enemy->IsAlive()) continue;
 
-        // Use Get methods to get enemy attributes
+        // Get メソッドで敵の属性を取得する
         float enemyX = enemy->GetX();
         float enemyY = enemy->GetY();
         float enemyWidth = enemy->GetWidth();
         float enemyHeight = enemy->GetHeight();
 
-        // Treat projectile as a box centered at posX/posY with size scaled by scaleEffect
+        // 射弹を posX/posY 中心・scaleEffect 反映済みサイズの矩形として扱う
         float projW = size * scaleEffect;
         float projH = size * scaleEffect;
         float projLeft = posX - projW * 0.5f;
@@ -439,7 +439,7 @@ void Projectile::CheckEnemyCollision(std::vector<Enemy*>& enemies) {
         float projRight = projLeft + projW;
         float projBottom = projTop + projH;
 
-        // Collision detection (AABB)
+        // 衝突判定（AABB）
         if (projLeft < enemyX + enemyWidth &&
             projRight > enemyX &&
             projTop < enemyY + enemyHeight &&
@@ -463,24 +463,24 @@ void Projectile::CheckEnemyCollision(std::vector<Enemy*>& enemies) {
 void Projectile::ApplyEffectToEnemy(Enemy* enemy) {
     if (!enemy || !enemy->IsAlive()) return;
 
-    // Calculate attack angle using centers
+    // 中心点を使って攻撃角度を計算する
     float enemyCenterX = enemy->GetX() + enemy->GetWidth() * 0.5f;
     float enemyCenterY = enemy->GetY() + enemy->GetHeight() * 0.5f;
     float dx = enemyCenterX - posX;
     float dy = enemyCenterY - posY;
     float attackAngle = atan2(dy, dx);
 
-    // Apply damage
+    // ダメージを適用する
     enemy->TakeDamage((int)effect.damage, attackAngle);
 
-    // Apply special effects
-    // TODO: Add status effects like burning, slowing, stunning, etc.
-    // Need to add a status effect system to the Enemy class
+    // 特殊効果を適用する
+    // TODO: 燃焼・減速・スタンなどの状態異常を追加する
+    // Enemy クラス側に状態異常システムを追加する必要がある
 }
 
 void Projectile::CreateImpactEffect() {
-    // TODO: Create impact effects
-    // Can add particle effects, sound effects, etc. here
+    // TODO: 着弾エフェクトを作成する
+    // ここにパーティクルや効果音などを追加できる
 }
 
 
@@ -500,18 +500,18 @@ ID3D11ShaderResourceView* ProjectileManager::GetTextureForType(ProjectileType ty
 void Projectile::Render(const Camera& camera) {
     if (!isActive) return;
 
-    // Get corresponding texture
+    // 対応するテクスチャを取得する
     ID3D11ShaderResourceView* texture = ProjectileManager::GetInstance().GetTextureForType(type);
     if (!texture) return;
 
-    // Convert to screen coordinates (world -> screen)
+    // 画面座標へ変換する（world -> screen）
     float screenX, screenY;
     float cameraX = camera.GetX();
     float cameraY = camera.GetY();
     screenX = posX - cameraX;
     screenY = posY - cameraY;
 
-    // Set color based on type
+    // 種類に応じて色を設定する
     switch (type) {
     case ProjectileType::FIREBALL:
         SetColor(1.0f, 0.5f, 0.2f, 1.0f);
@@ -554,9 +554,9 @@ void Projectile::Render(const Camera& camera) {
     bool flipHoriz = false;
     float drawRotation = totalRotation;
     if (type == ProjectileType::BULLET) {
-        drawRotation = 0.0f; // ensure no rotation
-        // If moving left, flip the sprite horizontally
-		renderHeight = renderSize * 1.5f; // Make bullet sprite rectangular
+        drawRotation = 0.0f; // 回転しないことを保証する
+        // 左へ進んでいる場合はスプライトを左右反転する
+        renderHeight = renderSize * 1.5f; // 弾スプライトを縦長にする
 		renderWidth = renderSize * 1.0f;
         flipHoriz = (velocityX < 0.0f);
     }
@@ -565,7 +565,7 @@ void Projectile::Render(const Camera& camera) {
 
     SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
-// ProjectileManager class implementation
+// ProjectileManager クラスの実装
 void ProjectileManager::AddProjectile(ProjectileType type, float startX, float startY,
     float targetX, float targetY, float speed,
     const ProjectileEffect& effect, bool fromPlayer) {
@@ -588,7 +588,7 @@ void ProjectileManager::Update(float deltaTime, MapManager* mapManager, std::vec
 void ProjectileManager::HandlePlayerSlashHitRect(float rectX, float rectY, float rectW, float rectH) {
     for (auto it = projectiles.begin(); it != projectiles.end();) {
         if (it->CheckCollisionWithRect(rectX, rectY, rectW, rectH)) {
-            // Only allow cutting projectiles that are hostile and actually aimed at the player
+            // 敵対的で、かつ実際にプレイヤーを狙っている射弹だけ斬れるようにする
             if (it->IsHostileAndAimedAtPlayer()) {
                 it->OnHitByPlayer();
             }
@@ -604,7 +604,7 @@ void ProjectileManager::HandlePlayerSlashHitRect(float rectX, float rectY, float
 }
 
 void ProjectileManager::HandlePlayerSlashHitCircle(float centerX, float centerY, float radius) {
-    // convert circle to rect for simple check
+    // 簡易判定のため円を矩形に変換する
     float rectX = centerX - radius;
     float rectY = centerY - radius;
     float rectW = radius * 2.0f;
@@ -623,14 +623,14 @@ void ProjectileManager::ClearAll() {
 }
 
 void ProjectileManager::LoadTextures(ID3D11Device* device) {
-    // Load various projectile textures
+    // 各種射弹テクスチャを読み込む
     LoadTexture(device, "asset/enemy/enemy_005_thorn/enemy_005_thorn_Pbullet_right.png", &fireballTexture);
     LoadTexture(device, "asset/enemy/enemy_003_fort/enemy_003_fort_bullet.png", &bulletTexture);
     LoadTexture(device, "asset/Projectile_IceShard.png", &iceShardTexture);
 
 }
 
-// Predefined projectile creation functions
+// 定義済み効果を使った射弹生成関数
 void ProjectileManager::CreateFireball(float startX, float startY, float targetX, float targetY, bool fromPlayer) {
     ProjectileEffect effect;
     effect.damage = 100000.0f;

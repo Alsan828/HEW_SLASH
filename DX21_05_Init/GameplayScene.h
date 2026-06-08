@@ -4,29 +4,29 @@
 #include "SceneManager.h"
 #include "Enemy.h"
 
-// this is used for all the areas including the boss area (total of 8 areas)
+// ボスエリアを含むすべてのエリア（全 8 エリア）で使う
 class GameplayScene : public SceneBase
 {
 private:
     SceneManager* sceneManager;
-    int worldNumber;  // for the world number ( world1, 2 or 3)
-    int areaNumber;  // for the area number ( area1, area2, ... area8)
-    bool isBossStage; // to check if its boss stage or not
+    int worldNumber;  // ワールド番号（world1、2、3）
+    int areaNumber;  // エリア番号（area1、area2、...、area8）
+    bool isBossStage; // ボスステージかどうか
 
-    // Tutorial overlay for early World1 areas
+    // World1 前半エリア用のチュートリアルオーバーレイ
     bool m_showTutorial = false;
-    int m_currentTutorialIndex = 0; // Which tutorial (1-4) to show
-    bool m_tutorialTriggered[4] = { false, false, false, false }; // Track which tutorials shown
+    int m_currentTutorialIndex = 0; // 表示するチュートリアル番号（1-4）
+    bool m_tutorialTriggered[4] = { false, false, false, false }; // どのチュートリアルを表示済みかを管理する
     ID3D11ShaderResourceView* m_tutorialTexture = nullptr;
     ID3D11ShaderResourceView* m_tutorialButtonTexture = nullptr;
     ID3D11ShaderResourceView* m_tutorialButtonHoverTexture = nullptr;
     UIButton m_tutorialButton;
 
-    // for the boss
+    // ボス用
     Enemy* m_boss;
-    float m_bossCheckpointHP;   // this is for the checkpoint of the boss when it respawns so the hp bar will be full or not
-    bool m_checkpoint1Reached;  // for when the hp bar has reached 2/3 of it
-    bool m_checkpoint2Reached;  // for when the hp bar has reached 1/3 of it
+    float m_bossCheckpointHP;   // ボス再出現時に HP バーをどこまで戻すかを保持する
+    bool m_checkpoint1Reached;  // HP バーが 2/3 に到達したか
+    bool m_checkpoint2Reached;  // HP バーが 1/3 に到達したか
 
     StageInfo stageInfo;
 
@@ -39,11 +39,11 @@ public:
     void Uninit() override;
 
 
-    // for the boss hp logic
+    // ボス HP ロジック用
     void UpdateBossLogic(float deltaTime);
-    void CheckBossCheckpoints();      // if we reached the checkpoint of the hp bar
-    void RespawnBossAtCheckpoint();   // the boss respawns at the checkpoint, so I can see the bar full or not
-    void RenderBossHealthBar();       // draws the boss HP bar
+    void CheckBossCheckpoints();      // HP バーのチェックポイントに到達したかを確認する
+    void RespawnBossAtCheckpoint();   // チェックポイントからボスを再出現させる
+    void RenderBossHealthBar();       // ボス HP バーを描画する
 
-    void CheckTutorialTriggers(); // check if player hit the tutorial or not
+    void CheckTutorialTriggers(); // プレイヤーがチュートリアルトリガーに触れたかを確認する
 };

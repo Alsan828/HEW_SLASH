@@ -1,0 +1,1702 @@
+﻿### D:\Japan\HAL\HEW2\HEW_SLASH\DX21_05_Init\Enemy.cpp
+1: // Enemy.cpp
+7: // 初始化伤害数字管理器
+10: // 定义敌人纹理
+16: ID3D11ShaderResourceView* g_flyEnemyIdleTexture = nullptr;  // 改为飞行敌人纹理
+17: ID3D11ShaderResourceView* g_flyEnemyDeathTexture = nullptr;  // 改为飞行敌人死亡纹理
+40: // Boss textures are defined in `Globals.cpp`.
+122:             // Simple facing based on horizontal velocity
+141: // 修改InitEnemies函数，加载所有纹理
+143:     // 加载敌人纹理
+144:     // 普通敌人
+148:     // 盲眼普通敌人（idle/普通动画共用同一张图；死亡复用普通敌人死亡）
+151:     // 飞行敌人
+155:     // 法师敌人
+160:     // 快速敌人
+164:     // 炸弹敌人
+168:     // Square enemy
+172:     // Beam enemy
+181:     // Boss 敌人纹理（请替换为你自己的资源路径）
+185:     // Load boss charge textures (provide correct file paths for your images)
+188:     // Load boss dash (2 frames) sprite
+199:     // Load boss charge textures (provide correct file paths for your images)
+202:     // Load boss dash (2 frames) sprite
+211: // ========== BlindEyeEnemy ==========
+214:     // 盲眼敌人不追人，巡逻逻辑自己处理转向，不需要朝向冷却
+220:     // idle/普通：使用同一张图（单帧/单格）
+222:     // 死亡动画：复用普通敌人死亡
+226:     // initial weakpoint: front takes double damage
+229:     // 轻微慢一点，符合“普通”巡逻敌人
+233:     // Make a clear weakpoint (one-hit kill) for testing: hit from above
+242:     // 不追逐
+251:     // 在脚下前方做一个小探测点，判断是否还有地面
+283:     // 盲眼敌人只巡逻：遇墙或悬崖掉头
+287:     // 1) 前方是否还有地面（悬崖检测）
+292:         // 2) 墙壁检测：在预测位置放一个小偏移，若会撞墙则掉头
+303: // ========== ThrowerEnemy ==========
+306:     // Reuse mage/"projectile" enemy texture as requested.
+318:     // Larger flight time => slower projectile speed while keeping the same ballistic arc formula
+321:     // One-hit weakpoint (top attack)
+343:     // Spawn a base enemy at thrower's position and launch it.
+350:     // Convert to game units per second such that Update (vel * dt * 60)
+351:     // => one-second displacement is vel * 60.
+375:     // Keep some distance; do not chase too aggressively.
+392:     // Update thrown enemies first so they can land this frame.
+397:     // Throw after movement logic so aiming uses current position.
+403: // Enemy类实现
+408:     // 普通敌人的碰撞盒不要比贴图大一圈：缩小并保持中心点不变
+417:     // 为基类敌人添加默认动画剪辑
+423:     facingRight = true;  // 默认面向右边
+427:     // 设置基础的8方向伤害倍率
+437:     // 初始化AI参数
+440:     detectionRange = 3.0f;  // 检测范围
+441:     loseSightRange = 8.0f;  // 丢失视野范围
+443:     // base/normal enemy uses turn cooldown by default
+449:         // Enforce a minimum damage multiplier of 1.0f so enemies never take reduced damage
+461: // 计算相对角度（基于敌人面向方向）
+463:     // 面向右时，0度为正面；面向左时，180度为正面
+467:     // 标准化到[-π, π]
+474: // 转换角度到方向索引（8方向）
+476:     // 标准化相对角度到[0, 2π]
+480:     // 8个方向，每个45度
+483:     // 计算方向索引
+494: // 根据攻击角度计算伤害
+500: // 在TakeDamage方法中使用DamageNumberManager
+509:     // 使用独立的伤害数字管理器
+512:         posX + width * 0.5f,  // 敌人中心X
+513:         posY + height,        // 敌人顶部
+518:     // Always spawn hit effect on any successful hit.
+519:     // Use a stable hit anchor (same convention as damage numbers): X=center, Y=top.
+520:     // Slightly offset down so the flash appears on the body rather than above the head.
+524:         // Slightly stronger shake on weak-point/critical hit
+528:         // Subtle shake on normal hit
+541:         /*if (multiplier >= 2.0f) {
+544:         if (multiplier > 1.5f) {  // CHANGED FROM >= 2.0f to > 1.5f
+553:     // 基础敌人被击中时没有特殊行为
+557:     if (isDying) return;  // 避免重复触发
+561:     // 确保切换到死亡动画
+564:     // 重置动画到第一帧
+568:     // increments the player combo when enemy dies
+569:     //g_player.comboCount++;
+570:     //g_player.comboTimer = 5.0f; // it resets the timer
+573:     //erase later
+586:     //OnEnemyDefeated();
+588:     //eraee later
+603:     // 优先处理死亡状态
+605:         anim.Update(deltaTime);  // 确保死亡动画得到更新
+607:         // 检查动画是否播放完毕
+611:         return;  // 死亡动画期间不执行其他逻辑
+615:         // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+620:     // 可见性检测和优化逻辑
+645:     // 受击状态处理
+653:     // 应用重力
+656:     // 保存旧位置用于碰撞检测
+660:     // 水平移动
+667:     // 垂直移动
+674:     // 边界检查
+677:         OnDeath();  // 触发死亡动画
+681:     // AI更新
+692: // 简化更新（对需要更新的屏幕外敌人）
+694:     // 简化的AI更新（只处理状态转换，不进行路径计算等）
+697:     // 更新离屏计时器
+701: // 简化的AI更新
+703:     // 只处理基本状态维护，不进行复杂计算
+706:     // 更新面向方向
+711:     // 简化状态机：只处理超时或关键状态转换
+715:     // 每5秒检查一次状态转换（减少频率）
+719:         // 简化状态转换逻辑
+743:     // 更新面向方向（普通敌人受冷却限制；其他敌人保持原本“立即转向”）
+757:     // 状态机逻辑
+777:     // 每2秒检查一次是否需要改变方向
+780:             patrolDirection = 1.0f;  // 向右走
+783:             patrolDirection = -1.0f;  // 向左走
+790:     // 添加小的垂直速度变化避免完全静止
+798:     float dy = g_player.posY - posY;  // 添加垂直方向计算
+799:     float distance = sqrt(dx * dx + dy * dy);  // 使用实际距离
+801:     // 只有远程敌人才在攻击范围内停止移动
+803:         // 远程敌人在攻击范围内停止移动
+807:         // 普通敌人：一直按自己当前面向方向移动（不再根据玩家位置改变移动方向）
+813:     // 获取相机位置（相机中心坐标）
+817:     // 将世界坐标转换为屏幕坐标（相对坐标）
+818:     // 假设渲染系统使用屏幕中心作为原点(0,0)
+826:     // Apply tint if set (default white)
+829:     // 将世界坐标转换为屏幕坐标
+833:     // NOTE: health bar is rendered after the enemy so it appears on top
+835:     // 获取UV偏移用于精灵表动画
+838:     // Apply scale to sprite size
+841:     // Center the bigger sprite on collision box
+845:     // 渲染敌人精灵
+855:         false,             // enableCulling
+856:         0.0f,              // rotation
+857:         !facingRight       // flipHorizontal: 注意这里可能应该是!facingRight，根据您的坐标系决定
+860:     // Boss may use its own tint
+863:     // 如果不是死亡状态，渲染血条（包括血量小于等于10的敌人）
+872:     // Apply per-enemy tint (allows BR variant to render red when SetTint was used)
+897:     // Restore draw color to white after rendering the boss
+900:     // Boss uses the HUD-mounted health bar (rendered by GameplayScene).
+901:     // Do not render the above-head health bar for the boss to avoid duplicate UI.
+905:     // Follower-style health icons (using asset/UI/Health.png 1x3 spritesheet)
+906:     // Compute how many icons to show: one per 10 HP (ceil)
+910:     // Ensure healthFollowers vector has the right size
+916:     // World-to-screen base anchor: above enemy
+920:     // Per-icon layout
+921:     // Keep icon size constant; only reduce spacing to fit within enemy width
+922:     const float iconW = width * 0.28f; // base icon size relative to enemy width
+924:     // Reduce default spacing significantly so indicators are closer together
+925:     float spacing = iconW * 0.12f; // much smaller spacing
+926:     const float minSpacing = width * 0.01f; // absolute minimum spacing
+928:     // Ensure the total indicator area does not exceed the enemy width
+929:     // leave a small margin so edges do not go beyond the enemy size
+944:     // Use real delta time for smoothing
+950:         // target position stacked horizontally centered above the enemy
+956:         // Directly snap follower to target position so health icons are fixed above the head
+961:         // Convert to screen coords
+965:         // Determine visibility: each icon represents 10 HP (strict). Show icon i when health > i*10
+982:     // Basic bounding box overlap
+988:     // If overlapping, only count as a damaging collision when either:
+989:     //  - this enemy type allows contact damage (CanDamageOnContact()) and
+990:     //    the player is not dashing (dashing is considered an attack), OR
+991:     //  - the enemy is currently executing an explicit attack (IsCurrentlyAttacking()).
+999: // 检查与特定区域的碰撞
+1007:         // 回退到原始方法
+1018:     // 使用空间网格优化
+1039: // 更新碰撞检测，使用空间网格优化
+1045:     // 缓存空间网格指针
+1047:     // 使用空间网格优化
+1049:     float padding = 0.5f;  // 稍微扩展检测范围
+1068:     // For hazard spikes, use a smaller collision box (one third), centered
+1081: // FlyEnemy实现 - 飞行敌人，不受重力影响
+1084:     // 飞行敌人：空中单位
+1086:     attackRange = 0.0f;  // 近战敌人
+1096:     // 添加动画剪辑
+1104:     // 飞行敌人特定参数
+1105:     patrolMinX = x - 2.0f;  // 扩大巡逻范围
+1107:     detectionRange = 5.0f;  // 更远的探测距离
+1108:     patrolAltitude = y;  // 巡逻高度
+1110:     altitudeChangeRate = 0.05f;  // 高度变化速度
+1114:     // ensure there is a clear weak direction (back) for one-shot testing
+1123:     // 每2秒检查是否需要改变水平方向
+1126:             patrolDirection = 1.0f;  // 向右走
+1129:             patrolDirection = -1.0f;  // 向左走
+1134:     // 垂直漂浮效果
+1138:     // 平滑移动到目标高度
+1151:     velocityX = patrolDirection * moveSpeed * 0.3f;  // 巡逻时较慢
+1160:     // 如果玩家在检测范围内，直接向玩家移动
+1162:         // 归一化方向向量
+1166:         // 飞行敌人直接向玩家移动，无视地形
+1171:         // 接近时稍微减速
+1178:     // 飞行敌人被击中时会有短暂硬直
+1185:     // 飞行敌人死亡时可能会有特殊效果
+1188: // MageEnemy实现
+1191:     // 法师敌人：顶部和底部为弱点（一击必杀）
+1199:     detectionRange = 4.0f;  // 更远的探测距离
+1200:     attackRange = 2.5f;  // 射弹攻击范围
+1203:     // 添加动画剪辑
+1205:     anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_mageEnemyDeathTexture); // for when I kill the enemy
+1209:     // 射弹相关参数
+1212:     attackCooldown = 1.5f;  // 攻击冷却时间
+1217:     // expose a weakpoint direction for one-shot testing
+1222:     // 死亡动画期间不应再产生新射弹
+1233:     // Enemy::Update 可能在死亡/离屏最小更新等情况下提前返回，
+1234:     // 这里再兜底一次，确保不会在这些状态下继续发射射弹。
+1241:     // 在追逐状态下发射射弹
+1252:     // 法师在追逐时保持距离
+1255:             velocityX = moveSpeed * 0.5f;  // 移动较慢
+1262:         velocityX = 0;  // 在攻击距离内停止移动
+1267:     //如果死亡
+1270:     // Aim at player's center, and fire from enemy center (body)
+1279:         // 获取ProjectileManager实例
+1282:         // 创建魔法射弹配置
+1288:         // 计算射弹目标位置为玩家中心
+1292:         // 发射魔法射弹：从敌人身体中心发射
+1294:             posX + width * 0.5f,  // 从身体中心发射
+1295:             posY + height * 0.5f,  // 从敌人中心Y
+1301:         // 播放攻击动画
+1302:         //PlayAnimation("attack");
+1306: // FastEnemy实现
+1315:     attackRange = 0.0f;  // 近战敌人
+1322:     // one-hit weakpoint from above for testing
+1326: // 添加这个函数实现
+1342:         anim.Update(deltaTime);  // 确保死亡动画得到更新
+1344:         // 检查动画是否播放完毕
+1348:         return;  // 死亡动画期间不执行其他逻辑
+1352:         // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+1357:     // 可见性检测和优化逻辑
+1382:     // 受击状态处理
+1390:     // AI更新
+1393:     // 应用水平移动
+1396:     // 飞行敌人的垂直移动（漂浮效果）
+1399:     // 边界检查（防止飞出世界）
+1416:     float distance = sqrt(dx * dx + dy * dy);  // 使用实际距离
+1418:     // 快速敌人一直向玩家移动
+1426:     // 冲刺攻击
+1427:     if (currentDashCooldown <= 0 && distance < 2.0f) {  // 冲刺距离阈值
+1434:     // 快速敌人向前冲刺
+1438: // BombEnemy实现
+1441:     // 炸弹敌人：顶部和底部为弱点（一击必杀），其他方向减少伤害
+1453:     moveSpeed = 0.0f;  // 不移动
+1469: // 覆盖TakeDamage函数，添加爆炸检测
+1473:     // 获取伤害倍率
+1477:     // 使用独立的伤害数字管理器
+1480:         posX + width * 0.5f,  // 敌人中心X
+1481:         posY + height,        // 敌人顶部
+1483:         multiplier >= 10.0f  // 如果从顶部/底部方向，显示为暴击
+1486:     // 检查是否从顶部或底部攻击
+1491:     // 如果从顶部或底部攻击，立即死亡并触发爆炸
+1493:         health = 0;  // 立即死亡
+1494:         // mark as weak-spot death so kill rewards & effects apply
+1497:         OnDeath();  // 触发爆炸
+1498:         return;     // 直接返回，跳过后续逻辑
+1501:     // 非致命/非垂直一击时，播放普通的击中反馈（特效与音效）
+1506:     // 非垂直攻击，正常处理伤害
+1519: void BombEnemy::Update(float deltaTime, MapManager* mapManager) {    // 优先处理死亡状态
+1521:         anim.Update(deltaTime);  // 确保死亡动画得到更新
+1523:         // 检查动画是否播放完毕
+1527:         return;  // 死亡动画期间不执行其他逻辑
+1531:         // 如果已经死亡但还没开始死亡动画，则开始死亡动画
+1535:     // 调用基类的受击状态更新
+1543:     // 脉动效果
+1548:     // 简单AI：只检测玩家距离
+1553:     // 更新面向方向
+1558:     // 简单状态机
+1560:         currentState = CHASE;  // 当玩家接近时进入追逐状态
+1563:         currentState = PATROL;  // 否则保持巡逻状态（静止）
+1566:     // 死亡时触发爆炸
+1574:     // 在追逐状态下，如果玩家在爆炸范围内，就自爆
+1580:         OnDeath();  // 触发爆炸
+1585:     // 先调用基类的OnDeath
+1591:     // 播放爆炸音效
+1592:     // PlaySound("explosion.wav");
+1594:     // 创建爆炸效果
+1595:     // CreateExplosionEffect(posX, posY);
+1597:     // 创建射弹向左右发射
+1601: // so the enemy throw projectiles in 8 directions
+1603:     // Get ProjectileManager instance
+1606:     float distance = 10.0f;  // How far to target
+1608:     // Calculate center position of the enemy
+1610:     float centerY = posY + height * 0.3f;  // 从敌人高度30%处发射（原来是0.5f，降低了20%）
+1612:     // for the 8 directions pattern
+1622:             true  // will not hurt the player
+1634:     // Boss: collision box and sprite are both 3x
+1635:     // Enemy(x,y,...) has already set a base collision size; scale it up while keeping the center position.
+1648:     // idle: 4列1行，按需调整
+1651: 	// dash: 2帧（按你的图），循环用于“重复播放4次”
+1653: 	// dash over: 1x4，播放完回到下一段
+1656:     // 充能/蓄力（保持原有）
+1660:     // 新增：slash 准备与激活，来自你提供的两张图
+1661:     // 图片5：4帧，从右到左播放 => start=3, end=0, splitX=4, splitY=1
+1663: 	// 图片6：8帧，从右到左播放 => start=7, end=0, splitX=8, splitY=1
+1664: 	// Slow down to 0.5x speed (double frame time)
+1667:     // Down before => down
+1671:     // death: 5帧示例
+1677: // Boss should not deal damage by simple collision/contact.
+1684:     // Handle death state
+1698:     // Phase change example
+1705:     // Update facing towards player unless locked during release
+1711:     // State machine
+1715:         // Choose between dash or slash only (leap disabled)
+1748:     // During leap moving, motion and gravity are handled in UpdateLeapMoving.
+1749:     // Skipping base movement here prevents double-integration which can cause disappearing.
+1750:     // Gravity and movement like base Enemy
+1774:     // Boss moves toward player
+1784:         velocityX = 0;  // Stop at attack range
+1789:     // Boss special attack - shoot multiple projectiles, etc.
+1790:     // Use ProjectileManager to create attacks
+1795:     // Boss hit reaction
+1800:     // Boss death - maybe trigger cutscene or level completion
+1803: // Boss takes damage: mitigate during DOWN and change weakline after N hits
+1806:     // If the boss is performing the active slash and is within the
+1807:     // vulnerability window (first five frames), immediately enter the
+1808:     // down sequence. This makes hitting the boss early in the slash
+1809:     // cause a guaranteed knockdown.
+1821:     // During down: reduced damage and cannot die
+1823:         actualDamage = std::max(1, actualDamage / 4); // reduce
+1829:     // Hit feedback (same as normal enemies)
+1839:         // Enter down sequence
+1845:             // Clamp to small positive HP during down
+1855: // ===== Boss helpers =====
+1859:     // Randomize some durations when entering states to make behavior less predictable
+1862:         float r = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f; // [-1,1]
+1872:         // Start charge animation using stage1
+1878:         // Lock facing at start of charge
+1880:         // Prevent changing facing once the dash direction is chosen
+1882:         // randomized charge duration
+1888:         // Maintain locked facing during dash movement
+1891:         // randomized dash moving duration (cap by dashMaxDuration later)
+1895:         // Play dash_over first, then return to idle when finished
+1905:         // Lock facing at start of slash
+1908:         // use same charge duration randomness for slash
+1915:         // Maintain locked facing
+1917:         // When entering active slash, mark as attacking so collision can hurt the player
+1918:         // (IsCurrentlyAttacking will report true during the active window)
+1919:         // We will use state and animation frame checks in IsCurrentlyAttacking.
+1931:         facingLocked = true; // keep facing fixed during down
+1944:     // While charging, advance animation from stage1 to stage2 midway
+1951:         // Move quickly in the locked facing direction (ensure dash direction matches facing)
+1955:         // Make sure the visual facing matches the dash
+1961:     // Repeat dash animation loops before moving to dash_over.
+1962:     // Calculate a requiredTime but allow randomized shorter/longer durations.
+1968:     // Use randomizedDashMovingDuration when set (fallback to a quarter of dashMaxDuration)
+1971:     // Keep dashing for the required/randomized time, but still allow a max duration guard.
+1980:     // `dash_over` is non-looping; when it finishes or after a short timeout, go back to idle.
+1987:     // After prep animation finishes (or a fallback duration), enter active slash
+1988:     if (stateTimer >= randomizedChargeDuration * 0.5) {        //(anim.IsFinished() || stateTimer >= chargeDuration)
+1994:     // Deal damage on the second-to-last frame.
+1995:     // With startFrame=7 and endFrame=0 (reverse playback), the second-to-last frame is 1.
+2002:         // Only kill the player if they are not already dead, not currently
+2003:         // invincible (gauge or dash), and not dashing (dashing is an attack
+2004:         // state and should not be interrupted). Match the beam enemy checks
+2005:         // to avoid inconsistent behavior.
+2011:         // Spawn projectile barrage once
+2017:             // Fan-shaped barrage fired along boss facing direction
+2019:             const float totalSpread = 0.9f; // radians, wider fan
+2020:             // Use fixed/locked facing if available, else current facing
+2034:     // End slash when the clip finishes.
+2041:     // Slash attack: damage occurs on the specific frame (frame 1)
+2046:     // Dash movement: treat the boss as attacking for contact damage while moving in dash state
+2069:         // When the boss finishes the down-after recovery and gets up,
+2070:         // clear the accumulated hit counter so the next down-phase
+2071:         // requires fresh hits.
+2078:     // Cycle weak direction to simulate changing weakline
+2080:     // Reset all to 1.0
+2085:     // Make one direction very weak each time
+2100:     dashSpeedMultiplier = 25.0f;  // faster dash
+2101:     chargeDuration = 0.7f;        // shorter charge window (harder to react)
+2102:     downDuration = 2.0f;          // shorter vulnerability window
+2103:     timingVariance = 0.15f;       // less predictable timing
+2133: // SquareEnemy implementation - stationary enemy
+2136:     // Square enemy: takes normal damage from all directions
+2148:     moveSpeed = 0.0f;  // Doesn't move
+2149:     detectionRange = 0.0f;  // Doesn't chase
+2150:     attackRange =  0.0f;  // Contact damage only
+2152:     // Add animations (adjust frame counts based on your sprites)
+2154:     anim.AddClip("death", 0, 3, 1, 4, 0.06f, false, g_squareEnemyDeathTexture); // Adjust frames as needed
+2163:     // Handle death state first
+2178:     // Visibility detection
+2203:     // Handle hit state
+2211:     // Square enemy doesnt move
+2215:     // Pulse effect for visual feedback
+2218:     // just stay in place
+2230:     // Square enemy has no special behavior when hit
+2235:     // Call base death logic
+2241:     // Weak points: Vertical and Horizontal lines (one-hit weakpoints)
+2250:     detectionRange = 0.6f;  // change this depending on the range you want
+2252:     // for the animation
+2279:     // Show damage number
+2288:     // If hit on weak points, instant death
+2296:     // Normal damage
+2310:     // Handle death animation sequence
+2314:         // Phase 0: pre_death animation
+2324:         // Phase 1: main death with explosion
+2326:             // Trigger the explosion
+2336:         // Phase 2: post_death animation (beam fading)
+2351:     // Handle hit state
+2363:     // Calculate distance to player
+2368:     // Update facing direction
+2373:     // Get current frame (declare before switch to avoid scoping issues)
+2376:     // State machine for beam attack cycle
+2383:         // Cooldown timer
+2388:         // Check if player is in range and cooldown is done
+2399:         hasKilledPlayerThisAttack = false; // Reset kill flag when starting new attack
+2401:         // After charging animation completes, start attack
+2412:         CheckBeamDamage(); // Check beam damage EVERY frame during attack, not just specific frames
+2414:         // After attack duration, start post-attack
+2425:         // After post-attack animation, return to idle
+2428:             currentCooldown = attackCooldown;  // Reset cooldown
+2434:     anim.Update(deltaTime);  // Update animation
+2438:     // so the enemy kills one time per attack to the player kill once per attack
+2441:     // Get centers
+2454:     // Check horizontal beam (left-right line)
+2459:     // Check vertical beam (up-down line)
+2464:     // Create a small safe zone in the very center
+2468:     // Hit if touching either line, but NOT in the center safe zone
+2471:     // the player dies instantly
+2482:     // Start death animation sequence
+2484:     deathAnimationPhase = 0;  // Start with pre_death animation
+2489:     // Damages other enemies but not the player
+2490:     // the center position of this beam enemy
+2494:     // the explosion is really big like a big circle OLD VERSION
+2495:     // Damage nearby enemies
+2496:     /*for (auto& enemy : g_enemies) {
+2509:     // with this the explosion is like "+" which is the laser shape when the beam enemy is killed
+2513:         // calculates the center position of the enemies
+2517:         // for the horizontal and vertical distances between the two centers (the center is the beam enemy)
+2518:         // fabs so the value is always positive
+2525:         // Check horizontal beam (left and right line)
+2530:         // Check vertical beam (up and down line)
+2535:         // Hit if touching either line
+2541:             float angle = atan2(dy, dx); // calculates the angle in radians  from one point to another from the beam enemy when hitting other enemies
+2549: // 敌人更新函数
+2556:     // NOTE:
+2557:     // Some enemies (e.g., ThrowerEnemy) can spawn new enemies during Update().
+2558:     // Using a range-for over std::vector while it is modified can invalidate
+2559:     // references/iterators and crash. Iterate by index over the initial count.
+2565:         // 调试信息：计数可见敌人
+2573:     // 调试输出（可选）
+2585:     // 移除死亡的敌人
+2592:                 if (/*!e->IsAlive()*/e->IsMarkedForDeletion()) {
+2602: // 修改RenderEnemies函数
+2605:         ID3D11ShaderResourceView* texture = g_enemyIdleTexture;  // 默认纹理
+2607:         if (dynamic_cast<FlyEnemy*>(enemy)) {  // 改为FlyEnemy
+2629:         enemy->Render(texture, camera); // 传递相机参数
+
+### D:\Japan\HAL\HEW2\HEW_SLASH\DX21_05_Init\Game.cpp
+2: // Add to global variable definition section in Game.cpp
+7: // Tutorial global flag
+10: // added december 4th
+11: // for the timer of the game
+17: // Sound effect instance ID storage
+77: // Clear gauge state and particles (callable from other modules)
+80:     // Reset player gauge values
+87:     // Clear particles and spawn timer
+96:     const int count = 4 + (rand() % 4); // 4..7
+104:         // Random radial burst
+116:         // Slow down animation to ~0.6x of current speed (increase frame time)
+123: // Spawn a larger, more dramatic burst when the gauge is filled (player becomes invincible).
+124: // This creates more particles with higher speed and wider spread than the regular red kill burst.
+126:     // Use the trail particle sheet (particle_sheet.png) for a more varied look
+129:     const int count = 20 + (rand() % 11); // 20..30 particles for a very large burst
+134:         p.texture = g_gaugeTrailParticleTexture; // particle_sheet.png
+137:         // Stronger radial burst with wider variation
+139:         const float speed = (0.15f + Rand01() * 0.35f) * 10.0f; // faster
+143:         // Larger, more varied scale
+146:         p.angularVelocity = (Rand01() * 2.0f - 1.0f) * 12.0f; // stronger spin
+150:         // Faster animation for a snappier look
+166:     // Natural dispersion:
+167:     // - random drift direction
+168:     // - slight bias backwards relative to facing
+169:     // - random scale + rotation
+175:     const float angle = (r01 * 2.0f - 1.0f) * 1.1f; // ~[-1.1, 1.1] rad
+176:     const float speed = 0.02f + r02 * 0.03f;        // 0.02..0.05
+182:     // Size: half of previous (base 1.0 -> 0.5), with small random variation.
+201: void SpawnWeakPointHitEffectScaled(float worldX, float worldY, float overrideScale /*=0*/) {
+202:     // Prefer new slash flash textures; fallback to old single texture if needed.
+223:     // Weak-point slash flash should be more visible than a normal hit.
+233:     // Some textures are sprite-sheets (slash flash), others are single images (legacy hit).
+247: // Spawn a larger visual effect for weak-point kills
+249:     // Prefer new slash flash textures; fallback to old single texture if needed.
+270:     // Make the kill effect larger than a normal weak-point hit
+273:     // Slightly slower frame time for a more dramatic kill flash
+294: // Slash-count follower spawn request (set on enemy kill)
+307:     // Match the historical cursor placement used by MouseIndicatorSystem.
+308:     // The cursor texture is drawn with its top-left at the mouse world position.
+332:     // Keep ShowCursor counter stable: call until the desired visibility is reached.
+342: // ...existing code...
+366:     // Use the same orientation source as the player render logic.
+367:     // During wall slide, facingRight can be momentarily out-of-sync with the visual orientation.
+370:         // In Player.cpp wall-slide detection:
+371:         //   left wall  => wallSlideDirection = -1, facingRight = true
+372:         //   right wall => wallSlideDirection =  1, facingRight = false
+380: // Game timer implementation
+401: // Trigger slow motion effect
+408: // ResetGame: perform a soft reset by default. If fullReload is true, also
+409: // clear enemies and reload the current map (useful for full respawn on death
+410: // in non-boss stages or when the player requests a manual reset).
+412:     // Always clear transient projectiles and visual effects
+418:         // Full cleanup/reload: destroy all enemies and recreate them from map
+428:     // Reset charge (charging / saved charge) state
+437:     // Preserve gauge points and invincibility state across level transitions.
+438:     // Do not reset g_player.gaugePoints, g_player.isInvincible, g_player.isGaugeInvincible,
+439:     // or g_player.invincibleTimer here.
+444: // added december 11th
+452:     // NOTE: preserve gauge-related particles/state when switching maps so
+453:     // the player's gauge (points and active effects) is not unexpectedly
+454:     // reset when entering a new level. Do not clear the gauge particle
+455:     // lists or reset the spawn timer here.
+457:     // 释放所有纹理 - 只保留右边纹理
+459:     // 只保留右边的纹理
+473:     // FOR THE PLAYER WHEN INVINCIBLE
+486:     // for the ground tiles texture
+503:     // for the boss decoration in the boss stage
+522:     // 解放击中特效纹理
+534:     // for the combo texture
+539:     // for the gauge bar when there is one
+550:     // release platform wood background
+554: // Improved collision detection function
+561: // for the combo UI of the player when hitting enemies
+569:     // Combo X symbol UI
+576:     // Combo digit UI
+582:     // Spacing values
+588:     // Draw the "X" symbol
+592:     sprintf_s(buffer, "%d", g_player.comboCount); // it converts the number into digits
+594:     float digitXaxis = comboXUI.x + (comboXUI.width * 0.5f) + spaceBetweenXandDigit; // for the first number x axis position
+596:     // Draw combo number
+599:         int digit = buffer[i] - '0';  // 1 for frame 1, 2 for frame 2, 3 for frame 3, etc etc
+603:         digitXaxis += spaceBetweenDigits; // Move to next digit position
+606:     // Combo remaining-time bar (under the combo UI)
+607:     // comboTimer counts down from COMBO_RESET_TIME to 0.
+614:     // Combo timer bar UI
+621:     // background
+625:     // fill
+633: // for the gauge bar UI
+636:     // for the surrounded of the gauge bar.
+643:     // for the inner part of the gauge bar
+644:     float barOffsetX = -0.0015f;  // if positive move right, if negative move left
+645:     float barOffsetY = 0.32f;    // if positive move up, if negative move down
+647:     // Gauge bar UI struct (inner filled part)
+651:     // Center horizontally, bottom aligned
+655:     // for the surrounding frame of the gauge bar
+661:     // draw the gauge full effect animation when the gauge is full
+683:     // for the filled bar calculation
+686:     // Normal gameplay: calculate from gauge points
+691:     // If invincible the drain progress will go from top to bottom
+695:         fillRatio = drainProgress;  // it goes down from top to bottom
+701:     // draw the filled part of the gauge bar
+715: // for the score UI
+730:     // Draw the enemy points
+735: // Game initialization
+739:     // FOR THE PLAYER
+752:     // 为动画剪辑添加通用名称（不再区分左右）
+767:     // FOR THE PLAYER WHEN INVINCIBLE
+779:     // 为动画剪辑添加通用名称（不再区分左右）
+792:     // for the ground texture
+817:     // for the signs
+846:     // Dash/slash-count UI (follows player): attack_count.png is a 1x3 sheet
+851:     // Health follower spritesheet (1x3)
+863:     // background textures: simple tiled backgrounds
+864:     LoadTexture(g_pDevice, "asset/platform/platformrenga3.png", &g_backgroundTexture1); // used by world1 and world2
+865:     LoadTexture(g_pDevice, "asset/platform/platformwood.png", &g_platformWoodTexture); // used by world3
+867: 	// for the gauge bar
+873:     // Gauge mode trailing particle (1x5)
+876:     // Gauge kill burst particle (1x5)
+894: // Modified game update function
+899:     // `animLockDuration` is a constant duration; `animLockTimer` is the running countdown.
+900:     // Decrementing the duration itself can break the lock/unlock logic and freeze animation transitions.
+908:     // Update audio manager
+909:     g_gameTimer.Tick(); // added december 3rd
+914:     // added december 4th
+919:     g_gameStats.UpdateTime(g_gameElapsedTime); // track total time
+924:     // Shoot fireball from player position towards mouse position
+925:     /*g_projectileManager.CreateFireball(
+926:         g_player.posX + PLAYER_WIDTH / 2,  // Shoot from player center
+930:         true  // From player
+933:     // Update slow motion effect
+938:             g_slowMoFactor = 1.0f; // Restore normal time
+942:     // Apply time scaling effect (priority: global slow motion > dash-end slow motion > charge effect)
+945:         timeScale = g_slowMoFactor; // Use slow motion factor
+958:     // for updating the combo timer
+968:     // Acceleration state:
+969:     // - active when comboCount > threshold
+970:     // - also active during gauge-based invincibility (gauge/full-gauge reward during kill streak)
+973:     // for updating the invincibility timer
+978:         // Gauge invincibility: 1-second warning (play once)
+990:     // Auto-activate invincibility when gauge is full
+1000:         // Spawn a dramatic particle burst at the player's center when gauge activates
+1008: 	// for the gauge effect timer
+1022:     // Gauge trail particles: active only during gauge-based invincibility.
+1026:             // Spawn around player's body (random within an ellipse around the player).
+1041:             // 1.5x spawn rate => interval gets smaller.
+1097:     // Update / spawn player afterimages
+1108:     // Use displacement-based speed so afterimages still spawn even if velocity is
+1109:     // temporarily overridden/reset during input/physics updates.
+1119:     // Afterimages:
+1120:     // - Always during dash.
+1121:     // - Also during accelerated state (combo) while moving/running.
+1122:     // - When not accelerated, dash afterimages spawn at half rate (interval doubled).
+1126:         // Only slow down afterimage rate for non-accelerated dash.
+1131:         // If we're only accelerated (not dashing), require actual movement.
+1170:         // Update game logic using adjusted time
+1175:         // Update all projectiles
+1177:         // 在UpdateGame函数中修改动画设置部分
+1180:             // Only use invincible animation set during gauge-based invincibility.
+1181:             // Dash/slash post-invincibility should not override current animation.
+1184:                 // INVINCIBLE ANIMATIONS
+1187:                     // Death animation stays normal (no invincible death texture)
+1206:                     // Determine slash direction
+1216:                         clip = "InvincibleSlash2";  // Up
+1219:                         clip = "InvincibleSlash4";  // Down
+1222:                         clip = "InvincibleSlash3";  // Side
+1225:                         clip = "InvincibleSlash1";  // Diagonal
+1241:                     if (g_player.velocityY < 0.0f) // Falling
+1247:                     else // Jumping
+1260:                 else // Idle
+1269:                 if (g_player.isDead) // for when dying
+1276:                 else if (g_player.isCharging) // 如果玩家正在蓄力
+1278:                     if (!g_player.isOnGround) // 如果玩家在空中蓄力
+1284:                     else // 如果玩家在地面蓄力
+1291:                 else if (g_player.isDashing) // 如果玩家正在冲刺
+1293:                     // Slash clip depends on dash direction.
+1294:                     // Classify into 4 sectors with 45° boundaries:
+1295:                     //   Up:    |dy| dominates and dy > 0  -> Slash2
+1296:                     //   Down:  |dy| dominates and dy < 0  -> Slash4
+1297:                     //   Side:  otherwise, |dx| dominates -> Slash3
+1298:                     //   DiagDown-ish fallback            -> Slash1
+1299:                     // Left/right is handled by facing/flip.
+1303:                     const float DIAG_RATIO = 0.70710678f; // cos(45°)
+1318:                         // diagonal-ish: choose a dedicated diagonal-down slash
+1332:                 else if (!g_player.isOnGround) // 玩家不在地面上
+1334:                     if (g_player.velocityY < 0.0f) // 下落
+1340:                     else // 跳跃
+1347:                 else if (g_player.isMoving) // 玩家在移动
+1353:                 else // 玩家站立
+1362:         // Keep animation speed in sync with accelerated state
+1369: // Helper function: Get texture based on tile code
+1458:         return g_tutorialTexture; // ground texture for tutorial tiles
+1465: // Helper function: Set color based on tile code
+1468:         //SetColor(0.4f, 0.8f, 0.3f, 1.0f);
+1469:         //SetColor(0.7f, 0.7f, 0.7f, 1.0f);
+1472:         //SetColor(0.6f, 0.4f, 0.2f, 1.0f);
+1475:         //SetColor(0.5f, 0.5f, 0.5f, 1.0f);
+1510:     // Draw simple tiled scrolling background based on current map
+1511:     // Draw tiled background with optional parallax and tile scaling.
+1512:     // parallax: 1.0 = follows camera exactly, <1.0 = moves slower (distant)
+1513:     // tileScale: scale tiles larger (useful for distant layer to reduce repetition)
+1517:         // Center around the camera so the background tiles align with the
+1518:         // visible viewport. This prevents off-center tiling when camera looks ahead.
+1519:         // When using parallax (<1.0), the background should be centered using
+1520:         // the parallax-adjusted camera position so tiles remain around the
+1521:         // screen even as the parallax offset increases.
+1524:         // Use parallax-adjusted center for tile selection to avoid the
+1525:         // background tiles drifting away from the camera when parallax != 1.0
+1529:         // Compute visible rect in WORLD UNITS (pixel->world scale ~=100)
+1533:         // Apply tile scaling
+1537:         // Center tile indices around player
+1541:         // How many tiles roughly fit across/height (half-extent)
+1545:         // Increase radius to render more tiles (user requested ~2x)
+1546:         const int MAX_RADIUS = 8; // (2*8+1)^2 = 289 tiles max
+1550:         // Darken background (kept here so effect applies equally to layers)
+1551:         // Lowered from 0.45 to 0.25 to make the background noticeably darker
+1554:         // Parallax adjustment: background should move slower than camera.
+1567:         // Restore color
+1571:     // choose background texture per current map
+1576:                 // world3: only draw a distant parallax layer (near layer removed)
+1580:                 // world1/2: only draw distant parallax layer
+1597:     // Advance health icon animation
+1600:     // Draw slash-count icons will be rendered later (moved down) so they are not occluded by terrain
+1602:     // Draw player afterimages (behind player)
+1615:     // Draw gauge trail particles (behind player)
+1621:         // Ease-out fade, looks more "natural" than linear.
+1627:         // Slightly bluish-white to match gauge vibe.
+1647:         // Hit effects are stored in WORLD coordinates, but `RenderImage` draws in SCREEN coordinates.
+1648:         // Convert to screen space before rendering, otherwise the effect appears offset by camera.
+1649:         // Disable culling here because culling uses world-space camera checks.
+1657:     // Background disabled temporarily for debugging visibility
+1658:     // (was: parallax background draw)
+1660:     // Use new map system to draw tiles
+1664:         // Draw background layer tiles
+1674:         // Draw midground layer tiles (player activity layer)
+1683:             //RenderImage(screenPos.first, screenPos.second, tile.width, tile.height, texture, 0, 1, 1);
+1685:             // for the goal
+1691:                 // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
+1692:                 float renderScale = 2.0f;  // Adjust this to match your collision size
+1693:                 float renderWidth = tile.width; // no change
+1696:                 // center the sprite on the tile position
+1704:             //// for one way platforms. they will be a bit smaller to match collision with character. might change later
+1705:             //else if (tile.tileInfo.code == "OP") {
+1706:             //    // scale the texture to match the collision (0.1f / 0.15f = 0.67) bc thats the size of the actual block in the game
+1707:             //    float renderScale = 0.67f;  // Adjust this to match your collision size
+1708:             //    float renderWidth = tile.width; // no change
+1709:             //    float renderHeight = tile.height * renderScale;
+1711:             //    // center the sprite on the tile position
+1712:             //    float offsetX = (tile.width - renderWidth) * 0.5f;
+1713:             //    float offsetY = (tile.height - renderHeight) * 0.5f;
+1715:             //    RenderImage(screenPos.first + offsetX, screenPos.second + offsetY,
+1716:             //        renderWidth, renderHeight, texture, 0, 1, 1);
+1717:             //}
+1719:             // for the animation of the signs
+1723:                 // for getting the right texture depending on the sign
+1725:                 int numFrames = 4; // default if 4 frames
+1731:                     numFrames = 5; // only this sign is 5 frames instead of 4
+1740:                 /*if (signTexture) {
+1748:                     // calculate the frames
+1751:                     RenderImage(screenPos.first, screenPos.second, tile.width, tile.height * 2.0f, // *2.0f so it will be the correct size for the sign (twice as a big ad the actual tile)
+1759:                 // Normal rendering for all other tiles
+1764:         // Draw foreground layer tiles
+1775:     // Draw charge effect
+1793:     // Draw dash effect
+1808:     // Draw gauge-kill red particles (burst)
+1830:     // Draw slash-count icons (followers) here so they render after tiles and are not occluded by terrain
+1831:     // Hide during gauge-based invincibility.
+1843:             // Sprite size in world units
+1848:             // Target anchor: one grid tile behind player (respect facing)
+1853:             // Per-icon offsets (so they don't overlap and are not aligned)
+1854:             const float xDir = g_player.facingRight ? -1.0f : 1.0f; // extend further behind
+1871:             // Compute preview-based pending cost so follower highlights stay
+1872:             // perfectly in sync with the arrow preview. We take the maximum
+1873:             // of the actual accumulated pending cost and the preview derived
+1874:             // from the current/saved charge time.
+1878:             // Determine effective charge time used for preview (matches MouseIndicatorSystem logic)
+1892:             // Preview pending: when actively charging, UI should only show a single
+1893:             // pending consumption (one red follower) regardless of charge amount.
+1964:     // Draw player
+1966:         // Normal drawing when alive
+1969:         // for the size of the character
+1974:         // center the bigger sprite on collision box
+1978:         // 获取当前动画剪辑的纹理
+1984:         // 根据朝向决定是否水平翻转
+1985:         // 如果facingRight为true（面向右），不翻转
+1986:         // 如果facingRight为false（面向左），水平翻转
+1990:         //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+1994:         SetColor(1.0f, 1.0f, 1.0f, 1.0f);  // Reset color after being invincible
+1999:         // for the attack count
+2001:         //// Position top left of the player
+2002:         //float countWidth = 0.1f;
+2003:         //float countHeight = 0.15f;
+2004:         //float offsetCountX = -0.08f;  // hozirontal
+2005:         //float offsetCountY = PLAYER_HEIGHT /*+ 0.01f*/; // vertical
+2007:         //float countXPos = g_player.posX + offsetCountX;
+2008:         //float countYPos = g_player.posY + offsetCountY;
+2010:         //auto countScreenPos = worldToScreen(countXPos, countYPos);
+2012:         //int frameIndexC = 0;
+2013:         //if (g_player.dashPoints == 3) {
+2014:         //    frameIndexC = 0;  // Show 3 triangles
+2015:         //}
+2016:         //else if (g_player.dashPoints == 2) {
+2017:         //    frameIndexC = 1;  // Show 2 triangles
+2018:         //}
+2019:         //else {
+2020:         //    frameIndexC = 2;  // Show 1 triangle (for dashPoints 1 or 0)
+2021:         //}
+2023:         //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+2024:         //RenderImage(countScreenPos.first, countScreenPos.second,
+2025:         //    countWidth, countHeight,
+2026:         //    g_attackCountTestTexture, 0, 1, 3);
+2028:         //RenderImage(countScreenPos.first + 0.2f, countScreenPos.second,
+2029:         //    countWidth, countHeight,
+2030:         //    g_attackCountTestTexture, 1, 1, 3);
+2032:         //RenderImage(countScreenPos.first + 0.4f, countScreenPos.second,
+2033:         //    countWidth, countHeight,
+2034:         //    g_attackCountTestTexture, 2, 1, 3);
+2041:         // Death animation
+2051:         // Get death animation texture and frame
+2059:         // Render death animation
+2069:     // for the esc texture
+2071:         // ESC button UI
+2088:     // During death animation (death happens on hit), disable all gameplay inputs.
+2089:     // Otherwise movement input below would still flip `g_player.facingRight`.
+2098:    /* if (g_inputSystem.IsMouseRightDown()) {
+2101:     // Right click: keep as cancel-charge only (invincibility is now auto-triggered)
+2105:     // for pausing the game press P or Esc key
+2110:         if (currentScene == GAMEPLAY || currentScene == CAKE) // the areas and the cake scene
+2113:             sceneManager.SwitchScene(PAUSE);  // you can pause the game at any stage
+2117:         // if you press P or Esc key again you can go back to the stage (you can use the mouse and click the continue button
+2121:             if (previousScene == GAMEPLAY || previousScene == CAKE) // the areas and the cake scene
+2124:                 //Audio::ResumeBGM();
+2139:     // If the current active scene is the pause scene, do not process any
+2140:     // further gameplay inputs (movement, dash, jump, mouse charge, etc.).
+2141:     // Pause toggle handling above still executes so player can resume.
+2146:     // Get mouse input state
+2151:     // Charge-dash input mode (VK_T):
+2152:     // - true (default): always dash on release even if a saved charge exists.
+2153:     // - false: if a saved charge exists, mouse press dashes immediately.
+2158:     // Dash aftermath behavior toggle (VK_G):
+2159:     // - false (default): aftermath uses existing gravity/physics behavior.
+2160:     // - true: aftermath ignores gravity; movement input breaks aftermath (already).
+2167:     // Pure mouse control: press to start charging
+2170:             // Legacy: if we already have a saved charge, pressing dashes immediately.
+2181:             // New mode: always start charging, dash will happen on release.
+2186:     // Pure mouse control: release to execute dash
+2189:             // Hold < 0.2s: chain previous saved charge (if any).
+2190:             // Hold >= 0.2s: use the new charge (override saved).
+2197:                 // Force_execute uses current charge by making sure we don't fall back to saved.
+2205:     // Cancel charging
+2212:     // Movement control
+2231:     // Requested: movement should interrupt dash-end slow motion.
+2232:     // Note: movement input is handled here directly (not always via MovePlayerLeft/Right),
+2233:     // so break the state at the input level.
+2244:     // Jump control
+2245:     // Allow both Space and W to trigger a jump (including while wall-sliding).
+2252:     // Trigger jump on edge (pressed this frame but not previous). If both are
+2253:     // pressed simultaneously, only call Jump() once.
+2262: // MouseIndicatorSystem implementation
+2293:     //if (!m_showMouseIndicator) return;
+2294:     //// Do not show mouse indicator if protagonist is dead
+2295:     //if (g_player.isDead) return;
+2300:     // Draw mouse position indicator
+2308:     // Mouse cursor is rendered by `g_gameCursor` globally.
+2310:     // (Removed fixed numeric dash-points UI — followers still render above player.)
+2312:     // (Removed debug numeric toggle UI for T/G modes)
+2321:     // for the timer counting
+2322:     float timerX = -0.768f;  // position x axis
+2323:     float timerY = 0.78f;   // position y axis
+2324:     float timerDigitWidth = 0.03f;  // width
+2325:     float timerDigitHeight = 0.07f; // height
+2327:     // for the minutes
+2333:     // for the seconds
+2340:     //SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+2343:     // Do not show mouse indicator if protagonist is dead
+2346:     // Draw direction arrow
+2361:             // Get effective charge time for arrow preview.
+2362:             // When chaining (short hold) and a saved charge exists, the dash will actually use the saved charge.
+2363:             // So the arrow must preview that saved charge, otherwise it looks too short on the second dash.
+2377:             // Determine charge level and use the same multipliers as in ExecuteMouseChargeDash
+2401:             // ExecuteMouseChargeDash and DashToMouse apply an extra 1.3x multiplier
+2402:             // for short (no-charge) dashes; the preview should match that behavior.
+2403:             // Only apply the extra multiplier when the previewed charge level is 0.
+2406:             // Calculate the ACTUAL world distance the player will travel
+2407:             // Distance = velocity × time × 60.0 (matching UpdatePlayerPhysics)
+2415:             // Calculate the center of the arrow (midpoint between tail and head)
+2419:             // Position calculation for screen rendering
+2422:             // Get charge level for color display
+2425:             // Display different colors based on charge level
+2427:                 //SetColor(1.0f, 0.0f, 0.0f, 1.0f); // Red
+2430:                 //SetColor(0.0f, 0.0f, 1.0f, 1.0f); // Dark blue
+2433:                 //SetColor(0.0f, 1.0f, 1.0f, 1.0f); // Blue
+2437:             // The arrow texture is a 1x3 spritesheet: frames 0 and 1 are body segments, frame 2 is the head.
+2438:             // Instead of stretching the whole image, repeat frames 0/1 to form the shaft, then draw frame 2 as the head.
+2442:             // Choose head width in world units. Keep head height equal to arrowWidth.
+2443:             float headWidth = arrowWidth; // try to keep head unscaled horizontally relative to its height
+2445:             // If arrow is too short, fall back to original stretched rendering
+2453:                 // Determine number of body segments. Use headWidth as a nominal segment unit to keep visuals consistent.
+2459:                 // Draw each body segment, alternating frames 0 and 1
+2467:                     int frame = (i % 2 == 0) ? 0 : 1; // alternate frame 0 and 1
+2472:                 // Draw head at the tip
+2492:     // Legacy API: cursor visibility is now controlled by the global in-game cursor.
+2493:     // Keep this so existing scene code doesn't need to manage cursor visibility.
+2498: // Reset all statistics
+2518: // Increment kill counter
+2526: // Increment weak point kill counter
+2534: // Increment death counter
+2538:     //erase later
+2551:     // erase later
+2558: // for updating the maximum combo
+2564:         currentMaxCombo = combo; // current max combo
+2567: //  when player dies, resets the area progress
+2569:     //totalEnemyPoints -= currentAreaEnemyPoints; // Subtract current area points from total
+2570:     currentAreaEnemyPoints = 0; // Reset current area progress
+2571:     //maxCombo = 0;  // Reset max combo on death
+2583: // Update total time
+2588: // Calculate the final score based on kills, time, and deaths
+2590:     int comboMultiplier = std::max(1, maxCombo);  // Minimum combo is 1
+2592:     // Convert time to 4-digit number (total seconds)
+2593:     //int timeInSeconds = static_cast<int>(totalTime);
+2596:     int timeInMMSS = (minutes * 100) + seconds;  // MMSS format
+2598:     // Cap deaths at 50 for penalty calculation
+2602:     // Calculate base score
+2605:     // Calculate penalty
+2608:     int penaltyMultiplied = static_cast<int>(penalty * 1.5f); // so it gives me an integrer number
+2611:     // Ensure score doesn't go negative
+2614:     // erase later
+2665:         totalScore = 0; // so there will not be negative score
+2674:     //totalEnemyPoints = 0;
+
+### D:\Japan\HAL\HEW2\HEW_SLASH\DX21_05_Init\GameplayScene.cpp
+6: // construct
+10:     worldNumber = world;        // for the world number ( 1,2 or 3)
+11:     areaNumber = area;          // for the area number (1 to 8)
+12:     isBossStage = (area == 8);  // area 8 is the boss area
+14:     // for the boss
+26:     // generates the map name based on world and stage
+32:     // For boss stages we need a full reload so the boss instance/state is
+33:     // recreated and initialized cleanly. Regular areas use a soft reset to
+34:     // preserve transient state like gauge/particles when moving between maps.
+36:         // Ensure scene-local checkpoint tracking is cleared on (re)entering the boss stage.
+52:     // Reset tutorial tracking
+75:     // if boss stage, set up the boss
+80:         // 在当前敌人列表中查找 BossEnemy
+89:             // Respect each boss class's tuned max HP and start full for testing.
+97: // with this I show the tutorial without the trigger
+98: //bool GameplayScene::Init()
+99: //{
+100: //	ShowCursor(FALSE);
+101: //    g_gameState = STATE_PLAYING;
+102: //
+103: //    // generates the map name based on world and stage
+104: //    StageInfo info(worldNumber, areaNumber);
+105: //    std::string mapName = info.GetMapName();
+106: //
+107: //    g_mapManager.SwitchMap(mapName, -1, -1);
+108: //
+109: //    // For boss stages we need a full reload so the boss instance/state is
+110: //    // recreated and initialized cleanly. Regular areas use a soft reset to
+111: //    // preserve transient state like gauge/particles when moving between maps.
+112: //    if (isBossStage) {
+113: //        // Ensure scene-local checkpoint tracking is cleared on (re)entering the boss stage.
+114: //        m_bossCheckpointHP = 0.0f;
+115: //        m_checkpoint1Reached = false;
+116: //        m_checkpoint2Reached = false;
+117: //        ResetGame(true);
+118: //    }
+119: //    else {
+120: //        ResetGame();
+121: //    }
+122: //
+123: //    // Load tutorial overlay for first four World1 areas
+124: //    if (worldNumber == 1 && areaNumber >= 1 && areaNumber <= 4) {
+125: //        m_showTutorial = true;
+126: //        g_tutorialActive = true;
+127: //        std::string path = "asset/tutorial/tutorial_" + std::to_string(areaNumber) + ".png";
+128: //        LoadTexture(g_pDevice, path.c_str(), &m_tutorialTexture);
+129: //        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_normal.png", &m_tutorialButtonTexture);
+130: //        LoadTexture(g_pDevice, "asset/UI/cake/nextbutton_hover.png", &m_tutorialButtonHoverTexture);
+131: //        // place button at bottom-right
+132: //        m_tutorialButton = UIButton(0.7f, -0.85f, 0.35f, 0.7f, MENU, m_tutorialButtonTexture, m_tutorialButtonHoverTexture);
+133: //        m_tutorialButton.SetHitboxScale(0.25f, 0.13f);
+134: //        m_tutorialButton.SetHitboxOffset(-0.06f);
+135: //    }
+136: //
+137: //	if (isBossStage)
+138: //	{
+139: //		Audio::PlayBGM(BackgroundMusic::BOSS_BATTLE, true);
+140: //	}
+141: //	else
+142: //	{
+143: //		switch (worldNumber)
+144: //		{
+145: //		case 1: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+146: //		case 2: Audio::PlayBGM(BackgroundMusic::LEVEL2, true); break;
+147: //		case 3: Audio::PlayBGM(BackgroundMusic::LEVEL3, true); break;
+148: //		default: Audio::PlayBGM(BackgroundMusic::LEVEL1, true); break;
+149: //		}
+150: //	}
+151: //
+152: //    // if boss stage, set up the boss
+153: //    if (isBossStage)
+154: //    {
+155: //        m_boss = nullptr;
+156: //
+157: //        // 在当前敌人列表中查找 BossEnemy
+158: //        for (auto* e : g_enemies) {
+159: //            if (dynamic_cast<BossEnemy*>(e) != nullptr) {
+160: //                m_boss = e;
+161: //                break;
+162: //            }
+163: //        }
+164: //
+165: //        if (m_boss) {
+166: //            // Set boss HP to 300 for normal gameplay
+167: //            m_boss->SetMaxHealth(300.0f);
+168: //            m_boss->SetHealth(300.0f);
+169: //        }
+170: //    }
+171: //
+172: //    return true;
+173: //}
+174: // this is for the tutorial without the triggers
+175: //void GameplayScene::Update(float deltaTime)
+176: //{
+177: //    // If tutorial overlay active, handle tutorial input and don't advance game time
+178: //    if (m_showTutorial) {
+179: //        // still update raw input
+180: //        g_inputSystem.Update();
+181: //
+182: //        // Process tutorial button
+183: //        if (m_tutorialButton.Process() == UIButtonResult::Clicked) {
+184: //            // hide tutorial and resume normal play
+185: //            m_showTutorial = false;
+186: //            g_tutorialActive = false;
+187: //            // release tutorial textures
+188: //            if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
+189: //            if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
+190: //            if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
+191: //
+192: //            // while tutorial is shown, do not update game logic or timers
+193: //            return;
+194: //        }
+195: //        //// while tutorial is shown, do not update game logic or timers
+196: //        //return;
+197: //    }
+198: //
+199: //    if (isBossStage) {
+200: //        UpdateBossLogic(deltaTime); // update the boss logic
+201: //    }
+202: //    else {
+203: //        UpdateGame(deltaTime); // update the game logic
+204: //    }
+205: //}
+207: // with this I show the tutorial with the triggers
+210:     // If tutorial overlay active, handle tutorial input and don't advance game time
+218:             // Release tutorial texture (keep button textures for reuse)
+226:         /*return;*/
+241:     // If tutorial already showing, don't check for new triggers
+244:     // Get current map
+248:     // Get all midground tiles (main gameplay layer)
+251:     // Check each tile to see if player is touching a tutorial trigger
+253:         // Check if tile is a tutorial type
+256:         // Simple AABB collision check between player and tile
+267:             // Determine which tutorial based on tile code
+273:             // If valid tutorial and not yet triggered
+276:                 m_currentTutorialIndex = tutorialIndex + 1; // 1-based for filename
+278:                 // Load the tutorial texture
+281:                 // Release old texture if any
+287:                 // Load new tutorial texture
+293:                 // Only trigger one tutorial at a time, and then break after finding one
+301:     // 死亡中でもタイマーだけは更新する
+315:     // Preserve a local pointer to the boss before running the general update
+316:     // because UpdateGame -> UpdateEnemies may delete enemy objects when their
+317:     // death animation completes. Checking membership in g_enemies is safer
+318:     // than dereferencing a potentially deleted pointer.
+324:         // If the boss pointer no longer exists in the global enemy list,
+325:         // it may have finished its death animation and been removed.
+326:         // For multi-boss fights (e.g. boss2) only transition when ALL
+327:         // BossEnemy instances have been removed.
+334:             // Count remaining boss instances
+345:                 // All bosses finished their death animations and were removed.
+351:                 // There are still other bosses alive / playing death animations.
+352:                 // Reassign m_boss to a remaining boss so checkpoint logic can continue.
+357:             // If still present, check alive state and perform checkpoint logic.
+362:                 // Boss is dead but still present (death animation playing). Do nothing
+363:                 // and allow UpdateGame to continue updating until removal.
+369: // for checking if the hp bar of the boss reached the point for the checkpoint
+372:     if (!m_boss) return; // if there is not boss, dont do anything
+374:     // Use the boss' actual max HP when computing checkpoints
+379:     // Checkpoint at 2/3 HP
+383:         m_bossCheckpointHP = currentHP; // save the boss hp for the respawn
+385:         // erase later. this is jsut for debug
+386:       /* char debugMsg[256];
+392:     // Checkpoint at 1/3 HP
+396:         m_bossCheckpointHP = currentHP; // save the boss hp for the respawn
+398:         // erased later. just for debug
+399:        /*char debugMsg[256];
+406: // for the boss to respawn at the last checkpoint (so the hp bar will be full or not) when player dies
+409:     // erases projectiles and ememies. might change this later depending on the type of boss
+413:     // Reload the map (this will respawn enemies)
+416:     // Reset player state
+432:     // Find the respawned boss and set its hp to checkpoint
+435:         // Find the actual BossEnemy instance in the respawned enemy list.
+445:             // restore checkpoint hp if any
+452:             // Also reset transient boss state so it doesn't carry over
+453:             // behavior flags from a previous attempt.
+465:     // Draw tutorial overlay on top if active
+467:         // draw full-screen centered tutorial image
+470:         // Draw next button
+481:     if (!m_boss || !m_boss->IsAlive()) return; // if there is no boss or if its not alive, dont do anything
+483:     // Boss HP bar dimensions and position
+485:     bossHPBarUI.width = 0.6f;    // for the width of the HP bar
+486:     bossHPBarUI.height = 0.6f;  // for the height of the HP bar
+487:     bossHPBarUI.x = -0.3f; // Center horizontally
+488:     bossHPBarUI.y = -1.1f;      // Bottom center of screen
+490:     // for the hp bar when its not full
+494:     // Calculate health
+497:     // Color changes depenging on HP percentage. MIGHT NOT NEED IN THE FUTURE
+499:         //SetColor(0.2f, 1.0f, 0.2f, 1.0f);  // greeen for more than half of hp
+502:         SetColor(1.0f, 0.8f, 0.0f, 1.0f);  // yellow for half of hp
+505:         SetColor(1.0f, 0.2f, 0.2f, 1.0f);  // red for almost death
+508:     // for the inner part of the hp bar
+509:     float innerOffsetX = 0.035f; // positive shift right, negative shift left
+522:     //if (m_tutorialTexture) { m_tutorialTexture->Release(); m_tutorialTexture = nullptr; }
+523:     //if (m_tutorialButtonTexture) { m_tutorialButtonTexture->Release(); m_tutorialButtonTexture = nullptr; }
+524:     //if (m_tutorialButtonHoverTexture) { m_tutorialButtonHoverTexture->Release(); m_tutorialButtonHoverTexture = nullptr; }
+525:     // for erasing
+
+### D:\Japan\HAL\HEW2\HEW_SLASH\DX21_05_Init\Map.cpp
+11: // Create boss map variant with two bosses (boss2)
+37: // Create boss map variant 3: single red boss with 2x speed
+63: // Map class implementation
+144: // Initialize the tile dictionary with all available tile types
+146:     // Initialize tile type dictionary
+148:         // Empty space
+151:         // Ground types
+152:         {"BB", {"BB", "ground", "black", true, false, false, false}}, // for the black platform
+154:         {"G2", {"G2", "ground", "top", true, false, false, false}}, // for decoration on top of actual platform
+168:         // Wall types
+172:         // Platform types
+175:         {"OP", {"OP", "platform", "one_way", true, false, false, false}},  // 单向平台
+177:         // Enemy types
+187:         {"BS", {"BS", "enemy", "boss", false, false, false, true}}, // 新增 Boss 敌人码
+188:         {"BR", {"BR", "enemy", "boss_red", false, false, false, true}}, // 红色 Boss 变种
+190:         // Portal/door types
+191:         // Default behavior: all non-boss doors go to the next area.
+198:         {"DB", {"DB", "door", "boss", false, false, true, false}}, // boss door
+200:         // portal types for World2 (stage2)
+208:         //{"B2", {"B2", "door", "boss2", false, false, true, false}}, // for the boss of world 2
+210:         // portal types for World3 (stage3)
+218:         // maybe add boss stage too
+220:         // Spawn point types
+224:         // Decoration types (optional)
+235:         // Hazard spikes (directional)
+240:         // Generic spike tile (non-directional)
+243:         // Tutorial trigger tiles
+251: // Convert tile code string to TileInfo structure
+257:     // Return empty tile by default
+287:         // Door codes -> next stage (except boss door)
+304:         // Some enemy codes are not numeric after the prefix (e.g. "BS").
+305:         // Avoid crashing on std::stoi.
+328: // Load map data from a 2D grid of tile codes
+342:     // Calculate total map dimensions
+346:     // Calculate starting position (centered at origin)
+352:     // Process each cell in the grid
+356:             if (tileCode == kEmptyTileCode) continue;  // Skip empty tiles
+360:             // Calculate tile position
+368:             // Create regular tile
+391: // Add a single tile to the map at specified position
+400:     // Create regular tile
+410:     // Add to appropriate layer
+424: // Add a player spawn point to the map
+433:     // Set as default spawn if this is the first one
+439: // Clear all tiles from a specific layer
+454: // Clear all map data including tiles, spawn points, and enemy spawns
+466: // Get tiles from a specific layer
+477: // Get all solid tiles (collidable tiles from midground layer)
+490: // Get spawn point coordinates by ID
+502: // Get the default spawn point coordinates
+508: // 同样可以优化传送门检测
+512:     // 回退到原始方法
+515:             // Door sprite is 1x2. Treat portal collision as 2 tiles tall,
+516:             // centered one tile higher than the base tile.
+518:             // Move portal collision down by half a tile.
+519:             // Original portal collision was centered 0.5 tile above the base tile (posY + 0.5h).
+520:             // To move it DOWN by 0.5 tile, shift center by +0.5h -> posY + 1.0h.
+521:             // If your world Y axis is inverted (down is negative), this will appear reversed.
+522:             // In that case, use posY + 0.0h for down shift.
+530:                 portalId = tile.linkedSpawnId; // Use linkedSpawnId as portalId
+541: // Create a boss map
+567: // Create a cake map
+596:     // 计算地图边界
+616:     // 扩展一些边界
+622:     // 创建或重新构建空间网格
+630: //GetCell implementation
+640: //Rebuild implementation
+642:     // 清空现有单元格
+646:     // 重新从地图构建网格
+650: // 单向平台碰撞检测
+653:     // 检测基本AABB碰撞
+659:     // 计算各边的穿透深度
+660:     float topPenetration = (y + height) - platform.posY;  // 玩家底部到平台顶部的距离
+662:     // 对于单向平台，只有从上方碰撞才有效
+663:     // 当玩家的底部在平台顶部附近，并且玩家正在下落时，才视为有效碰撞
+664:     if (topPenetration > 0 && topPenetration < 0.1f) {  // 设置一个小的容差范围
+665:         penetrationY = -topPenetration;  // 负值表示向上调整
+672: // 获取所有单向平台
+
+### D:\Japan\HAL\HEW2\HEW_SLASH\DX21_05_Init\Player.cpp
+9:     // Base feel (old value)
+11:     // Extra hitstop per charge level (0..3)
+24:     // Requested: increase hit-stop time after hitting an enemy to 1.5x.
+29: // 冲刺命中检测辅助：给定测试位置，使用缩小并居中的碰撞盒检测敌人
+35:     // 冲刺斩击的“攻击判定”不应该等同于冲刺时的“受击判定”(当前物理碰撞盒被缩小到 1/4)。
+36:     // 这里单独放大命中检测盒，避免高速擦肩而过。
+37:     // Requested: increase slash width.
+60:         // 已命中过的敌人跳过
+68:             //g_player.comboCount++;
+69:             //g_player.comboTimer = 5.0f;
+71:             //g_gameStats.UpdateMaxCombo(g_player.comboCount);// added january 22nd
+74:             // Hit-stop should depend on charge strength, not on invincibility state.
+80:                     // 可选全局慢动作
+81:                     // TriggerSlowMotion(0.05f, 0.3f);
+84:                         // Always grant a single gauge point per hit — remove
+85:                         // extra gauge for weak-point hits so gains are uniform.
+94:            /* if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+106:             // Scale base damage by 1.5x per extra consumed dash point
+116:     // Also hit enemy projectiles that intersect the dash attack hitbox
+117:     // Use the same rect used above
+121: // 冲刺结束点追加一个“小圆形”命中判定：只在到达终点的那一刻触发一次。
+122: // 该判定复用 hitEnemies 去重，因此不会与冲刺过程中的伤害重合。
+152:             //g_player.comboCount++;
+153:             //g_player.comboTimer = 5.0f;
+155:             //g_gameStats.UpdateMaxCombo(g_player.comboCount); // added january 22nd
+158:             // Hit-stop should depend on charge strength, not on invincibility state.
+166:                         // Always grant a single gauge point per hit — remove
+167:                         // extra gauge for weak-point hits so gains are uniform.
+176:             /*if (g_player.gaugePoints < g_player.MAX_GAUGE_POINTS) {
+188:             // Scale base damage by 1.5x per extra consumed dash point
+197:     // Also hit enemy projectiles in the end-circle area
+212:     g_mapManager.GetCurrentMap()->BuildSpatialGrid();//TODO
+213:     // 计算玩家当前的碰撞体大小
+217:     // 计算碰撞体偏移量，确保中心位置不变
+221:     // 冲刺时碰撞体缩小为1/4，计算偏移量以保持中心不变
+231:     // 应用重力
+232:     // When no-gravity aftermath mode is enabled, aftermath behaves like a gravity-free state.
+237:         // 如果在墙壁滑行状态，应用较小的重力
+239:             // 墙壁滑行时，垂直速度限制在滑行速度
+244:                 // 如果向上移动，仍然应用正常重力
+248:                 // 向下移动时，应用较小的重力
+252:             // 墙壁滑行时水平速度逐渐减小
+261:             // 正常重力
+270:     // 重置墙壁滑行状态
+274:     // 如果不在冲刺状态且不在地面上，检测墙壁滑行
+275:     // 注意：死亡状态下不应再根据环境改写朝向/状态
+277:         // 获取当前地图的空间网格
+282:             // 获取玩家周围的瓦片
+292:             // 使用玩家的实际碰撞体进行接触检测
+298:             // 定义很小的接触阈值
+299:             // 增大一点使爬墙判定更容易触发
+302:             // 检测左右墙壁接触
+310:                     // 检查垂直方向重叠（Y轴有重叠）
+314:                         // 检测左侧墙壁接触
+318:                             g_player.wallSlideDirection = -1; // 左侧墙
+320:                             break; // 找到一面墙就足够
+323:                         // 检测右侧墙壁接触
+327:                             g_player.wallSlideDirection = 1;  // 右侧墙
+329:                             break; // 找到一面墙就足够
+337:     // 保存原始位置用于碰撞检测
+341:     // 计算移动距离
+345:     // 获取当前地图的空间网格
+349:         // 如果没有空间网格，使用原始方法
+354:         // === 根据速度动态调整检测次数 ===
+359:             // 冲刺：基础8步，按速度提升，封顶16步
+363:             // 高速移动时增加检测次数
+367:             // 正常移动
+368:             steps = 4; // 保持原来的4次
+371:         // === 预收集所有可能碰撞的瓦片 ===
+374:         // 计算移动范围，扩大检测区域
+378:         // 预测移动后的位置范围
+386:         // 获取移动范围内的所有瓦片
+389:         // 分离普通固体瓦片和单向平台
+428:         // 使用连续碰撞检测
+435:             // 水平碰撞检测（只检测普通固体，单向平台不影响水平移动）
+442:                     // 计算碰撞方向和回退
+448:                     // 计算重叠
+452:                     // 选择最小重叠方向
+454:                         // 水平碰撞
+464:                         // 垂直碰撞
+481:             // 垂直碰撞检测（先检测普通固体）
+483:             float preCollisionY = g_player.posY - stepY; // 记录碰撞前的Y位置
+490:                     // 计算碰撞方向和回退
+496:                     // 计算重叠
+500:                     // 选择最小重叠方向
+502:                         // 水平碰撞
+512:                         // 垂直碰撞
+527:             // 如果没有与普通固体碰撞，检测单向平台
+534:                     // 计算玩家的边界
+540:                     // 计算平台的边界
+546:                     // 1. 检测水平方向的重叠
+569:             // 如果两个方向都发生碰撞
+571:                 // 可以在这里添加对角线碰撞的特殊处理
+572:                 g_player.posY -= stepY; // 回退垂直移动
+573:                 g_player.posX -= stepX; // 回退水平移动
+576:             // 冲刺时在每个子步位置做敌人命中检测，避免高速穿过
+583:     // 传送门处理
+593:         // 使用正确的碰撞体大小检测传送门
+611:             // to save the combo after switching areas
+615:             //if (targetMap == "boss") {
+616:             //    // it goes to boss stage (World 1, Stage 8)
+617:             //    sceneManager.SwitchToStage(1, 8);
+618:             //    portalCooldown = 1.0f;
+619:             //}
+621:                 // Derive world from the actual current map name so boss-door routing
+622:                 // does not depend on SceneManager stage state being perfectly synced.
+640:                     sceneManager.SwitchToStage(world, 8);   // go to that world's boss stage
+643:                     // Fallback: direct map switch keeps behavior stable even if parsing fails.
+647:                 //to restore the combo after switching
+657: 				// Default door behavior: go to next stage (except boss door).
+681: 					// Fallback to old behavior
+684:                 //to restore the combo after switching
+693:     // 如果垂直速度绝对值 > 0.05f，认为玩家不在地面上
+698:     // 边界检查
+702:         // Reset combo on death
+706:     // Clear gauge state and visual effects (delegated to Game.cpp)
+709:         // only counts deaths if the player has points
+724:         g_player.hitStopTriggered = 0; // 重置顿刀触发计数
+725:         g_player.hitStopTimer = 0.0f;  // 重置顿刀计时器
+729:     // 使用当前最终位置检测（作为兜底），子步检测已在UpdatePlayerPhysics中进行
+733: // New: Update player death state
+739:     // Reset combo when player dies
+746:         // On player death timeout, perform a full reset including
+747:         // reloading the current map so enemies/spawns are restored.
+752: // New: Player death handler
+758:     // Clear gauge-invincibility flag so invincible animation set does not persist.
+761:     // Small camera shake on player getting hit/death.
+762:     // Keep it subtle to avoid nausea.
+765:     // Track death
+771:     // only count deaths if the player has points
+779:     // Stop all player actions
+788:     // Death sound can be added here
+789:     // g_audioManager.PlaySFX("death_sound.wav");
+792: // New: Check if player should die
+798:     // Check collision with all alive enemies
+802:         // Use the enemy's collision logic which may gate contact damage
+804:             // If player is dashing, they won't die but will attack the enemy instead
+806:                 // Attack logic handled in CheckDashAttack
+810:                 // Otherwise, player dies
+819: // Modified UpdateDash function: add charge decay update
+822:     // Prioritize dashing state update
+830:             // Brief invincibility window after dash ends
+834:             // Requested: after dash ends, enter a real-time 0.75s slow-motion at 75% speed.
+835:             // Player is invincible during this time.
+840:             EnterDashAftermath(); // Enter aftermath when dash ends
+844:     // Update dash-end slow motion timer in real time (unscaled).
+853:     // Then update aftermath state
+855:     // Update dash point recovery system
+858:     // Update charge decay timer
+861:     // Charge logic should be independent of aftermath state
+866:         // Allow charging during stun, but charge time cannot be too long
+868:             // When charge time is max, clear aftermath first if in aftermath
+869:             /*if (g_player.isInDashAftermath) {
+873:             g_player.chargeTime = g_player.MAX_CHARGE_TIME; // it caps to max charge time and it doesnt release it unless you stop clicking
+876:         // === 蓄力点数消耗显示调整 ===
+877:         // 现在无论蓄力持续多久，预扣始终显示为 1 点（只高亮一个 follower），
+878:         // 并且不再根据段数播放音效。充能达到最大时会播放一次音效（见下方的 max 音效触发）。
+882:             // 仅显示将要消耗的 1 点（如果有点数的话），避免多点预扣显示
+885:             // 不再累加计时器用于逐步增加预扣点数，重置计时器以免遗留
+894:         // Play charge SE when reaching max (once per charge)
+911:     // 死亡中禁止任何移动输入
+915:     // 检查是否正在蓄力且不允许移动
+920:     // 如果在硬直中，移动会中断它
+924:     // Also break dash-end slow motion on movement.
+936:     // 死亡中禁止任何移动输入
+940:     // 检查是否正在蓄力且不允许移动
+945:     // 如果在硬直中，移动会中断它
+949:     // Also break dash-end slow motion on movement.
+972: // Improved jump function
+981:     // Wall jump: when sliding on a wall, jump to the opposite direction.
+986:         // Push away from wall: wallSlideDirection is -1 for left wall, +1 for right wall.
+987:         // We want to jump opposite, so use negative direction.
+994:     // Normal jump
+1001: // Method 3: Mouse direction dash
+1006:     // Check if points are sufficient
+1011:     // Consume dash point
+1016:     // record that we consumed 1 point for this dash (used for damage scaling)
+1022:     // Get mouse world coordinates
+1026:     // Calculate direction vector from player to mouse
+1033:     // Normalize direction vector
+1044:     // Set dash state
+1050:     // Face towards dash direction during slash.
+1055:     // Set dash speed
+1056:     // Increase minimum dash distance by 1.3x for basic (non-charge) dash
+1060:     // Store mouse target position
+1065: // 修改后的 StartMouseChargeDash 函数
+1070:     // 条件：不在冲刺、不在蓄力、有点数、在可行动状态
+1080:     // 重置蓄力时间，从0开始计算本次蓄力
+1082:     // 重置本次蓄力的点数消耗累计
+1085:     // 按下一瞬间立即预扣 1 点（只要有点），并播放蓄力音效
+1092:     // 不清除保存的蓄力，但本次重新开始
+1095: // 修改后的 ExecuteMouseChargeDash 函数
+1106:     // 清除硬直状态以允许新的冲刺
+1111:     // Starting a dash should interrupt dash-end slow motion.
+1118:     // 结算蓄力消耗：
+1119:     // 修改：不论蓄力持续多久，都只消耗 1 点（其他蓄力效果保持不变）
+1120:     // - 若处于 gauge 无敌，则不消耗点数
+1126:             // 点数不足：不放出，取消蓄力
+1137:     // record consumed points for this dash (at least 1)
+1140:     // 获取当前鼠标位置
+1144:     // 计算从玩家到鼠标的方向
+1151:     // 标准化方向
+1162:     // === 关键修改：基于蓄力时间计算冲刺距离（而非离散段数） ===
+1164:     // short-press chaining: if short and has saved charge, use savedChargeTime
+1168:             // refresh decay timer
+1170:             // reflect saved charge into chargeTime for hit-stop / other logic
+1178:         // long press: use current charge time and save if long enough
+1188:     // normalize to [0,1]
+1190:     // max speed multiplier when fully charged (matches previous level-3 behavior)
+1193:     float durationMultiplier = 1.0f; // keep duration fixed for now
+1195:     // 设置冲刺状态
+1201:     // Face towards dash direction during slash.
+1206:     // 应用冲刺速度：保持最长距离不变, 但把最短距离延长为1.3倍
+1207:     // We scale the base speed by speedMultiplier for charge levels.
+1208:     // For minimal (non-charge) dash we additionally multiply by 1.3 to lengthen shortest dash.
+1210:     // If this dash consumed only 1 point (short dash), increase to 1.3x
+1217:     // 存储新的鼠标目标位置
+1221:     // 结束蓄力状态
+1228: // Enter dash aftermath state
+1230:     // 在进入硬直前，补一次“终点小圆形”攻击判定（只触发一次）。
+1231:     // 注意：这里仍处于 isDashing=true，因此会复用 hitEnemies 去重，不与冲刺过程伤害重合。
+1234:     // Clear all velocity to keep player stationary
+1238:     // Do not enter aftermath if no points left
+1248: // Update aftermath state
+1254:     // Check for movement input to interrupt
+1261:     // Aftermath state ends
+1268: // Update dash point recovery
+1270:     // Ground recovery of points:
+1271:     // - isOnGround 连续保持 > 1.0s 之后才开始回复
+1272:     // - 开始回复后每 0.25s 回复 1 点直到回满
+1276:     // 关键修复：短按冲刺时很容易出现“落地但仍处于冲刺/蓄力相关状态”，
+1277:     // 这会让地面回复逻辑在冲刺期间也持续积累定时器，导致点数看起来一直在回复。
+1278:     // 因此在任何冲刺相关阶段，禁止回复并重置计时器。
+1284:     // Allow recovery when on ground OR while wall-sliding.
+1285:     // Previously recovery required being on ground; this change permits
+1286:     // wall-slide to also count as a valid recovery state.
+1311:     // 保留余量时间，实现“每0.25秒一次”的稳定节拍
+1316: // Consume dash point
+1318:     // During gauge-based invincibility, dashes/slashes are free (no point consumption).
+1330: // get kills on enemy defeat
+1332:     // Track kill for statistics
+1337:     // Track kills for statistics
+1339:         g_gameStats.IncrementWeakPointKills();  // 30 points
+1343:         // Enhanced visual feedback for weak-point kills
+1346:         // Increase slash hit-stop duration by 1.5x for dramatic effect
+1355:         g_gameStats.IncrementKills();  // 10 points
+1358:     // Award gauge points for kills, but do NOT increase gauge while the player
+1359:     // already has gauge-based invincibility active. This prevents extending the
+1360:     // current invincible state by farming additional kills during the effect.
+1362:         // Always grant 1 gauge point per kill. Remove extra gauge for weak-point kills.
+1370:     // Restore dash point
+1377:         // Spawn indicator at enemy death position instead of popping in at the player.
+1378:         // The slash-count UI uses internal static smoothing state inside DrawGame().
+1379:         // We "teleport" its current position to the death location, so it flies back to the player anchor.
+1391:     // Gauge kill burst particle effect
+1392:     // When the player is in gauge-based invincibility, spawn the red burst at the
+1393:     // defeated enemy's world position instead of the player's position so the
+1394:     // effect originates from the enemy.
+
+### D:\Japan\HAL\HEW2\HEW_SLASH\DX21_05_Init\Projectile.cpp
+1: // Projectile.cpp
+4: // Global projectile manager instance
+13:     // posX/posY are stored as the projectile center. Use that directly.
+30:     // Trigger visual/sound effects on hit
+31:     // spawn weak point hit effect at projectile position
+32:     // Use 0.75 scale for projectile hit effects
+33:     // posX/posY represent the projectile center
+36:     // Shorter hit-stop and weaker camera shake compared to enemy hit
+37:     g_player.hitStopTimer = 0.025f; // shorter than normal
+42:     // Deactivate projectile
+47:     // We only consider projectiles that are from enemies (not from player)
+50:     // Compute direction to player
+60:     if (len <= 0.001f) return true; // very close -> probably aimed
+64:     // projectile travel direction
+70:     // dot product: if the projectile is roughly heading towards the player, dot > cos(60deg)=0.5
+85:     // Calculate direction vector
+99:     // 根据速度方向计算初始旋转角度
+102:     // 对于普通子弹（BULLET），我们不希望它随方向旋转，使用固定旋转0
+107:     // Set initial properties based on type
+131:         maxLifeTime = 0.5f; // Lightning has very short duration
+154:     // Check lifetime
+161:     // 保存当前速度方向
+165:     // Type-specific update logic
+190:     // 如果速度方向发生变化，更新旋转角度
+192:         // 计算新的方向角度
+196:         // 只对非自转子弹类型更新基础方向
+200:             // 这些类型没有自转，直接更新旋转角度
+204:             // 其他类型保持原有的自转逻辑
+209:     // Movement and collision detection
+212:     // Check map collision
+221: // Check collision with player
+223:     // Only check player collision if projectile is not from player
+228:     // Get player position and size
+234:     // 考虑玩家冲刺时的碰撞体变化
+244:     // 计算射弹的实际碰撞体大小（考虑缩放效果）
+247:     // 射弹中心点（posX/posY are center coordinates）
+251:     // 玩家碰撞体中心点
+255:     // 使用中心点距离检测碰撞（更准确）
+260:     // 碰撞半径
+261:     // 敌人射弹判定略微缩小，避免贴图较大导致“擦边也算命中”。
+262:     // 注意：这里只影响碰撞，不影响渲染。
+263:     // Shrink enemy projectile hitbox more to avoid accidental grazing hits
+269:         //if (!g_player.isDashing && !g_player.isDead) {
+270:         //    // Apply effect to player
+271:         //    OnPlayerDeath();
+272:         //    isActive = false; // 射弹命中后应该消失
+273:         //}
+275:         // so the player doesnt die also if invincible
+277:             // Apply effect to player
+279:             isActive = false; // 射弹命中后应该消失
+284:     // Fireball: gradually grows larger and accelerates
+287:     // 火球的自转效果保留
+292:     // Bullet: simple projectile with slight rotation
+293:     // Disable rotation for BULLET: keep rotation fixed
+295:     // No scaling effect - keeps constant size
+299:     // Ice Shard: 基础方向 + 自转效果
+302:     // Ice trail effect
+304:         // Could add ice particle effects here
+309:     // Lightning: 基础方向 + 闪烁效果，不自转
+311:     // 闪电不自转，旋转角度来自基础方向
+315:     // Poison Dart: 基础方向 + 自转
+316:     // 正弦波运动
+323:     // Holy Bolt: 基础方向 + 脉冲效果，不自转
+325:     // 圣光箭不自转，旋转角度来自基础方向
+328:     // Magic Missile: homes to the nearest enemy
+334:         // Find the nearest enemy
+338:                 // Use Get methods to get enemy position
+354:     // 保存旧的旋转角度
+357:     // Home towards target
+364:             // Gradually adjust direction
+371:             // Normalize velocity
+376:             // 计算新的方向角度
+379:             // 平滑过渡旋转角度
+382:             // 将角度差标准化到[-π, π]范围内
+386:             // 使用插值平滑旋转过渡
+391:         // 如果没有跟踪目标，保持原有的自转
+404:     // Only count as collision when the projectile's center point intersects a solid tile.
+405:     // posX/posY are stored as the projectile center.
+411:         // Check if center point lies within the tile rectangle
+421:     // Check enemy collision if projectile is from player
+428:         // Use Get methods to get enemy attributes
+434:         // Treat projectile as a box centered at posX/posY with size scaled by scaleEffect
+442:         // Collision detection (AABB)
+466:     // Calculate attack angle using centers
+473:     // Apply damage
+476:     // Apply special effects
+477:     // TODO: Add status effects like burning, slowing, stunning, etc.
+478:     // Need to add a status effect system to the Enemy class
+482:     // TODO: Create impact effects
+483:     // Can add particle effects, sound effects, etc. here
+503:     // Get corresponding texture
+507:     // Convert to screen coordinates (world -> screen)
+514:     // Set color based on type
+539:     // 获取总旋转角度
+542:     // 渲染射弹（带旋转和缩放）
+545:     // 默认使用正方形渲染（多数子弹）
+549:     // 将绘制坐标调整为以中心为锚（便于旋转/翻转）
+553:     // 对于普通子弹，禁用旋转并根据水平速度决定水平翻转
+557:         drawRotation = 0.0f; // ensure no rotation
+558:         // If moving left, flip the sprite horizontally
+559: 		renderHeight = renderSize * 1.5f; // Make bullet sprite rectangular
+568: // ProjectileManager class implementation
+591:             // Only allow cutting projectiles that are hostile and actually aimed at the player
+607:     // convert circle to rect for simple check
+626:     // Load various projectile textures
+633: // Predefined projectile creation functions
+684:     effect.burnDamage = 3.0f; // Using burnDamage as poison over time damage
+698: // 在Projectile.cpp中添加以下方法实现
+700: // 计算速度方向角度
+702:     // 计算速度方向的角度（弧度）
+706: // 获取旋转角度
+708:     // 基础的方向角度
+711:     // 根据子弹类型调整旋转
+714:         // 火球：基础方向角度 + 自转角度
+717:         // 普通子弹：禁用方向旋转，始终保持不变
+720:         // 冰箭：基础方向角度 + 自转角度
+723:         // 魔法飞弹：基础方向角度 + 自转角度
+726:         // 闪电：基础方向角度，加上随机的闪烁效果
+729:         // 毒箭：基础方向角度 + 自转角度
+732:         // 圣光箭：基础方向角度
+
+### D:\Japan\HAL\HEW2\HEW_SLASH\DX21_05_Init\Render.cpp
+13: // Define global variables (initialization allowed)
+17: ID3D11Buffer* g_pConstantBuffer = nullptr; // added november 12th
+77: 	// only preload the most used SE in the game (like player and enemies SEs)
+84: 	// Get actual client area size of window
+90: 	// Create device and swap chain
+93: 	swapChainDesc.BufferDesc.Width = windowWidth;      // Use actual window width
+94: 	swapChainDesc.BufferDesc.Height = windowHeight;    // Use actual window height
+102: 	swapChainDesc.Windowed = TRUE;  // Keep as windowed mode (borderless fullscreen)
+104: 	// Call function to create device and swap chain simultaneously
+119: 	// Create render target view
+127: 	// Create depth stencil buffer
+130: 	textureDesc.Width = windowWidth;   // Use actual window width
+131: 	textureDesc.Height = windowHeight; // Use actual window height
+143: 	// Create depth stencil view
+152: 	// Create viewport (using actual window dimensions)
+161: 	// Create input layout
+164: 		// Inform that position coordinates exist
+166: 		// Inform that texture coordinates exist
+168: 		// for the color part
+173: 	// Create vertex shader object, simultaneously create vertex layout
+180: 	// Create pixel shader object
+189: 		// Handle error
+196: 		// Handle error
+201: 	// Create sampler state
+209: 	blendDesc.AlphaToCoverageEnable = FALSE; // Disable alpha to coverage
+210: 	blendDesc.IndependentBlendEnable = FALSE; // Disable independent blending
+211: 	blendDesc.RenderTarget[0].BlendEnable = TRUE; // Enable blending for render target
+212: 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA; // Source blend factor
+213: 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA; // Destination blend factor
+214: 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD; // Blend operation
+215: 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE; // Alpha source blend factor
+216: 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO; // Alpha destination blend factor
+217: 	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD; // Alpha blend operation
+218: 	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; // Write all color channels
+229: 	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL; // Depth write mask
+230: 	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS; // Depth comparison function
+236: 	g_pDeviceContext->OMSetDepthStencilState(depthStencilState, 1); // Set depth stencil state
+239: 	// added november 12th
+240: 	// for the constant buffer for shader
+270: 	// Screen fill color
+271: 	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; //red,green,blue,alpha
+273: 	// Specify the drawing target canvas and depth buffer to use
+275: 	// Fill the drawing target canvas
+277: 	// Reset the depth buffer
+288: 	g_pDeviceContext->OMSetBlendState(NULL, NULL, 0xFFFFFFFF); // Set blend state (use default blend state)
+290: 	//BackGround: pTextureSRV2
+292: 	// Set sampler state
+299: 	// Switch double buffer and update screen
+306:     // Render the custom cursor on top of everything.
+307:     // In gameplay we want it to be camera-aware; in other scenes it should behave like UI.
+319: 	// ※DirectX features must be released when the application ends after creation
+332: 	SAFE_RELEASE(g_uiNumberTexture); // for the ui number texture
+334: 	SAFE_RELEASE(g_pConstantBuffer); // added november 12th
+341: 	// Create .cso filename
+343: 	const char* dot = strrchr(szFileName, '.');  // Find last '.'
+346: 		strncpy(csoFileName, szFileName, basenameLen); // Copy filename without extension if extension exists
+347: 		csoFileName[basenameLen] = '\0';   // Add terminator
+350: 		strcpy(csoFileName, szFileName);   // Copy as is if no extension
+352: 	strcat(csoFileName, ".cso");// Append ".cso" extension
+354: 	// Open .cso file if exists
+359: 		// Get file size
+364: 		// Allocate memory for reading binary data
+369: 		// Pass pointer and size to caller
+373: 	// If .cso file doesn't exist, compile .hlsl file
+381: 		// Convert character encoding from Shift-JIS to UTF-16
+382: 		setlocale(LC_ALL, "japanese");  // Set locale (Windows specific)
+385: 		// Set shader compile options
+388: 		dwShaderFlags |= D3DCOMPILE_DEBUG; // Include debug info for debug builds
+391: 		// Blob for storing compile results and error information
+395: 		// Compile HLSL file
+397: 			filename,							// Filename
+398: 			nullptr,							// No macro definitions
+399: 			D3D_COMPILE_STANDARD_FILE_INCLUDE,	// Support #include
+400: 			szEntryPoint,						// Entry point name
+401: 			szShaderModel,						// Shader model
+402: 			dwShaderFlags,						// Compile flags
+403: 			0,									// Effect flags
+404: 			&pBlob,								// Compile result on success
+405: 			&pErrorBlob);						// Compile error output
+407: 		// Display error message on compile failure
+418: 		// Release error blob if exists
+421: 		// Pass compiled binary data to caller on success
+434: 	// Compile according to file extension
+438: 	// Create vertex shader using device
+441: 	// Create vertex layout using device
+452: 	// Compile according to file extension
+456: 	// Create pixel shader
+463: // Quad drawing function
+466: 	// Create temporary vertex buffer
+478: 	// Set rendering pipeline state
+481: 	// Execute draw command
+484: 	// Release temporary resources
+492: 	// 如果启用剔除且物体不可见，则跳过渲染
+497: 	// Calculate size of each frame in sprite sheet (texture coordinates)
+501: 	// Calculate current frame position in sprite sheet
+502: 	// rows = vertical count, columns = horizontal count
+506: 	// Calculate texture coordinate range for current frame
+507: 	float u0 = col * frameWidth;       // Left boundary
+508: 	float u1 = (col + 1) * frameWidth; // Right boundary
+509: 	float v0 = row * frameHeight;      // Top boundary
+510: 	float v1 = (row + 1) * frameHeight; // Bottom boundary
+512: 	// 应用水平翻转
+519: 	// Quad center for rotation
+524: 	// 如果没有旋转，使用更简单的计算
+526: 		// 不旋转时直接计算顶点位置
+528: 			{ posX + width, posY + height, 0.5f, u1, v0 }, // Top right
+529: 			{ posX + width, posY,           0.5f, u1, v1 }, // Bottom right
+530: 			{ posX,         posY + height, 0.5f, u0, v0 }, // Top left
+531: 			{ posX,         posY,          0.5f, u0, v1 }  // Bottom left
+535: 		// 创建和使用顶点缓冲区...
+538: 		// 有旋转时计算旋转后的顶点位置
+551: 		// Original corners (unrotated)
+552: 		float x0 = posX;         float y0 = posY;          // bottom left
+553: 		float x1 = posX + width; float y1 = posY;          // bottom right
+554: 		float x2 = posX;         float y2 = posY + height; // top left
+555: 		float x3 = posX + width; float y3 = posY + height; // top right
+557: 		// Apply rotation
+558: 		auto p0 = rotatePoint(x3, y3); // top right
+559: 		auto p1 = rotatePoint(x1, y1); // bottom right
+560: 		auto p2 = rotatePoint(x2, y2); // top left
+561: 		auto p3 = rotatePoint(x0, y0); // bottom left
+564: 			{ p0.first, p0.second, 0.5f, u1, v0 }, // Top right
+565: 			{ p1.first, p1.second, 0.5f, u1, v1 }, // Bottom right
+566: 			{ p2.first, p2.second, 0.5f, u0, v0 }, // Top left
+567: 			{ p3.first, p3.second, 0.5f, u0, v1 }  // Bottom left
+571: 		// 创建和使用顶点缓冲区...
+574: 	// 后续创建缓冲区、设置资源、绘制等代码保持不变...
+575: 	// Create temporary vertex buffer
+590: 		// Error handling
+594: 	// Bind vertex buffer
+599: 	// Bind texture resource
+602: 	// Set sampler state
+605: 	g_pDeviceContext->OMSetBlendState(g_pBlendState, NULL, 0xFFFFFFFF); // Set blend state
+607: 	// Draw quad
+610: 	// Release temporary resources
+614: // used for the gauge in the game
+631: 	// Render normally
+634: 	// Disable gauge fill for next renders
+640: // render image vertical so it doesnt shift left
+643: 	// Shrink the quad from the right while keeping left edge fixed
+644: 	float renderWidth = width * fillRatio;  // Actual width to render
+646: 	// Texture coordinates - crop from the right to match render width
+647: 	float u0 = 0.0f;              // Left boundary
+648: 	float u1 = fillRatio;         // Right boundary - crop texture to match
+649: 	float v0 = 0.0f;              // Top boundary
+650: 	float v1 = 1.0f;              // Bottom boundary
+654: 		{ posX + renderWidth, posY + height, 0.5f, u1, v0 }, // Top right
+655: 		{ posX + renderWidth, posY,          0.5f, u1, v1 }, // Bottom right
+656: 		{ posX,               posY + height, 0.5f, u0, v0 }, // Top left
+657: 		{ posX,               posY,          0.5f, u0, v1 }  // Bottom left
+662: 	// Create temporary vertex buffer
+680: 	// Bind vertex buffer
+685: 	// Bind texture resource
+688: 	// Set sampler state
+692: 	// Draw quad
+695: 	// Release temporary resources
+701: 	// 如果启用剔除且物体不可见，则跳过渲染
+705: 	if (number < 0) return; // Only support non-negative numbers
+707: 	// Calculate total number of digits (e.g., 123 has 3 digits)
+714: 	if (numDigits == 0) numDigits = 1; // Handle case of 0
+716: 	// Render digits from right to left (right-aligned)
+717: 	float currentX = startX + (numDigits - 1) * digitWidth; // Right alignment starting point
+720: 		int digit = temp % 10; // Get current digit (ones place)
+721: 		temp /= 10;            // Remove processed digit
+723: 		// Render current digit
+725: 		currentX -= digitWidth; // Move left one digit
+730: // added november 12th
+

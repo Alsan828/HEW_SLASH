@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "SceneBase.h"
 #include "InputSystem.h"
 #include "SceneManager.h"
@@ -12,11 +12,11 @@ class UIButton;
 class PauseScene : public SceneBase 
 {
 private:
-    SceneManager* sceneManager;   // pointer to the scene manager
+    SceneManager* sceneManager;   // シーンマネージャーへのポインタ
 
     SceneBase* underlyingScene;
 
-    ID3D11ShaderResourceView* blackTexture = nullptr; // this is used to make the stage look transparent
+    ID3D11ShaderResourceView* blackTexture = nullptr; // ステージを半透明に見せるために使う
 
     ID3D11ShaderResourceView* backgroundTexture = nullptr;
 
@@ -33,7 +33,7 @@ private:
     ID3D11ShaderResourceView* quitTexture = nullptr;
     ID3D11ShaderResourceView* quitHoverTexture = nullptr;
 
-    SCENE pausedSceneType; // for depending on the scene you are to pause the game
+    SCENE pausedSceneType; // どのシーンをポーズしたかを保持する
 
 public:
     PauseScene(SceneManager* manager, SceneBase* stage, SCENE PAUSE);
