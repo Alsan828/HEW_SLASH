@@ -1695,6 +1695,37 @@ void BossEnemy::Update(float deltaTime, MapManager* mapManager)
         return;
     }
 
+    if (bossFreezeTimer > 0.0f) {
+        bossFreezeTimer -= deltaTime;
+
+        // idleアニメを維持し、行動・攻撃を一切行わない
+        if (anim.GetCurrentClipName() != "idle") {
+            anim.SetClip("idle");
+        }
+        velocityX = 0.0f;
+
+        // 重力と地形衝突だけは通常どおり適用する（宙に浮かないように）
+        velocityY += GRAVITY * deltaTime * 60.0f;
+
+        float oldX = posX;
+        float oldY = posY;
+
+        posX += velocityX * deltaTime * 60.0f;
+        if (CheckHorizontalCollision(mapManager, oldX, oldY)) {
+            posX = oldX;
+            velocityX = 0.0f;
+        }
+
+        posY += velocityY * deltaTime * 60.0f;
+        if (CheckVerticalCollision(mapManager, oldX, oldY)) {
+            posY = oldY;
+            velocityY = 0.0f;
+        }
+
+        anim.Update(deltaTime);
+        return;  // ステートマシン・攻撃処理をすべてスキップ
+    }
+
     // フェーズ変化の例
     float healthPercent = health / maxHealth;
     if (healthPercent < 0.3f && phase == 1) {
@@ -2101,6 +2132,7 @@ FinalBossEnemy::FinalBossEnemy(float x, float y) : BossEnemy(x, y)
     chargeDuration = 0.7f;        // shorter charge window (harder to react)
     downDuration = 2.0f;          // shorter vulnerability window
     timingVariance = 0.15f;       // less predictable timing
+    bossFreezeTimer = 3.0f;       // AIfreeze when enter boss map
 
     anim.ClearClips();
 

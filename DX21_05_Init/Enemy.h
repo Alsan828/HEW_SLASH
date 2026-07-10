@@ -454,6 +454,9 @@ protected:
     float idleDuration = 1.0f;
     int phase = 1;  // Boss phases
 
+protected:
+    float bossFreezeTimer = 0.0f;
+
     // 仕様ベースのボス挙動
     enum BossState {
         BOSS_IDLE,
