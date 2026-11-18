@@ -816,23 +816,23 @@ void InitGameWorld() {
 
     // 標識用
     LoadTexture(g_pDevice, "asset/UI/sign/sign_wasd.png", &g_signWASDTexture);
-    signAnim.AddClip("SignWASD", 0, 19, 1, 20, 0.15f, true, g_signWASDTexture);
+    signAnim.AddClip("SignWASD", 0, 12, 1, 20, 0.2f, false, g_signWASDTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_s.png", &g_signSTexture);
-    signAnim.AddClip("SignS", 0, 19, 1, 20, 0.15f, true, g_signSTexture);
+    signAnim.AddClip("SignS", 0, 12, 1, 20, 0.15f, false, g_signSTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_right.png", &g_signRightTexture);
-    signAnim.AddClip("SignRight", 0, 19, 1, 20, 0.15f, true, g_signRightTexture);
+    signAnim.AddClip("SignRight", 0, 12, 1, 20, 0.15f, false, g_signRightTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_release.png", &g_signReleaseTexture);
-    signAnim.AddClip("SignRelease", 0, 19, 1, 20, 0.15f, true, g_signReleaseTexture);
+    signAnim.AddClip("SignRelease", 0, 12, 1, 20, 0.15f, false, g_signReleaseTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_red_is_safe_seriously_it_really_is.png", &g_signRedTexture);
-    signAnim.AddClip("SignRed", 0, 19, 1, 20, 0.15f, true, g_signRedTexture);
+    signAnim.AddClip("SignRed", 0, 12, 1, 20, 0.15f, false, g_signRedTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_pink.png", &g_signPinkTexture);
-    signAnim.AddClip("SignPink", 0, 19, 1, 20, 0.15f, true, g_signPinkTexture);
+    signAnim.AddClip("SignPink", 0, 12, 1, 20, 0.15f, false, g_signPinkTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_long_click.png", &g_signLongClickTexture);
-    signAnim.AddClip("SignLongClick", 0, 19, 1, 20, 0.15f, true, g_signLongClickTexture);
+    signAnim.AddClip("SignLongClick", 0, 12, 1, 20, 0.15f, false, g_signLongClickTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_esc.png", &g_signESCTexture);
-    signAnim.AddClip("SignESC", 0, 3, 1, 4, 0.15f, true, g_signESCTexture);
+    signAnim.AddClip("SignESC", 0, 3, 1, 4, 0.15f, false, g_signESCTexture);
     LoadTexture(g_pDevice, "asset/UI/sign/sign_click.png", &g_signClickTexture);
-    signAnim.AddClip("SignClick", 0, 19, 1, 20, 0.15f, true, g_signClickTexture);
+    signAnim.AddClip("SignClick", 0, 12, 1, 20, 0.15f, false, g_signClickTexture);
 
     LoadTexture(g_pDevice, "asset/UI/number.png", &g_numberTexture);
     LoadTexture(g_pDevice, "asset/UI/UI_score＆time.png", &g_uiNumberTexture);
